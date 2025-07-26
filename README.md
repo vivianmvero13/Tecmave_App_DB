@@ -34,7 +34,7 @@ src/
 
 ---
 
-## 🔒 Seguridad
+## Seguridad
 
 - Autenticación con Spring Security
 - Roles de acceso: `ADMIN`, `CLIENTE`, `COLABORADOR`
@@ -44,15 +44,15 @@ src/
 
 ---
 
-## 📝 Funcionalidades principales
+## Funcionalidades principales
 
-- 📆 Agendamiento de citas desde el panel del cliente
-- 🧾 Generación de proformas y facturas automáticas
-- 🚗 Seguimiento del estado del vehículo
-- 🔔 Centro de notificaciones en tiempo real (planificado)
-- 🧑‍🔧 Registro de entrada/salida de colaboradores
-- 📩 Envío de boletines informativos vía correo electrónico (planificado)
-- 📊 Bitácoras de acciones administrativas
+- Agendamiento de citas desde el panel del cliente
+- Generación de proformas y facturas automáticas
+- Seguimiento del estado del vehículo
+- Centro de notificaciones en tiempo real (planificado)
+- Registro de entrada/salida de colaboradores
+- Envío de boletines informativos vía correo electrónico (planificado)
+- Bitácoras de acciones administrativas
 
 ---
 
@@ -72,6 +72,7 @@ src/
 git clone https://github.com/tuusuario/tecmave-transformacion-digital.git
 cd tecmave-transformacion-digital
 
+---
 ## Autores
 Estudiantes:
 Vivian Michelle Velázquez Rojas,
