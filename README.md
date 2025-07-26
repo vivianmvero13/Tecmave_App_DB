@@ -18,10 +18,11 @@ Este proyecto tiene como objetivo optimizar la gestión de citas, control de col
 | HTML/CSS/JS       | Interfaz de usuario                       |
 | Thymeleaf         | Motor de plantillas del lado del servidor |
 
-
 ---
 
 ## Estructura del proyecto
+
+```
 src/
 └── main/
     ├── java/
@@ -37,6 +38,7 @@ src/
         ├── application.properties  # Configuración de base de datos, puertos, logs, etc.
         ├── static/                 # Archivos estáticos (CSS, JS, imágenes)
         └── templates/              # Plantillas HTML (si se usa Thymeleaf)
+```
 
 ---
 
@@ -77,8 +79,10 @@ src/
 ```bash
 git clone https://github.com/tuusuario/tecmave-transformacion-digital.git
 cd tecmave-transformacion-digital
+```
 
-```markdown
+---
+
 ## Autores
 
 **Estudiantes:**
