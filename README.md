@@ -23,14 +23,20 @@ Este proyecto tiene como objetivo optimizar la gestión de citas, control de col
 
 ## Estructura del proyecto
 src/
-├── config/ → Configuraciones de seguridad, CORS, serialización
-├── controller/ → Controladores REST que exponen las APIs
-├── dto/ → Objetos de transferencia de datos
-├── model/ → Entidades JPA que representan la BD
-├── repository/ → Interfaces que extienden JpaRepository
-├── service/ → Lógica de negocio encapsulada
-├── resources/
-└── application.properties → Configuración de base de datos y puertos
+└── main/
+    ├── java/
+    │   └── com/
+    │       └── tecmave/
+    │           ├── config/         # Configuraciones de seguridad, CORS, serialización
+    │           ├── controller/     # Controladores REST que exponen las APIs
+    │           ├── dto/            # Objetos de transferencia de datos entre capas
+    │           ├── model/          # Entidades JPA que representan la base de datos
+    │           ├── repository/     # Interfaces que extienden JpaRepository
+    │           └── service/        # Lógica de negocio encapsulada en servicios
+    └── resources/
+        ├── application.properties  # Configuración de base de datos, puertos, logs, etc.
+        ├── static/                 # Archivos estáticos (CSS, JS, imágenes)
+        └── templates/              # Plantillas HTML (si se usa Thymeleaf)
 
 ---
 
@@ -66,20 +72,21 @@ src/
 - Docker
 - NetBeans
 
-### 📦 Clonar el repositorio
+### Clonar el repositorio
 
 ```bash
 git clone https://github.com/tuusuario/tecmave-transformacion-digital.git
 cd tecmave-transformacion-digital
 
----
+```markdown
 ## Autores
-Estudiantes:
-Vivian Michelle Velázquez Rojas,
-Joshua Emmanuel López Villanueva,  
-Fabián Guevara Passot,  
-Darian Khaled Gonzalez Rojas 
 
-Instructor guía:
-Mario Alberto Jimenez Espinoza
+**Estudiantes:**
 
+- Vivian Michelle Velázquez Rojas  
+- Joshua Emmanuel López Villanueva  
+- Fabián Guevara Passot  
+- Darian Khaled González Rojas  
+
+**Instructor guía:**  
+Mario Alberto Jiménez Espinoza
