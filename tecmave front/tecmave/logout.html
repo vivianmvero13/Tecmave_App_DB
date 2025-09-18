@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="refresh" content="2;url=/login.html">
+  <title>Cerrando sesión...</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f4f4f4; display: flex; align-items:center; justify-content:center; height:100vh; }
+    .msg { background: white; padding: 2rem 3rem; box-shadow: 0 0 10px rgba(0,0,0,.1); border-radius: 12px; font-size: 1.2rem; }
+  </style>
+  <link href="assets/css/styles.css" rel="stylesheet">
+</head>
+<body>
+<script> localStorage.removeItem('user'); </script>
+  <div class="msg">Cerrando sesión, redirigiendo al inicio de sesión...</div>
+  <script defer src="assets/js/app.js"></script>
+
+</body>
+</html>
