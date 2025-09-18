@@ -10,35 +10,10 @@ Este proyecto tiene como objetivo optimizar la gestión de citas, control de col
 
 | Tecnología        | Rol en el sistema                         |
 |-------------------|-------------------------------------------|
-| Java 21           | Lenguaje principal para el backend        |
+| C#                | Lenguaje principal para el backend        |
 | Spring Boot 3.x   | Framework para la lógica del sistema      |
-| Spring Security   | Control de autenticación y autorización   |
-| Spring Data JPA   | Persistencia de datos con Hibernate       |
 | MySQL 8.x         | Base de datos relacional                  |
 | HTML/CSS/JS       | Interfaz de usuario                       |
-| Thymeleaf         | Motor de plantillas del lado del servidor |
-
----
-
-## Estructura del proyecto
-
-```
-src/
-└── main/
-    ├── java/
-    │   └── com/
-    │       └── tecmave/
-    │           ├── config/         # Configuraciones de seguridad, CORS, serialización
-    │           ├── controller/     # Controladores REST que exponen las APIs
-    │           ├── dto/            # Objetos de transferencia de datos entre capas
-    │           ├── model/          # Entidades JPA que representan la base de datos
-    │           ├── repository/     # Interfaces que extienden JpaRepository
-    │           └── service/        # Lógica de negocio encapsulada en servicios
-    └── resources/
-        ├── application.properties  # Configuración de base de datos, puertos, logs, etc.
-        ├── static/                 # Archivos estáticos (CSS, JS, imágenes)
-        └── templates/              # Plantillas HTML (si se usa Thymeleaf)
-```
 
 ---
 
@@ -62,27 +37,6 @@ src/
 - Envío de boletines informativos vía correo electrónico (planificado)
 - Bitácoras de acciones administrativas
 
----
-
-## Requisitos para ejecutar el proyecto
-
-### Requisitos mínimos
-
-- JDK 21+
-- Maven 3.8+
-- MySQL Server 8.x
-- Docker
-- NetBeans
-
-### Clonar el repositorio
-
-```bash
-git clone https://github.com/tuusuario/tecmave-transformacion-digital.git
-cd tecmave-transformacion-digital
-```
-
----
-
 ## Autores
 
 **Estudiantes:**
@@ -90,7 +44,8 @@ cd tecmave-transformacion-digital
 - Vivian Michelle Velázquez Rojas  
 - Joshua Emmanuel López Villanueva  
 - Fabián Guevara Passot  
-- Darian Khaled González Rojas  
+- Darian Khaled González Rojas
+- Daniel Andrés Lopez Salazar
 
 **Instructor guía:**  
 Mario Alberto Jiménez Espinoza
