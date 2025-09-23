@@ -17,6 +17,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 builder.Services.AddScoped<AgendamientoService>();
+builder.Services.AddScoped<TipoServiciosService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

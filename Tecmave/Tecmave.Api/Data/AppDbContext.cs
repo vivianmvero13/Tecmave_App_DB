@@ -11,6 +11,7 @@ namespace Tecmave.Api.Data
 
         }
         public DbSet<AgendamientoModel> Agendamiento { get; set; }
-
+        public DbSet<TipoServiciosModel> tipo_servicios { get; set; }
     }
+
 }
