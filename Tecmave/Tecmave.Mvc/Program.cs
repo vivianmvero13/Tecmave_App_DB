@@ -3,16 +3,19 @@
 using AlphatechFront.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Tecmave.Data;
+using System;
+using Tecmave.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddControllers();
+
 var _connectionStrings = builder.Configuration.GetConnectionString("MySqlConnection");
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(_connectionStrings, ServerVersion.AutoDetect(_connectionStrings))
 );
 
