@@ -14,6 +14,14 @@ namespace Tecmave.Api.Data
         public DbSet<TipoServiciosModel> tipo_servicios { get; set; }
         public DbSet<ServiciosModel> servicios { get; set; }
         public DbSet<RevisionModel> revision { get; set; }
+        public DbSet<EstadosModel> estados { get; set; }
+        public DbSet<RolesModel> aspnetroles { get; set; }
+        public DbSet<UsuariosModel> aspnetusers { get; set; }
+        public DbSet<ModelosModel> modelo { get; set; }
+
+
+
+
 
 
     }

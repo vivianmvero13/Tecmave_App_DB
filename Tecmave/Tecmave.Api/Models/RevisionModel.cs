@@ -2,14 +2,16 @@
 
 namespace Tecmave.Api.Models
 {
-    public class ServiciosModel
+    public class RevisionModel
     {
         [Key]
-        public int id_servicio { get; set; } // [pk, increment]
-        public string nombre { get; set; }
-        public string descripcion { get; set; }
-        public string tipo { get; set; }
-        public decimal precio { get; set; }
-        public int tipo_servicio_id { get; set; }
+        public int id_revision { get; set; } // [pk, increment]
+        public string vehiculo_id { get; set; }
+        public DateTime fecha_ingreso { get; set; }
+        public int id_servicio { get; set; }
+        public int id_estado { get; set; }
+        public DateTime fecha_estimada_entrega { get; set; }
+        public DateTime fecha_entrega_final { get; set; }
+         
     }
 }
