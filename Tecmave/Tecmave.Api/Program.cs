@@ -28,6 +28,14 @@ builder.Services.AddScoped<MarcasService>();
 builder.Services.AddScoped<ModelosService>();
 builder.Services.AddScoped<FacturasService>();
 builder.Services.AddScoped<DetalleFacturaService>();
+builder.Services.AddScoped<ResenasService>();
+builder.Services.AddScoped<VehiculosService>();
+builder.Services.AddScoped<PromocionesService>();
+builder.Services.AddScoped<NotificacionesService>();
+builder.Services.AddScoped<ColaboradoresService>();
+
+
+
 
 
 

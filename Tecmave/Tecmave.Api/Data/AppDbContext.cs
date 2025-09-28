@@ -19,6 +19,11 @@ namespace Tecmave.Api.Data
         public DbSet<AgendamientoModel> Agendamientos { get; set; }
         public DbSet<FacturasModel> factura { get; set; }
         public DbSet<DetalleFacturaModel> detalle_factura { get; set; }
+        public DbSet<ResenasModel> Resenas { get; set; }
+        public DbSet<NotificacionesModel> Notificaciones { get; set; }
+        public DbSet<PromocionesModel> Promociones { get; set; }
+        public DbSet<ColaboradoresModel> Colaboradores { get; set; }
+        public DbSet<ServiciosRevisionModel> servicios_revision { get; set; }
 
 
 
@@ -44,7 +49,9 @@ namespace Tecmave.Api.Data
             b.Entity<RevisionModel>().ToTable("revision");
             b.Entity<AgendamientoModel>().ToTable("agendamiento");
             b.Entity<FacturasModel>().ToTable("factura");
+            b.Entity<FacturasModel>().ToTable("notificaciones");
             b.Entity<DetalleFacturaModel>().ToTable("DetalleFactura");
+            b.Entity<PromocionesModel>().ToTable("promociones");
 
         }
     }
