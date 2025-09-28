@@ -1,29 +1,51 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Tecmave.Api.Models;
 
 namespace Tecmave.Api.Data
 {
-    //creamos el contexto de la conexion de la db
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<Usuario, IdentityRole<int>, int>
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+        public DbSet<EstadosModel> Estados { get; set; }
+        public DbSet<TipoServiciosModel> TipoServicios { get; set; }
+        public DbSet<ModelosModel> Modelos { get; set; }
+        public DbSet<MarcasModel> Marcas { get; set; }
+        public DbSet<VehiculosModel> Vehiculos { get; set; }
+        public DbSet<ServiciosModel> Servicios { get; set; }
+        public DbSet<RevisionModel> Revisiones { get; set; }
+        public DbSet<AgendamientoModel> Agendamientos { get; set; }
+        public DbSet<FacturasModel> factura { get; set; }
+        public DbSet<DetalleFacturaModel> detalle_factura { get; set; }
+
+
+
+
+        protected override void OnModelCreating(ModelBuilder b)
         {
+            base.OnModelCreating(b);
+
+            b.Entity<Usuario>().ToTable("aspnetusers");
+            b.Entity<IdentityRole<int>>().ToTable("aspnetroles");
+            b.Entity<IdentityUserRole<int>>().ToTable("aspnetuserroles");
+            b.Entity<IdentityUserLogin<int>>().ToTable("aspnetuserlogins");
+            b.Entity<IdentityUserToken<int>>().ToTable("aspnetusertokens");
+            b.Entity<IdentityUserClaim<int>>().ToTable("aspnetuserclaims");
+            b.Entity<IdentityRoleClaim<int>>().ToTable("aspnetroleclaims");
+
+            b.Entity<EstadosModel>().ToTable("estados");
+            b.Entity<TipoServiciosModel>().ToTable("tipo_servicios");
+            b.Entity<ModelosModel>().ToTable("modelo");
+            b.Entity<MarcasModel>().ToTable("marca");
+            b.Entity<VehiculosModel>().ToTable("vehiculos");
+            b.Entity<ServiciosModel>().ToTable("servicios");
+            b.Entity<RevisionModel>().ToTable("revision");
+            b.Entity<AgendamientoModel>().ToTable("agendamiento");
+            b.Entity<FacturasModel>().ToTable("factura");
+            b.Entity<DetalleFacturaModel>().ToTable("DetalleFactura");
 
         }
-        public DbSet<AgendamientoModel> Agendamiento { get; set; }
-        public DbSet<TipoServiciosModel> tipo_servicios { get; set; }
-        public DbSet<ServiciosModel> servicios { get; set; }
-        public DbSet<RevisionModel> revision { get; set; }
-        public DbSet<EstadosModel> estados { get; set; }
-        public DbSet<RolesModel> aspnetroles { get; set; }
-        public DbSet<UsuariosModel> aspnetusers { get; set; }
-        public DbSet<ModelosModel> modelo { get; set; }
-
-
-
-
-
-
     }
-
 }

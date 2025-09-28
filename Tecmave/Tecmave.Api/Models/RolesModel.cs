@@ -1,11 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Identity;
 
 namespace Tecmave.Api.Models
 {
-    public class RolesModel
+    public class RolesModel : IdentityRole<int>
     {
-        [Key]
-        public int Id { get; set; } // [pk, increment]
-        public string Name { get; set; }
+        public string? Descripcion { get; set; }
     }
 }

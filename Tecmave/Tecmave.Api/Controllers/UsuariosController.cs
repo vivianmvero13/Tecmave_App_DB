@@ -1,88 +1,60 @@
-﻿using Tecmave.Api.Data;
-using Tecmave.Api.Models;
+﻿using Microsoft.AspNetCore.Mvc;
 using Tecmave.Api.Services;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Tecmave.Api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-    public class UsuariosController : Controller
+    [Route("api/usuarios")]
+    public class UsuariosController : ControllerBase
     {
-        private readonly UsuarioService _UsuariosService;
+        private readonly UserAdminService _svc;
+        public UsuariosController(UserAdminService svc) { _svc = svc; }
 
-        public UsuariosController(UsuarioService UsuariosService)
-        {
-            _UsuariosService = UsuariosService;
-        }
+        [HttpGet] public async Task<IActionResult> List() => Ok(await _svc.ListAsync());
 
-        //Apis GET, POST, PUT   y DELETE
-        [HttpGet]
-        public ActionResult<IEnumerable<UsuariosModel>> GetUsuariosModel()
-        {
-            return _UsuariosService.GetUsuariosModel();
-        }
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> Get(int id)
+            => (await _svc.GetByIdAsync(id)) is var u && u is not null ? Ok(u) : NotFound();
 
-        [HttpGet("{id}")]
-        public ActionResult<UsuariosModel> GetById(int id)
-        {
-            return _UsuariosService.GetById(id);
-        }
-
-        //Apis POST
+        public record CreateUserDto(string UserName, string Email, string Password, string? PhoneNumber);
         [HttpPost]
-        public ActionResult<UsuariosModel> AddUsuarios(UsuariosModel UsuariosModel)
+        public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
         {
-
-            var newUsuariosModel = _UsuariosService.AddUsuario(UsuariosModel);
-
-            return
-                CreatedAtAction(
-                        nameof(GetUsuariosModel), new
-                        {
-                            id = newUsuariosModel.Id,
-                        },
-                        newUsuariosModel);
-
+            var (res, user) = await _svc.CreateAsync(dto.UserName, dto.Email, dto.Password, dto.PhoneNumber);
+            return res.Succeeded ? CreatedAtAction(nameof(Get), new { id = user!.Id }, user) : BadRequest(res.Errors);
         }
 
-        //APIS PUT
-        [HttpPut]
-        public IActionResult UpdateUsuarios(UsuariosModel UsuariosModel)
+        public record UpdateUserDto(string? UserName, string? Email, string? PhoneNumber);
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto dto)
         {
-
-            if (!_UsuariosService.UpdateUsuario(UsuariosModel))
-            {
-                return NotFound(
-                        new
-                        {
-                            elmsneaje = "El  de usuario no fue encontrado"
-                        }
-                    );
-            }
-
-            return NoContent();
-
+            var res = await _svc.UpdateAsync(id, dto.UserName, dto.Email, dto.PhoneNumber);
+            return res.Succeeded ? Ok() : BadRequest(res.Errors);
         }
 
-        //APIS DELETE
-        [HttpDelete]
-        public IActionResult DeleteUsuariosModel(int id)
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
         {
-
-            if (!_UsuariosService.DeleteUsuario(id))
-            {
-                return NotFound(
-                        new
-                        {
-                            elmsneaje = "El  de usuario no fue encontrado"
-                        }
-                    );
-            }
-
-            return NoContent();
-
+            var res = await _svc.DeleteAsync(id);
+            return res.Succeeded ? Ok() : BadRequest(res.Errors);
         }
 
+        [HttpPost("{id:int}/roles/add")]
+        public async Task<IActionResult> AddRole(int id, [FromQuery] string role)
+        {
+            var res = await _svc.AddToRoleAsync(id, role);
+            return res.Succeeded ? Ok() : BadRequest(res.Errors);
+        }
+
+        [HttpPost("{id:int}/roles/remove")]
+        public async Task<IActionResult> RemoveRole(int id, [FromQuery] string role)
+        {
+            var res = await _svc.RemoveFromRoleAsync(id, role);
+            return res.Succeeded ? Ok() : BadRequest(res.Errors);
+        }
+
+        [HttpGet("{id:int}/roles")]
+        public async Task<IActionResult> GetRoles(int id)
+            => Ok(await _svc.GetRolesAsync(id));
     }
 }

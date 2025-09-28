@@ -22,17 +22,17 @@ namespace Tecmave.Api.Services
         //funcion de obtener cantons
         public List<TipoServiciosModel> GetTipoServiciosModel()
         { 
-                return _context.tipo_servicios.ToList(); 
+                return _context.TipoServicios.ToList(); 
         }
 
 
         public TipoServiciosModel GetById(int id) {
-            return _context.tipo_servicios.FirstOrDefault(p=> p.id_tipo_servicio == id);
+            return _context.TipoServicios.FirstOrDefault(p=> p.id_tipo_servicio == id);
         }
 
         public TipoServiciosModel AddTipoServicios(TipoServiciosModel TipoServiciosModel)
         {
-            _context.tipo_servicios.Add(TipoServiciosModel);
+            _context.TipoServicios.Add(TipoServiciosModel);
             _context.SaveChanges();
             return TipoServiciosModel;
         }
@@ -40,7 +40,7 @@ namespace Tecmave.Api.Services
 
         public bool UpdateTipoServicios(TipoServiciosModel TipoServiciosModel)
         {
-            var entidad =  _context.tipo_servicios.FirstOrDefault(p => p.id_tipo_servicio == TipoServiciosModel.id_tipo_servicio);
+            var entidad =  _context.TipoServicios.FirstOrDefault(p => p.id_tipo_servicio == TipoServiciosModel.id_tipo_servicio);
 
             if (entidad == null) {
                 return false;
@@ -58,14 +58,14 @@ namespace Tecmave.Api.Services
 
         public bool DeleteTipoServicios(int id)
         {
-            var entidad = _context.tipo_servicios.FirstOrDefault(p => p.id_tipo_servicio == id);
+            var entidad = _context.TipoServicios.FirstOrDefault(p => p.id_tipo_servicio == id);
 
             if (entidad == null)
             {
                 return false;
             }
 
-            _context.tipo_servicios.Remove(entidad);
+            _context.TipoServicios.Remove(entidad);
             _context.SaveChanges();
             return true;
 

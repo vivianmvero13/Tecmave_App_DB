@@ -22,17 +22,17 @@ namespace Tecmave.Api.Services
         //funcion de obtener agendamientos
         public List<AgendamientoModel> GetAgendamientoModel()
         { 
-                return _context.Agendamiento.ToList(); 
+                return _context.Agendamientos.ToList(); 
         }
 
 
         public AgendamientoModel GetById(int id) {
-            return _context.Agendamiento.FirstOrDefault(p=> p.id_agendamiento== id);
+            return _context.Agendamientos.FirstOrDefault(p=> p.id_agendamiento== id);
         }
 
         public AgendamientoModel AddAgendamiento(AgendamientoModel AgendamientoModel)
         {
-            _context.Agendamiento.Add(AgendamientoModel);
+            _context.Agendamientos.Add(AgendamientoModel);
             _context.SaveChanges();
             return AgendamientoModel;
         }
@@ -40,7 +40,7 @@ namespace Tecmave.Api.Services
 
         public bool UpdateAgendamiento(AgendamientoModel AgendamientoModel)
         {
-            var entidad =  _context.Agendamiento.FirstOrDefault(p => p.id_agendamiento== AgendamientoModel.id_agendamiento);
+            var entidad =  _context.Agendamientos.FirstOrDefault(p => p.id_agendamiento== AgendamientoModel.id_agendamiento);
 
             if (entidad == null) {
                 return false;
@@ -55,14 +55,14 @@ namespace Tecmave.Api.Services
 
         public bool DeleteAgendamiento(int id)
         {
-            var entidad = _context.Agendamiento.FirstOrDefault(p => p.id_agendamiento== id);
+            var entidad = _context.Agendamientos.FirstOrDefault(p => p.id_agendamiento== id);
 
             if (entidad == null)
             {
                 return false;
             }
 
-            _context.Agendamiento.Remove(entidad);
+            _context.Agendamientos.Remove(entidad);
             _context.SaveChanges();
             return true;
 

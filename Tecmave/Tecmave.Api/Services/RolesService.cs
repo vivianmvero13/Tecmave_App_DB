@@ -1,76 +1,64 @@
-﻿using Tecmave.Api.Data;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Tecmave.Api.Models;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Tecmave.Api.Services
 {
     public class RolesService
     {
+        private readonly RoleManager<RolesModel> _roleManager;
 
-        private readonly AppDbContext _context;
-
-        public RolesService(AppDbContext context)
+        public RolesService(RoleManager<RolesModel> roleManager)
         {
-            _context = context;
+            _roleManager = roleManager;
         }
 
-        //Aca necesitamos el modelo de datos para el almacenamiento temporal
-        private readonly List<RolesModel> _canton = new List<RolesModel>();
-        private int _nextId = 1;
+        public Task<List<RolesModel>> GetAllAsync() =>
+            _roleManager.Roles.AsNoTracking().ToListAsync();
 
+        public Task<RolesModel?> GetByIdAsync(int id) =>
+            _roleManager.FindByIdAsync(id.ToString());
 
-        //funcion de obtener cantons
-        public List<RolesModel> GetRolesModel()
-        { 
-                return _context.aspnetroles.ToList(); 
-        }
-
-
-        public RolesModel GetById(int id) {
-            return _context.aspnetroles.FirstOrDefault(p=> p.Id == id);
-        }
-
-        public RolesModel AddRoles(RolesModel RolesModel)
+        public async Task<IdentityResult> CreateAsync(string name, string? descripcion = null)
         {
-            _context.aspnetroles.Add(RolesModel);
-            _context.SaveChanges();
-            return RolesModel;
-        }
+            if (await _roleManager.RoleExistsAsync(name))
+                return IdentityResult.Failed(new IdentityError { Description = "El rol ya existe." });
 
-
-        public bool UpdateRoles(RolesModel RolesModel)
-        {
-            var entidad =  _context.aspnetroles.FirstOrDefault(p => p.Id == RolesModel.Id);
-
-            if (entidad == null) {
-                return false;
-            }
-
-            entidad.Name = RolesModel.Name;
-
-
-            _context.SaveChanges();
-
-            return true;
-
-        }
-
-
-        public bool DeleteRoles(int id)
-        {
-            var entidad = _context.aspnetroles.FirstOrDefault(p => p.Id == id);
-
-            if (entidad == null)
+            var role = new RolesModel
             {
-                return false;
-            }
-
-            _context.aspnetroles.Remove(entidad);
-            _context.SaveChanges();
-            return true;
-
+                Name = name,
+                NormalizedName = name.ToUpperInvariant(),
+                Descripcion = descripcion
+            };
+            return await _roleManager.CreateAsync(role);
         }
 
+        public async Task<IdentityResult> UpdateAsync(int id, string? name = null, string? descripcion = null)
+        {
+            var role = await _roleManager.FindByIdAsync(id.ToString());
+            if (role is null)
+                return IdentityResult.Failed(new IdentityError { Description = "Rol no encontrado." });
 
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                role.Name = name;
+                role.NormalizedName = name.ToUpperInvariant();
+            }
+            if (descripcion != null)
+                role.Descripcion = descripcion;
+
+            return await _roleManager.UpdateAsync(role);
+        }
+
+        public async Task<IdentityResult> DeleteAsync(int id)
+        {
+            var role = await _roleManager.FindByIdAsync(id.ToString());
+            if (role is null)
+                return IdentityResult.Failed(new IdentityError { Description = "Rol no encontrado." });
+
+            return await _roleManager.DeleteAsync(role);
+        }
     }
 }

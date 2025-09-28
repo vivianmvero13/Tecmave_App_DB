@@ -1,6 +1,8 @@
-using Tecmave.Api.Data;
-using Tecmave.Api.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Tecmave.Api.Data;
+using Tecmave.Api.Models;
+using Tecmave.Api.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,7 +24,11 @@ builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<RevisionService>();
 builder.Services.AddScoped<EstadosService>();
 builder.Services.AddScoped<RolesService>();
-builder.Services.AddScoped<UsuarioService>();
+builder.Services.AddScoped<MarcasService>();
+builder.Services.AddScoped<ModelosService>();
+builder.Services.AddScoped<FacturasService>();
+builder.Services.AddScoped<DetalleFacturaService>();
+
 
 
 
@@ -51,6 +57,13 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
+
+builder.Services
+    .AddIdentity<Usuario, RolesModel>(o => { o.SignIn.RequireConfirmedAccount = false; })
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
