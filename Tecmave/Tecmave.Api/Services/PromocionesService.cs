@@ -22,18 +22,18 @@ namespace Tecmave.Api.Services
         //funcion de obtener cantons
         public List<PromocionesModel> GetPromocionesModel()
         {
-            return _context.Promociones.ToList();
+            return _context.promociones.ToList();
         }
 
 
         public PromocionesModel GetByid_promocion(int id)
         {
-            return _context.Promociones.FirstOrDefault(p => p.id_promocion == id);
+            return _context.promociones.FirstOrDefault(p => p.id_promocion == id);
         }
 
         public PromocionesModel AddPromociones(PromocionesModel PromocionesModel)
         {
-            _context.Promociones.Add(PromocionesModel);
+            _context.promociones.Add(PromocionesModel);
             _context.SaveChanges();
             return PromocionesModel;
         }
@@ -41,7 +41,7 @@ namespace Tecmave.Api.Services
 
         public bool UpdatePromociones(PromocionesModel PromocionesModel)
         {
-            var entidad = _context.Promociones.FirstOrDefault(p => p.id_promocion == PromocionesModel.id_promocion);
+            var entidad = _context.promociones.FirstOrDefault(p => p.id_promocion == PromocionesModel.id_promocion);
 
             if (entidad == null)
             {
@@ -60,14 +60,14 @@ namespace Tecmave.Api.Services
 
         public bool DeletePromociones(int id)
         {
-            var entidad = _context.Promociones.FirstOrDefault(p => p.id_promocion == id);
+            var entidad = _context.promociones.FirstOrDefault(p => p.id_promocion == id);
 
             if (entidad == null)
             {
                 return false;
             }
 
-            _context.Promociones.Remove(entidad);
+            _context.promociones.Remove(entidad);
             _context.SaveChanges();
             return true;
 

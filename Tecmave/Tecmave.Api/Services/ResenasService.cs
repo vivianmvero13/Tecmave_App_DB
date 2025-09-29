@@ -22,18 +22,18 @@ namespace Tecmave.Api.Services
         //funcion de obtener cantons
         public List<ResenasModel> GetResenasModel()
         {
-            return _context.Resenas.ToList();
+            return _context.resenas.ToList();
         }
 
 
         public ResenasModel GetByid_resena(int id)
         {
-            return _context.Resenas.FirstOrDefault(p => p.id_resena == id);
+            return _context.resenas.FirstOrDefault(p => p.id_resena == id);
         }
 
         public ResenasModel AddResenas(ResenasModel ResenasModel)
         {
-            _context.Resenas.Add(ResenasModel);
+            _context.resenas.Add(ResenasModel);
             _context.SaveChanges();
             return ResenasModel;
         }
@@ -41,7 +41,7 @@ namespace Tecmave.Api.Services
 
         public bool UpdateResenas(ResenasModel ResenasModel)
         {
-            var entidad = _context.Resenas.FirstOrDefault(p => p.id_resena == ResenasModel.id_resena);
+            var entidad = _context.resenas.FirstOrDefault(p => p.id_resena == ResenasModel.id_resena);
 
             if (entidad == null)
             {
@@ -60,14 +60,14 @@ namespace Tecmave.Api.Services
 
         public bool DeleteResenas(int id)
         {
-            var entidad = _context.Resenas.FirstOrDefault(p => p.id_resena == id);
+            var entidad = _context.resenas.FirstOrDefault(p => p.id_resena == id);
 
             if (entidad == null)
             {
                 return false;
             }
 
-            _context.Resenas.Remove(entidad);
+            _context.resenas.Remove(entidad);
             _context.SaveChanges();
             return true;
 

@@ -22,17 +22,17 @@ namespace Tecmave.Api.Services
         //funcion de obtener cantons
         public List<RevisionModel> GetRevisionModel()
         { 
-                return _context.Revisiones.ToList(); 
+                return _context.revision.ToList(); 
         }
 
 
         public RevisionModel GetById(int id) {
-            return _context.Revisiones.FirstOrDefault(p=> p.id_servicio == id);
+            return _context.revision.FirstOrDefault(p=> p.id_servicio == id);
         }
 
         public RevisionModel AddRevision(RevisionModel RevisionModel)
         {
-            _context.Revisiones.Add(RevisionModel);
+            _context.revision.Add(RevisionModel);
             _context.SaveChanges();
             return RevisionModel;
         }
@@ -40,7 +40,7 @@ namespace Tecmave.Api.Services
 
         public bool UpdateRevision(RevisionModel RevisionModel)
         {
-            var entidad =  _context.Revisiones.FirstOrDefault(p => p.id_servicio == RevisionModel.id_servicio);
+            var entidad =  _context.revision.FirstOrDefault(p => p.id_servicio == RevisionModel.id_servicio);
 
             if (entidad == null) {
                 return false;
@@ -55,14 +55,14 @@ namespace Tecmave.Api.Services
 
         public bool DeleteRevision(int id)
         {
-            var entidad = _context.Revisiones.FirstOrDefault(p => p.id_servicio == id);
+            var entidad = _context.revision.FirstOrDefault(p => p.id_servicio == id);
 
             if (entidad == null)
             {
                 return false;
             }
 
-            _context.Revisiones.Remove(entidad);
+            _context.revision.Remove(entidad);
             _context.SaveChanges();
             return true;
 

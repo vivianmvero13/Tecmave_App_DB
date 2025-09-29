@@ -22,18 +22,18 @@ namespace Tecmave.Api.Services
         //funcion de obtener cantons
         public List<NotificacionesModel> GetNotificacionesModel()
         {
-            return _context.Notificaciones.ToList();
+            return _context.notificaciones.ToList();
         }
 
 
         public NotificacionesModel GetByid_notificacion(int id)
         {
-            return _context.Notificaciones.FirstOrDefault(p => p.id_notificaciones == id);
+            return _context.notificaciones.FirstOrDefault(p => p.id_notificaciones == id);
         }
 
         public NotificacionesModel AddNotificaciones(NotificacionesModel NotificacionesModel)
         {
-            _context.Notificaciones.Add(NotificacionesModel);
+            _context.notificaciones.Add(NotificacionesModel);
             _context.SaveChanges();
             return NotificacionesModel;
         }
@@ -41,7 +41,7 @@ namespace Tecmave.Api.Services
 
         public bool UpdateNotificaciones(NotificacionesModel NotificacionesModel)
         {
-            var entidad = _context.Notificaciones.FirstOrDefault(p => p.id_notificaciones == NotificacionesModel.id_notificaciones);
+            var entidad = _context.notificaciones.FirstOrDefault(p => p.id_notificaciones == NotificacionesModel.id_notificaciones);
 
             if (entidad == null)
             {
@@ -60,14 +60,14 @@ namespace Tecmave.Api.Services
 
         public bool DeleteNotificaciones(int id)
         {
-            var entidad = _context.Notificaciones.FirstOrDefault(p => p.id_notificaciones == id);
+            var entidad = _context.notificaciones.FirstOrDefault(p => p.id_notificaciones == id);
 
             if (entidad == null)
             {
                 return false;
             }
 
-            _context.Notificaciones.Remove(entidad);
+            _context.notificaciones.Remove(entidad);
             _context.SaveChanges();
             return true;
 

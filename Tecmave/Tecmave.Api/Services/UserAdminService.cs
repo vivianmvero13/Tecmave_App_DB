@@ -7,9 +7,9 @@ namespace Tecmave.Api.Services
     public class UserAdminService
     {
         private readonly UserManager<Usuario> _userManager;
-        private readonly RoleManager<RolesModel> _roleManager;
+        private readonly RoleManager<IdentityRole<int>> _roleManager;
 
-        public UserAdminService(UserManager<Usuario> um, RoleManager<RolesModel> rm)
+        public UserAdminService(UserManager<Usuario> um, RoleManager<IdentityRole<int>> rm)
         {
             _userManager = um; _roleManager = rm;
         }
@@ -57,7 +57,7 @@ namespace Tecmave.Api.Services
         public async Task EnsureRoleAsync(string roleName)
         {
             if (!await _roleManager.RoleExistsAsync(roleName))
-                await _roleManager.CreateAsync(new RolesModel { Name = roleName, NormalizedName = roleName.ToUpperInvariant() });
+                await _roleManager.CreateAsync(new IdentityRole<int> { Name = roleName, NormalizedName = roleName.ToUpperInvariant() });
         }
 
         public async Task<IdentityResult> AddToRoleAsync(int id, string roleName)

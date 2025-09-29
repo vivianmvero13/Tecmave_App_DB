@@ -22,18 +22,18 @@ namespace Tecmave.Api.Services
         //funcion de obtener cantons
         public List<VehiculosModel> GetVehiculosModel()
         {
-            return _context.Vehiculos.ToList();
+            return _context.vehiculos.ToList();
         }
 
 
         public VehiculosModel GetByid_vehiculo(int id)
         {
-            return _context.Vehiculos.FirstOrDefault(p => p.id_vehiculo == id);
+            return _context.vehiculos.FirstOrDefault(p => p.id_vehiculo == id);
         }
 
         public VehiculosModel AddVehiculos(VehiculosModel VehiculosModel)
         {
-            _context.Vehiculos.Add(VehiculosModel);
+            _context.vehiculos.Add(VehiculosModel);
             _context.SaveChanges();
             return VehiculosModel;
         }
@@ -41,7 +41,7 @@ namespace Tecmave.Api.Services
 
         public bool UpdateVehiculos(VehiculosModel VehiculosModel)
         {
-            var entidad = _context.Vehiculos.FirstOrDefault(p => p.id_vehiculo == VehiculosModel.id_vehiculo);
+            var entidad = _context.vehiculos.FirstOrDefault(p => p.id_vehiculo == VehiculosModel.id_vehiculo);
 
             if (entidad == null)
             {
@@ -60,14 +60,14 @@ namespace Tecmave.Api.Services
 
         public bool DeleteVehiculos(int id)
         {
-            var entidad = _context.Vehiculos.FirstOrDefault(p => p.id_vehiculo == id);
+            var entidad = _context.vehiculos.FirstOrDefault(p => p.id_vehiculo == id);
 
             if (entidad == null)
             {
                 return false;
             }
 
-            _context.Vehiculos.Remove(entidad);
+            _context.vehiculos.Remove(entidad);
             _context.SaveChanges();
             return true;
 

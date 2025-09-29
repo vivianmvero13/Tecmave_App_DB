@@ -22,18 +22,18 @@ namespace Tecmave.Api.Services
         //funcion de obtener cantons
         public List<MarcasModel> GetMarcasModel()
         {
-            return _context.Marcas.ToList();
+            return _context.marca.ToList();
         }
 
 
         public MarcasModel GetByid_marca(int id)
         {
-            return _context.Marcas.FirstOrDefault(p => p.id_marca == id);
+            return _context.marca.FirstOrDefault(p => p.id_marca == id);
         }
 
         public MarcasModel AddMarcas(MarcasModel MarcasModel)
         {
-            _context.Marcas.Add(MarcasModel);
+            _context.marca.Add(MarcasModel);
             _context.SaveChanges();
             return MarcasModel;
         }
@@ -41,7 +41,7 @@ namespace Tecmave.Api.Services
 
         public bool UpdateMarcas(MarcasModel MarcasModel)
         {
-            var entidad = _context.Marcas.FirstOrDefault(p => p.id_marca == MarcasModel.id_marca);
+            var entidad = _context.marca.FirstOrDefault(p => p.id_marca == MarcasModel.id_marca);
 
             if (entidad == null)
             {
@@ -60,14 +60,14 @@ namespace Tecmave.Api.Services
 
         public bool DeleteMarcas(int id)
         {
-            var entidad = _context.Marcas.FirstOrDefault(p => p.id_marca == id);
+            var entidad = _context.marca.FirstOrDefault(p => p.id_marca == id);
 
             if (entidad == null)
             {
                 return false;
             }
 
-            _context.Marcas.Remove(entidad);
+            _context.marca.Remove(entidad);
             _context.SaveChanges();
             return true;
 

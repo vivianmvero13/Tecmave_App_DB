@@ -22,18 +22,18 @@ namespace Tecmave.Api.Services
         //funcion de obtener cantons
         public List<ColaboradoresModel> GetColaboradoresModel()
         {
-            return _context.Colaboradores.ToList();
+            return _context.colaboradores.ToList();
         }
 
 
         public ColaboradoresModel GetByid_colaborador(int id)
         {
-            return _context.Colaboradores.FirstOrDefault(p => p.id_colaborador == id);
+            return _context.colaboradores.FirstOrDefault(p => p.id_colaborador == id);
         }
 
         public ColaboradoresModel AddColaboradores(ColaboradoresModel ColaboradoresModel)
         {
-            _context.Colaboradores.Add(ColaboradoresModel);
+            _context.colaboradores.Add(ColaboradoresModel);
             _context.SaveChanges();
             return ColaboradoresModel;
         }
@@ -41,7 +41,7 @@ namespace Tecmave.Api.Services
 
         public bool UpdateColaboradores(ColaboradoresModel ColaboradoresModel)
         {
-            var entidad = _context.Colaboradores.FirstOrDefault(p => p.id_colaborador == ColaboradoresModel.id_colaborador);
+            var entidad = _context.colaboradores.FirstOrDefault(p => p.id_colaborador == ColaboradoresModel.id_colaborador);
 
             if (entidad == null)
             {
@@ -60,14 +60,14 @@ namespace Tecmave.Api.Services
 
         public bool DeleteColaboradores(int id)
         {
-            var entidad = _context.Colaboradores.FirstOrDefault(p => p.id_colaborador == id);
+            var entidad = _context.colaboradores.FirstOrDefault(p => p.id_colaborador == id);
 
             if (entidad == null)
             {
                 return false;
             }
 
-            _context.Colaboradores.Remove(entidad);
+            _context.colaboradores.Remove(entidad);
             _context.SaveChanges();
             return true;
 

@@ -9,24 +9,21 @@ namespace Tecmave.Api.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-        public DbSet<EstadosModel> Estados { get; set; }
-        public DbSet<TipoServiciosModel> TipoServicios { get; set; }
-        public DbSet<ModelosModel> Modelos { get; set; }
-        public DbSet<MarcasModel> Marcas { get; set; }
-        public DbSet<VehiculosModel> Vehiculos { get; set; }
-        public DbSet<ServiciosModel> Servicios { get; set; }
-        public DbSet<RevisionModel> Revisiones { get; set; }
-        public DbSet<AgendamientoModel> Agendamientos { get; set; }
+        public DbSet<EstadosModel> estados { get; set; }
+        public DbSet<TipoServiciosModel> tipo_servicios { get; set; }
+        public DbSet<ModelosModel> modelo { get; set; }
+        public DbSet<MarcasModel> marca { get; set; }
+        public DbSet<VehiculosModel> vehiculos { get; set; }      
+        public DbSet<ServiciosModel> servicios { get; set; }
+        public DbSet<RevisionModel> revision { get; set; }
+        public DbSet<AgendamientoModel> agendamientos { get; set; }
         public DbSet<FacturasModel> factura { get; set; }
         public DbSet<DetalleFacturaModel> detalle_factura { get; set; }
-        public DbSet<ResenasModel> Resenas { get; set; }
-        public DbSet<NotificacionesModel> Notificaciones { get; set; }
-        public DbSet<PromocionesModel> Promociones { get; set; }
-        public DbSet<ColaboradoresModel> Colaboradores { get; set; }
+        public DbSet<ResenasModel> resenas { get; set; }
+        public DbSet<NotificacionesModel> notificaciones { get; set; }
+        public DbSet<PromocionesModel> promociones { get; set; }
+        public DbSet<ColaboradoresModel> colaboradores { get; set; }
         public DbSet<ServiciosRevisionModel> servicios_revision { get; set; }
-
-
-
 
         protected override void OnModelCreating(ModelBuilder b)
         {
@@ -40,19 +37,21 @@ namespace Tecmave.Api.Data
             b.Entity<IdentityUserClaim<int>>().ToTable("aspnetuserclaims");
             b.Entity<IdentityRoleClaim<int>>().ToTable("aspnetroleclaims");
 
-            b.Entity<EstadosModel>().ToTable("estados");
-            b.Entity<TipoServiciosModel>().ToTable("tipo_servicios");
-            b.Entity<ModelosModel>().ToTable("modelo");
-            b.Entity<MarcasModel>().ToTable("marca");
-            b.Entity<VehiculosModel>().ToTable("vehiculos");
-            b.Entity<ServiciosModel>().ToTable("servicios");
-            b.Entity<RevisionModel>().ToTable("revision");
-            b.Entity<AgendamientoModel>().ToTable("agendamiento");
-            b.Entity<FacturasModel>().ToTable("factura");
-            b.Entity<FacturasModel>().ToTable("notificaciones");
-            b.Entity<DetalleFacturaModel>().ToTable("DetalleFactura");
-            b.Entity<PromocionesModel>().ToTable("promociones");
-
+            b.Entity<EstadosModel>().ToTable("estados").HasKey(x => x.id_estado);
+            b.Entity<TipoServiciosModel>().ToTable("tipo_servicios").HasKey(x => x.id_tipo_servicio);
+            b.Entity<ModelosModel>().ToTable("modelo").HasKey(x => x.id_modelo);
+            b.Entity<MarcasModel>().ToTable("marca").HasKey(x => x.id_marca);
+            b.Entity<VehiculosModel>().ToTable("vehiculos").HasKey(x => x.id_vehiculo);
+            b.Entity<ServiciosModel>().ToTable("servicios").HasKey(x => x.id_servicio);
+            b.Entity<RevisionModel>().ToTable("revision").HasKey(x => x.id_revision);
+            b.Entity<AgendamientoModel>().ToTable("agendamiento").HasKey(x => x.id_agendamiento);
+            b.Entity<FacturasModel>().ToTable("factura").HasKey(x => x.id_factura);
+            b.Entity<DetalleFacturaModel>().ToTable("detalle_factura").HasKey(x => x.id_detalle);
+            b.Entity<ResenasModel>().ToTable("resenas").HasKey(x => x.id_resena);
+            b.Entity<NotificacionesModel>().ToTable("notificaciones").HasKey(x => x.id_notificaciones);
+            b.Entity<PromocionesModel>().ToTable("promociones").HasKey(x => x.id_promocion);
+            b.Entity<ColaboradoresModel>().ToTable("colaboradores").HasKey(x => x.id_colaborador);
+            b.Entity<ServiciosRevisionModel>().ToTable("servicios_revision").HasKey(x => x.id_servicio_revision);
         }
     }
 }

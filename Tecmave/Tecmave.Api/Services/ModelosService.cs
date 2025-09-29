@@ -22,17 +22,17 @@ namespace Tecmave.Api.Services
         //funcion de obtener cantons
         public List<ModelosModel> GetModelosModel()
         { 
-                return _context.Modelos.ToList(); 
+                return _context.modelo.ToList(); 
         }
 
 
         public ModelosModel GetByid_modelo(int id) {
-            return _context.Modelos.FirstOrDefault(p=> p.id_modelo == id);
+            return _context.modelo.FirstOrDefault(p=> p.id_modelo == id);
         }
 
         public ModelosModel AddModelos(ModelosModel ModelosModel)
         {
-            _context.Modelos.Add(ModelosModel);
+            _context.modelo.Add(ModelosModel);
             _context.SaveChanges();
             return ModelosModel;
         }
@@ -40,7 +40,7 @@ namespace Tecmave.Api.Services
 
         public bool UpdateModelos(ModelosModel ModelosModel)
         {
-            var entidad =  _context.Modelos.FirstOrDefault(p => p.id_modelo == ModelosModel.id_modelo);
+            var entidad =  _context.modelo.FirstOrDefault(p => p.id_modelo == ModelosModel.id_modelo);
 
             if (entidad == null) {
                 return false;
@@ -58,14 +58,14 @@ namespace Tecmave.Api.Services
 
         public bool DeleteModelos(int id)
         {
-            var entidad = _context.Modelos.FirstOrDefault(p => p.id_modelo == id);
+            var entidad = _context.modelo.FirstOrDefault(p => p.id_modelo == id);
 
             if (entidad == null)
             {
                 return false;
             }
 
-            _context.Modelos.Remove(entidad);
+            _context.modelo.Remove(entidad);
             _context.SaveChanges();
             return true;
 
