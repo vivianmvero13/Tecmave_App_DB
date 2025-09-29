@@ -9,32 +9,32 @@ namespace Tecmave.Api.Controllers
     [Route("[controller]")]
     public class AgendamientoController : Controller
     {
-        private readonly AgendamientoService _cantonService;
+        private readonly AgendamientoService _agendamientoService;
 
-        public AgendamientoController(AgendamientoService cantonService)
+        public AgendamientoController(AgendamientoService agendamientoService)
         {
-            _cantonService = cantonService;
+            _agendamientoService = agendamientoService;
         }
 
         //Apis GET, POST, PUT   y DELETE
         [HttpGet]
         public ActionResult<IEnumerable<AgendamientoModel>> GetAgendamientoModel()
         {
-            return _cantonService.GetAgendamientoModel();
+            return _agendamientoService.GetAgendamientoModel();
         }
 
         [HttpGet("{id}")]
         public ActionResult<AgendamientoModel> GetById(int id)
         {
-            return _cantonService.GetById(id);
+            return _agendamientoService.GetById(id);
         }
 
         //Apis POST
         [HttpPost]
-        public ActionResult<AgendamientoModel> AddAgendamiento(AgendamientoModel cantonModel)
+        public ActionResult<AgendamientoModel> AddAgendamiento(AgendamientoModel agendamientoModel)
         {
 
-            var newAgendamientoModel = _cantonService.AddAgendamiento(cantonModel);
+            var newAgendamientoModel = _agendamientoService.AddAgendamiento(agendamientoModel);
 
             return
                 CreatedAtAction(
@@ -48,15 +48,15 @@ namespace Tecmave.Api.Controllers
 
         //APIS PUT
         [HttpPut]
-        public IActionResult UpdateAgendamiento(AgendamientoModel cantonModel)
+        public IActionResult UpdateAgendamiento(AgendamientoModel agendamientoModel)
         {
 
-            if (!_cantonService.UpdateAgendamiento(cantonModel))
+            if (!_agendamientoService.UpdateAgendamiento(agendamientoModel))
             {
                 return NotFound(
                         new
                         {
-                            elmsneaje = "El canton no fue encontrado"
+                            elmsneaje = "El agendamiento no fue encontrado"
                         }
                     );
             }
@@ -70,12 +70,12 @@ namespace Tecmave.Api.Controllers
         public IActionResult DeleteAgendamientoModel(int id)
         {
 
-            if (!_cantonService.DeleteAgendamiento(id))
+            if (!_agendamientoService.DeleteAgendamiento(id))
             {
                 return NotFound(
                         new
                         {
-                            elmsneaje = "El canton no fue encontrado"
+                            elmsneaje = "El agendamiento no fue encontrado"
                         }
                     );
             }
