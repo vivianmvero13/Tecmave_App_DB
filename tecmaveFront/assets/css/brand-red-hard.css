@@ -1,0 +1,181 @@
+/* ===== TECMAVE BRAND HARD OVERRIDES (red/black/white) ===== */
+:root{
+  --bg:#0b0c0f !important; --panel:#101217 !important; --panel-2:#131723 !important;
+  --text:#f5f7fb !important; --muted:#c9cfdb !important;
+  --primary:#dc2626 !important; --primary-2:#b91c1c !important;
+  --success:#22c55e !important; --warn:#f59e0b !important; --danger:#ef4444 !important;
+  --ring:0 0 0 4px rgba(220,38,38,.28) !important;
+}
+/* Kill any old blues */
+a, .link, .nav a:hover, .nav a.active{ color:#fff !important }
+.topbar, .sidebar, .card, .input, input, select, textarea, .search input {
+  background-color: var(--panel) !important; color: var(--text) !important;
+  border-color: rgba(255,255,255,.12) !important;
+}
+.btn, button, .button, input[type=submit], input[type=button], input[type=reset]{
+  display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:10px 16px;cursor:pointer;font-weight:700;
+  border:1px solid rgba(255,255,255,.12) !important;
+  background:linear-gradient(180deg,var(--primary),var(--primary-2)) !important;color:#fff !important;
+  box-shadow:0 10px 24px rgba(220,38,38,.28) !important;
+}
+.btn.secondary, .btn-outline, input[type=reset]{
+  background:transparent !important; color:var(--text) !important; border:1px solid rgba(255,255,255,.24) !important; box-shadow:none !important;
+}
+input:focus, select:focus, textarea:focus{ border-color:var(--primary) !important; box-shadow: var(--ring) !important }
+.badge, .pill{ border-color:rgba(255,255,255,.24) !important; color:var(--muted) !important; background:rgba(255,255,255,.05) !important }
+
+/* Sidebar active */
+.sidebar .nav a.active{ background: linear-gradient(180deg, rgba(220,38,38,.18), rgba(220,38,38,.06)) !important; border:1px solid rgba(220,38,38,.35) !important }
+
+/* Carousel cleanup */
+.carousel, .banner, .slider{ border-radius:18px !important; overflow:hidden !important; border:1px solid rgba(255,255,255,.08) !important }
+.carousel img, .banner img, .slider img{ width:100% !important; height:360px !important; object-fit:cover !important; display:block !important }
+.carousel .controls, .slider .controls, [data-carousel-prev], [data-carousel-next], .carousel-prev, .carousel-next{ display:none !important }
+.carousel::-webkit-scrollbar{ display:none !important }
+.carousel{ -ms-overflow-style:none; scrollbar-width:none }
+
+/* Footer styling */
+#site-footer{ margin-top: 24px !important }
+footer, .footer{ position: static !important; padding: 20px 0 !important; border-top:1px solid rgba(255,255,255,.08) !important }
+
+/* Kill any stray hero/banner images injected above app */
+body > img:first-child{ display:none !important }
+
+/* ===== Footer Theme Integration (Colores oscuros/rojos para coincidir con el tema principal) ===== */
+/* Aplicado globalmente a .footer-v2 para index.html y otras páginas (renderizado por footer-config.js) */
+.footer-v2 {
+  background-color: var(--bg) !important; /* #0b0c0f - Fondo oscuro */
+  color: var(--text) !important; /* #f5f7fb - Texto claro */
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  font-family: 'Inter', sans-serif;
+}
+
+.footer-v2-main {
+  padding: 60px 0 !important;
+  background-color: var(--panel) !important; /* #101217 - Panel oscuro */
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.footer-v2 .footer-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+  gap: 40px !important;
+}
+
+.footer-v2 .footer-col {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.footer-v2 .footer-logo {
+  width: 150px !important;
+  margin-bottom: 15px !important;
+}
+
+.footer-v2 .footer-slogan {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 20px !important;
+  color: var(--text) !important; /* Texto claro */
+}
+
+.footer-v2-socials {
+  display: flex !important;
+  gap: 10px !important;
+}
+
+.footer-v2-socials a {
+  color: var(--muted) !important; /* #c9cfdb - Muted */
+  font-size: 1rem !important;
+  transition: color 0.3s !important;
+}
+
+.footer-v2-socials a:hover {
+  color: var(--primary) !important; /* #dc2626 - Rojo en hover */
+}
+
+.footer-v2 h4 {
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: var(--text) !important; /* Texto claro */
+  margin-bottom: 20px !important;
+  text-transform: uppercase !important;
+}
+
+.footer-v2 .footer-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.footer-v2 .footer-list li {
+  margin-bottom: 10px !important;
+}
+
+.footer-v2 .footer-list a {
+  color: var(--muted) !important; /* #c9cfdb - Muted */
+  text-decoration: none !important;
+  transition: color 0.3s !important;
+}
+
+.footer-v2 .footer-list a:hover {
+  color: var(--primary) !important; /* #dc2626 - Rojo en hover */
+}
+
+.footer-v2 .contact-info li {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.footer-v2 .contact-info i {
+  font-size: 1rem !important;
+  color: var(--text) !important; /* Texto claro para iconos */
+}
+
+.footer-v2 .subscribe-form {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.footer-v2 .subscribe-form input {
+  padding: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important; /* Borde sutil */
+  background-color: var(--panel-2) !important; /* #131723 - Fondo input oscuro */
+  color: var(--text) !important; /* Texto claro */
+  border-radius: 4px !important;
+}
+
+.footer-v2 .subscribe-form button {
+  padding: 12px !important;
+  background: linear-gradient(180deg, var(--primary), var(--primary-2)) !important; /* Rojo primary */
+  color: #fff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+  transition: background-color 0.3s !important;
+}
+
+.footer-v2 .subscribe-form button:hover {
+  background: linear-gradient(180deg, var(--primary-2), #991b1b) !important; /* Rojo más oscuro en hover */
+}
+
+.footer-v2-bottom {
+  background-color: var(--bg) !important; /* #0b0c0f - Fondo oscuro */
+  padding: 20px 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.footer-v2-bottom .container {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  font-size: 0.9rem !important;
+}
+
+.footer-v2-bottom p {
+  color: var(--muted) !important; /* #c9cfdb - Muted para copyright */
+  margin: 0 !important;
+}

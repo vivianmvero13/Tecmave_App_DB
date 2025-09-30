@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inicio | TECMAVE CR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+  <link rel="stylesheet" href="../assets/css/theme-lighten.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/brand-red-hard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Estilos adicionales para ocultar elementos específicos */
+    .hide-admin-options {
+      display: none !important;
+    }
+    
+    /* Estilo específico para ocultar el elemento Carrusel */
+    .hide-carrusel {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><img src="../assets/img/tecmave_logo_innovacion.jpg" alt=""><span>Tecmave</span></div>
+      <div class="subtle">Gestión</div>
+      <nav class="nav">
+        <a href="index.html"><i class="fa-solid fa-gauge-high"></i> Panel</a>
+        <a href="vehiculos.html" class="client-only"><i class="fa-solid fa-car"></i> Vehículos</a>
+        <a href="clientes.html" class="client-only"><i class="fa-solid fa-user-group"></i> Clientes</a>
+        <a href="servicios.html" class="client-only"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
+        <a href="agendamiento.html" class="client-only"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
+        <a href="resenas.html" class="client-only"><i class="fa-solid fa-star"></i> Reseñas</a>
+
+        <!-- Elementos de administración que deben ocultarse -->
+        <a href="colaboradores.html" class="admin-only hide-admin-options"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
+        <a href="facturacion.html" class="admin-only hide-admin-options"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación</a>
+        <a href="estadisticas.html" class="admin-only hide-admin-options"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
+        <a href="administracion.html" class="admin-only hide-admin-options"><i class="fa-solid fa-gear"></i> Administración</a>
+        
+        <!-- Elemento CARRUSEL - ELIMINADO COMPLETAMENTE -->
+        
+        <a href="usuarios.html" class="admin-only hide-admin-options"><i class="fa-solid fa-users"></i> Usuarios</a>
+        <a href="resenas-usuarios.html" class="admin-only hide-admin-options"><i class="fa-solid fa-comments"></i> Reseñas Usuarios</a>
+     
+    </aside>
+
+    <header class="topbar">
+      <button class="iconbtn" data-toggle-sidebar><i class="fa-solid fa-bars"></i></button>
+      <div id="site-header" class="brand2"><img class="logo-xs" src="../assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave" style="width:20px;height:20px;border-radius:6px;margin-right:6px;"><span>Inicio | TECMAVE CR</span></div>
+      <div class="search">
+        <input type="search" placeholder="Buscar clientes, placas, servicios…">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M21 21l-4.3-4.3M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <button class="iconbtn"><i class="fa-regular fa-bell"></i></button>
+      <button class="iconbtn"><i class="fa-regular fa-user"></i> <span id="user-display-name">Admin</span></button>
+    </header>
+
+    <main class="main">
+      <main class="container">
+        <section class="section client-only">
+          <section class="hero-v2">
+            <div class="hero-v2-content">
+              <h1>TECMAVE</h1>
+              <p>Soluciones para la Logística y Mantenimiento de su flota.</p>
+              <div class="hero-v2-buttons">
+                <a href="servicios.html" class="btn btn-primary">Nuestros Servicios</a>
+                <a href="contacto.html" class="btn btn-secondary">Contacto</a>
+              </div>
+            </div>
+          </section>
+          <section class="section client-only">
+            <div class="grid cols-3">
+              <div class="card"><h2>Servicios Profesionales</h2><p>Mantenimiento preventivo y correctivo de la más alta calidad</p></div>
+              <div class="card"><h2>Asistencia 24/7</h2><p>Asistencia en carretera disponible las 24 horas del día</p></div>
+              <div class="card"><h2>Expertos Certificados</h2><p>Técnicos con certificación internacional</p></div>
+            </div>
+          </section>
+          <section class="section client-only">
+            <h2>Promociones Destacadas</h2>
+            <div class="grid cols-3">
+              <div class="card promo-card">
+                <h3>Cambio de Aceite</h3>
+                <p>30% de descuento en cambio de aceite sintético</p>
+                <button class="btn btn-secondary" data-modal="promo-aceite">Ver Promoción</button>
+              </div>
+              <div class="card promo-card">
+                <h3>Alineación</h3>
+                <p>Alineación y balanceo con 20% de descuento</p>
+                <button class="btn btn-secondary" data-modal="promo-alineacion">Ver Promoción</button>
+              </div>
+              <div class="card promo-card">
+                <h3>Revisión Completa</h3>
+                <p>Revisión de 50 puntos gratuita</p>
+                <button class="btn btn-secondary" data-modal="promo-revision">Ver Promoción</button>
+              </div>
+            </div>
+          </section>
+          <div id="promo-aceite" class="modal">
+            <div class="modal-content">
+              <span class="close-button">&times;</span>
+              <h2>Cambio de Aceite</h2>
+              <p>Aprovecha nuestro 30% de descuento en cambio de aceite sintético. Incluye filtro de aceite y revisión de niveles.</p>
+            </div>
+          </div>
+          <div id="promo-alineacion" class="modal">
+            <div class="modal-content">
+              <span class="close-button">&times;</span>
+              <h2>Alineación y Balanceo</h2>
+              <p>Obtén un 20% de descuento en nuestro servicio de alineación y balanceo. Mejora la vida de tus llantas y tu seguridad al conducir.</p>
+            </div>
+          </div>
+          <div id="promo-revision" class="modal">
+            <div class="modal-content">
+              <span class="close-button">&times;</span>
+              <h2>Revisión Completa</h2>
+              <p>Tu seguridad es nuestra prioridad. Te ofrecemos una revisión de 50 puntos completamente gratuita. ¡Agenda tu cita hoy!</p>
+            </div>
+          </div>
+
+          <!-- Admin Dashboard content is injected by role-ui.js -->
+          <!-- Client-specific review section -->
+          <section class="section client-only">
+            <h2>Escribe tu Reseña</h2>
+            <div class="card">
+              <label>Nombre</label>
+              <input class="input" id="client-review-name" placeholder="Tu nombre (opcional)"/>
+              <label>Calificación</label>
+              <select class="input" id="client-review-rating">
+                <option value="5">★★★★★</option>
+                <option value="4">★★★★☆</option>
+                <option value="3">★★★☆☆</option>
+                <option value="2">★★☆☆☆</option>
+                <option value="1">★☆☆☆☆</option>
+              </select>
+              <label>Comentario</label>
+              <textarea class="input" id="client-review-comment" rows="4" placeholder="Comparte tu experiencia..."></textarea>
+              <button onclick="addClientReview()" style="margin-top:.8rem">Enviar Reseña</button>
+            </div>
+          </section>
+
+          <section class="section client-only">
+            <h2>Reseñas Públicas</h2>
+            <div class="grid cols-2" id="client-reviews-list">
+              <!-- Reviews will be loaded here by JavaScript -->
+            </div>
+          </section>
+
+          <script>
+            // Function to add a client review (for index.html client view)
+            function addClientReview() {
+              const name = document.getElementById('client-review-name').value.trim() || 'Anónimo';
+              const rating = document.getElementById('client-review-rating').value;
+              const comment = document.getElementById('client-review-comment').value.trim();
+
+              if (!comment) {
+                alert('Por favor, escribe un comentario para tu reseña.');
+                return;
+              }
+
+              const newReview = { name, rating, comment, date: new Date().toISOString().split('T')[0] };
+              let reviews = JSON.parse(localStorage.getItem('tecmave.reviews') || '[]');
+              reviews.unshift(newReview); // Add to the beginning
+              localStorage.setItem('tecmave.reviews', JSON.stringify(reviews));
+
+              renderClientReviews();
+              document.getElementById('client-review-comment').value = '';
+              toast('¡Gracias por tu reseña!');
+            }
+
+            // Function to render client reviews (for index.html client view)
+            function renderClientReviews() {
+              const reviewsList = document.getElementById('client-reviews-list');
+              if (!reviewsList) return;
+
+              reviewsList.innerHTML = ''; // Clear existing reviews
+              const reviews = JSON.parse(localStorage.getItem('tecmave.reviews') || '[]');
+
+              if (reviews.length === 0) {
+                reviewsList.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">Aún no hay reseñas. ¡Sé el primero en dejar una!</p>';
+                return;
+              }
+
+              reviews.forEach(review => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                  <strong>${review.name}</strong>
+                  <p>${'★'.repeat(parseInt(review.rating))}${'☆'.repeat(5 - parseInt(review.rating))}</p>
+                  <p style="margin-top:.5rem">${review.comment}</p>
+                  <small style="color:var(--muted); margin-top: 10px; display: block;">${review.date}</small>
+                `;
+                reviewsList.appendChild(card);
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+              // Only render client reviews if the user is a client
+              const user = JSON.parse(localStorage.getItem('user') || '{}');
+              if (user.role === 'cliente') {
+                renderClientReviews();
+              }
+              
+              // Asegurarse de que el elemento Carrusel esté completamente oculto
+              const carruselElements = document.querySelectorAll('a[href*="carrusel"], a:contains("Carrusel")');
+              carruselElements.forEach(el => {
+                el.style.display = 'none';
+                el.remove(); // Eliminar completamente del DOM
+              });
+            });
+          </script>
+        </section>
+      </main>
+      <footer class="footer-v2" id="site-footer">
+        <div class="footer-v2-main">
+          <div class="container">
+            <div class="footer-grid">
+              <div class="footer-col">
+                <img src="../assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave Logo" class="footer-logo">
+                <p class="footer-slogan">Simply #1 Real Estate Theme</p>
+                <div class="footer-v2-socials">
+                  <a href="#"><i class="fab fa-facebook-f"></i></a>
+                  <a href="#"><i class="fab fa-twitter"></i></a>
+                  <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                  <a href="#"><i class="fab fa-instagram"></i></a>
+                  <a href="#"><i class="fab fa-pinterest"></i></a>
+                  <a href="#"><i class="fab fa-youtube"></i></a>
+                  <a href="#"><i class="fas fa-rss"></i></a>
+                </div>
+              </div>
+              <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul class="footer-list">
+                  <li><a href="index.html">Home</a></li>
+                  <li><a href="#">List Layout</a></li>
+                  <li><a href="informacion.html">Blog</a></li>
+                  <li><a href="contacto.html">Contact</a></li>
+                </ul>
+              </div>
+              <div class="footer-col">
+                <h4>Contact Us</h4>
+                <ul class="footer-list contact-info">
+                  <li><i class="fas fa-map-marker-alt"></i> <span>3015 Grand Ave, Coconut Grove, Merrick Way, FL 12345</span></li>
+                  <li><i class="fas fa-phone-alt"></i> <span>+123-456-789</span></li>
+                  <li><i class="fas fa-envelope"></i> <span>sales@example.com</span></li>
+                </ul>
+              </div>
+              <div class="footer-col">
+                <h4>Remain Updated</h4>
+                <form class="subscribe-form">
+                  <input type="email" placeholder="Your email address">
+                  <button type="submit">Sign up</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-v2-bottom">
+          <div class="container">
+            <p>© 2025 All rights reserved.</p>
+            <p>Designed by TECMAVE</p>
+          </div>
+        </div>
+      </footer>
+      <script>
+        (function(){
+          if (location.hash && location.hash.startsWith('#user=')) {
+            try {
+              const raw = decodeURIComponent(location.hash.split('=')[1]);
+              const user = JSON.parse(atob(raw));
+              localStorage.setItem('user', JSON.stringify(user));
+              history.replaceState(null, '', location.pathname + location.search);
+            } catch(e){ console.warn('hash user decode failed', e); }
+          }
+
+          const u = (function(){ try{ return JSON.parse(localStorage.getItem('user')||'null'); }catch(e){return null;}})();
+          if (u) {
+            const span = document.getElementById('current-user');
+            const loginLink = document.getElementById('fallback-login-link');
+            const logoutBtn = document.getElementById('logout-btn');
+            if (span) span.textContent = (u.name||u.email||'Usuario') + ' (' + u.role + ')';
+            if (loginLink) loginLink.style.display = 'none';
+            if (logoutBtn) logoutBtn.style.display = 'block';
+          }
+        })();
+      </script>
+      <script>
+        (function(){
+          try {
+            var u = JSON.parse(localStorage.getItem('user')||'null');
+            var adminEls = document.querySelectorAll('.admin-only');
+            var clientEls = document.querySelectorAll('.client-only');
+            if (u) {
+              if (u.role === 'admin') { 
+                clientEls.forEach(el=>el.style.display='none'); 
+                // Ocultar elementos específicos de administración
+                document.querySelectorAll('.hide-admin-options').forEach(el => {
+                  el.style.display = 'none';
+                });
+              }
+              else if (u.role === 'cliente') { 
+                adminEls.forEach(el=>el.style.display='none'); 
+              }
+            } else {
+              adminEls.forEach(el=>el.style.display='none');
+              clientEls.forEach(el=>el.style.display='none');
+            }
+          } catch(e){}
+        })();
+      </script>
+      <script defer src="../assets/js/app.js"></script>
+    </main>
+  </div>
+  <script src="../assets/js/dashboard.js"></script>
+  <script defer src="../assets/js/nav-active.js"></script>
+  <script defer src="../assets/js/role-ui.js"></script>
+  <script defer src="../assets/js/footer-config.js"></script>
+  <script defer src="../assets/js/carousel-polish.js"></script>
+  <script defer src="../assets/js/chatbot.js"></script>
+</body>
+</html>

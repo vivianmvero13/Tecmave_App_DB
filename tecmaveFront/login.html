@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | TECMAVE CR</title>
+  <link href="assets/css/styles.css" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/theme-lighten.css">
+  <link rel="stylesheet" href="assets/css/auth-pro.css">
+  <link rel="stylesheet" href="assets/css/brand-red-hard.css">
+  <style>
+    /* Ajuste para el botón y enlace: Color rojo visible */
+    .login-v2-button {
+      background: #dc2626 !important;
+      color: #fff !important;
+      font-weight: 700 !important;
+    }
+    .login-v2-create-account {
+      display: block !important;
+      margin-top: 12px !important;
+      color: #dc2626 !important; /* Rojo visible */
+      font-weight: 700 !important;
+      text-decoration: none !important;
+      text-align: center !important;
+    }
+    .login-v2-create-account:hover {
+      text-decoration: underline !important;
+      color: #b91c1c !important; /* Rojo más oscuro en hover */
+    }
+
+    /* Estilos para el footer: Colores oscuros para coincidir con el tema de la página */
+    .footer-v2 {
+      background-color: #0b0c0f !important; /* Fondo oscuro (--bg) */
+      color: #f5f7fb !important; /* Texto claro (--text) */
+      border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+    .footer-v2-main {
+      background-color: #101217 !important; /* Panel oscuro (--panel) */
+      border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+    .footer-v2 .footer-col h4 {
+      color: #f5f7fb !important; /* Texto claro */
+    }
+    .footer-v2 .footer-list a {
+      color: #c9cfdb !important; /* Muted (--muted) */
+    }
+    .footer-v2 .footer-list a:hover {
+      color: #dc2626 !important; /* Rojo primary en hover */
+    }
+    .footer-v2 .footer-slogan {
+      color: #f5f7fb !important; /* Texto claro */
+    }
+    .footer-v2-socials a {
+      color: #c9cfdb !important; /* Muted */
+    }
+    .footer-v2-socials a:hover {
+      color: #dc2626 !important; /* Rojo en hover */
+    }
+    .footer-v2 .subscribe-form input {
+      background-color: #131723 !important; /* Panel-2 (--panel-2) */
+      border-color: rgba(255, 255, 255, 0.12) !important;
+      color: #f5f7fb !important;
+    }
+    .footer-v2 .subscribe-form button {
+      background: linear-gradient(180deg, #dc2626, #b91c1c) !important; /* Rojo primary */
+      color: #fff !important;
+    }
+    .footer-v2 .subscribe-form button:hover {
+      background: linear-gradient(180deg, #b91c1c, #991b1b) !important; /* Rojo más oscuro */
+    }
+    .footer-v2-bottom {
+      background-color: #0b0c0f !important; /* Fondo oscuro */
+      border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+      color: #c9cfdb !important; /* Muted para copyright */
+    }
+    .footer-v2-bottom p {
+      color: #c9cfdb !important; /* Muted */
+    }
+  </style>
+</head>
+<body class="login-v2-body">
+    <div class="login-v2-container">
+        <div class="login-v2-left">
+            <div class="login-v2-header">
+                <img src="assets/img/tecmave_logo_innovacion.jpg" alt="Logo" class="login-v2-logo">
+                <h2>Tecmave taller Automotriz</h2>
+            </div>
+            <div class="login-v2-image">
+                <img src="assets/img/tecmave_exterior_2.jpg" alt="Ad Image">
+            </div>
+            <p class="login-v2-footer-text">TUS FUTURUS PRODUCTOS ESTAN AL ALCANCE DE TU MANO.</p>
+        </div>
+        <div class="login-v2-right">
+            <div class="login-v2-form-container">
+                <div class="login-v2-form-header">
+                    <img src="assets/img/tecmave_logo_innovacion.jpg" alt="Happy Hive Logo" class="login-v2-form-logo">
+                    <h1>Login</h1>
+                    <p>SEA BIENVENIDO DE VUELTA AMIGO.</p>
+                </div>
+                <form id="loginForm" class="login-v2-form">
+                    <div class="login-v2-input-group">
+                        <label for="login_email">User  Name</label>
+                        <input id="login_email" type="email" required>
+                    </div>
+                    <div class="login-v2-input-group">
+                        <label for="login_pass">Password</label>
+                        <input id="login_pass" type="password" required>
+                    </div>
+                    <button type="submit" class="login-v2-button">Login</button>
+                    <!-- 🔗 Opción "Crear Cuenta" justo debajo del botón -->
+                    <a href="registro.html" class="login-v2-create-account">¿No tienes cuenta? Crear cuenta</a>
+                </form>
+                <p class="login-v2-demo-text">Demo admin: admin@tecmave.com / Admin1234</p>
+            </div>
+        </div>
+    </div>
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const email = document.getElementById('login_email').value.trim();
+  const pass = document.getElementById('login_pass').value;
+
+  if (email === 'admin@tecmave.com' && pass === 'Admin1234') {
+    const role = 'admin';
+    const userData = { email, role, name: 'Administrador Demo', loggedIn: true };
+    localStorage.setItem('user', JSON.stringify(userData));
+    if (location.protocol === 'file:') {
+      const userStr = encodeURIComponent(btoa(JSON.stringify(userData)));
+      window.location.href = 'public/index.html#user=' + userStr;
+    } else {
+      window.location.href = '/public/index.html';
+    }
+  } else if (email.endsWith('@gmail.com')) {
+    const role = 'cliente';
+    const userData = { email, role, name: email.split('@')[0], loggedIn: true };
+    localStorage.setItem('user', JSON.stringify(userData));
+    if (location.protocol === 'file:') {
+      const userStr = encodeURIComponent(btoa(JSON.stringify(userData)));
+      window.location.href = 'public/index.html#user=' + userStr;
+    } else {
+      window.location.href = '/public/index.html';
+    }
+  } else {
+    alert('Credenciales incorrectas. Admin: @tecmave.com, Cliente: @gmail.com');
+  }
+});
+</script>
+
+<script defer src="assets/js/auth-ui.js"></script>
+<script defer src="assets/js/app.js"></script>
+
+<footer class="footer-v2" id="site-footer">
+    <div class="footer-v2-main">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <img src="assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave Logo" class="footer-logo">
+                    <p class="footer-slogan">Taller de servicio automotriz y asistencia en carretera. Más de 15 años de experiencia en Costa Rica.</p>
+                    <div class="footer-v2-socials">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-pinterest"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#"><i class="fas fa-rss"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Links rapidos</h4>
+                    <ul class="footer-list">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="#">List Layout</a></li>
+                        <li><a href="informacion.html">Blog</a></li>
+                        <li><a href="contacto.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contactenos</h4>
+                    <ul class="footer-list contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> <span>Curridabat, 100 m este de La Galera</span></li>
+                        <li><i class="fas fa-phone-alt"></i> <span>+506 2285-6409</span></li>
+                        <li><i class="fas fa-envelope"></i> <span>info@tecmave.cr</span></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Vuelva otra vez</h4>
+                    <form class="subscribe-form">
+                        <input type="email" placeholder="su correo electronico">
+                        <button type="submit">Inicie sesion</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer-v2-bottom">
+        <div class="container">
+            <p>© 2025 All rights reserved.</p>
+            <p>todos los derechos a TECMAVE CR</p>
+        </div>
+    </div>
+</footer>
+</body>
+</html>
