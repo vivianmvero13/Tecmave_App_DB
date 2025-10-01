@@ -1,0 +1,16 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@using Tecmave.Models
+@inject SignInManager<Usuario> SignInManager;
+
+@if (SignInManager.IsSignedIn(User))
+{
+	
+		<a class="iconbtn" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+			<i class="fas fa-user me-1"></i> @User.Identity.Name
+		</a>
+	<a class="iconbtn" asp-controller="Account" asp-action="Logout"><i class="fas fa-sign-out-alt me-1"></i> Logout</a>
+	
+	
+}
+
+
