@@ -9,12 +9,28 @@ var builder = WebApplication.CreateBuilder(args);
 var conn = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<AppDbContext>(o => o.UseMySql(conn, ServerVersion.AutoDetect(conn)));
 
-builder.Services.AddIdentity<Usuario, IdentityRole<int>>(o =>
+builder.Services.AddIdentity<Usuario, AppRole>(o =>
 {
     o.SignIn.RequireConfirmedAccount = false;
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
+
+builder.Services.AddCors(
+    options =>
+    {
+        options.AddPolicy("PermirFrontend", policy =>
+        {
+            //policy.WithOrigins("https://localhost")
+            policy.AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+
+        }
+    );
+    }
+
+    );
 
 builder.Services.AddScoped<AgendamientoService>();
 builder.Services.AddScoped<TipoServiciosService>();
@@ -51,4 +67,5 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.UseCors("PermirFrontend");
 app.Run();

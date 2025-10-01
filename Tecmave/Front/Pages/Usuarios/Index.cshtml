@@ -1,0 +1,49 @@
+﻿@page
+@model Front.Pages.Usuarios.IndexModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Usuarios Registrados";
+}
+
+<h1>Usuarios Registrados</h1>
+
+<div class="table-responsive mt-4">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Rol</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="userTable"></tbody>
+    </table>
+</div>
+
+<script src="~/lib/jquery/jquery.min.js"></script>
+<script>
+    const USERS_URL = 'https://localhost:7096/api/usuarios';
+
+    $(function () {
+      $.getJSON(USERS_URL, function (users) {
+        const $tbody = $('#userTable').empty();
+        users.forEach(u => {
+          const tr = `
+            <tr>
+              <td>${u.userName ?? ''}</td>
+              <td>${u.email ?? ''}</td>
+              <td>${u.PhoneNumber ?? ''}</td>
+              <td>${(u.roles && u.roles[0]) ? u.roles[0] : ''}</td>
+              <td>
+                 <a class="btn btn-primary" href="/Usuarios/Editar/${u.id}">Editar</a>
+               </td>
+            </tr>`;
+          $tbody.append(tr);
+        });
+      }).fail(err => {
+        console.error('Error cargando usuarios', err);
+      });
+    });
+</script>

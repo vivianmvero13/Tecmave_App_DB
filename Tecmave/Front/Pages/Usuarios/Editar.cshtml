@@ -1,0 +1,120 @@
+﻿@page "{id:int}"
+@model Front.Pages.Usuarios.EditarModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Editar usuario";
+}
+
+<h1 class="mb-4">Editar usuario</h1>
+
+<div class="card p-4">
+    <form id="frmUser">
+        <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px;">
+            <div>
+                <label class="form-label">Usuario</label>
+                <input id="UserName" class="form-control" />
+            </div>
+            <div>
+                <label class="form-label">Email</label>
+                <input id="Email" type="email" class="form-control" />
+            </div>
+            <div>
+                <label class="form-label">Teléfono</label>
+                <input id="PhoneNumber" class="form-control" />
+            </div>
+            <div>
+                <label class="form-label">Rol</label>
+                <select id="RoleSelect" class="form-select">
+                    <option value="">— Sin rol —</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button id="btnSave" type="submit" class="btn btn-primary">Guardar</button>
+            <a class="btn btn-secondary" asp-page="/Usuarios/Index">Volver</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery/jquery.min.js"></script>
+    <script>
+        const API = '@Model.ApiBase';
+        const USER_ID = @Model.Id;
+
+        let currentRole = null;
+
+        $(function () {
+          loadUser();
+          loadRoles();
+          $('#frmUser').on('submit', onSave);
+        });
+
+        function loadUser() {
+          $.getJSON(`${API}/api/usuarios/${USER_ID}`, function (u) {
+            $('#UserName').val(u.userName ?? '');
+            $('#Email').val(u.email ?? '');
+            $('#PhoneNumber').val(u.phoneNumber ?? '');
+          });
+
+          $.getJSON(`${API}/api/usuarios/${USER_ID}/roles`, function (roles) {
+            currentRole = (roles && roles.length) ? roles[0] : null;
+            if (currentRole) $('#RoleSelect').val(currentRole);
+          });
+        }
+
+        function loadRoles() {
+          $.getJSON(`${API}/api/roles`, function (roles) {
+            const $sel = $('#RoleSelect').empty().append('<option value="">— Sin rol —</option>');
+            roles.forEach(r => {
+              const val = r.name ?? r.normalizedName ?? r.Name ?? r.NormalizedName;
+              if (val) $sel.append(`<option value="${val}">${val}</option>`);
+            });
+            if (currentRole) $sel.val(currentRole);
+          });
+        }
+
+        async function onSave(e) {
+          e.preventDefault();
+          $('#btnSave').prop('disabled', true);
+
+          const payload = {
+            userName: $('#UserName').val(),
+            email: $('#Email').val(),
+            phoneNumber: $('#PhoneNumber').val()
+          };
+
+          try {
+            // Actualizar usuario (PUT con /{id})
+            await $.ajax({
+              url: `${API}/api/usuarios/${USER_ID}`,
+              method: 'PUT',
+              contentType: 'application/json',
+              data: JSON.stringify(payload)
+            });
+
+            const selectedRole = $('#RoleSelect').val() || null;
+
+            // Remover rol si cambió
+            if (currentRole && currentRole !== selectedRole) {
+              await fetch(`${API}/api/usuarios/${USER_ID}/roles/remove/${currentRole}`, { method: 'POST' });
+            }
+
+            // Asignar rol si es nuevo
+            if (selectedRole && selectedRole !== currentRole) {
+              await fetch(`${API}/api/usuarios/${USER_ID}/roles/add/${selectedRole}`, { method: 'POST' });
+            }
+
+            // Redirigir al Index
+            window.location.href = '/Usuarios/Index';
+
+          } catch (err) {
+            console.error(err);
+            alert('No se pudo guardar el usuario.');
+          } finally {
+            $('#btnSave').prop('disabled', false);
+          }
+        }
+    </script>
+}

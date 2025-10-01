@@ -1,4 +1,8 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/kaled
 /* DASHBOARD SHELL */
 :root{
   --bg:#0a0f1c; --panel:#0f1626; --panel-2:#111a2b; --text:#e6ebf5; --muted:#9aa6be;
@@ -133,6 +137,7 @@ footer,.footer{position:static!important;background:linear-gradient(180deg, rgba
 .admin-dashboard-chart-container canvas {
   flex-grow: 1;
 }
+<<<<<<< HEAD
 =======
 ﻿* DASHBOARD SHELL */
 :root {
@@ -543,4 +548,7 @@ footer, .footer {
     .admin-dashboard-chart-container canvas {
         flex-grow: 1;
     }
+>>>>>>> origin/kaled
+=======
+
 >>>>>>> origin/kaled
