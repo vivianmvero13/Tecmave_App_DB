@@ -1,6 +1,5 @@
 ﻿using Tecmave.Api.Data;
 using Tecmave.Api.Models;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Tecmave.Api.Services
 {
@@ -21,13 +20,14 @@ namespace Tecmave.Api.Services
 
         //funcion de obtener cantons
         public List<RevisionModel> GetRevisionModel()
-        { 
-                return _context.revision.ToList(); 
+        {
+            return _context.revision.ToList();
         }
 
 
-        public RevisionModel GetById(int id) {
-            return _context.revision.FirstOrDefault(p=> p.id_servicio == id);
+        public RevisionModel GetById(int id)
+        {
+            return _context.revision.FirstOrDefault(p => p.id_servicio == id);
         }
 
         public RevisionModel AddRevision(RevisionModel RevisionModel)
@@ -40,9 +40,10 @@ namespace Tecmave.Api.Services
 
         public bool UpdateRevision(RevisionModel RevisionModel)
         {
-            var entidad =  _context.revision.FirstOrDefault(p => p.id_servicio == RevisionModel.id_servicio);
+            var entidad = _context.revision.FirstOrDefault(p => p.id_servicio == RevisionModel.id_servicio);
 
-            if (entidad == null) {
+            if (entidad == null)
+            {
                 return false;
             }
 

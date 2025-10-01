@@ -5,7 +5,9 @@ using Tecmave.Api.Models;
 
 namespace Tecmave.Api.Data
 {
-    public class AppDbContext : IdentityDbContext<Usuario, IdentityRole<int>, int>
+    public class AppDbContext : IdentityDbContext<Usuario, AppRole, int,
+        IdentityUserClaim<int>, IdentityUserRole<int>, IdentityUserLogin<int>,
+        IdentityRoleClaim<int>, IdentityUserToken<int>>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -13,7 +15,7 @@ namespace Tecmave.Api.Data
         public DbSet<TipoServiciosModel> tipo_servicios { get; set; }
         public DbSet<ModelosModel> modelo { get; set; }
         public DbSet<MarcasModel> marca { get; set; }
-        public DbSet<VehiculosModel> vehiculos { get; set; }      
+        public DbSet<VehiculosModel> vehiculos { get; set; }
         public DbSet<ServiciosModel> servicios { get; set; }
         public DbSet<RevisionModel> revision { get; set; }
         public DbSet<AgendamientoModel> agendamientos { get; set; }
@@ -29,14 +31,23 @@ namespace Tecmave.Api.Data
         {
             base.OnModelCreating(b);
 
+            // Tablas Identity (usa AppRole, no IdentityRole<int>)
             b.Entity<Usuario>().ToTable("aspnetusers");
-            b.Entity<IdentityRole<int>>().ToTable("aspnetroles");
+            b.Entity<AppRole>().ToTable("aspnetroles");
             b.Entity<IdentityUserRole<int>>().ToTable("aspnetuserroles");
             b.Entity<IdentityUserLogin<int>>().ToTable("aspnetuserlogins");
             b.Entity<IdentityUserToken<int>>().ToTable("aspnetusertokens");
             b.Entity<IdentityUserClaim<int>>().ToTable("aspnetuserclaims");
             b.Entity<IdentityRoleClaim<int>>().ToTable("aspnetroleclaims");
 
+            // Config extra para AppRole
+            b.Entity<AppRole>(e =>
+            {
+                e.Property(r => r.Description).HasMaxLength(256);
+                e.Property(r => r.IsActive).HasDefaultValue(true);
+            });
+
+            // Tablas de dominio
             b.Entity<EstadosModel>().ToTable("estados").HasKey(x => x.id_estado);
             b.Entity<TipoServiciosModel>().ToTable("tipo_servicios").HasKey(x => x.id_tipo_servicio);
             b.Entity<ModelosModel>().ToTable("modelo").HasKey(x => x.id_modelo);

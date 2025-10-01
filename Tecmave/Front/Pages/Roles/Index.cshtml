@@ -1,0 +1,48 @@
+﻿@page
+@model Front.Pages.Roles.IndexModel
+@{
+    Layout = "_Layout";
+	ViewData["Title"] = "Roles Registrados";
+}
+
+<h1>Roles Registrados</h1>
+
+<a class="btn btn-primary" asp-area="" asp-page="/Usuarios/Crear">Nuevo registro</a>
+<div class="table-responsive mt-4">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID Rol</th>
+                <th>Rol</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="rolTable"></tbody>
+    </table>
+</div>
+
+<script src="~/lib/jquery/jquery.min.js"></script>
+<script src="~/lib/jquery/jquery.min.js"></script>
+<script>
+    const ROLES_URL = 'https://localhost:7096/api/roles';
+
+    $(function () {
+      $.getJSON(ROLES_URL, function (roles) {
+        const $tbody = $('#rolTable').empty();
+        roles.forEach(r => {
+          const tr = `
+            <tr>
+              <td>${r.id ?? ''}</td>
+              <td>${r.normalizedName ?? ''}</td>
+              <td>
+                                    <a class="btn btn-primary" href="/Usuarios/Editar?id=${u.id}">Editar</a>
+                                    <a class="btn btn-danger" onclick="eliminarUsuario('${u.id}')">Eliminar</a>
+                                </td>
+            </tr>`;
+          $tbody.append(tr);
+        });
+      }).fail(err => {
+        console.error('Error cargando roles', err);
+      });
+    });
+</script>

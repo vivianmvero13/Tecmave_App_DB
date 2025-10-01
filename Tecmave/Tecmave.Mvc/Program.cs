@@ -1,69 +1,32 @@
-
-
-using Tecmave.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-
-using Tecmave.Data;
+using System.Net.Http.Headers;
 using Tecmave.Mvc.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddControllers();
-
-var _connectionStrings = builder.Configuration.GetConnectionString("MySqlConnection");
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseMySql(_connectionStrings, ServerVersion.AutoDetect(_connectionStrings))
-);
-
-builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
+var apiBase = builder.Configuration["Api:BaseUrl"] ?? "https://localhost:7096";
+builder.Services.AddHttpClient<AdminApiClient>(c =>
 {
-    // Configuración de las contraseñas
-    options.Password.RequireDigit = true;
-    options.Password.RequiredLength = 8;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireLowercase = true;
-
-    options.SignIn.RequireConfirmedAccount = false;
-    options.SignIn.RequireConfirmedEmail = false;
-    options.SignIn.RequireConfirmedPhoneNumber = false;
-    // Configuración de bloqueo de cuenta
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-    options.Lockout.MaxFailedAccessAttempts = 5;
-})
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
-
+    c.BaseAddress = new Uri(apiBase);
+    c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+});
 
 var app = builder.Build();
 
-await SeedService.SeedDatabase(app.Services);
-
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
-
-
 app.UseAuthorization();
-
-app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
-
+    pattern: "{controller=Usuarios}/{action=Index}/{id?}");
 
 app.Run();

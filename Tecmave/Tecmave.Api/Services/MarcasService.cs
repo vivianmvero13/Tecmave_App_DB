@@ -1,6 +1,5 @@
 ﻿using Tecmave.Api.Data;
 using Tecmave.Api.Models;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Tecmave.Api.Services
 {

@@ -12,6 +12,6 @@ namespace Tecmave.Api.Models
         public int id_estado { get; set; }
         public DateTime fecha_estimada_entrega { get; set; }
         public DateTime fecha_entrega_final { get; set; }
-         
+
     }
 }
