@@ -1,10 +1,11 @@
 
 
-using AlphatechFront.Models;
+using Tecmave.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
-using Tecmave.Api.Data;
+
+using Tecmave.Data;
+using Tecmave.Mvc.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +16,7 @@ builder.Services.AddControllers();
 
 var _connectionStrings = builder.Configuration.GetConnectionString("MySqlConnection");
 
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(_connectionStrings, ServerVersion.AutoDetect(_connectionStrings))
 );
 
@@ -41,6 +42,8 @@ builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
 
 var app = builder.Build();
 
+await SeedService.SeedDatabase(app.Services);
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -51,6 +54,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
 
 app.UseAuthorization();
 
