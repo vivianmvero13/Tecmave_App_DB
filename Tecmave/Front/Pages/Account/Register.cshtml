@@ -1,0 +1,45 @@
+﻿@page
+@using Front.Pages.Account;
+@model Front.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = "~/Pages/Shared/_AccountLayout.cshtml";
+}
+
+<div class="login-v2-right">
+    <div class="login-v2-form-container">
+        <div class="login-v2-form-header">
+            <img src="/img/tecmave_logo_innovacion.jpg" alt="Happy Hive Logo" class="login-v2-form-logo">
+            <h1>Crear Cuenta</h1>
+            <p>Regístrate para acceder a todos los servicios</p>
+        </div>
+        <form asp-route-returnUrl="@Model.ReturnUrl" method="post" class="login-v2-form">
+          <!-- <div class="login-v2-input-group">
+                <label asp-for="Register.Email">Cedula</label>
+                <input asp-for="Cedula" type="text" required>
+            </div>
+            <div class="login-v2-input-group">
+                <label asp-for="NombreCompleto">Nombre Completo</label>
+                <input asp-for="NombreCompleto" type="text" required>
+              </div>-->
+            <div class="login-v2-input-group">
+                <label asp-for="Register.Email">Correo Electrónico</label>
+                <input asp-for="Register.Email" type="email" required>
+            </div>
+            <div class="login-v2-input-group">
+                <label asp-for="Register.Password">Contraseña</label>
+                <input asp-for="Register.Password" type="password" required minlength="8">
+            </div>
+            <div class="login-v2-input-group">
+                <label asp-for="Register.Password2">Confirmar Contraseña</label>
+                <input asp-for="Register.Password2" type="password" required minlength="8">
+            </div>
+            <button type="submit" value="Register" class="login-v2-button">Crear Cuenta</button>
+            <p>
+                ¿Ya tienes cuenta?
+                <a href="/Account/Login"  class="login-v2-create-account"> Inicia Sesión</a>
+            </p>
+        </form>
+
+    </div>
+</div>

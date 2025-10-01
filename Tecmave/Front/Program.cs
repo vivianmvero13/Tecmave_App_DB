@@ -1,20 +1,37 @@
+using Front.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Tecmave.Front.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
 
-// Autenticación con cookies solo para el front
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(o =>
+
+var cs = builder.Configuration.GetConnectionString("MySqlConnection");
+builder.Services.AddDbContext<MyIdentityDBContext>(opt =>
+    opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
+
+builder.Services.AddIdentity<Usuario, IdentityRole<int>>(
+    options =>
     {
-        o.LoginPath = "/Login";
-        o.LogoutPath = "/Logout";
-        o.ExpireTimeSpan = TimeSpan.FromHours(8);
-        o.SlidingExpiration = true;
-        o.Cookie.HttpOnly = true;
-        o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-    });
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireNonAlphanumeric = true;
+        options.Password.RequiredLength = 8;
+
+        options.SignIn.RequireConfirmedEmail = false;
+
+        options.Lockout.AllowedForNewUsers = true;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+    })
+    .AddDefaultTokenProviders()
+    .AddEntityFrameworkStores<MyIdentityDBContext>()
+    ;
+
+
 
 var app = builder.Build();
 
