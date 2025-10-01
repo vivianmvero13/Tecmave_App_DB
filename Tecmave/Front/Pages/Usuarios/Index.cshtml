@@ -35,15 +35,18 @@
               <td>${u.userName ?? ''}</td>
               <td>${u.email ?? ''}</td>
               <td>${u.PhoneNumber ?? ''}</td>
-              <td>${(u.roles && u.roles[0]) ? u.roles[0] : ''}</td>
-              <td>
+                  <td class="roles">(cargando…)</td>
+                  <td>
                  <a class="btn btn-primary" href="/Usuarios/Editar/${u.id}">Editar</a>
                </td>
-            </tr>`;
-          $tbody.append(tr);
+            </tr>
+          `);
+          $tbody.append($tr);
+
+          // Trae roles de este usuario
+          $.getJSON(`${API_USERS}/${u.id}/roles`, function(roles){
+            $tr.find('.roles').text(roles.length ? roles.join(', ') : '(sin rol)');
+          }).fail(() => $tr.find('.roles').text('(error)'));
         });
-      }).fail(err => {
-        console.error('Error cargando usuarios', err);
-      });
-    });
+      }).fail(err => console.error('Error cargando usuarios', err));
 </script>

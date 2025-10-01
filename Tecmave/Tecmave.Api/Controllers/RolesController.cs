@@ -1,100 +1,124 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using Tecmave.Api.Models;
+using Tecmave.Api.Services;
 
 namespace Tecmave.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/roles")]
     public class RolesController : ControllerBase
     {
-        private readonly RoleManager<IdentityRole<int>> _roles;
-        private readonly UserManager<Usuario> _users;
+        private readonly RolesService _svc;
+        public RolesController(RolesService svc) { _svc = svc; }
 
-        public RolesController(RoleManager<IdentityRole<int>> roles, UserManager<Usuario> users)
-        {
-            _roles = roles;
-            _users = users;
-        }
+        // DTOs
+        public record CreateRoleDto(string Name, string? Description, bool IsActive = true);
+        public record UpdateRoleDto(string? Name, string? Description, bool? IsActive);
+        public record PermissionDto(string Permission);
 
+        // GET /api/roles
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<IdentityRole<int>>>> GetAll()
+        public async Task<ActionResult<IEnumerable<object>>> List()
         {
-            var list = await _roles.Roles.AsNoTracking().ToListAsync();
-            return Ok(list);
+            var roles = await _svc.ListAsync();
+            return Ok(roles.Select(r => new
+            {
+                r.Id,
+                r.Name,
+                r.NormalizedName,
+                r.Description,
+                r.IsActive
+            }));
         }
 
+        // GET /api/roles/5
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<IdentityRole<int>>> GetById(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            var role = await _roles.Roles.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id);
-            if (role == null) return NotFound();
-            return Ok(role);
+            var r = await _svc.FindByIdAsync(id);
+            return r is null ? NotFound() : Ok(new
+            {
+                r.Id,
+                r.Name,
+                r.NormalizedName,
+                r.Description,
+                r.IsActive
+            });
         }
 
-        public record CreateRoleDto(string Name);
+        // POST /api/roles
         [HttpPost]
-        public async Task<ActionResult<IdentityRole<int>>> Create([FromBody] CreateRoleDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateRoleDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Name)) return BadRequest("Name is required.");
-            var exists = await _roles.RoleExistsAsync(dto.Name);
-            if (exists) return Conflict("Role already exists.");
-            var result = await _roles.CreateAsync(new IdentityRole<int>(dto.Name));
-            if (!result.Succeeded) return BadRequest(result.Errors.Select(e => e.Description));
-            var created = await _roles.Roles.AsNoTracking().FirstAsync(r => r.Name == dto.Name);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            var (res, role) = await _svc.CreateAsync(dto.Name, dto.Description, dto.IsActive);
+            return res.Succeeded
+                ? CreatedAtAction(nameof(Get), new { id = role!.Id }, new
+                {
+                    role.Id,
+                    role.Name,
+                    role.NormalizedName,
+                    role.Description,
+                    role.IsActive
+                })
+                : BadRequest(res.Errors);
         }
 
-        public record UpdateRoleDto(string Name);
+        // PUT /api/roles/5
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Rename(int id, [FromBody] UpdateRoleDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateRoleDto dto)
         {
-            var role = await _roles.FindByIdAsync(id.ToString());
-            if (role == null) return NotFound();
-            if (string.IsNullOrWhiteSpace(dto.Name)) return BadRequest("Name is required.");
-            var dup = await _roles.Roles.AnyAsync(r => r.Name == dto.Name && r.Id != id);
-            if (dup) return Conflict("Another role with that name already exists.");
-            var set = await _roles.SetRoleNameAsync(role, dto.Name);
-            if (!set.Succeeded) return BadRequest(set.Errors.Select(e => e.Description));
-            var upd = await _roles.UpdateAsync(role);
-            if (!upd.Succeeded) return BadRequest(upd.Errors.Select(e => e.Description));
-            return NoContent();
+            var res = await _svc.UpdateAsync(id, dto.Name, dto.Description, dto.IsActive);
+            return res.Succeeded ? Ok() : BadRequest(res.Errors);
         }
 
+        // POST /api/roles/5/activate
+        [HttpPost("{id:int}/activate")]
+        public async Task<IActionResult> Activate(int id)
+        {
+            var res = await _svc.SetActiveAsync(id, true);
+            return res.Succeeded ? Ok() : BadRequest(res.Errors);
+        }
+
+        // POST /api/roles/5/deactivate
+        [HttpPost("{id:int}/deactivate")]
+        public async Task<IActionResult> Deactivate(int id)
+        {
+            var res = await _svc.SetActiveAsync(id, false);
+            return res.Succeeded ? Ok() : BadRequest(res.Errors);
+        }
+
+        // DELETE /api/roles/5  (protege si hay usuarios asignados)
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var role = await _roles.FindByIdAsync(id.ToString());
-            if (role == null) return NotFound();
-            var result = await _roles.DeleteAsync(role);
-            if (!result.Succeeded) return BadRequest(result.Errors.Select(e => e.Description));
-            return NoContent();
+            var res = await _svc.DeleteAsync(id);
+            return res.Succeeded ? Ok() : BadRequest(res.Errors);
         }
 
-        [HttpPost("{id:int}/users/{userId:int}")]
-        public async Task<IActionResult> AddUserToRole(int id, int userId)
+        // --- Permisos (role claims) ---
+
+        // GET /api/roles/5/permissions
+        [HttpGet("{id:int}/permissions")]
+        public async Task<IActionResult> GetPermissions(int id)
         {
-            var role = await _roles.FindByIdAsync(id.ToString());
-            if (role == null) return NotFound("Role not found.");
-            var user = await _users.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            if (user == null) return NotFound("User not found.");
-            var result = await _users.AddToRoleAsync(user, role.Name!);
-            if (!result.Succeeded) return BadRequest(result.Errors.Select(e => e.Description));
-            return NoContent();
+            var list = await _svc.GetPermissionsAsync(id);
+            return Ok(list);
         }
 
-        [HttpDelete("{id:int}/users/{userId:int}")]
-        public async Task<IActionResult> RemoveUserFromRole(int id, int userId)
+        // POST /api/roles/5/permissions
+        [HttpPost("{id:int}/permissions")]
+        public async Task<IActionResult> AddPermission(int id, [FromBody] PermissionDto dto)
         {
-            var role = await _roles.FindByIdAsync(id.ToString());
-            if (role == null) return NotFound("Role not found.");
-            var user = await _users.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            if (user == null) return NotFound("User not found.");
-            var result = await _users.RemoveFromRoleAsync(user, role.Name!);
-            if (!result.Succeeded) return BadRequest(result.Errors.Select(e => e.Description));
-            return NoContent();
+            var res = await _svc.AddPermissionAsync(id, dto.Permission);
+            return res.Succeeded ? Ok() : BadRequest(res.Errors);
+        }
+
+        // DELETE /api/roles/5/permissions?permission=xyz
+        [HttpDelete("{id:int}/permissions")]
+        public async Task<IActionResult> RemovePermission(int id, [FromQuery] string permission)
+        {
+            var res = await _svc.RemovePermissionAsync(id, permission);
+            return res.Succeeded ? Ok() : BadRequest(res.Errors);
         }
     }
 }
