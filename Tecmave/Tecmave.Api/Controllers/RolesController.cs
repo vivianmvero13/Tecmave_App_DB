@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Tecmave.Api.Models;
 using Tecmave.Api.Services;
 
 namespace Tecmave.Api.Controllers
@@ -11,14 +10,12 @@ namespace Tecmave.Api.Controllers
         private readonly RolesService _svc;
         public RolesController(RolesService svc) { _svc = svc; }
 
-        // DTOs
         public record CreateRoleDto(string Name, string? Description, bool IsActive = true);
         public record UpdateRoleDto(string? Name, string? Description, bool? IsActive);
         public record PermissionDto(string Permission);
 
-        // GET /api/roles
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<object>>> List()
+        public async Task<IActionResult> List()
         {
             var roles = await _svc.ListAsync();
             return Ok(roles.Select(r => new
@@ -31,7 +28,6 @@ namespace Tecmave.Api.Controllers
             }));
         }
 
-        // GET /api/roles/5
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Get(int id)
         {
@@ -46,24 +42,22 @@ namespace Tecmave.Api.Controllers
             });
         }
 
-        // POST /api/roles
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateRoleDto dto)
         {
             var (res, role) = await _svc.CreateAsync(dto.Name, dto.Description, dto.IsActive);
-            return res.Succeeded
-                ? CreatedAtAction(nameof(Get), new { id = role!.Id }, new
-                {
-                    role.Id,
-                    role.Name,
-                    role.NormalizedName,
-                    role.Description,
-                    role.IsActive
-                })
-                : BadRequest(res.Errors);
+            if (!res.Succeeded) return BadRequest(res.Errors);
+
+            return CreatedAtAction(nameof(Get), new { id = role!.Id }, new
+            {
+                role.Id,
+                role.Name,
+                role.NormalizedName,
+                role.Description,
+                role.IsActive
+            });
         }
 
-        // PUT /api/roles/5
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateRoleDto dto)
         {
@@ -71,7 +65,6 @@ namespace Tecmave.Api.Controllers
             return res.Succeeded ? Ok() : BadRequest(res.Errors);
         }
 
-        // POST /api/roles/5/activate
         [HttpPost("{id:int}/activate")]
         public async Task<IActionResult> Activate(int id)
         {
@@ -79,7 +72,6 @@ namespace Tecmave.Api.Controllers
             return res.Succeeded ? Ok() : BadRequest(res.Errors);
         }
 
-        // POST /api/roles/5/deactivate
         [HttpPost("{id:int}/deactivate")]
         public async Task<IActionResult> Deactivate(int id)
         {
@@ -87,7 +79,6 @@ namespace Tecmave.Api.Controllers
             return res.Succeeded ? Ok() : BadRequest(res.Errors);
         }
 
-        // DELETE /api/roles/5  (protege si hay usuarios asignados)
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -95,9 +86,6 @@ namespace Tecmave.Api.Controllers
             return res.Succeeded ? Ok() : BadRequest(res.Errors);
         }
 
-        // --- Permisos (role claims) ---
-
-        // GET /api/roles/5/permissions
         [HttpGet("{id:int}/permissions")]
         public async Task<IActionResult> GetPermissions(int id)
         {
@@ -105,7 +93,6 @@ namespace Tecmave.Api.Controllers
             return Ok(list);
         }
 
-        // POST /api/roles/5/permissions
         [HttpPost("{id:int}/permissions")]
         public async Task<IActionResult> AddPermission(int id, [FromBody] PermissionDto dto)
         {
@@ -113,7 +100,6 @@ namespace Tecmave.Api.Controllers
             return res.Succeeded ? Ok() : BadRequest(res.Errors);
         }
 
-        // DELETE /api/roles/5/permissions?permission=xyz
         [HttpDelete("{id:int}/permissions")]
         public async Task<IActionResult> RemovePermission(int id, [FromQuery] string permission)
         {

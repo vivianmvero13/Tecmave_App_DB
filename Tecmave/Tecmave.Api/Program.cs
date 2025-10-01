@@ -24,9 +24,18 @@ builder.Services
         o.Password.RequireUppercase = true;
         o.Password.RequireNonAlphanumeric = false;
     })
-    .AddRoles<AppRole>()                    
+    .AddRoles<AppRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermirFrontend",
+        policy => policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
 
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
@@ -43,6 +52,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+
+app.UseCors("PermirFrontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

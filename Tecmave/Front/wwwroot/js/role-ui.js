@@ -174,7 +174,7 @@
     const commonLinks = `
       <a href="index.html"><i class="fa-solid fa-gauge-high"></i> Panel</a>
       <a href="vehiculos.html" class="client-only"><i class="fa-solid fa-car"></i> Vehículos</a>
-      <a href="clientes.html" class="client-only"><i class="fa-solid fa-user-group"></i> Clientes</a>
+      <a href="/Usuarios" class="client-only"><i class="fa-solid fa-user-group"></i> Usuarios</a>
       <a href="servicios.html" class="client-only"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
       <a href="agendamiento.html" class="client-only"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
       <a href="resenas.html" class="client-only"><i class="fa-solid fa-star"></i> Reseñas</a> <!-- New client link -->
