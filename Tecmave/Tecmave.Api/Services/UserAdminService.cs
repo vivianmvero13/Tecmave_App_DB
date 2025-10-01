@@ -7,9 +7,9 @@ namespace Tecmave.Api.Services
     public class UserAdminService
     {
         private readonly UserManager<Usuario> _userManager;
-        private readonly RoleManager<IdentityRole<int>> _roleManager;
+        private readonly RoleManager<AppRole> _roleManager;
 
-        public UserAdminService(UserManager<Usuario> um, RoleManager<IdentityRole<int>> rm)
+        public UserAdminService(UserManager<Usuario> um, RoleManager<AppRole> rm)
         {
             _userManager = um; _roleManager = rm;
         }
@@ -27,37 +27,10 @@ namespace Tecmave.Api.Services
             return (res, res.Succeeded ? user : null);
         }
 
-        public async Task<IdentityResult> UpdateAsync(int id, string? userName = null, string? email = null, string? phone = null)
-        {
-            var user = await _userManager.FindByIdAsync(id.ToString());
-            if (user is null) return IdentityResult.Failed(new IdentityError { Description = "Usuario no encontrado" });
-            if (!string.IsNullOrWhiteSpace(userName)) user.UserName = userName;
-            if (!string.IsNullOrWhiteSpace(email)) user.Email = email;
-            if (!string.IsNullOrWhiteSpace(phone)) user.PhoneNumber = phone;
-            return await _userManager.UpdateAsync(user);
-        }
-
-        public async Task<IdentityResult> DeleteAsync(int id)
-        {
-            var user = await _userManager.FindByIdAsync(id.ToString());
-            if (user is null) return IdentityResult.Failed(new IdentityError { Description = "Usuario no encontrado" });
-            return await _userManager.DeleteAsync(user);
-        }
-
-        public Task<string?> GeneratePasswordResetTokenAsync(int id) =>
-            GetByIdAsync(id).ContinueWith(async t => t.Result is null ? null : await _userManager.GeneratePasswordResetTokenAsync(t.Result)).Unwrap();
-
-        public async Task<IdentityResult> ResetPasswordWithTokenAsync(int id, string token, string newPassword)
-        {
-            var user = await _userManager.FindByIdAsync(id.ToString());
-            if (user is null) return IdentityResult.Failed(new IdentityError { Description = "Usuario no encontrado" });
-            return await _userManager.ResetPasswordAsync(user, token, newPassword);
-        }
-
         public async Task EnsureRoleAsync(string roleName)
         {
             if (!await _roleManager.RoleExistsAsync(roleName))
-                await _roleManager.CreateAsync(new IdentityRole<int> { Name = roleName, NormalizedName = roleName.ToUpperInvariant() });
+                await _roleManager.CreateAsync(new AppRole { Name = roleName, NormalizedName = roleName.ToUpperInvariant(), IsActive = true });
         }
 
         public async Task<IdentityResult> AddToRoleAsync(int id, string roleName)
@@ -80,5 +53,30 @@ namespace Tecmave.Api.Services
             var user = await _userManager.FindByIdAsync(id.ToString());
             return user is null ? new List<string>() : await _userManager.GetRolesAsync(user);
         }
+
+        public async Task<IdentityResult> UpdateAsync(
+    int id, string? userName = null, string? email = null, string? phone = null)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user is null)
+                return IdentityResult.Failed(new IdentityError { Description = "Usuario no encontrado" });
+
+            if (!string.IsNullOrWhiteSpace(userName))
+                user.UserName = userName;
+            if (!string.IsNullOrWhiteSpace(email))
+                user.Email = email;
+            if (!string.IsNullOrWhiteSpace(phone))
+                user.PhoneNumber = phone;
+
+            return await _userManager.UpdateAsync(user);
+        }
+        public async Task<IdentityResult> DeleteAsync(int id)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user is null)
+                return IdentityResult.Failed(new IdentityError { Description = "Usuario no encontrado" });
+            return await _userManager.DeleteAsync(user);
+        }
+
     }
 }

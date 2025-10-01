@@ -1,5 +1,22 @@
+﻿<<<<<<< HEAD
+<<<<<<< HEAD
+
+
+:root{ --bg:#0f172a; --panel:#111b2e; --panel-2:#14203a; --text:#e9eef7; --muted:#a8b3c7; --primary:#0ea5e9; --primary-2:#0284c7; }
+=======
+﻿:root {
+    --bg: #0f172a;
+    --panel: #111b2e;
+    --panel-2: #14203a;
+    --text: #e9eef7;
+    --muted: #a8b3c7;
+    --primary: #0ea5e9;
+    --primary-2: #0284c7;
+}
+>>>>>>> origin/kaled
+=======
 
 
 :root{ --bg:#0f172a; --panel:#111b2e; --panel-2:#14203a; --text:#e9eef7; --muted:#a8b3c7; --primary:#0ea5e9; --primary-2:#0284c7; }
 
-
+>>>>>>> origin/kaled

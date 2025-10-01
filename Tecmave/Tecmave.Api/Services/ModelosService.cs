@@ -1,6 +1,5 @@
 ﻿using Tecmave.Api.Data;
 using Tecmave.Api.Models;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Tecmave.Api.Services
 {
@@ -21,13 +20,14 @@ namespace Tecmave.Api.Services
 
         //funcion de obtener cantons
         public List<ModelosModel> GetModelosModel()
-        { 
-                return _context.modelo.ToList(); 
+        {
+            return _context.modelo.ToList();
         }
 
 
-        public ModelosModel GetByid_modelo(int id) {
-            return _context.modelo.FirstOrDefault(p=> p.id_modelo == id);
+        public ModelosModel GetByid_modelo(int id)
+        {
+            return _context.modelo.FirstOrDefault(p => p.id_modelo == id);
         }
 
         public ModelosModel AddModelos(ModelosModel ModelosModel)
@@ -40,9 +40,10 @@ namespace Tecmave.Api.Services
 
         public bool UpdateModelos(ModelosModel ModelosModel)
         {
-            var entidad =  _context.modelo.FirstOrDefault(p => p.id_modelo == ModelosModel.id_modelo);
+            var entidad = _context.modelo.FirstOrDefault(p => p.id_modelo == ModelosModel.id_modelo);
 
-            if (entidad == null) {
+            if (entidad == null)
+            {
                 return false;
             }
 

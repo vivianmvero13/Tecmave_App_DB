@@ -1,4 +1,8 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/kaled
 /* ===== TECMAVE BRAND HARD OVERRIDES (red/black/white) ===== */
 :root{
   --bg:#0b0c0f !important; --panel:#101217 !important; --panel-2:#131723 !important;
@@ -41,6 +45,7 @@ footer, .footer{ position: static !important; padding: 20px 0 !important; border
 
 /* Kill any stray hero/banner images injected above app */
 body > img:first-child{ display:none !important }
+<<<<<<< HEAD
 =======
 ﻿/* ===== TECMAVE BRAND HARD OVERRIDES (red/black/white) ===== */
 :root {
@@ -147,12 +152,19 @@ footer, .footer {
 body > img:first-child {
     display: none !important
 }
->>>>>>> kaled
+>>>>>>> origin/kaled
+=======
+
+>>>>>>> origin/kaled
 
 /* ===== Footer Theme Integration (Colores oscuros/rojos para coincidir con el tema principal) ===== */
 /* Aplicado globalmente a .footer-v2 para index.html y otras páginas (renderizado por footer-config.js) */
 .footer-v2 {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/kaled
   background-color: var(--bg) !important; /* #0b0c0f - Fondo oscuro */
   color: var(--text) !important; /* #f5f7fb - Texto claro */
   border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -288,6 +300,7 @@ body > img:first-child {
   color: var(--muted) !important; /* #c9cfdb - Muted para copyright */
   margin: 0 !important;
 }
+<<<<<<< HEAD
 =======
     background-color: var(--bg) !important; /* #0b0c0f - Fondo oscuro */
     color: var(--text) !important; /* #f5f7fb - Texto claro */
@@ -424,4 +437,7 @@ body > img:first-child {
         color: var(--muted) !important; /* #c9cfdb - Muted para copyright */
         margin: 0 !important;
     }
->>>>>>> kaled
+>>>>>>> origin/kaled
+=======
+
+>>>>>>> origin/kaled

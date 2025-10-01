@@ -279,4 +279,8 @@ CREATE TABLE colaboradores (
   CONSTRAINT FK_Colab_Usuario FOREIGN KEY (id_usuario) REFERENCES aspnetusers (Id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+ALTER TABLE aspnetroles
+  ADD COLUMN Description varchar(256) NULL AFTER NormalizedName,
+  ADD COLUMN IsActive tinyint(1) NOT NULL DEFAULT 1 AFTER Description;
+
 SET FOREIGN_KEY_CHECKS = 1;

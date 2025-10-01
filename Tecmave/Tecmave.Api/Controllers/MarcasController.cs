@@ -1,7 +1,6 @@
-﻿using Tecmave.Api.Data;
+﻿using Microsoft.AspNetCore.Mvc;
 using Tecmave.Api.Models;
 using Tecmave.Api.Services;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Tecmave.Api.Controllers
 {

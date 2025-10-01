@@ -1,6 +1,14 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+:root {
+=======
+﻿:root {
+>>>>>>> origin/kaled
+=======
+
 :root {
 
+>>>>>>> origin/kaled
     --primary: #e10600;
     --primary-dark: #c10500;
     --secondary: #2c3e50;
@@ -16,7 +24,11 @@
     --transition: all 0.3s ease;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/kaled
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
     font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -189,12 +201,54 @@ main.container { padding-bottom: 3rem; }
 
 .hero {
   background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('../img/tecmave_exterior_1.jpg') center/cover no-repeat !important;
+<<<<<<< HEAD
+=======
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
 }
 
 
 button, .btn {
 
+main.container {
+    padding-bottom: 3rem;
+}
+
+.carousel-container {
+    position: relative;
+}
+
+    .carousel-container .carousel-track {
+        overflow: hidden;
+    }
+
+    .carousel-container img {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        border-radius: var(--radius);
+    }
+
+
+.hero {
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('../img/tecmave_exterior_1.jpg') center/cover no-repeat !important;
+>>>>>>> origin/kaled
+=======
+
+>>>>>>> origin/kaled
+}
+
+
+button, .btn {
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/kaled
   display: inline-block;
   padding: .8rem 1.2rem;
   border-radius: var(--radius);
@@ -216,7 +270,58 @@ button.primary, .btn.btn-primary { background: var(--primary); }
 #seccion-informacion .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 900px) { #seccion-informacion .grid.cols-2 { grid-template-columns: 1fr; } }
 #seccion-informacion .card { height: auto; overflow: hidden; }
+<<<<<<< HEAD
+=======
+    display: inline-block;
+    padding: .8rem 1.2rem;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    background: var(--secondary);
+    color: #fff;
+}
 
+    button:hover, .btn:hover {
+        transform: translateY(-2px);
+    }
+
+
+    button.ghost, .btn.ghost {
+        background: transparent;
+        color: var(--secondary);
+        border: 2px solid var(--secondary);
+    }
+
+    button.primary, .btn.btn-primary {
+        background: var(--primary);
+    }
+
+
+#seccion-informacion {
+    padding-bottom: 5rem;
+}
+
+    #seccion-informacion .grid.cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+@media (max-width: 900px) {
+    #seccion-informacion .grid.cols-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+#seccion-informacion .card {
+    height: auto;
+    overflow: hidden;
+}
+>>>>>>> origin/kaled
+=======
+
+>>>>>>> origin/kaled
 
 /* Footer V2 Styles */
 .footer-v2 {
@@ -258,7 +363,11 @@ button.primary, .btn.btn-primary { background: var(--primary); }
     gap: 10px;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/kaled
 .footer-v2-socials a {
     color: #a0a0a0;
     font-size: 1rem;
@@ -268,7 +377,21 @@ button.primary, .btn.btn-primary { background: var(--primary); }
 .footer-v2-socials a:hover {
     color: #fff;
 }
+<<<<<<< HEAD
+=======
+    .footer-v2-socials a {
+        color: #a0a0a0;
+        font-size: 1rem;
+        transition: color 0.3s;
+    }
 
+        .footer-v2-socials a:hover {
+            color: #fff;
+        }
+>>>>>>> origin/kaled
+=======
+
+>>>>>>> origin/kaled
 
 .footer-v2 h4 {
     font-size: 1.1rem;
@@ -284,7 +407,11 @@ button.primary, .btn.btn-primary { background: var(--primary); }
     margin: 0;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/kaled
 .footer-v2 .footer-list li {
     margin-bottom: 10px;
 }
@@ -298,7 +425,25 @@ button.primary, .btn.btn-primary { background: var(--primary); }
 .footer-v2 .footer-list a:hover {
     color: #fff;
 }
+<<<<<<< HEAD
+=======
+    .footer-v2 .footer-list li {
+        margin-bottom: 10px;
+    }
 
+    .footer-v2 .footer-list a {
+        color: #a0a0a0;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
+        .footer-v2 .footer-list a:hover {
+            color: #fff;
+        }
+>>>>>>> origin/kaled
+=======
+
+>>>>>>> origin/kaled
 
 .footer-v2 .contact-info li {
     display: flex;
@@ -317,7 +462,11 @@ button.primary, .btn.btn-primary { background: var(--primary); }
     gap: 10px;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/kaled
 .footer-v2 .subscribe-form input {
     padding: 12px;
     border: 1px solid #555;
@@ -340,6 +489,34 @@ button.primary, .btn.btn-primary { background: var(--primary); }
 .footer-v2 .subscribe-form button:hover {
     background-color: var(--primary-2, #d35400);
 }
+<<<<<<< HEAD
+=======
+    .footer-v2 .subscribe-form input {
+        padding: 12px;
+        border: 1px solid #555;
+        background-color: #3f3f3f;
+        color: #fff;
+        border-radius: 4px;
+    }
+
+.footer-v2 .subscribe-form button {
+    padding: 12px;
+    background-color: var(--primary, #e67e22);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+        .footer-v2 .subscribe-form button:hover {
+            background-color: var(--primary-2, #d35400);
+        }
+>>>>>>> origin/kaled
+=======
+
+>>>>>>> origin/kaled
 
 
 .footer-v2-bottom {
@@ -348,13 +525,29 @@ button.primary, .btn.btn-primary { background: var(--primary); }
     border-top: 1px solid #444;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/kaled
 .footer-v2-bottom .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 0.9rem;
 }
+<<<<<<< HEAD
+=======
+    .footer-v2-bottom .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+>>>>>>> origin/kaled
+=======
 
+>>>>>>> origin/kaled
 
 /* Hero V2 Styles */
 .hero-v2 {
@@ -371,7 +564,11 @@ button.primary, .btn.btn-primary { background: var(--primary); }
     overflow: hidden;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/kaled
 .hero-v2::before {
     content: '';
     position: absolute;
@@ -382,7 +579,22 @@ button.primary, .btn.btn-primary { background: var(--primary); }
     background: rgba(0, 0, 0, 0.5);
     z-index: 1;
 }
+<<<<<<< HEAD
+=======
+    .hero-v2::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1;
+    }
+>>>>>>> origin/kaled
+=======
 
+>>>>>>> origin/kaled
 
 .hero-v2-content {
     position: relative;
@@ -448,14 +660,29 @@ button.primary, .btn.btn-primary { background: var(--primary); }
     font-weight: bold;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/kaled
 .close-button:hover,
 .close-button:focus {
     color: black;
     text-decoration: none;
     cursor: pointer;
 }
+<<<<<<< HEAD
+=======
+    .close-button:hover,
+    .close-button:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+>>>>>>> origin/kaled
+=======
 
+>>>>>>> origin/kaled
 
 /* Chatbot Styles */
 .chat-icon {
@@ -500,12 +727,25 @@ button.primary, .btn.btn-primary { background: var(--primary); }
     align-items: center;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/kaled
 .chat-header h3 {
     margin: 0;
     color: #fff;
 }
+<<<<<<< HEAD
+=======
+    .chat-header h3 {
+        margin: 0;
+        color: #fff;
+    }
+>>>>>>> origin/kaled
+=======
 
+>>>>>>> origin/kaled
 
 .close-chat {
     background: none;
@@ -534,6 +774,10 @@ button.primary, .btn.btn-primary { background: var(--primary); }
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/kaled
 .chat-message.user {
     background-color: #2c2b2b;
     align-self: flex-end;
@@ -543,7 +787,21 @@ button.primary, .btn.btn-primary { background: var(--primary); }
     background-color: #443f3f;
     align-self: flex-start;
 }
+<<<<<<< HEAD
+=======
+    .chat-message.user {
+        background-color: #2c2b2b;
+        align-self: flex-end;
+    }
 
+    .chat-message.bot {
+        background-color: #443f3f;
+        align-self: flex-start;
+    }
+>>>>>>> origin/kaled
+=======
+
+>>>>>>> origin/kaled
 
 .chat-footer {
     padding: 15px;
@@ -552,7 +810,11 @@ button.primary, .btn.btn-primary { background: var(--primary); }
     border-top: 1px solid #eee;
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/kaled
 .chat-footer input {
     flex: 1;
     padding: 10px;
@@ -568,4 +830,24 @@ button.primary, .btn.btn-primary { background: var(--primary); }
     border-radius: 5px;
     cursor: pointer;
 }
+<<<<<<< HEAD
+=======
+    .chat-footer input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
 
+    .chat-footer button {
+        padding: 10px 15px;
+        background-color: var(--primary, #e53935);
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+>>>>>>> origin/kaled
+=======
+
+>>>>>>> origin/kaled
