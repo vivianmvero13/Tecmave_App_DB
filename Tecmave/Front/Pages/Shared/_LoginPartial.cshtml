@@ -1,0 +1,28 @@
+﻿
+@using Microsoft.AspNetCore.Identity
+@using Tecmave.Front.Models
+
+@inject SignInManager<Usuario> SignInManager
+@inject UserManager<Usuario> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <form asp-area="Identity"
+          asp-page="/Account/Logout"
+          asp-route-returnUrl="@Url.Page("/Login", new { area = "" })"
+          method="post"
+          id="logoutForm"
+          class="navbar-right">
+
+        <a asp-area="Identity"
+           asp-page="/Account/Manage/Index"
+           title="Manage"
+           class="iconbtn">
+            <i class="fas fa-user me-1"></i> @UserManager.GetUserName(User)!
+        </a>
+
+        <button type="submit" class="iconbtn">
+            <i class="fas fa-sign-out-alt me-1"></i> Logout
+        </button>
+    </form>
+}

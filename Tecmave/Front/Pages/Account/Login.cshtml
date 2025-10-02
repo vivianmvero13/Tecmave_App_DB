@@ -1,0 +1,41 @@
+﻿@page
+@model Front.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = "~/Pages/Shared/_AccountLayout.cshtml";
+}
+
+<div class="login-v2-form-header">
+    <img src="~/img/tecmave_logo_innovacion.jpg" alt="Tecmave Logo" class="login-v2-form-logo">
+    <h1>Login</h1>
+    <p>SEA BIENVENIDO DE VUELTA AMIGO.</p>
+</div>
+
+<form method="post" class="login-v2-form">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="login-v2-input-group">
+        <label asp-for="Login.Email">Email</label>
+        <input asp-for="Login.Email" class="form-control" type="email" required />
+        <span asp-validation-for="Login.Email" class="text-danger"></span>
+    </div>
+
+    <div class="login-v2-input-group">
+        <label asp-for="Login.Password">Password</label>
+        <input asp-for="Login.Password" class="form-control" type="password" required />
+        <span asp-validation-for="Login.Password" class="text-danger"></span>
+    </div>
+
+    <div class="login-v2-input-group">
+        <a asp-controller="Account" asp-action="VerifyEmail">¿Olvidaste la contraseña?</a>
+    </div>
+
+    <button type="submit" class="login-v2-button">Login</button>
+
+    <p class="text-center mt-2">
+        ¿No tienes cuenta?
+        <a href="/Account/Register"  class="login-v2-create-account">Crear cuenta</a>
+    </p>
+</form>
+
+<p class="login-v2-demo-text">Demo admin: admin@tecmave.com / Admin1234</p>
