@@ -82,124 +82,115 @@
     function escapeHtml(s){ return String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
 
     async function loadRolesList(){
-        try{
-            const roles = await $.getJSON(ROLES_URL);
-            allRoleNamesNorm = roles
-                .map(r => r.normalizedName ?? r.NormalizedName ?? (r.name ? U(r.name) : null))
-                .filter(Boolean);
-        }catch(e){ allRoleNamesNorm = []; }
-    }
-
-    async function loadUsers(){
-        try{
-            const users = await $.getJSON(USERS_URL);
-            const roleFetches = users.map(u =>
-                $.getJSON(`${USERS_URL}/${u.id}/roles`)
-                    .then(r => ({
-                        ...u,
-                        userNameNorm: U(u.userName),
-                        roles: (r || []).map(U)
-                    }))
-                    .catch(() => ({
-                        ...u,
-                        userNameNorm: U(u.userName),
-                        roles: []
-                    }))
-            );
-            allUsers = await Promise.all(roleFetches);
-            populateRoleFilter(); renderTable(applyFilters());
-        }catch(e){
-            $('#userTable').html(`<tr><td colspan="5" class="text-danger">Error cargando usuarios</td></tr>`);
-        }
+      try{
+        const roles = await $.getJSON(ROLES_URL);
+        allRoleNamesNorm = roles
+          .map(r => r.normalizedName ?? r.NormalizedName ?? (r.name ? U(r.name) : null))
+          .filter(Boolean);
+      }catch{ allRoleNamesNorm = []; }
     }
 
     function populateRoleFilter(){
-        const union = new Set([
-            ...allRoleNamesNorm,
-            ...allUsers.flatMap(u => (u.roles || []).map(U))
-        ]);
-        const $sel = $('#roleFilter').empty();
-        $sel.append(`<option value="">(Todos)</option>`);
-        $sel.append(`<option value="__SIN_ROL__">(SIN ROL)</option>`);
-        Array.from(union).filter(Boolean).sort().forEach(r =>
-            $sel.append(`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`)
-        );
+      const union = new Set([
+        ...allRoleNamesNorm,
+        ...allUsers.flatMap(u => (u.roles || []).map(U))
+      ]);
+      const $sel = $('#roleFilter').empty();
+      $sel.append(`<option value="">(Todos)</option>`);
+      $sel.append(`<option value="__SIN_ROL__">(SIN ROL)</option>`);
+      Array.from(union).filter(Boolean).sort().forEach(r =>
+        $sel.append(`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`)
+      );
     }
 
     function getSearchText(){ return ($('#localSearch').val() || '').toLowerCase(); }
 
     function applyFilters(){
-        const selected = $('#roleFilter').val();
-        const q = getSearchText();
-        return allUsers.filter(u => {
-            const roles = Array.isArray(u.roles) ? u.roles.map(U) : [];
-            const roleOk = !selected
-              ? true
-              : (selected === '__SIN_ROL__' ? roles.length === 0 : roles.includes(U(selected)));
-            const haystack = [
-                u.userNameNorm || U(u.userName),
-                u.email || '',
-                u.phoneNumber || '',
-                ...roles
-            ].join(' ').toLowerCase();
-            return roleOk && (!q || haystack.includes(q));
-        });
+      const selected = $('#roleFilter').val();
+      const q = getSearchText();
+      return allUsers.filter(u => {
+        const roles = Array.isArray(u.roles) ? u.roles.map(U) : [];
+        const roleOk = !selected
+          ? true
+          : (selected === '__SIN_ROL__' ? roles.length === 0 : roles.includes(U(selected)));
+        const haystack = [
+          u.userNameNorm || U(u.userName),
+          u.email || '',
+          u.phoneNumber || '',
+          ...roles
+        ].join(' ').toLowerCase();
+        return roleOk && (!q || haystack.includes(q));
+      });
     }
 
     function renderTable(users){
-        const $tb = $('#userTable').empty();
-        if(!users.length){
-            $tb.html(`<tr><td colspan="5" class="text-muted">No hay usuarios.</td></tr>`);
-            $('#resultsBadge').text(`Mostrando 0 de ${allUsers.length}`);
-            return;
-        }
-        users.forEach(u=>{
-            const rolesText = (u.roles && u.roles.length) ? u.roles.map(U).join(', ') : '(SIN ROL)';
-            $tb.append(`<tr>
-              <td>${escapeHtml(u.userNameNorm || U(u.userName))}</td>
-              <td>${escapeHtml(u.email)}</td>
-              <td>${escapeHtml(u.phoneNumber)}</td>
-              <td>${escapeHtml(rolesText)}</td>
-              <td><a class="btn btn-primary btn-sm" href="/Usuarios/Editar/${encodeURIComponent(u.id)}">Editar</a></td>
-            </tr>`);
-        });
-        $('#resultsBadge').text(`Mostrando ${users.length} de ${allUsers.length}`);
+      const $tb = $('#userTable').empty();
+      if(!users.length){
+        $tb.html(`<tr><td colspan="5" class="text-muted">No hay usuarios.</td></tr>`);
+        $('#resultsBadge').text(`Mostrando 0 de ${allUsers.length}`);
+        return;
+      }
+      users.forEach(u=>{
+        const rolesText = (u.roles && u.roles.length) ? u.roles.map(U).join(', ') : '(SIN ROL)';
+        $tb.append(`<tr>
+          <td>${escapeHtml(u.userNameNorm || U(u.userName))}</td>
+          <td>${escapeHtml(u.email)}</td>
+          <td>${escapeHtml(u.phoneNumber)}</td>
+          <td>${escapeHtml(rolesText)}</td>
+          <td><a class="btn btn-primary btn-sm" href="/Usuarios/Editar/${encodeURIComponent(u.id)}">Editar</a></td>
+        </tr>`);
+      });
+      $('#resultsBadge').text(`Mostrando ${users.length} de ${allUsers.length}`);
     }
 
-    function exportToExcel(){
-        const data = applyFilters();
-        if(!data.length){ alert('No hay datos para exportar con los filtros actuales.'); return; }
-        const rows = data.map(u=>({
-            Username: (u.userNameNorm || U(u.userName)) ?? '',
-            Email: u.email ?? '',
-            Telefono: u.phoneNumber ?? '',
-            Roles: (u.roles && u.roles.length) ? u.roles.map(U).join(', ') : '(SIN ROL)'
-        }));
-        if (window.XLSX){
-            const ws = XLSX.utils.json_to_sheet(rows);
-            ws['!cols'] = [{wch:20},{wch:30},{wch:20},{wch:40}];
-            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Usuarios');
-            const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-            XLSX.writeFile(wb, `usuarios-roles-${stamp}.xlsx`);
-        } else {
-            const headers = ['Username','Email','Telefono','Roles'];
-            const csv = [headers.join(','), ...rows.map(r => headers.map(h => {
-              const cell = String(r[h] ?? '');
-              return /[",\n]/.test(cell) ? `"${cell.replaceAll('"','""')}"` : cell;
-            }).join(','))].join('\n');
-            const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-            const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-            a.download = `usuarios-roles-${stamp}.csv`; document.body.appendChild(a); a.click(); a.remove();
-        }
+    async function loadUsers(){
+      try{
+        try{
+          const res = await fetch(`${USERS_URL}/with-role`);
+          if(res.ok){
+            const rows = await res.json();
+            allUsers = rows.map(u => ({
+              id: u.id,
+              userName: u.userName,
+              userNameNorm: U(u.userName),
+              email: u.email,
+              phoneNumber: u.phoneNumber,
+              roles: u.role ? [U(u.role)] : []
+            }));
+            populateRoleFilter(); renderTable(applyFilters());
+            return;
+          }
+        }catch{}
+        const users = await $.getJSON(USERS_URL);
+        const roleFetches = users.map(async (u) => {
+          try{
+            const arr = await $.getJSON(`${USERS_URL}/${u.id}/roles`);
+            const roles = Array.isArray(arr) ? arr.map(U) : [];
+            return { ...u, userNameNorm: U(u.userName), roles };
+          }catch{
+            try{
+              const obj = await $.getJSON(`${USERS_URL}/${u.id}/role`);
+              const roleName = obj?.role ?? obj?.Role;
+              const roles = roleName ? [U(roleName)] : [];
+              return { ...u, userNameNorm: U(u.userName), roles };
+            }catch{
+              return { ...u, userNameNorm: U(u.userName), roles: [] };
+            }
+          }
+        });
+        allUsers = await Promise.all(roleFetches);
+        populateRoleFilter(); renderTable(applyFilters());
+      }catch(e){
+        $('#userTable').html(`<tr><td colspan="5" class="text-danger">Error cargando usuarios</td></tr>`);
+      }
     }
 
     $(function(){
-        loadRolesList().then(loadUsers);
-        $('#roleFilter').on('change', ()=>renderTable(applyFilters()));
-        $('#localSearch').on('input', debounce(()=>renderTable(applyFilters()), 200));
-        $('#localSearch').on('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); e.currentTarget.blur(); }});
-        $('#clearSearch').on('click', ()=>{ $('#localSearch').val(''); renderTable(applyFilters()); $('#localSearch').focus(); });
-        $('#exportBtn').on('click', exportToExcel);
+      loadRolesList().then(loadUsers);
+      $('#roleFilter').on('change', ()=>renderTable(applyFilters()));
+      $('#localSearch').on('input', debounce(()=>renderTable(applyFilters()), 200));
+      $('#localSearch').on('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); e.currentTarget.blur(); }});
+      $('#clearSearch').on('click', ()=>{ $('#localSearch').val(''); renderTable(applyFilters()); $('#localSearch').focus(); });
+      $('#exportBtn').on('click', exportToExcel);
     });
 </script>

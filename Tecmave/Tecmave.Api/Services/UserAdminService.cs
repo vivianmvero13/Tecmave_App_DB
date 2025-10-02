@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 
 namespace Tecmave.Api.Services
@@ -8,10 +9,13 @@ namespace Tecmave.Api.Services
     {
         private readonly UserManager<Usuario> _userManager;
         private readonly RoleManager<AppRole> _roleManager;
+        private readonly AppDbContext _db;
 
-        public UserAdminService(UserManager<Usuario> um, RoleManager<AppRole> rm)
+        public UserAdminService(UserManager<Usuario> um, RoleManager<AppRole> rm, AppDbContext db)
         {
-            _userManager = um; _roleManager = rm;
+            _userManager = um;
+            _roleManager = rm;
+            _db = db;
         }
 
         public Task<List<Usuario>> ListAsync() =>
@@ -30,12 +34,7 @@ namespace Tecmave.Api.Services
         public async Task EnsureRoleAsync(string roleName)
         {
             if (!await _roleManager.RoleExistsAsync(roleName))
-                await _roleManager.CreateAsync(new AppRole
-                {
-                    Name = roleName,
-                    NormalizedName = roleName.ToUpperInvariant(),
-                    IsActive = true
-                });
+                await _roleManager.CreateAsync(new AppRole { Name = roleName, NormalizedName = roleName.ToUpperInvariant(), IsActive = true });
         }
 
         public async Task<IList<string>> GetRolesAsync(int id)
@@ -52,7 +51,9 @@ namespace Tecmave.Api.Services
             return roles.FirstOrDefault();
         }
 
-        public async Task<(IdentityResult result, string? previousRole)> SetSingleRoleAsync(int userId, string roleName, bool forceReplace)
+        public async Task<(IdentityResult result, string? previousRole)> SetSingleRoleAsync(
+            int userId, string roleName, bool forceReplace,
+            int? adminId = null, string? adminName = null, string? ip = null)
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user is null)
@@ -66,35 +67,46 @@ namespace Tecmave.Api.Services
                 return (IdentityResult.Failed(new IdentityError { Code = "RoleInactive", Description = "El rol está inactivo" }), null);
 
             var currentRoles = await _userManager.GetRolesAsync(user);
+            var previous = currentRoles.FirstOrDefault();
 
-            if (currentRoles.Count == 1 && string.Equals(currentRoles[0], role.Name, StringComparison.OrdinalIgnoreCase))
-                return (IdentityResult.Success, currentRoles[0]);
+            if (previous != null && previous.Equals(role.Name, StringComparison.OrdinalIgnoreCase))
+                return (IdentityResult.Success, previous);
 
-            if (currentRoles.Count == 0)
+            if (currentRoles.Count > 0 && !forceReplace)
+                return (IdentityResult.Failed(new IdentityError { Code = "RoleConflict", Description = $"El usuario ya tiene el rol '{previous}'" }), previous);
+
+            if (currentRoles.Count > 0)
             {
-                var addRes = await _userManager.AddToRoleAsync(user, role.Name!);
-                return (addRes, null);
+                var rem = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                if (!rem.Succeeded) return (rem, previous);
             }
 
-            var previous = currentRoles.First();
-            if (!forceReplace)
+            await EnsureRoleAsync(role.Name!);
+            var addRes = await _userManager.AddToRoleAsync(user, role.Name!);
+
+            if (addRes.Succeeded)
             {
-                return (IdentityResult.Failed(new IdentityError
+                _db.role_change_audit.Add(new RoleChangeAudit
                 {
-                    Code = "RoleConflict",
-                    Description = $"El usuario ya tiene el rol '{previous}'. Debe confirmarse el reemplazo."
-                }), previous);
+                    TargetUserId = user.Id,
+                    TargetUserName = user.UserName,
+                    PreviousRole = previous,
+                    NewRole = role.Name,
+                    ChangedByUserId = adminId,
+                    ChangedByUserName = adminName,
+                    ChangedAtUtc = DateTime.UtcNow,
+                    Action = previous == null ? "Asignar" : "Reemplazar",
+                    Detail = previous == null ? $"Asignación de rol '{role.Name}'" : $"Reemplazo de rol '{previous}' por '{role.Name}'",
+                    SourceIp = ip
+                });
+                await _db.SaveChangesAsync();
             }
 
-            var removeRes = await _userManager.RemoveFromRolesAsync(user, currentRoles);
-            if (!removeRes.Succeeded)
-                return (removeRes, previous);
-
-            var addRes2 = await _userManager.AddToRoleAsync(user, role.Name!);
-            return (addRes2, previous);
+            return (addRes, previous);
         }
 
-        public async Task<IdentityResult> RemoveAllRolesAsync(int userId)
+        public async Task<IdentityResult> RemoveAllRolesAsync(
+            int userId, int? adminId = null, string? adminName = null, string? ip = null)
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user is null)
@@ -103,7 +115,25 @@ namespace Tecmave.Api.Services
             var current = await _userManager.GetRolesAsync(user);
             if (current.Count == 0) return IdentityResult.Success;
 
-            return await _userManager.RemoveFromRolesAsync(user, current);
+            var res = await _userManager.RemoveFromRolesAsync(user, current);
+            if (res.Succeeded)
+            {
+                _db.role_change_audit.Add(new RoleChangeAudit
+                {
+                    TargetUserId = user.Id,
+                    TargetUserName = user.UserName,
+                    PreviousRole = current.FirstOrDefault(),
+                    NewRole = null,
+                    ChangedByUserId = adminId,
+                    ChangedByUserName = adminName,
+                    ChangedAtUtc = DateTime.UtcNow,
+                    Action = "Eliminar",
+                    Detail = "Eliminación de rol",
+                    SourceIp = ip
+                });
+                await _db.SaveChangesAsync();
+            }
+            return res;
         }
 
         public async Task<IdentityResult> UpdateAsync(int id, string? userName = null, string? email = null, string? phone = null)

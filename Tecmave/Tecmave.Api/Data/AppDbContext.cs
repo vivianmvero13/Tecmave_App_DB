@@ -27,27 +27,65 @@ namespace Tecmave.Api.Data
         public DbSet<ColaboradoresModel> colaboradores { get; set; }
         public DbSet<ServiciosRevisionModel> servicios_revision { get; set; }
 
+        public DbSet<RoleChangeAudit> role_change_audit { get; set; }
+
         protected override void OnModelCreating(ModelBuilder b)
         {
             base.OnModelCreating(b);
 
-            // Tablas Identity (usa AppRole, no IdentityRole<int>)
             b.Entity<Usuario>().ToTable("aspnetusers");
             b.Entity<AppRole>().ToTable("aspnetroles");
-            b.Entity<IdentityUserRole<int>>().ToTable("aspnetuserroles");
+
+            b.Entity<IdentityUserRole<int>>(e =>
+            {
+                e.ToTable("aspnetuserroles");
+                e.HasKey(x => new { x.UserId, x.RoleId });
+
+                e.HasOne<Usuario>()
+                    .WithMany()
+                    .HasForeignKey(ur => ur.UserId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne<AppRole>()
+                    .WithMany()
+                    .HasForeignKey(ur => ur.RoleId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
             b.Entity<IdentityUserLogin<int>>().ToTable("aspnetuserlogins");
             b.Entity<IdentityUserToken<int>>().ToTable("aspnetusertokens");
             b.Entity<IdentityUserClaim<int>>().ToTable("aspnetuserclaims");
             b.Entity<IdentityRoleClaim<int>>().ToTable("aspnetroleclaims");
 
-            // Config extra para AppRole
             b.Entity<AppRole>(e =>
             {
                 e.Property(r => r.Description).HasMaxLength(256);
                 e.Property(r => r.IsActive).HasDefaultValue(true);
             });
 
-            // Tablas de dominio
+            b.Entity<RoleChangeAudit>(e =>
+            {
+                e.ToTable("role_change_audit");
+                e.HasKey(x => x.Id);
+
+                e.Property(x => x.TargetUserId).IsRequired();
+                e.Property(x => x.ChangedAtUtc).IsRequired();
+                e.Property(x => x.Action).HasMaxLength(20).IsRequired();
+
+                e.Property(x => x.TargetUserName).HasMaxLength(256);
+                e.Property(x => x.PreviousRole).HasMaxLength(256);
+                e.Property(x => x.NewRole).HasMaxLength(256);
+                e.Property(x => x.ChangedByUserName).HasMaxLength(256);
+                e.Property(x => x.Detail).HasMaxLength(1024);
+                e.Property(x => x.SourceIp).HasMaxLength(64);
+
+                e.HasIndex(x => x.TargetUserId);
+                e.HasIndex(x => x.ChangedAtUtc);
+                e.HasIndex(x => x.Action);
+            });
+
             b.Entity<EstadosModel>().ToTable("estados").HasKey(x => x.id_estado);
             b.Entity<TipoServiciosModel>().ToTable("tipo_servicios").HasKey(x => x.id_tipo_servicio);
             b.Entity<ModelosModel>().ToTable("modelo").HasKey(x => x.id_modelo);
