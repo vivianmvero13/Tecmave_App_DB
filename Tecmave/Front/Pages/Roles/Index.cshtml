@@ -34,10 +34,7 @@
             <tr>
               <td>${r.id ?? ''}</td>
               <td>${r.normalizedName ?? ''}</td>
-              <td>
-                                    <a class="btn btn-primary" href="/Usuarios/Editar?id=${u.id}">Editar</a>
-                                    <a class="btn btn-danger" onclick="eliminarUsuario('${u.id}')">Eliminar</a>
-                                </td>
+              <td>${r.description ?? ''}</td
             </tr>`;
           $tbody.append(tr);
         });
