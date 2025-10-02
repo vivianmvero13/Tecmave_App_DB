@@ -42,6 +42,23 @@ namespace Tecmave.Api.Controllers
             });
         }
 
+        [HttpGet("{id:int}/details")]
+        public async Task<IActionResult> GetDetails(int id)
+        {
+            var r = await _svc.FindByIdAsync(id);
+            if (r is null) return NotFound();
+
+            var perms = await _svc.GetPermissionsAsync(id);
+            return Ok(new
+            {
+                r.Id,
+                r.Name,
+                r.Description,
+                r.IsActive,
+                Permissions = perms
+            });
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateRoleDto dto)
         {

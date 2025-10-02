@@ -8,19 +8,20 @@ namespace Tecmave.Api.Services
     public class RolesService
     {
         private readonly RoleManager<AppRole> _roleManager;
-        private readonly UserManager<Usuario> _userManager;
 
-        public RolesService(RoleManager<AppRole> roleManager, UserManager<Usuario> userManager)
+        public RolesService(RoleManager<AppRole> roleManager)
         {
             _roleManager = roleManager;
-            _userManager = userManager;
         }
 
         public Task<List<AppRole>> ListAsync() =>
-            _roleManager.Roles.AsNoTracking().ToListAsync();
+            _roleManager.Roles.AsNoTracking().OrderBy(r => r.Name).ToListAsync();
 
         public Task<AppRole?> FindByIdAsync(int id) =>
             _roleManager.Roles.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id);
+
+        public Task<AppRole?> FindByNameAsync(string roleName) =>
+            _roleManager.Roles.AsNoTracking().FirstOrDefaultAsync(r => r.NormalizedName == roleName.ToUpper());
 
         public async Task<(IdentityResult result, AppRole? role)> CreateAsync(string name, string? description, bool isActive)
         {
@@ -68,13 +69,8 @@ namespace Tecmave.Api.Services
             if (role is null)
                 return IdentityResult.Failed(new IdentityError { Description = "Rol no encontrado" });
 
-            var usersInRole = await _userManager.GetUsersInRoleAsync(role.Name!);
-            if (usersInRole.Count > 0)
-                return IdentityResult.Failed(new IdentityError { Description = "No se puede eliminar: hay usuarios asignados." });
-
             return await _roleManager.DeleteAsync(role);
         }
-
 
         public async Task<List<string>> GetPermissionsAsync(int id)
         {
@@ -113,6 +109,23 @@ namespace Tecmave.Api.Services
             if (claim is null) return IdentityResult.Success;
 
             return await _roleManager.RemoveClaimAsync(role, claim);
+        }
+
+        public async Task EnsureDefaultRolesAsync(params (string Name, string? Description)[] roles)
+        {
+            foreach (var r in roles)
+            {
+                if (!await _roleManager.RoleExistsAsync(r.Name))
+                {
+                    await _roleManager.CreateAsync(new AppRole
+                    {
+                        Name = r.Name,
+                        NormalizedName = r.Name.ToUpperInvariant(),
+                        Description = r.Description,
+                        IsActive = true
+                    });
+                }
+            }
         }
     }
 }
