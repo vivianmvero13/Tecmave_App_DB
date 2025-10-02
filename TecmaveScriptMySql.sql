@@ -25,6 +25,7 @@ DROP TABLE IF EXISTS aspnetuserroles;
 DROP TABLE IF EXISTS aspnetroles;
 DROP TABLE IF EXISTS estados;
 DROP TABLE IF EXISTS aspnetusers;
+DROP TABLE IF EXISTS role_change_audit;
 
 CREATE TABLE aspnetusers (
   Id INT NOT NULL AUTO_INCREMENT,
@@ -278,6 +279,23 @@ CREATE TABLE colaboradores (
   KEY FK_Colab_Usuario (id_usuario),
   CONSTRAINT FK_Colab_Usuario FOREIGN KEY (id_usuario) REFERENCES aspnetusers (Id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE tecmave.role_change_audit (
+  Id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  TargetUserId INT NOT NULL,
+  TargetUserName VARCHAR(256) NULL,
+  PreviousRole VARCHAR(256) NULL,
+  NewRole VARCHAR(256) NULL,
+  ChangedByUserId INT NULL,
+  ChangedByUserName VARCHAR(256) NULL,
+  ChangedAtUtc DATETIME(6) NOT NULL,
+  Action VARCHAR(20) NOT NULL,
+  Detail VARCHAR(1024) NULL,
+  SourceIp VARCHAR(64) NULL,
+  INDEX IX_role_change_audit_TargetUserId (TargetUserId),
+  INDEX IX_role_change_audit_ChangedAtUtc (ChangedAtUtc),
+  INDEX IX_role_change_audit_Action (Action)
+);
 
 ALTER TABLE aspnetroles
   ADD COLUMN Description varchar(256) NULL AFTER NormalizedName,
