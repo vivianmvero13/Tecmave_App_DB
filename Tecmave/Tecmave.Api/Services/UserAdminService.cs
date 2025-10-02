@@ -95,7 +95,7 @@ namespace Tecmave.Api.Services
                     ChangedByUserId = adminId,
                     ChangedByUserName = adminName,
                     ChangedAtUtc = DateTime.UtcNow,
-                    Action = previous == null ? "assign" : "replace",
+                    Action = previous == null ? "Asignar" : "Reemplazar",
                     Detail = previous == null ? $"Asignación de rol '{role.Name}'" : $"Reemplazo de rol '{previous}' por '{role.Name}'",
                     SourceIp = ip
                 });
@@ -127,8 +127,8 @@ namespace Tecmave.Api.Services
                     ChangedByUserId = adminId,
                     ChangedByUserName = adminName,
                     ChangedAtUtc = DateTime.UtcNow,
-                    Action = "remove",
-                    Detail = "Remoción de rol",
+                    Action = "Eliminar",
+                    Detail = "Eliminación de rol",
                     SourceIp = ip
                 });
                 await _db.SaveChangesAsync();
