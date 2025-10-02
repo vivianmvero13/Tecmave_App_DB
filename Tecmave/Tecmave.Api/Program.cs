@@ -43,6 +43,22 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<UserAdminService>();
 builder.Services.AddScoped<RolesService>();
 
+builder.Services.AddScoped<VehiculosService>();
+builder.Services.AddScoped<TipoServiciosService>();
+builder.Services.AddScoped<ServiciosService>();
+builder.Services.AddScoped<ServiciosRevisionModel>();
+builder.Services.AddScoped<RolesService>();
+builder.Services.AddScoped<ResenasService>();
+builder.Services.AddScoped<PromocionesService>();
+builder.Services.AddScoped<NotificacionesService>();
+builder.Services.AddScoped<ModelosService>();
+builder.Services.AddScoped<MarcasService>();
+builder.Services.AddScoped<FacturasService>();
+builder.Services.AddScoped<EstadosService>();
+builder.Services.AddScoped<ColaboradoresService>();
+builder.Services.AddScoped<AgendamientoService>();
+
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
