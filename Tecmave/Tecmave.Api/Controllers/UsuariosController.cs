@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Tecmave.Api.Services;
 
 namespace Tecmave.Api.Controllers
@@ -40,43 +41,54 @@ namespace Tecmave.Api.Controllers
             return res.Succeeded ? Ok() : BadRequest(res.Errors);
         }
 
+        [HttpGet("{id:int}/roles")]
+        public async Task<IActionResult> GetRoles(int id) => Ok(await _svc.GetRolesAsync(id));
 
         [HttpGet("{id:int}/role")]
         public async Task<IActionResult> GetSingleRole(int id)
         {
-            var role = await _svc.GetSingleRoleOrNullAsync(id);
-            return Ok(new { Role = role });
+            var r = await _svc.GetSingleRoleOrNullAsync(id);
+            return Ok(new { role = r });
         }
 
         public record AssignRoleDto(string RoleName, bool ForceReplace = false);
 
         [HttpPut("{id:int}/role")]
-        public async Task<IActionResult> SetSingleRole(int id, [FromBody] AssignRoleDto dto)
+        public async Task<IActionResult> SetSingleRole(int id, [FromBody] AssignRoleDto dto, CancellationToken ct)
         {
-            var (res, previous) = await _svc.SetSingleRoleAsync(id, dto.RoleName, dto.ForceReplace);
-            if (res.Succeeded) return Ok(new { Previous = previous, Current = dto.RoleName });
+            var adminIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int? adminId = int.TryParse(adminIdStr, out var n) ? n : null;
+            var adminName = User.Identity?.Name;
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
 
-            var code = res.Errors.FirstOrDefault()?.Code ?? "";
-            var desc = res.Errors.FirstOrDefault()?.Description ?? "Error";
-
-            return code switch
+            var (res, previous) = await _svc.SetSingleRoleAsync(id, dto.RoleName, dto.ForceReplace, adminId, adminName, ip);
+            if (!res.Succeeded)
             {
-                "UserNotFound" => NotFound(new { Code = code, Message = desc }),
-                "RoleNotFound" => NotFound(new { Code = code, Message = desc }),
-                "RoleInactive" => BadRequest(new { Code = code, Message = desc }),
-                "RoleConflict" => Conflict(new { Code = code, Message = desc, Previous = previous }),
-                _ => BadRequest(new { Code = code, Message = desc })
-            };
+                var err = res.Errors.FirstOrDefault();
+                var code = err?.Code ?? "Error";
+                var msg = err?.Description ?? "Error";
+                return code switch
+                {
+                    "UserNotFound" => NotFound(new { code, message = msg }),
+                    "RoleNotFound" => NotFound(new { code, message = msg }),
+                    "RoleInactive" => BadRequest(new { code, message = msg }),
+                    "RoleConflict" => Conflict(new { code, message = msg, previous }),
+                    _ => BadRequest(new { code, message = msg })
+                };
+            }
+            return Ok(new { previous, current = dto.RoleName });
         }
 
         [HttpDelete("{id:int}/role")]
-        public async Task<IActionResult> RemoveAllRoles(int id)
+        public async Task<IActionResult> RemoveAllRoles(int id, CancellationToken ct)
         {
-            var res = await _svc.RemoveAllRolesAsync(id);
-            if (res.Succeeded) return Ok(new { Role = (string?)null });
-            var err = res.Errors.FirstOrDefault();
-            if (err?.Code == "UserNotFound") return NotFound(err);
-            return BadRequest(res.Errors);
+            var adminIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int? adminId = int.TryParse(adminIdStr, out var n) ? n : null;
+            var adminName = User.Identity?.Name;
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            var res = await _svc.RemoveAllRolesAsync(id, adminId, adminName, ip);
+            return res.Succeeded ? Ok(new { role = (string?)null }) : BadRequest(res.Errors);
         }
     }
 }

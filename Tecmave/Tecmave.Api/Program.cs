@@ -42,12 +42,9 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<UserAdminService>();
 builder.Services.AddScoped<RolesService>();
-
 builder.Services.AddScoped<VehiculosService>();
 builder.Services.AddScoped<TipoServiciosService>();
 builder.Services.AddScoped<ServiciosService>();
-builder.Services.AddScoped<ServiciosRevisionModel>();
-builder.Services.AddScoped<RolesService>();
 builder.Services.AddScoped<ResenasService>();
 builder.Services.AddScoped<PromocionesService>();
 builder.Services.AddScoped<NotificacionesService>();
