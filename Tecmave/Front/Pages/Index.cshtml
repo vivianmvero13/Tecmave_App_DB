@@ -4,7 +4,179 @@
     ViewData["Title"] = "Home page";
 }
 
+@using Microsoft.AspNetCore.Identity
+@using Tecmave.Front.Models
+@inject SignInManager<Usuario> SignInManager
+@inject UserManager<Usuario> UserManager
+
+@{
+    if (!SignInManager.IsSignedIn(User))
+    {
+        Response.Redirect("/Account/Login");
+    }
+
+   }
+
+
+<section class="section client-only">
+    <h2>Escribe tu Reseña</h2>
+    <div class="card">
+        <label>Nombre</label>
+        <input class="input" id="client-review-name" placeholder="Tu nombre" readonly />
+
+        <label>Servicio</label>
+        <select class="input" id="client-review-service">
+            <option value="">Seleccione un servicio</option>
+        </select>
+
+        <label>Calificación</label>
+        <select class="input" id="client-review-rating">
+            <option value="5.0">★★★★★</option>
+            <option value="4.0">★★★★☆</option>
+            <option value="3.0">★★★☆☆</option>
+            <option value="2.0">★★☆☆☆</option>
+            <option value="1.0">★☆☆☆☆</option>
+        </select>
+
+        <label>Comentario</label>
+        <textarea class="input" id="client-review-comment" rows="4" placeholder="Comparte tu experiencia..."></textarea>
+
+        <button onclick="addClientReview()" style="margin-top:.8rem">Enviar Reseña</button>
+    </div>
+</section>
+
+
+
+<section class="section client-only">
+    <h2>Reseñas Públicas</h2>
+    <div class="grid cols-2" id="client-reviews-list">
+        <!-- Reviews will be loaded here by JavaScript -->
+    </div>
+</section>
+
+
+
+
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
+
+<script>
+
+
+    const API_RESENA = "https://localhost:7096/Resenas";
+        const API_SERVICIO = "https://localhost:7096/Servicios";
+
+        const username = "@User.Identity.Name";
+        const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
+
+        $(document).ready(function () {
+            $("#client-review-name").val(username);
+            cargarServicios();
+            cargarResenas();
+        });
+
+        function cargarServicios() {
+            $.ajax({
+                url: API_SERVICIO,
+                method: 'GET',
+                success: function(data) {
+                    const select = $("#client-review-service");
+                    select.empty();
+                    select.append('<option value="">Seleccione un servicio</option>');
+                    data.forEach(servicio => {
+                        select.append(`<option value="${servicio.id_servicio}">${servicio.nombre}</option>`);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error al cargar servicios:", error);
+                }
+            });
+        }
+
+        function addClientReview() {
+            const servicioId = $("#client-review-service").val();
+            const calificacion = parseFloat($("#client-review-rating").val());
+            const comentario = $("#client-review-comment").val();
+
+            if (!servicioId || !comentario.trim()) {
+                alert("Por favor selecciona un servicio y escribe un comentario.");
+                return;
+            }
+
+            const nuevaResena = {
+                cliente_id: userId,
+                servicio_id: parseInt(servicioId),
+                comentario: comentario,
+                calificacion: calificacion
+            };
+
+            $.ajax({
+                url: API_RESENA,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(nuevaResena),
+                success: function() {
+                    alert("¡Gracias por tu reseña!");
+                    $("#client-review-service").val("");
+                    $("#client-review-rating").val("5.0");
+                    $("#client-review-comment").val("");
+                    cargarResenas();
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error al enviar reseña:", error);
+                }
+            });
+        }
+
+        function cargarResenas() {
+            $.ajax({
+                url: API_RESENA,
+                method: 'GET',
+                success: function(data) {
+                    const reviewsList = document.getElementById('client-reviews-list');
+                    if (!reviewsList) return;
+
+                    reviewsList.innerHTML = '';
+
+                    if (data.length === 0) {
+                        reviewsList.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">Aún no hay reseñas. ¡Sé el primero en dejar una!</p>';
+                        return;
+                    }
+
+                    data.forEach(review => {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.innerHTML = `
+                            <strong>${review.nombre_usuario || 'Usuario'}</strong>
+                            <p>${'★'.repeat(Math.round(review.calificacion))}${'☆'.repeat(5 - Math.round(review.calificacion))}</p>
+                            <p style="margin-top:.5rem">${review.comentario}</p>
+                            
+                        `;
+                        reviewsList.appendChild(card);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error al cargar reseñas:", error);
+                }
+            });
+        }
+
+
+    $(document).ready(function () {
+        
+        $("#client-review-name").val(username);
+
+        
+        cargarServicios();
+
+        
+        cargarResenas();
+    });
+
+
+</script>
+
+
+

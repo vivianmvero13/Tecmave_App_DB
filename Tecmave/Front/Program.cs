@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 
 
+
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<MyIdentityDBContext>(opt =>
     opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
@@ -49,6 +50,12 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+
+
+
+
 app.MapRazorPages();
+
+app.MapFallbackToPage("/Account/Login");
 
 app.Run();

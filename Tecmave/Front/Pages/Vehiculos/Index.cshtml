@@ -1,0 +1,142 @@
+﻿@page
+@model Front.Pages.Vehiculos.IndexModel
+@{
+}
+
+
+
+
+
+<section class="section">
+    <div class="container grid cols-2">
+        <div class="card">
+            <h3>Registrar vehículo</h3>
+
+            <div class="form-row">
+                <div>
+                    <label>Placa</label>
+                    <input id="placaInput" class="input" placeholder="ABC123" />
+                </div>
+                <div>
+                    <label>Marca</label>
+                    <select id="marcaInput" class="input">
+                        <option value="">Seleccione una marca</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label>Año</label>
+                    <input id="anioInput" class="input" type="number" placeholder="2020" />
+                </div>
+            </div>
+            
+            <button onclick="guardarVehiculo()">Guardar</button>
+        </div>
+        <div class="card">
+            <h3>Estado y detalles</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Placa</th>
+                        <th>Marca</th>
+                        <th>Año</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="listaDatos">
+                    
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</section>
+
+
+<script>
+
+    
+       const API_VEHICULO = "https://localhost:7096/Vehiculos";
+    const API_MARCA = "https://localhost:7096/Marcas";
+    const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
+    console.log("userId:", userId, "tipo:", typeof userId);
+    let marcas = [];
+
+    function cargarMarcas() {
+        $.ajax({
+            url: API_MARCA,
+            method: 'GET',
+            success: function(data) {
+                marcas = data;
+                const select = $("#marcaInput");
+                select.empty();
+                select.append('<option value="">Seleccione una marca</option>');
+                data.forEach(marca => {
+                    select.append(`<option value="${marca.id_marca}">${marca.nombre}</option>`);
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error("Error al cargar marcas: " + error);
+            }
+        });
+    }
+
+    function cargarVehiculosAsociados() {
+        $.ajax({
+            url: API_VEHICULO,
+            method: 'GET',
+            success: function(data) {
+                $("#listaDatos").empty();
+                data.forEach(item => {
+                    if (item.cliente_id.toString() === userId) {
+                        const marca = marcas.find(m => m.id_marca === item.id_marca);
+                        const nombreMarca = marca ? marca.nombre : "Desconocida";
+
+                        $("#listaDatos").append(`
+                            <tr>
+                                <td>${item.placa}</td>
+                                <td>${nombreMarca}</td>
+                                <td>${item.anio}</td>
+                                <td>
+                                    <button class="secondary" onclick="actualizarVehiculo('${item.id_vehiculo}')">Actualizar</button>
+                                </td>
+                            </tr>
+                        `);
+                    }
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error("Error al cargar vehículos: " + error);
+            }
+        });
+    }
+
+    function guardarVehiculo() {
+        const nuevoVehiculo = {
+            placa: $("#placaInput").val(),
+            id_marca: parseInt($("#marcaInput").val()),
+            anio: parseInt($("#anioInput").val()),
+            cliente_id: userId
+        };
+
+        $.ajax({
+            url: API_VEHICULO,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(nuevoVehiculo),
+            success: function() {
+                alert("Vehículo registrado correctamente.");
+                cargarVehiculosAsociados();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error al registrar: " + error);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        cargarMarcas();
+        cargarVehiculosAsociados();
+    });
+</script>
