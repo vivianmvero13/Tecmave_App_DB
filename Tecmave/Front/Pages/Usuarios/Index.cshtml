@@ -185,12 +185,62 @@
       }
     }
 
+    // ---------- EXPORTAR A EXCEL  ----------
+    function csvEscape(val){
+      const s = (val ?? '').toString();
+      if (/[",\n\r;]/.test(s)) {
+        return `"${s.replace(/"/g, '""')}"`;
+      }
+      return s;
+    }
+
+    function buildCsv(rows){
+      const headers = ['Username','Email','Teléfono','Rol'];
+      const lines = [headers.join(',')];
+      rows.forEach(u => {
+        const rol = (u.roles && u.roles.length) ? u.roles.join(' | ') : '(SIN ROL)';
+        lines.push([
+          csvEscape(u.userNameNorm || U(u.userName)),
+          csvEscape(u.email || ''),
+          csvEscape(u.phoneNumber || ''),
+          csvEscape(rol)
+        ].join(','));
+      });
+      return '\uFEFF' + lines.join('\r\n');
+    }
+
+    window.exportToExcel = function(){
+      const rows = applyFilters();
+      if (!rows.length){
+        alert('No hay datos para exportar.');
+        return;
+      }
+      const csv = buildCsv(rows);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+      // Nombre con fecha/hora
+      const now = new Date();
+      const pad = n => n.toString().padStart(2,'0');
+      const fname = `usuarios_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    };
+
     $(function(){
       loadRolesList().then(loadUsers);
       $('#roleFilter').on('change', ()=>renderTable(applyFilters()));
       $('#localSearch').on('input', debounce(()=>renderTable(applyFilters()), 200));
       $('#localSearch').on('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); e.currentTarget.blur(); }});
       $('#clearSearch').on('click', ()=>{ $('#localSearch').val(''); renderTable(applyFilters()); $('#localSearch').focus(); });
-      $('#exportBtn').on('click', exportToExcel);
+
+      $('#exportBtn').on('click', ()=>window.exportToExcel());
     });
 </script>
+
