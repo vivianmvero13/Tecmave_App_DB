@@ -65,6 +65,12 @@ namespace Tecmave.Api.Data
                 e.Property(r => r.IsActive).HasDefaultValue(true);
             });
 
+            b.Entity<Usuario>(b =>
+            {
+                b.Property(u => u.Nombre).HasMaxLength(50);
+                b.Property(u => u.Apellidos).HasMaxLength(50);
+            });
+
             b.Entity<RoleChangeAudit>(e =>
             {
                 e.ToTable("role_change_audit");

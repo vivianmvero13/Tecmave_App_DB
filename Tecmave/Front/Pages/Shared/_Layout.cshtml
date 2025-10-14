@@ -27,22 +27,22 @@
             </div>
             <div class="subtle">Gestión</div>
             <nav class="nav">
-                <a href="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
+                <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
                 <a asp-page="/Vehiculos/Index" class="client-only"><i class="fa-solid fa-car"></i> Vehículos</a>
-                <a href="/Usuarios/Index" class="client-only"><i class="fa-solid fa-user-group"></i> Usuarios</a>
-                <a href="/Servicios/Index" class="client-only"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
-                <a href="/Agendamiento/Index" class="client-only"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
+                <a asp-page="/Usuarios/Index" class="client-only"><i class="fa-solid fa-user-group"></i> Usuarios</a>
+                <a asp-page="/Servicios/Index" class="client-only"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
+                <a asp-page="/Agendamiento/Index" class="client-only"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
 
-                <a href="/Colaboradores/Index" class="admin-only"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
-                <a href="/Facturacion/Index" class="admin-only"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación</a>
-                <a href="/Estadisticas/Index" class="admin-only"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
-                <a href="/Administracion/Index" class="admin-only"><i class="fa-solid fa-gear"></i> Administración</a>
-                <a href="/Carrusel/Index" class="admin-only"><i class="fa-regular fa-images"></i> Carrusel</a>
+                <a asp-page="/Colaboradores/Index" class="admin-only"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
+                <a asp-page="/Facturacion/Index" class="admin-only"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación</a>
+                <a asp-page="/Estadisticas/Index" class="admin-only"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
+                <a asp-page="/Administracion/Index" class="admin-only"><i class="fa-solid fa-gear"></i> Administración</a>
+                <a asp-page="/Carrusel/Index" class="admin-only"><i class="fa-regular fa-images"></i> Carrusel</a>
             </nav>
             <div class="subtle">Cuenta</div>
     <!--       <nav class="nav">
-                <a id="login-link" href="/Login"><i class="fa-regular fa-circle-user"></i> Iniciar sesión</a>
-                <a id="logout-btn" href="#"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
+                <a id="login-link" asp-page="/Login"><i class="fa-regular fa-circle-user"></i> Iniciar sesión</a>
+                <a id="logout-btn" asp-page="#"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
                     </nav>-->
         </aside>
 

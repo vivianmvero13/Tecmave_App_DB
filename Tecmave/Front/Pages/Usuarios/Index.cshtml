@@ -38,6 +38,8 @@
     <table class="table align-middle">
         <thead>
             <tr>
+                <th>Nombre</th>
+                <th>Apellidos</th>
                 <th>Username</th>
                 <th>Email</th>
                 <th>Teléfono</th>
@@ -133,11 +135,13 @@
       users.forEach(u=>{
         const rolesText = (u.roles && u.roles.length) ? u.roles.map(U).join(', ') : '(SIN ROL)';
         $tb.append(`<tr>
-          <td>${escapeHtml(u.userNameNorm || U(u.userName))}</td>
-          <td>${escapeHtml(u.email)}</td>
-          <td>${escapeHtml(u.phoneNumber)}</td>
-          <td>${escapeHtml(rolesText)}</td>
-          <td><a class="btn btn-primary btn-sm" href="/Usuarios/Editar/${encodeURIComponent(u.id)}">Editar</a></td>
+            <td>${escapeHtml(u.nombre || 'Sin definir')}</td>
+            <td>${escapeHtml(u.apellidos || 'Sin definir')}</td>
+            <td>${escapeHtml(u.userNameNorm || U(u.userName))}</td>
+            <td>${escapeHtml(u.email)}</td>
+            <td>${escapeHtml(u.phoneNumber)}</td>
+            <td>${escapeHtml(rolesText)}</td>
+            <td><a class="btn btn-primary btn-sm" href="/Usuarios/Editar/${encodeURIComponent(u.id)}">Editar</a></td>
         </tr>`);
       });
       $('#resultsBadge').text(`Mostrando ${users.length} de ${allUsers.length}`);
