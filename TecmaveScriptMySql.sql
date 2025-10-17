@@ -302,3 +302,13 @@ ALTER TABLE aspnetroles
   ADD COLUMN IsActive tinyint(1) NOT NULL DEFAULT 1 AFTER Description;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+INSERT INTO estados (id_estado, nombre) VALUES
+(4, 'Ingresado'),
+(5, 'En Diagnóstico'),
+(6, 'Pendiente de aprobación'),
+(7, 'En mantenimiento'),
+(8, 'En pruebas'),
+(9, 'Finalizado'),
+(10, 'Entregado'),
+(11, 'Cancelado');
