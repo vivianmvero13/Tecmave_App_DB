@@ -29,6 +29,8 @@ DROP TABLE IF EXISTS role_change_audit;
 
 CREATE TABLE aspnetusers (
   Id INT NOT NULL AUTO_INCREMENT,
+  Apellidos VARCHAR(256) NOT NULL,
+  Nombre VARCHAR(256) NOT NULL,
   UserName VARCHAR(256) NULL,
   NormalizedUserName VARCHAR(256) NULL,
   Email VARCHAR(256) NULL,
@@ -154,6 +156,7 @@ CREATE TABLE vehiculos (
   id_marca INT NOT NULL,
   anno int NOT NULL,
   placa VARCHAR(255) NOT NULL,
+  modelo VARCHAR(255),
   PRIMARY KEY (id_vehiculo),
   KEY FK_Vehiculos_Cliente (cliente_id),
   KEY FK_Vehiculos_Marca (id_marca),
@@ -312,3 +315,59 @@ INSERT INTO estados (id_estado, nombre) VALUES
 (9, 'Finalizado'),
 (10, 'Entregado'),
 (11, 'Cancelado');
+
+-- 1) Quitar la foreign key de 'marca' que apunta a 'modelo'
+ALTER TABLE marca DROP FOREIGN KEY FK_Marca_Modelo;
+ALTER TABLE marca DROP INDEX FK_Marca_Modelo;
+ALTER TABLE marca DROP COLUMN id_modelo;
+DROP TABLE modelo;
+
+USE tecmave;
+
+INSERT INTO marca (nombre) VALUES
+('Sin marca'),
+('Jeep'),
+('Dodge'),
+('Toyota'),
+('Nissan'),
+('Honda'),
+('Mitsubishi'),
+('Suzuki'),
+('Hyundai'),
+('Chevrolet'),
+('Chrysler'),
+('Daihatsu'),
+('RAM'),
+('Ford'),
+('GMC'),
+('Hummer'),
+('Isuzu'),
+('Kia'),
+('Lexus'),
+('Mazda');
+
+  
+INSERT INTO aspnetroles (Id, Name, NormalizedName, Description, IsActive)
+VALUES
+(1, 'Admin', 'ADMIN', 'Administrador con acceso completo al sistema', 1),
+(2, 'Colaborador', 'COLABORADOR', 'Empleado o técnico del taller con permisos limitados', 1),
+(3, 'Cliente', 'CLIENTE', 'Usuario cliente que puede ver y registrar sus vehículos', 1);
+
+
+INSERT INTO aspnetusers
+(Nombre, Apellidos, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed,
+ PasswordHash, SecurityStamp, ConcurrencyStamp, PhoneNumber, PhoneNumberConfirmed,
+ TwoFactorEnabled, LockoutEnabled, AccessFailedCount)
+VALUES
+('Vivian', 'Velazquez', 'Vivian', 'VIVIAN', 'vivian@tecmave.com', 'VIVIAN@TECMAVE.COM', 1,
+ 'AQAAAAIAAYagAAAAEAdminHashDemo==', 'SEC123', 'CONC123', '88888888', 1, 0, 0, 0),
+
+('Joshua','Lopez', 'Joshua', 'JOSHUA', 'joshua@tecmave.com', 'joshua@TECMAVE.COM', 1,
+ 'AQAAAAIAAYagAAAAEColabHashDemo==', 'SEC456', 'CONC456', '87777777', 1, 0, 0, 0),
+
+('Khaled', 'Gonzalez', 'Khaled', 'KHALED', 'khaled@tecmave.com', 'KHALED@TECMAVE.COM', 1,
+ 'AQAAAAIAAYagAAAAEClienteHashDemo==', 'SEC789', 'CONC789', '86666666', 1, 0, 0, 0),
+
+('Daniel', 'Lopez', 'Daniel', 'DANIEL', 'Daniel@tecmave.com', 'DANIEL@TECMAVE.COM', 1,
+ 'AQAAAAIAAYagAAAAEClienteHashDemo==', 'SEC789', 'CONC789', '86666666', 1, 0, 0, 0);
+
