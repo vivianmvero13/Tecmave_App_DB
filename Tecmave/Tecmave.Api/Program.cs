@@ -30,11 +30,16 @@ builder.Services
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("PermirFrontend",
-        policy => policy
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod());
+    options.AddPolicy("PermirFrontend", policy => policy
+        .WithOrigins(
+            "https://localhost:7190",
+            "http://localhost:5173", 
+            "https://localhost:5173" 
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials()
+    );
 });
 
 builder.Services.AddAuthentication();
@@ -48,7 +53,6 @@ builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<ResenasService>();
 builder.Services.AddScoped<PromocionesService>();
 builder.Services.AddScoped<NotificacionesService>();
-builder.Services.AddScoped<ModelosService>();
 builder.Services.AddScoped<MarcasService>();
 builder.Services.AddScoped<FacturasService>();
 builder.Services.AddScoped<EstadosService>();

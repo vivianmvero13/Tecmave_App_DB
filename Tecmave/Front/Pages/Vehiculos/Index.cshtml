@@ -8,17 +8,10 @@
 <h1>Vehículos Registrados</h1>
 
 <div class="row g-3 align-items-end mt-3">
-    <div class="col-12 col-md-4">
-        <label for="roleFilter" class="form-label">Filtrar por rol</label>
-        <select id="roleFilter" class="form-select">
-            <option value="">(Todos)</option>
-            <option value="__SIN_ROL__">(Sin rol)</option>
-        </select>
-    </div>
     <div class="col-12 col-md-8">
         <label for="localSearch" class="form-label">Buscar</label>
         <div class="input-group">
-            <input id="localSearch" class="form-control" placeholder="Buscar por username, email, teléfono o rol…" />
+            <input id="localSearch" class="form-control" placeholder="Buscar por placa, marca, modelo, año o cliente…" />
             <button id="clearSearch" class="btn btn-outline-secondary" type="button">Limpiar</button>
         </div>
     </div>
@@ -27,9 +20,11 @@
 <div class="d-flex justify-content-between align-items-center mt-3">
     <small id="resultsBadge" class="text-muted">Mostrando 0 de 0</small>
     <div class="d-flex gap-2">
-        <a id="manageRolesBtn" class="btn btn-royal btn-sm" href="/Roles">Administrar Roles</a>
         <button id="exportBtn" class="btn btn-orange btn-sm" type="button">
             <i class="fa-solid fa-file-excel"></i> Exportar
+        </button>
+        <button id="registrarBtn" class="btn btn-orange btn-sm" type="button" onclick="location.href='/Vehiculos/Crear'">
+            <i class="fa-solid fa-plus"></i> Registrar
         </button>
     </div>
 </div>
@@ -38,15 +33,17 @@
     <table class="table align-middle">
         <thead>
             <tr>
-                <th>Username</th>
+                <th>Placa</th>
+                <th>Año</th>
+                <th>Marca</th>
+                <th>Modelo</th>
+                <th>Cliente</th>
                 <th>Email</th>
-                <th>Teléfono</th>
-                <th>Rol</th>
-                <th>Acciones</th>
+                <th style="width: 150px;">Acciones</th>
             </tr>
         </thead>
-        <tbody id="userTable">
-            <tr><td colspan="5">Cargando Vehículos…</td></tr>
+        <tbody id="vehiculosTable">
+            <tr><td colspan="7">Cargando vehículos…</td></tr>
         </tbody>
     </table>
 </div>
@@ -59,20 +56,148 @@
     }
 
         .btn-orange:hover {
-            background: #9FAA13 !important;
+            background: #8f9a11 !important;
         }
-
-    .btn-royal {
-        background: #C36721 !important;
-        border: 1px solid #C36721 !important;
-        color: #fff !important;
-    }
 </style>
 
 <script>
     const API_BASE = '@(Model?.ApiBase ?? "https://localhost:7096")';
-    const VEHICULOS_URL = `${API_BASE}/api/Vehículos`;
+    // Normaliza a minúsculas y sin acentos en la URL real
+    const VEHICULOS_URL = `${API_BASE}/Vehiculos`;
 
+    const $tableBody = document.getElementById('vehiculosTable');
+    const $search = document.getElementById('localSearch');
+    const $clear = document.getElementById('clearSearch');
+    const $badge = document.getElementById('resultsBadge');
+    const $export = document.getElementById('exportBtn');
 
+    let allRows = [];
+    let filteredRows = [];
+
+    // Utilidades para leer campos con distintos shapes
+    function pick(obj, paths, def = '') {
+        for (const p of paths) {
+            const v = p.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
+            if (v !== undefined && v !== null) return v;
+        }
+        return def;
+    }
+
+    function mapApiRow(r) {
+        // Mapea una fila cualquiera a un modelo plano para la UI
+        return {
+            id: pick(r, ['id', 'id_vehiculo', 'idVehiculo']),
+            placa: String(pick(r, ['placa', 'Placa'], '')).toUpperCase(),
+            anno: pick(r, ['anno', 'anno', 'year', 'Año'], ''),
+            marca: pick(r, ['marca', 'marca.nombre', 'Marca', 'Marca.Nombre'], ''),
+            modelo: pick(r, ['modelo', 'modelo.nombre', 'Modelo', 'Modelo.Nombre'], ''),
+            clienteId: pick(r, ['cliente_id', 'clienteId', 'cliente.id', 'cliente.Id'], null),
+            cliente: pick(r, ['cliente', 'cliente.userName', 'cliente.username', 'cliente.nombre', 'Cliente', 'Cliente.UserName', 'Cliente.Nombre'], ''),
+            email: pick(r, ['email', 'cliente.email', 'Cliente.Email'], '')
+        };
+    }
+
+    function renderRows(rows) {
+        if (!rows.length) {
+            $tableBody.innerHTML = `<tr><td colspan="7">Sin resultados</td></tr>`;
+            $badge.textContent = `Mostrando 0 de ${allRows.length}`;
+            return;
+        }
+        const html = rows.map(r => `
+            <tr>
+                <td>${escapeHtml(r.placa)}</td>
+                <td>${escapeHtml(r.anno)}</td>
+                <td>${escapeHtml(r.marca)}</td>
+                <td>${escapeHtml(r.modelo)}</td>
+                <td>${escapeHtml(r.cliente)}</td>
+                <td>${escapeHtml(r.email)}</td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a class="btn btn-outline-primary" href="/Vehículos/Detalle?id=${encodeURIComponent(r.id)}">Ver</a>
+                        <a class="btn btn-outline-secondary" href="/Vehículos/Editar?id=${encodeURIComponent(r.id)}">Editar</a>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+        $tableBody.innerHTML = html;
+        $badge.textContent = `Mostrando ${rows.length} de ${allRows.length}`;
+    }
+
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;','=':'&#61;','/':'&#47;'
+        }[c]));
+    }
+
+    function applyFilter() {
+        const q = $search.value.trim().toLowerCase();
+        if (!q) {
+            filteredRows = [...allRows];
+            renderRows(filteredRows);
+            return;
+        }
+        filteredRows = allRows.filter(r => {
+            return (
+                r.placa.toLowerCase().includes(q) ||
+                String(r.anno).toLowerCase().includes(q) ||
+                r.marca.toLowerCase().includes(q) ||
+                r.modelo.toLowerCase().includes(q) ||
+                r.cliente.toLowerCase().includes(q) ||
+                r.email.toLowerCase().includes(q)
+            );
+        });
+        renderRows(filteredRows);
+    }
+
+    function exportCsv() {
+        const rows = filteredRows.length ? filteredRows : allRows;
+        if (!rows.length) return;
+
+        const header = ['Placa','Año','Marca','Modelo','Cliente','Email'];
+        const csvRows = [
+            header.join(',')
+        ].concat(rows.map(r => [
+            r.placa, r.anno, r.marca, r.modelo, r.cliente, r.email
+        ].map(val => `"${String(val ?? '').replace(/"/g, '""')}"`).join(',')));
+
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const now = new Date();
+        const ts = now.toISOString().replace(/[:.]/g, '-');
+        a.download = `vehiculos_${ts}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    async function loadVehiculos() {
+        try {
+            const res = await fetch(VEHICULOS_URL, { credentials: 'include' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+
+            const list = Array.isArray(data) ? data
+                : Array.isArray(data?.data) ? data.data
+                : [];
+
+            allRows = list.map(mapApiRow);
+            filteredRows = [...allRows];
+            renderRows(filteredRows);
+        } catch (err) {
+            console.error(err);
+            $tableBody.innerHTML = `<tr><td colspan="7">Error cargando datos.</td></tr>`;
+            $badge.textContent = `Mostrando 0 de 0`;
+        }
+    }
+
+    // Eventos
+    $search.addEventListener('input', applyFilter);
+    $clear.addEventListener('click', () => { $search.value = ''; applyFilter(); });
+    $export.addEventListener('click', exportCsv);
+
+    // Init
+    loadVehiculos();
 </script>
-

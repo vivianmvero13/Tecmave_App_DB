@@ -13,7 +13,6 @@ namespace Tecmave.Api.Data
 
         public DbSet<EstadosModel> estados { get; set; }
         public DbSet<TipoServiciosModel> tipo_servicios { get; set; }
-        public DbSet<ModelosModel> modelo { get; set; }
         public DbSet<MarcasModel> marca { get; set; }
         public DbSet<VehiculosModel> vehiculos { get; set; }
         public DbSet<ServiciosModel> servicios { get; set; }
@@ -94,7 +93,6 @@ namespace Tecmave.Api.Data
 
             b.Entity<EstadosModel>().ToTable("estados").HasKey(x => x.id_estado);
             b.Entity<TipoServiciosModel>().ToTable("tipo_servicios").HasKey(x => x.id_tipo_servicio);
-            b.Entity<ModelosModel>().ToTable("modelo").HasKey(x => x.id_modelo);
             b.Entity<MarcasModel>().ToTable("marca").HasKey(x => x.id_marca);
             b.Entity<VehiculosModel>().ToTable("vehiculos").HasKey(x => x.id_vehiculo);
             b.Entity<ServiciosModel>().ToTable("servicios").HasKey(x => x.id_servicio);

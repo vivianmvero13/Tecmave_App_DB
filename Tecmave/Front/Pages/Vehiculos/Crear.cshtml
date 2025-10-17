@@ -1,6 +1,7 @@
 ﻿@page
-@model Front.Pages.Vehiculos.IndexModel
+@model Front.Pages.Vehiculos.CrearModel
 @{
+    ViewData["Title"] = "Registrar vehículo";
 }
 
 <section class="section">
@@ -10,129 +11,293 @@
 
             <div class="form-row">
                 <div>
-                    <label>Placa</label>
-                    <input id="placaInput" class="input" placeholder="ABC123" />
+                    <label for="usuarioInput">Usuario</label>
+                    <select id="usuarioInput" class="input">
+                        <option value="">Seleccione un usuario</option>
+                    </select>
                 </div>
                 <div>
-                    <label>Marca</label>
+                    <label for="marcaInput">Marca</label>
                     <select id="marcaInput" class="input">
                         <option value="">Seleccione una marca</option>
                     </select>
                 </div>
             </div>
+
             <div class="form-row">
                 <div>
-                    <label>Año</label>
-                    <input id="anioInput" class="input" type="number" placeholder="2020" />
+                    <label for="modeloInput">Modelo</label>
+                    <input id="modeloInput" class="input" maxlength="100" />
+                </div>
+                <div>
+                    <label for="annoInput">Año</label>
+                    <input id="annoInput" class="input" type="number" min="1950" max="2100" />
                 </div>
             </div>
-            
-            <button onclick="guardarVehiculo()">Guardar</button>
+
+            <div class="form-row">
+                <div>
+                    <label for="placaInput">Placa</label>
+                    <input id="placaInput" class="input" maxlength="10" />
+                </div>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+                <button id="guardarBtn" class="btn btn-orange" type="button" onclick="guardarVehiculo()">Guardar</button>
+                <a class="btn btn-outline-secondary" href="/Vehiculos">Volver</a>
+            </div>
+
+            <div id="formMsg" class="text-danger mt-2" style="display:none;"></div>
         </div>
+
         <div class="card">
-            <h3>Estado y detalles</h3>
+            <h3>Vehículos del usuario</h3>
             <table class="table">
                 <thead>
                     <tr>
                         <th>Placa</th>
                         <th>Marca</th>
+                        <th>Modelo</th>
                         <th>Año</th>
                         <th>Acción</th>
                     </tr>
                 </thead>
                 <tbody id="listaDatos">
-                    
+                    <tr><td colspan="5">Seleccione un usuario…</td></tr>
                 </tbody>
             </table>
-
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button id="btnSave" type="submit" class="btn btn-primary">Guardar</button>
+            <a class="btn btn-secondary" asp-page="/Vehiculos/Index">Volver</a>
         </div>
     </div>
 </section>
 
+<style>
+    .btn-orange {
+        background: #ff8c00 !important;
+        border: 1px solid #ff8c00 !important;
+        color: #fff !important;
+        padding: .5rem 1rem;
+        border-radius: .25rem;
+    }
+
+        .btn-orange:hover {
+            background: #e67e00 !important;
+        }
+
+    .text-danger {
+        color: #dc3545;
+    }
+
+    .grid.cols-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: .75rem;
+    }
+
+    .input {
+        width: 100%;
+        padding: .5rem;
+    }
+
+    .card {
+        border: 1px solid #e5e5e5;
+        border-radius: .5rem;
+        padding: 1rem;
+    }
+
+    .gap-2 {
+        gap: .5rem;
+    }
+
+    .table {
+        width: 100%;
+    }
+
+        .table th, .table td {
+            padding: .5rem;
+            border-bottom: 1px solid #eee;
+        }
+</style>
 
 <script>
-
     
-       const API_VEHICULO = "https://localhost:7096/Vehiculos";
-    const API_MARCA = "https://localhost:7096/Marcas";
-    const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
-    console.log("userId:", userId, "tipo:", typeof userId);
-    let marcas = [];
+    const API_BASE      = "https://localhost:7096";
+    const URL_VEHICULOS = `${API_BASE}/vehiculos`;
+    const URL_MARCAS    = `${API_BASE}/marcas`;
+    const URL_USUARIOS  = `${API_BASE}/api/usuarios`;
+    const marcasMap = new Map(); 
 
-    function cargarMarcas() {
-        $.ajax({
-            url: API_MARCA,
-            method: 'GET',
-            success: function(data) {
-                marcas = data;
-                const select = $("#marcaInput");
-                select.empty();
-                select.append('<option value="">Seleccione una marca</option>');
-                data.forEach(marca => {
-                    select.append(`<option value="${marca.id_marca}">${marca.nombre}</option>`);
-                });
-            },
-            error: function(xhr, status, error) {
-                console.error("Error al cargar marcas: " + error);
-            }
+    function showMsg(text){
+      const el = document.getElementById('formMsg');
+      el.textContent = text || '';
+      el.style.display = text ? 'block' : 'none';
+    }
+
+    //  Usuarios 
+    function nombreCompleto(u){
+      const n = (u.nombre ?? u.Nombre ?? '').trim();
+      const a = (u.apellidos ?? u.Apellidos ?? '').trim();
+      const full = [n, a].filter(Boolean).join(' ').trim();
+      return full || (u.userName ?? u.UserName ?? 'Usuario');
+    }
+
+    function cargarUsuarios(){
+      fetch(URL_USUARIOS, { credentials: 'include' })
+        .then(r => r.json())
+        .then(list => {
+          const data = Array.isArray(list) ? list : (Array.isArray(list?.data) ? list.data : []);
+          const sel = document.getElementById('usuarioInput');
+          sel.innerHTML = '<option value="">Seleccione un usuario</option>';
+          data.sort((a,b) => nombreCompleto(a).localeCompare(nombreCompleto(b)));
+          for(const u of data){
+            const id = u.id ?? u.Id;
+            if(!id) continue;
+            const opt = document.createElement('option');
+            opt.value = id;
+            opt.textContent = nombreCompleto(u);
+            sel.appendChild(opt);
+          }
+        })
+        .catch(err => { console.error('usuarios', err); showMsg('Error al cargar usuarios.'); });
+    }
+
+    //  Marcas 
+    function cargarMarcas(){
+      fetch(URL_MARCAS, { credentials: 'include' })
+        .then(r => r.json())
+        .then(data => {
+          const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+          marcasMap.clear();
+          for(const m of list){
+            const id = m.id_marca ?? m.id ?? m.Id;
+            const nombre = (m.nombre ?? m.Nombre ?? '').trim();
+            if(id && nombre) marcasMap.set(Number(id), nombre);
+          }
+
+          const sel = document.getElementById('marcaInput');
+          sel.innerHTML = '<option value="">Seleccione una marca</option>';
+          [...marcasMap.entries()]
+            .sort((a,b) => a[1].localeCompare(b[1]))
+            .forEach(([id, nombre]) => {
+              const opt = document.createElement('option');
+              opt.value = String(id);
+              opt.textContent = nombre;
+              sel.appendChild(opt);
+            });
+        })
+        .catch(err => { console.error('marcas', err); showMsg('Error al cargar marcas.'); });
+    }
+
+    //  Listado por usuario 
+    function cargarVehiculosAsociados(){
+      const uid = parseInt(document.getElementById('usuarioInput').value || '0', 10);
+      const tb  = document.getElementById('listaDatos');
+      if(!uid){ tb.innerHTML = '<tr><td colspan="5">Seleccione un usuario…</td></tr>'; return; }
+
+      fetch(URL_VEHICULOS, { credentials: 'include' })
+        .then(r => { if(!r.ok) throw r; return r.json(); })
+        .then(data => {
+          const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+          const propios = list.filter(v => {
+            const cid = v.cliente_id ?? v.clienteId ?? v.cliente?.id ?? v.ClienteId ?? 0;
+            return Number(cid) === uid;
+          });
+
+          if(!propios.length){
+            tb.innerHTML = '<tr><td colspan="5">Sin vehículos para este usuario.</td></tr>';
+            return;
+          }
+
+          tb.innerHTML = propios.map(v => {
+            const id     = v.id_vehiculo ?? v.id ?? v.Id;
+            const placa  = String(v.placa ?? '').toUpperCase();
+            const annoVal = Number(v.anno ?? v.anno ?? 0);
+            const annoTxt = annoVal > 0 ? String(annoVal) : '—';
+
+            const modelo = v.modelo ?? v.Modelo ?? '';
+            const idMarca = Number(v.id_marca ?? v.idMarca ?? 0);
+            const marcaNombre = (typeof v.marca === 'string' && v.marca.trim())
+                                  ? v.marca
+                                  : (marcasMap.get(idMarca) || (idMarca ? `#${idMarca}` : '—'));
+
+            return `
+              <tr>
+                <td>${esc(placa)}</td>
+                <td>${esc(marcaNombre)}</td>
+                <td>${esc(String(modelo))}</td>
+                <td>${esc(annoTxt)}</td>
+                <td><a class="btn btn-outline-primary btn-sm" href="/Vehiculos/Editar?id=${encodeURIComponent(id)}">Editar</a></td>
+              </tr>`;
+          }).join('');
+        })
+        .catch(async err => {
+          let msg = 'Error cargando vehículos.'; try { msg = (await err.json())?.message || msg; } catch {}
+          tb.innerHTML = `<tr><td colspan="5">${esc(msg)}</td></tr>`;
         });
     }
 
-    function cargarVehiculosAsociados() {
-        $.ajax({
-            url: API_VEHICULO,
-            method: 'GET',
-            success: function(data) {
-                $("#listaDatos").empty();
-                data.forEach(item => {
-                    if (item.cliente_id.toString() === userId) {
-                        const marca = marcas.find(m => m.id_marca === item.id_marca);
-                        const nombreMarca = marca ? marca.nombre : "Desconocida";
+    //  Guardar 
+    function guardarVehiculo(){
+      showMsg('');
 
-                        $("#listaDatos").append(`
-                            <tr>
-                                <td>${item.placa}</td>
-                                <td>${nombreMarca}</td>
-                                <td>${item.anio}</td>
-                                <td>
-                                    <button class="secondary" onclick="actualizarVehiculo('${item.id_vehiculo}')">Actualizar</button>
-                                </td>
-                            </tr>
-                        `);
-                    }
-                });
-            },
-            error: function(xhr, status, error) {
-                console.error("Error al cargar vehículos: " + error);
-            }
-        });
-    }
+      const uid      = parseInt(document.getElementById('usuarioInput').value || '0', 10);
+      const id_marca = parseInt(document.getElementById('marcaInput').value || '0', 10);
+      const modelo   = (document.getElementById('modeloInput').value || '').trim();
+      const anno     = parseInt(document.getElementById('annoInput').value || '0', 10);
+      const placa    = (document.getElementById('placaInput').value || '').trim().toUpperCase();
 
-    function guardarVehiculo() {
-        const nuevoVehiculo = {
-            placa: $("#placaInput").val(),
-            id_marca: parseInt($("#marcaInput").val()),
-            anio: parseInt($("#anioInput").val()),
-            cliente_id: userId
-        };
+      if(!uid){ showMsg('Seleccione un usuario.'); return; }
+      if(!id_marca){ showMsg('Seleccione una marca.'); return; }
+      if(!modelo){ showMsg('El modelo es requerido.'); return; }
+      const yearNow = new Date().getFullYear();
+      if(!anno || anno < 1950 || anno > yearNow + 1){ showMsg(`El año debe estar entre 1950 y ${yearNow + 1}.`); return; }
+      if(!placa){ showMsg('La placa es requerida.'); return; }
 
-        $.ajax({
-            url: API_VEHICULO,
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(nuevoVehiculo),
-            success: function() {
-                alert("Vehículo registrado correctamente.");
-                cargarVehiculosAsociados();
-            },
-            error: function(xhr, status, error) {
-                console.error("Error al registrar: " + error);
-            }
-        });
-    }
+      const payload = { cliente_id: uid, id_marca, modelo, anno, placa };
 
-    $(document).ready(function () {
-        cargarMarcas();
+      fetch(URL_VEHICULOS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      })
+      .then(async r => {
+        if(!r.ok){
+          let m = 'Error al registrar.'; try { m = (await r.json())?.message || m; } catch {}
+          throw new Error(m);
+        }
+        // limpiar
+        document.getElementById('marcaInput').value = '';
+        document.getElementById('modeloInput').value = '';
+        document.getElementById('annoInput').value = '';
+        document.getElementById('placaInput').value = '';
+        showMsg('');
         cargarVehiculosAsociados();
+        alert('Vehículo registrado correctamente.');
+      })
+      .catch(err => { showMsg(err.message || 'Error al registrar.'); console.error(err); });
+    }
+
+    function esc(s){
+      return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;','=':'&#61;','/':'&#47;'
+      }[c]));
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarUsuarios();
+      cargarMarcas();
+      document.getElementById('usuarioInput').addEventListener('change', cargarVehiculosAsociados);
     });
 </script>
