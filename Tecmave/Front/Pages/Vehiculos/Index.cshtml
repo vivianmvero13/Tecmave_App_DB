@@ -1,5 +1,5 @@
 ﻿@page
-@model Front.Pages.Vehículos.IndexModel
+@model Front.Pages.Vehiculos.IndexModel
 @{
     Layout = "_Layout";
     ViewData["Title"] = "Vehículos Registrados";
@@ -39,7 +39,7 @@
                 <th>Modelo</th>
                 <th>Cliente</th>
                 <th>Email</th>
-                <th style="width: 150px;">Acciones</th>
+                <th style="width:150px;">Acciones</th>
             </tr>
         </thead>
         <tbody id="vehiculosTable">
@@ -61,20 +61,27 @@
 </style>
 
 <script>
-    const API_BASE = '@(Model?.ApiBase ?? "https://localhost:7096")';
-    // Normaliza a minúsculas y sin acentos en la URL real
-    const VEHICULOS_URL = `${API_BASE}/Vehiculos`;
+    const API_BASE = 'https://localhost:7096';
+
+    // Endpoints (sin /api)
+    const VEHICULOS_URL = `${API_BASE}/vehiculos`;
+    const USUARIOS_URL  = `${API_BASE}/api/usuarios`;
+    const MARCAS_URL    = `${API_BASE}/marcas`;
 
     const $tableBody = document.getElementById('vehiculosTable');
-    const $search = document.getElementById('localSearch');
-    const $clear = document.getElementById('clearSearch');
-    const $badge = document.getElementById('resultsBadge');
-    const $export = document.getElementById('exportBtn');
+    const $search    = document.getElementById('localSearch');
+    const $clear     = document.getElementById('clearSearch');
+    const $badge     = document.getElementById('resultsBadge');
+    const $export    = document.getElementById('exportBtn');
 
     let allRows = [];
     let filteredRows = [];
 
-    // Utilidades para leer campos con distintos shapes
+    // Diccionarios auxiliares
+    const usersMap  = new Map(); // id -> { nombre, email }
+    const marcasMap = new Map(); // id -> nombre
+
+    // ===== Helpers =====
     function pick(obj, paths, def = '') {
         for (const p of paths) {
             const v = p.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
@@ -82,21 +89,71 @@
         }
         return def;
     }
-
-    function mapApiRow(r) {
-        // Mapea una fila cualquiera a un modelo plano para la UI
-        return {
-            id: pick(r, ['id', 'id_vehiculo', 'idVehiculo']),
-            placa: String(pick(r, ['placa', 'Placa'], '')).toUpperCase(),
-            anno: pick(r, ['anno', 'anno', 'year', 'Año'], ''),
-            marca: pick(r, ['marca', 'marca.nombre', 'Marca', 'Marca.Nombre'], ''),
-            modelo: pick(r, ['modelo', 'modelo.nombre', 'Modelo', 'Modelo.Nombre'], ''),
-            clienteId: pick(r, ['cliente_id', 'clienteId', 'cliente.id', 'cliente.Id'], null),
-            cliente: pick(r, ['cliente', 'cliente.userName', 'cliente.username', 'cliente.nombre', 'Cliente', 'Cliente.UserName', 'Cliente.Nombre'], ''),
-            email: pick(r, ['email', 'cliente.email', 'Cliente.Email'], '')
-        };
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;','=':'&#61;','/':'&#47;'
+        }[c]));
+    }
+    function nombreCompleto(u){
+        const n = (u.nombre ?? u.Nombre ?? '').trim();
+        const a = (u.apellidos ?? u.Apellidos ?? '').trim();
+        const user = (u.userName ?? u.UserName ?? '').trim();
+        const full = [n,a].filter(Boolean).join(' ').trim();
+        return full || user || 'Usuario';
     }
 
+    // ===== Cargas base =====
+    async function loadUsuarios() {
+        const r = await fetch(USUARIOS_URL, { credentials: 'include' });
+        if (!r.ok) throw new Error(`Usuarios HTTP ${r.status}`);
+        const payload = await r.json();
+        const list = Array.isArray(payload) ? payload : (Array.isArray(payload?.data) ? payload.data : []);
+        usersMap.clear();
+        for (const u of list) {
+            const id = Number(u.id ?? u.Id);
+            if (!id) continue;
+            usersMap.set(id, {
+                nombre: nombreCompleto(u),
+                email: (u.email ?? u.Email ?? '').trim()
+            });
+        }
+    }
+
+    async function loadMarcas() {
+        const r = await fetch(MARCAS_URL, { credentials: 'include' });
+        if (!r.ok) throw new Error(`Marcas HTTP ${r.status}`);
+        const payload = await r.json();
+        const list = Array.isArray(payload) ? payload : (Array.isArray(payload?.data) ? payload.data : []);
+        marcasMap.clear();
+        for (const m of list) {
+            const id = Number(m.id_marca ?? m.id ?? m.Id);
+            const nombre = (m.nombre ?? m.Nombre ?? '').trim();
+            if (id && nombre) marcasMap.set(id, nombre);
+        }
+    }
+
+    // ===== Transformación de fila del API a modelo UI =====
+    function mapApiRow(r) {
+        const id       = pick(r, ['id','id_vehiculo','idVehiculo']);
+        const placa    = String(pick(r, ['placa','Placa'], '')).toUpperCase();
+        const annoRaw  = Number(pick(r, ['anno','anio','Año','year'], 0));
+        const anno     = annoRaw > 0 ? annoRaw : '—';
+
+        const idMarca  = Number(pick(r, ['id_marca','idMarca'], 0));
+        // usar 'marca' string si viene, si no resolver por marcasMap, si no mostrar #id
+        const marca    = (pick(r, ['marca','Marca'], '') || marcasMap.get(idMarca) || (idMarca ? `#${idMarca}` : '—'));
+
+        const modelo   = pick(r, ['modelo','Modelo','modelo.nombre','Modelo.Nombre'], '');
+        const clienteId= Number(pick(r, ['cliente_id','clienteId','cliente.id','cliente.Id'], 0));
+
+        // Si el backend ya envía 'cliente' y 'email', úsalos; si no, resolver desde usersMap
+        const cliente  = pick(r, ['cliente','Cliente'], '') || (usersMap.get(clienteId)?.nombre || '');
+        const email    = pick(r, ['email','Email','cliente.email','Cliente.Email'], '') || (usersMap.get(clienteId)?.email || '');
+
+        return { id, placa, anno, marca, modelo, cliente, email };
+    }
+
+    // ===== Render =====
     function renderRows(rows) {
         if (!rows.length) {
             $tableBody.innerHTML = `<tr><td colspan="7">Sin resultados</td></tr>`;
@@ -106,15 +163,15 @@
         const html = rows.map(r => `
             <tr>
                 <td>${escapeHtml(r.placa)}</td>
-                <td>${escapeHtml(r.anno)}</td>
+                <td>${escapeHtml(String(r.anno))}</td>
                 <td>${escapeHtml(r.marca)}</td>
                 <td>${escapeHtml(r.modelo)}</td>
                 <td>${escapeHtml(r.cliente)}</td>
                 <td>${escapeHtml(r.email)}</td>
                 <td>
                     <div class="btn-group btn-group-sm" role="group">
-                        <a class="btn btn-outline-primary" href="/Vehículos/Detalle?id=${encodeURIComponent(r.id)}">Ver</a>
-                        <a class="btn btn-outline-secondary" href="/Vehículos/Editar?id=${encodeURIComponent(r.id)}">Editar</a>
+                        <a class="btn btn-outline-primary" href="/Vehiculos/Detalle?id=${encodeURIComponent(r.id)}">Ver</a>
+                        <a class="btn btn-outline-secondary" href="/Vehiculos/Editar?id=${encodeURIComponent(r.id)}">Editar</a>
                     </div>
                 </td>
             </tr>
@@ -123,12 +180,7 @@
         $badge.textContent = `Mostrando ${rows.length} de ${allRows.length}`;
     }
 
-    function escapeHtml(s) {
-        return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
-            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;','=':'&#61;','/':'&#47;'
-        }[c]));
-    }
-
+    // ===== Filtro local =====
     function applyFilter() {
         const q = $search.value.trim().toLowerCase();
         if (!q) {
@@ -136,52 +188,48 @@
             renderRows(filteredRows);
             return;
         }
-        filteredRows = allRows.filter(r => {
-            return (
-                r.placa.toLowerCase().includes(q) ||
-                String(r.anno).toLowerCase().includes(q) ||
-                r.marca.toLowerCase().includes(q) ||
-                r.modelo.toLowerCase().includes(q) ||
-                r.cliente.toLowerCase().includes(q) ||
-                r.email.toLowerCase().includes(q)
-            );
-        });
+        filteredRows = allRows.filter(r =>
+            r.placa.toLowerCase().includes(q) ||
+            String(r.anno).toLowerCase().includes(q) ||
+            r.marca.toLowerCase().includes(q) ||
+            r.modelo.toLowerCase().includes(q) ||
+            r.cliente.toLowerCase().includes(q) ||
+            r.email.toLowerCase().includes(q)
+        );
         renderRows(filteredRows);
     }
 
+    // ===== Exportar CSV =====
     function exportCsv() {
         const rows = filteredRows.length ? filteredRows : allRows;
         if (!rows.length) return;
 
         const header = ['Placa','Año','Marca','Modelo','Cliente','Email'];
-        const csvRows = [
-            header.join(',')
-        ].concat(rows.map(r => [
-            r.placa, r.anno, r.marca, r.modelo, r.cliente, r.email
-        ].map(val => `"${String(val ?? '').replace(/"/g, '""')}"`).join(',')));
+        const csvRows = [ header.join(',') ]
+            .concat(rows.map(r => [r.placa, r.anno, r.marca, r.modelo, r.cliente, r.email]
+                .map(val => `"${String(val ?? '').replace(/"/g, '""')}"`).join(',')));
 
         const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        const now = new Date();
-        const ts = now.toISOString().replace(/[:.]/g, '-');
-        a.download = `vehiculos_${ts}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+        a.href = url; a.download = `vehiculos_${ts}.csv`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
 
+    // ===== Carga principal =====
     async function loadVehiculos() {
         try {
-            const res = await fetch(VEHICULOS_URL, { credentials: 'include' });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            // Cargar primero usuarios (para nombre/email) y marcas (para resolver nombre por id)
+            await Promise.all([loadUsuarios(), loadMarcas()]);
 
+            const res = await fetch(VEHICULOS_URL, { credentials: 'include' });
+            if (!res.ok) throw new Error(`Vehículos HTTP ${res.status}`);
+            const data = await res.json();
             const list = Array.isArray(data) ? data
-                : Array.isArray(data?.data) ? data.data
-                : [];
+                       : Array.isArray(data?.data) ? data.data
+                       : [];
 
             allRows = list.map(mapApiRow);
             filteredRows = [...allRows];
