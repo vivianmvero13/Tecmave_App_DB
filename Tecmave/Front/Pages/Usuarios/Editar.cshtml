@@ -11,6 +11,14 @@
     <form id="frmUser">
         <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px;">
             <div>
+                <label class="form-label">Nombre</label>
+                <input id="nombre" class="form-control" />
+            </div>
+            <div>
+                <label class="form-label">Apellidos</label>
+                <input id="apellidos" class="form-control" />
+            </div>
+            <div>
                 <label class="form-label">Usuario</label>
                 <input id="UserName" class="form-control" />
             </div>
@@ -58,6 +66,9 @@
 
         function loadUser() {
           $.getJSON(`${API}/api/usuarios/${USER_ID}`, function (u) {
+            $('#nombre').val(u.nombre ?? '');
+            $('#apellidos').val(u.apellidos ?? '');
+            $('#PhoneNumber').val(u.phoneNumber ?? '');
             $('#UserName').val(u.userName ?? '');
             $('#Email').val(u.email ?? '');
             $('#PhoneNumber').val(u.phoneNumber ?? '');
@@ -76,6 +87,8 @@
           $('#btnSave').prop('disabled', true);
 
           const payload = {
+            nombre: $('#nombre').val(),
+            apellidos: $('#apellidos').val(),
             userName: $('#UserName').val(),
             email: $('#Email').val(),
             phoneNumber: $('#PhoneNumber').val()

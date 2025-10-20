@@ -280,7 +280,7 @@ CREATE TABLE colaboradores (
   CONSTRAINT FK_Colab_Usuario FOREIGN KEY (id_usuario) REFERENCES aspnetusers (Id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE tecmave.role_change_audit (
+CREATE TABLE role_change_audit (
   Id BIGINT AUTO_INCREMENT PRIMARY KEY,
   TargetUserId INT NOT NULL,
   TargetUserName VARCHAR(256) NULL,
