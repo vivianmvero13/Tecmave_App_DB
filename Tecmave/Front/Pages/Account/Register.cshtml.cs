@@ -33,6 +33,11 @@ namespace Front.Pages.Account
             var user = new Usuario();
             user.Email = Register.Email;
             user.UserName = Register.Email;
+            user.Cedula = Register.Cedula;
+            user.Nombre = Register.Nombre;
+            user.Apellido = Register.Apellido;
+            user.Direccion = Register.Direccion;
+            user.PhoneNumber = Register.PhoneNumber;
 
 
             var res = await _userManager

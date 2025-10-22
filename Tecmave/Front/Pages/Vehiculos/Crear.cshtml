@@ -19,6 +19,13 @@
                         <option value="">Seleccione una marca</option>
                     </select>
                 </div>
+                <div>
+                    <label>Modelo</label>
+                    <select id="modeloInput" class="input">
+                        <option value="">Seleccione un modelo</option>
+                    </select>
+                </div>
+
             </div>
             <div class="form-row">
                 <div>
@@ -36,6 +43,7 @@
                     <tr>
                         <th>Placa</th>
                         <th>Marca</th>
+                        <th>Modelo</th>
                         <th>Año</th>
                         <th>Acción</th>
                     </tr>
@@ -53,65 +61,98 @@
 <script>
 
     
-       const API_VEHICULO = "https://localhost:7096/Vehiculos";
+    const API_VEHICULO = "https://localhost:7096/Vehiculos";
     const API_MARCA = "https://localhost:7096/Marcas";
+    const API_MODELO = "https://localhost:7096/Modelos";
     const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
     console.log("userId:", userId, "tipo:", typeof userId);
+
     let marcas = [];
+    let modelos = [];
+
+
 
     function cargarMarcas() {
-        $.ajax({
-            url: API_MARCA,
-            method: 'GET',
-            success: function(data) {
-                marcas = data;
-                const select = $("#marcaInput");
-                select.empty();
-                select.append('<option value="">Seleccione una marca</option>');
-                data.forEach(marca => {
-                    select.append(`<option value="${marca.id_marca}">${marca.nombre}</option>`);
-                });
-            },
-            error: function(xhr, status, error) {
-                console.error("Error al cargar marcas: " + error);
-            }
-        });
+      $.ajax({
+        url: API_MARCA,
+        method: 'GET',
+        success: function(data) {
+          marcas = data;
+          const select = $("#marcaInput");
+          select.empty().append('<option value="">Seleccione una marca</option>');
+          data.forEach(marca => {
+            select.append(`<option value="${marca.id_marca}">${marca.nombre}</option>`);
+          });
+        },
+        error: function(xhr, status, error) {
+          console.error("Error al cargar marcas: " + error);
+        }
+      });
     }
 
-    function cargarVehiculosAsociados() {
-        $.ajax({
-            url: API_VEHICULO,
-            method: 'GET',
-            success: function(data) {
-                $("#listaDatos").empty();
-                data.forEach(item => {
-                    if (item.cliente_id.toString() === userId) {
-                        const marca = marcas.find(m => m.id_marca === item.id_marca);
-                        const nombreMarca = marca ? marca.nombre : "Desconocida";
-
-                        $("#listaDatos").append(`
-                            <tr>
-                                <td>${item.placa}</td>
-                                <td>${nombreMarca}</td>
-                                <td>${item.anio}</td>
-                                <td>
-                                    <button class="secondary" onclick="actualizarVehiculo('${item.id_vehiculo}')">Actualizar</button>
-                                </td>
-                            </tr>
-                        `);
-                    }
-                });
-            },
-            error: function(xhr, status, error) {
-                console.error("Error al cargar vehículos: " + error);
-            }
-        });
+    function cargarModelosPorMarca(idMarca) {
+      $.ajax({
+        url: `${API_MODELO}?id_marca=${idMarca}`,
+        method: 'GET',
+        success: function(data) {
+          modelos = data;
+          const select = $("#modeloInput");
+          select.empty().append('<option value="">Seleccione un modelo</option>');
+          data.forEach(modelo => {
+            select.append(`<option value="${modelo.id_modelo}">${modelo.nombre}</option>`);
+          });
+        },
+        error: function(xhr, status, error) {
+          console.error("Error al cargar modelos: " + error);
+        }
+      });
     }
+
+
+
+
+  function cargarVehiculosAsociados() {
+      $.ajax({
+        url: API_VEHICULO,
+        method: 'GET',
+        success: function(data) {
+          $("#listaDatos").empty();
+          data.forEach(item => {
+            if (item.cliente_id.toString() === userId) {
+              const marca = marcas.find(m => m.id_marca === item.id_marca);
+              const modelo = modelos.find(m => m.id_modelo === item.id_modelo);
+              const nombreMarca = marca ? marca.nombre : "Desconocida";
+              const nombreModelo = modelo ? modelo.nombre : "Desconocido";
+
+              $("#listaDatos").append(`
+                <tr>
+                  <td>${item.placa}</td>
+                  <td>${nombreMarca}</td>
+                  <td>${nombreModelo}</td>
+                  <td>${item.anio}</td>
+                  <td>
+                    <button class="secondary" onclick="actualizarVehiculo('${item.id_vehiculo}')">Actualizar</button>
+                  </td>
+                </tr>
+              `);
+            }
+          });
+        },
+        error: function(xhr, status, error) {
+          console.error("Error al cargar vehículos: " + error);
+        }
+      });
+    }
+
+    
+   
+
 
     function guardarVehiculo() {
         const nuevoVehiculo = {
             placa: $("#placaInput").val(),
             id_marca: parseInt($("#marcaInput").val()),
+              id_modelo: parseInt($("#modeloInput").val()),
             anio: parseInt($("#anioInput").val()),
             cliente_id: userId
         };
@@ -134,5 +175,15 @@
     $(document).ready(function () {
         cargarMarcas();
         cargarVehiculosAsociados();
+
+    $("#marcaInput").change(function () {
+      const idMarca = $(this).val();
+      if (idMarca) {
+        cargarModelosPorMarca(idMarca);
+      } else {
+        $("#modeloInput").empty().append('<option value="">Seleccione un modelo</option>');
+      }
+    });
+
     });
 </script>

@@ -7,5 +7,6 @@ namespace Tecmave.Api.Models
         [Key]
         public int id_modelo { get; set; } // [pk, increment]
         public string nombre { get; set; }
+        public int id_marca{ get; set; }
     }
 }

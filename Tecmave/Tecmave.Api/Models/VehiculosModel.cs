@@ -10,5 +10,6 @@ namespace Tecmave.Api.Models
         public int id_marca { get; set; } // [pk, increment]
         public int anio { get; set; }
         public string placa { get; set; }
+        public int id_modelo { get; set; }
     }
 }
