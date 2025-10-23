@@ -1,15 +1,28 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Tecmave.Api.Models
 {
-    public class VehiculosModel
+    [Table("vehiculos")] 
+    public class Vehiculo
     {
         [Key]
-        public int id_vehiculo { get; set; } // [pk, increment]
-        public int cliente_id { get; set; }
-        public int id_marca { get; set; } // [pk, increment]
-        public int anno { get; set; }
-        public string modelo { get; set; }
-        public string placa { get; set; }
+        [Column("id_vehiculo")]
+        public int IdVehiculo { get; set; }
+
+        [Column("cliente_id")]
+        public int ClienteId { get; set; }
+
+        [Column("id_marca")]
+        public int IdMarca { get; set; }
+
+        [Column("anno")]
+        public int Anno { get; set; }
+
+        [Column("modelo")]
+        public string Modelo { get; set; } = string.Empty;
+
+        [Column("placa")]
+        public string Placa { get; set; } = string.Empty;
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;                
 using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 using Tecmave.Api.Services;
@@ -7,14 +8,22 @@ using Tecmave.Api.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o =>
+    {
+        o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+        o.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// --- CONEXIÓN A MySQL ---
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
 
+// --- IDENTITY CONFIG ---
 builder.Services
     .AddIdentity<Usuario, AppRole>(options =>
     {
@@ -28,13 +37,14 @@ builder.Services
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+// --- CORS (Frontend permitido) ---
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermirFrontend", policy => policy
         .WithOrigins(
             "https://localhost:7190",
-            "http://localhost:5173", 
-            "https://localhost:5173" 
+            "http://localhost:5173",
+            "https://localhost:5173"
         )
         .AllowAnyHeader()
         .AllowAnyMethod()
@@ -59,7 +69,6 @@ builder.Services.AddScoped<EstadosService>();
 builder.Services.AddScoped<ColaboradoresService>();
 builder.Services.AddScoped<AgendamientoService>();
 
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -69,9 +78,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseCors("PermirFrontend");
-
 app.UseAuthentication();
 app.UseAuthorization();
 
