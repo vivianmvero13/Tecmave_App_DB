@@ -18,7 +18,7 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// --- CONEXIÃ“N A MySQL ---
+// --- CONEXIÓN A MySQL ---
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
@@ -63,7 +63,6 @@ builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<ResenasService>();
 builder.Services.AddScoped<PromocionesService>();
 builder.Services.AddScoped<NotificacionesService>();
-builder.Services.AddScoped<RevisionService>();
 builder.Services.AddScoped<MarcasService>();
 builder.Services.AddScoped<FacturasService>();
 builder.Services.AddScoped<EstadosService>();
@@ -84,6 +83,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+/*
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
@@ -101,7 +101,7 @@ using (var scope = app.Services.CreateScope())
     var admin = await userManager.FindByEmailAsync(adminEmail);
     if (admin == null)
     {
-        admin = new Usuario { UserName = "admin", Nombre = "Admin", Apellidos = "Principal", Email = adminEmail };
+        admin = new Usuario { UserName = "admin", Nombre = "Admin", Apellido = "Principal", Email = adminEmail };
         await userManager.CreateAsync(admin, "Admin1234");
         await userManager.AddToRoleAsync(admin, "Administrador");
     }
@@ -114,7 +114,7 @@ using (var scope = app.Services.CreateScope())
         {
             UserName = "usuario",
             Nombre = "Usuario",
-            Apellidos = "Prueba",
+            Apellido = "Prueba",
             Email = userEmail
         };
 
@@ -122,5 +122,5 @@ using (var scope = app.Services.CreateScope())
         await userManager.AddToRoleAsync(normalUser, "Usuarios");
     }
 }
-
+*/
 app.Run();
