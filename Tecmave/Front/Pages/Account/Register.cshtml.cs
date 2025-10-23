@@ -11,18 +11,14 @@ namespace Front.Pages.Account
     {
         private readonly UserManager<Usuario> _userManager;
 
-        private readonly RoleManager<IdentityRole<int>> _roleManager;
-
-
         [BindProperty]
         public RegisterDTO Register { get; set; }
         public string ReturnUrl { get; set; }
 
-        public RegisterModel(UserManager<Usuario> userManager, RoleManager<IdentityRole<int>> roleManager)
-        {
+        public RegisterModel(UserManager<Usuario> userManager)
+        =>
             _userManager = userManager;
-            _roleManager = roleManager;
-        }
+
         public void OnGet()
         {
         }
@@ -37,41 +33,10 @@ namespace Front.Pages.Account
             var user = new Usuario();
             user.Email = Register.Email;
             user.UserName = Register.Email;
-            user.Cedula = Register.Cedula;
-            user.Nombre = Register.Nombre;
-            user.Apellido = Register.Apellido;
-            user.Direccion = Register.Direccion;
-            user.PhoneNumber = Register.PhoneNumber;
 
 
             var res = await _userManager
                 .CreateAsync(user, Register.Password);
-
-
-            if (res.Succeeded)
-            {
-                
-                var roleExists = await _roleManager.RoleExistsAsync("Cliente");
-                if (!roleExists)
-                {
-                    var clienteRole = new IdentityRole<int>
-                    {
-                        Name = "Cliente",
-                        NormalizedName = "CLIENTE"
-                    };
-
-                    await _roleManager.CreateAsync(clienteRole);
-                }
-
-                
-                await _userManager.AddToRoleAsync(user, "Cliente");
-            }
-            else
-            {
-                // Manejo de errores si la creación falla
-                throw new Exception("Error al crear el usuario: " + string.Join(", ", res.Errors.Select(e => e.Description)));
-            }
-
 
             if (ReturnUrl == null)
             {
