@@ -9,8 +9,8 @@ namespace Tecmave.Api.Models
         public string? Nombre { get; set; }
 
         [MaxLength(50)]
-        public string? Apellidos { get; set; }
+        public string? Apellido { get; set; }
 
-        public string NombreCompleto => $"{Nombre} {Apellidos}".Trim();
+        public string NombreCompleto => $"{Nombre} {Apellido}".Trim();
     }
 }

@@ -66,19 +66,21 @@
 
     const horasDisponibles = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"];
 
-    // Cargar vehículos del usuario logeado
+
+
     function cargarVehiculosUsuario() {
         $.get(API_VEHICULO, function (vehiculos) {
             $("#vehiculos").empty().append('<option value="">Selecciona</option>');
             vehiculos.forEach(v => {
-                if (v.cliente_id.toString() === userId) {
-                    $("#vehiculos").append(`<option value="${v.id_vehiculo}">${v.placa}</option>`);
+                if (v.ClienteId.toString() === userId) {
+                    $("#vehiculos").append(`<option value="${v.IdVehiculo}">${v.Placa}</option>`);
                 }
             });
         });
     }
 
-    // Mostrar todas las horas disponibles siempre
+
+    
     function cargarHoras() {
         $("#hora").empty().append('<option value="">Selecciona</option>');
         horasDisponibles.forEach(h => {
@@ -86,7 +88,8 @@
         });
     }
 
-    // Validar y guardar agendamiento
+
+
     function guardarAgendamiento() {
         const vehiculoId = $("#vehiculos").val();
         const fecha = $("#fecha").val();
@@ -141,7 +144,9 @@
         });
     }
 
-    // Mostrar agendamientos del usuario
+
+
+
     function cargarAgendamientosUsuario() {
         $.get(API_AGENDAMIENTO, function (agendamientos) {
             $("table tbody").empty();
@@ -149,11 +154,11 @@
             const agendamientosUsuario = agendamientos.filter(a => a.cliente_id.toString() === userId);
 
             agendamientosUsuario.forEach(a => {
-                $.get(`${API_VEHICULO}/${a.vehiculo_id}`, function (vehiculo) {
+                $.get(`${API_VEHICULO}/${a.vehiculoId}`, function (vehiculo) {
                     $.get(`${API_ESTADO}/${a.id_estado}`, function (estado) {
                         $("table tbody").append(`
                             <tr>
-                                <td>${vehiculo.placa}</td>
+                                <td>${vehiculo.Placa}</td>
                                 <td>${a.fecha_agregada}</td>
                                 <td>${a.fecha_estimada}</td>
                                 <td>${estado.nombre}</td>
@@ -165,7 +170,8 @@
         });
     }
 
-    // Eventos al cargar la página
+
+    
     $(document).ready(function () {
 
     const hoy = new Date().toISOString().split('T')[0];

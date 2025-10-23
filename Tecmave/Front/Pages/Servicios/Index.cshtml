@@ -115,21 +115,22 @@
         });
     }
 
+
     function cargarRevisiones() {
         $.get(API_REVISION, function (data) {
             $("#tablaRevisiones").empty();
             data.forEach(rev => {
-                const vehiculo = vehiculos.find(v => v.id_vehiculo === rev.vehiculo_id && v.cliente_id.toString() === userId);
+                const vehiculo = vehiculos.find(v => v.IdVehiculo === rev.vehiculo_id && v.ClienteId.toString() === userId);
                 if (vehiculo) {
                     const servicio = servicios.find(s => s.id_servicio === rev.id_servicio);
                     const estado = estados.find(e => e.id_estado === rev.id_estado);
 
                     $("#tablaRevisiones").append(`
                         <tr>
-                            <td>${vehiculo.placa}</td>
-                            <td>${(marcas.find(m => m.id_marca === vehiculo.id_marca)?.nombre) || "Desconocida"}</td>
-                            <td>${vehiculo.modelo}</td>
-                            <td>${vehiculo.anno}</td>
+                            <td>${vehiculo.Placa}</td>
+                            <td>${(marcas.find(m => m.id_marca === vehiculo.IdMarca)?.nombre) || "Desconocida"}</td>
+                            <td>${vehiculo.Modelo}</td>
+                            <td>${vehiculo.Anno}</td>
                             <td>${servicio ? servicio.nombre : "Desconocido"}</td>
                             <td>${estado ? estado.nombre : "Desconocido"}</td>
                         </tr>
@@ -138,6 +139,7 @@
             });
         });
     }
+
 
     function cargarTipoServicios() {
         $.get(API_TIPO_SERVICIO, function (data) {
@@ -150,16 +152,18 @@
         });
     }
 
+
     function cargarVehiculos() {
         $.get(API_VEHICULO, function (data) {
-            vehiculos = data.filter(v => v.cliente_id.toString() === userId);
+            vehiculos = data.filter(v => v.ClienteId.toString() === userId);
             const select = $("#vehiculoInput");
             select.empty().append('<option value="">Seleccione vehículo</option>');
             vehiculos.forEach(v => {
-                select.append(`<option value="${v.id_vehiculo}">${v.placa} - ${v.modelo}</option>`);
+                select.append(`<option value="${v.IdVehiculo}">${v.Placa} - ${v.Modelo}</option>`);
             });
         });
     }
+
 
     function cargarMarcas() {
         $.get(API_MARCA, function (data) {
@@ -266,24 +270,26 @@
             }
         });
 
-        $("#vehiculoInput").change(function () {
-            const vehiculoId = parseInt($(this).val());
-            const vehiculo = vehiculos.find(v => v.id_vehiculo === vehiculoId);
 
-            if (vehiculo) {
-                const marca = marcas.find(m => m.id_marca === vehiculo.id_marca);
-                const selectMarca = $("#marcaInput");
-                selectMarca.empty();
+    $("#vehiculoInput").change(function () {
+        const vehiculoId = parseInt($(this).val());
+        const vehiculo = vehiculos.find(v => v.IdVehiculo === vehiculoId);
 
-                if (marca) {
-                    selectMarca.append(`<option value="${marca.nombre}">${marca.nombre}</option>`);
-                } else {
-                    selectMarca.append('<option value="">Marca no encontrada</option>');
-                }
+        if (vehiculo) {
+            const marca = marcas.find(m => m.id_marca === vehiculo.IdMarca);
+            const selectMarca = $("#marcaInput");
+            selectMarca.empty();
 
-                $("#precioInput").val("$ -");
+            if (marca) {
+                selectMarca.append(`<option value="${marca.nombre}">${marca.nombre}</option>`);
+            } else {
+                selectMarca.append('<option value="">Marca no encontrada</option>');
             }
-        });
+
+            $("#precioInput").val("$ -");
+        }
+    });
+
 
         $("#marcaInput, #kmInput").change(calcPreventivo);
     });
