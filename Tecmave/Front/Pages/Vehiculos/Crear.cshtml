@@ -70,69 +70,158 @@
     </div>
 </section>
 
+<!-- Modal reutilizable -->
+<div id="appModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-dialog" role="document">
+        <button class="modal-close" type="button" aria-label="Cerrar" data-close="1">×</button>
+        <div class="modal-icon" id="modalIcon">✓</div>
+        <h3 id="modalTitle">Título</h3>
+        <p id="modalBody">Mensaje…</p>
+        <div class="modal-actions">
+            <button id="modalPrimary" class="btn btn-orange" type="button" data-close="1">Aceptar</button>
+        </div>
+    </div>
+</div>
+
 <style>
     .btn-orange {
         background: #ff8c00 !important;
         border: 1px solid #ff8c00 !important;
         color: #fff !important;
         padding: .5rem 1rem;
-        border-radius: .25rem;
+        border-radius: .25rem
     }
 
         .btn-orange:hover {
-            background: #e67e00 !important;
+            background: #e67e00 !important
         }
 
+    .btn-red {
+        background: #dc3545 !important;
+        border: 1px solid #dc3545 !important;
+        color: #fff !important;
+        padding: .3rem .8rem;
+        border-radius: .25rem
+    }
+
+        .btn-red:hover {
+            background: #b92b3a !important
+        }
+
+    .btn-outline-primary.btn-sm {
+        padding: .3rem .6rem;
+        border-radius: .25rem
+    }
+
     .text-danger {
-        color: #dc3545;
+        color: #dc3545
     }
 
     .grid.cols-2 {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1rem;
+        gap: 1rem
     }
 
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1rem;
-        margin-bottom: .75rem;
+        margin-bottom: .75rem
     }
 
     .input {
         width: 100%;
-        padding: .5rem;
+        padding: .5rem
     }
 
     .card {
         border: 1px solid #e5e5e5;
         border-radius: .5rem;
-        padding: 1rem;
+        padding: 1rem
     }
 
     .gap-2 {
-        gap: .5rem;
+        gap: .5rem
     }
 
     .table {
-        width: 100%;
+        width: 100%
     }
 
         .table th, .table td {
             padding: .5rem;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #eee
         }
+
+    /* Modal */
+    .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none
+    }
+
+        .modal.show {
+            display: block
+        }
+
+    .modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,.45)
+    }
+
+    .modal-dialog {
+        position: relative;
+        max-width: 480px;
+        margin: 8vh auto 0;
+        background: #fff;
+        border-radius: .75rem;
+        padding: 1.25rem;
+        box-shadow: 0 10px 35px rgba(0,0,0,.25)
+    }
+
+    .modal-close {
+        position: absolute;
+        right: .5rem;
+        top: .5rem;
+        border: 0;
+        background: transparent;
+        font-size: 1.5rem;
+        line-height: 1;
+        cursor: pointer;
+        color: #888
+    }
+
+    .modal-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        margin: .25rem 0 .5rem;
+        display: grid;
+        place-content: center;
+        background: #e7f6ec;
+        color: #2e7d32;
+        font-weight: 700
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: .5rem;
+        margin-top: 1rem
+    }
 </style>
 
 <script>
-    const API_BASE      = "https://localhost:7096";
+    const API_BASE = "https://localhost:7096";
     const URL_VEHICULOS = `${API_BASE}/vehiculos`;
-    const URL_MARCAS    = `${API_BASE}/marcas`;
-    const URL_USUARIOS  = `${API_BASE}/api/usuarios`;
+    const URL_MARCAS = `${API_BASE}/marcas`;
+    const URL_USUARIOS = `${API_BASE}/api/usuarios`;
 
     const marcasMap = new Map();
-
     let currentVehiculoId = null;   // null = crear, número = editar
     let usersLoaded = false;
     let marcasLoaded = false;
@@ -155,7 +244,58 @@
       return p.get(name);
     }
 
-    // ---------- Usuarios ----------
+    /* =================== Modal helpers =================== */
+    const Modal = (() => {
+      const root   = document.getElementById('appModal');
+      const title  = document.getElementById('modalTitle');
+      const body   = document.getElementById('modalBody');
+      const icon   = document.getElementById('modalIcon');
+      let onClose  = null;
+
+      function setKind(kind){
+        // kind: 'ok' | 'warn' | 'error' | 'info'
+        const map = {
+          ok:   { bg:'#e7f6ec', color:'#2e7d32', text:'✓' },
+          warn: { bg:'#fff4e5', color:'#a15c00', text:'!' },
+          error:{ bg:'#fdecea', color:'#b3261e', text:'!' },
+          info: { bg:'#e7f1ff', color:'#0b57d0', text:'ℹ' }
+        };
+        const k = map[kind] || map.info;
+        icon.style.background = k.bg;
+        icon.style.color = k.color;
+        icon.textContent = k.text;
+      }
+
+      function show({ titleText = 'Información', bodyText = '', autoFocus = true, onCloseCb = null, kind = 'ok' }) {
+        setKind(kind);
+        title.textContent = titleText;
+        body.textContent  = bodyText;
+        onClose = typeof onCloseCb === 'function' ? onCloseCb : null;
+        root.classList.add('show');
+        root.style.display = 'block';
+        root.setAttribute('aria-hidden', 'false');
+        if (autoFocus) {
+          const primary = document.getElementById('modalPrimary');
+          setTimeout(() => primary?.focus(), 0);
+        }
+        document.addEventListener('keydown', escListener);
+      }
+
+      function hide() {
+        root.classList.remove('show');
+        root.style.display = 'none';
+        root.setAttribute('aria-hidden', 'true');
+        document.removeEventListener('keydown', escListener);
+        if (onClose) { const cb = onClose; onClose = null; try { cb(); } catch {} }
+      }
+
+      function escListener(e) { if (e.key === 'Escape') hide(); }
+      root.addEventListener('click', (e) => { if (e.target?.dataset?.close === '1') hide(); });
+
+      return { show, hide };
+    })();
+
+    /* =================== Usuarios y marcas =================== */
     function nombreCompleto(u){
       const n = (u.nombre ?? u.Nombre ?? '').trim();
       const a = (u.apellidos ?? u.Apellidos ?? '').trim();
@@ -180,16 +320,14 @@
             sel.appendChild(opt);
           }
           usersLoaded = true;
-          // Si ya sabemos a qué cliente pertenece el vehículo que estamos editando
           if (pendingClienteId) {
             sel.value = String(pendingClienteId);
-            cargarVehiculosAsociados(); // refresca tabla a ese usuario
+            cargarVehiculosAsociados();
           }
         })
         .catch(err => { console.error('usuarios', err); showMsg('Error al cargar usuarios.'); });
     }
 
-    // ---------- Marcas ----------
     function cargarMarcas(){
       return fetch(URL_MARCAS, { credentials: 'include' })
         .then(r => r.json())
@@ -218,7 +356,7 @@
         .catch(err => { console.error('marcas', err); showMsg('Error al cargar marcas.'); });
     }
 
-    // ---------- Listado por usuario ----------
+    /* =================== Listado por usuario =================== */
     function cargarVehiculosAsociados(){
       const uid = parseInt(document.getElementById('usuarioInput').value || '0', 10);
       const tb  = document.getElementById('listaDatos');
@@ -256,7 +394,10 @@
                 <td>${esc(marcaNom)}</td>
                 <td>${esc(String(modelo))}</td>
                 <td>${esc(annoTxt)}</td>
-                <td><a class="btn btn-outline-primary btn-sm" href="${selfUrl}">Editar</a></td>
+                <td>
+                  <a class="btn btn-outline-primary btn-sm" href="${selfUrl}">Editar</a>
+                  <button class="btn btn-red btn-sm" onclick="confirmarEliminar(${id})">Eliminar</button>
+                </td>
               </tr>`;
           }).join('');
         })
@@ -266,7 +407,7 @@
         });
     }
 
-    // ---------- Crear / Actualizar ----------
+    /* =================== Crear / Actualizar =================== */
     function getFormData(){
       const uid      = parseInt(document.getElementById('usuarioInput').value || '0', 10);
       const id_marca = parseInt(document.getElementById('marcaInput').value || '0', 10);
@@ -284,38 +425,18 @@
       return { ok:true, payload:{ cliente_id: uid, id_marca, modelo, anno, placa } };
     }
 
-        async function crearVehiculo(){
-      const uid      = parseInt(document.getElementById('usuarioInput').value || '0', 10);
-      const id_marca = parseInt(document.getElementById('marcaInput').value || '0', 10);
-      const modelo   = (document.getElementById('modeloInput').value || '').trim();
-      const anno     = parseInt(document.getElementById('annoInput').value || '0', 10);
-      const placa    = (document.getElementById('placaInput').value || '').trim().toUpperCase();
-
-      // validaciones rápidas (usa las tuyas si prefieres)
-      const yearNow = new Date().getFullYear();
-      if(!uid) return showMsg('Seleccione un usuario.');
-      if(!id_marca) return showMsg('Seleccione una marca.');
-      if(!modelo) return showMsg('El modelo es requerido.');
-      if(!anno || anno < 1950 || anno > yearNow + 1) return showMsg(`El año debe estar entre 1950 y ${yearNow + 1}.`);
-      if(!placa) return showMsg('La placa es requerida.');
-
+    async function crearVehiculo(){
+      const { ok, msg, payload } = getFormData();
+      if(!ok){ showMsg(msg); return; }
       showMsg('');
 
-      // El API acepta este shape; en crear mandamos id_vehiculo: 0
-      const payload = {
-        id_vehiculo: 0,
-        cliente_id: uid,
-        id_marca,
-        anno,
-        modelo,
-        placa
-      };
+      const body = { id_vehiculo: 0, ...payload };
 
       const r = await fetch(URL_VEHICULOS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(payload)
+        body: JSON.stringify(body)
       });
 
       if(!r.ok){
@@ -328,44 +449,25 @@
       document.getElementById('modeloInput').value = '';
       document.getElementById('annoInput').value = '';
       document.getElementById('placaInput').value = '';
-      showMsg('');
       cargarVehiculosAsociados();
-      alert('Vehículo registrado correctamente.');
+
+      Modal.show({ titleText: 'Éxito', bodyText: 'Vehículo registrado correctamente.', kind: 'ok' });
     }
 
     async function actualizarVehiculo(){
       if(!currentVehiculoId) return showMsg('No hay vehículo cargado para editar.');
 
-      const uid      = parseInt(document.getElementById('usuarioInput').value || '0', 10);
-      const id_marca = parseInt(document.getElementById('marcaInput').value || '0', 10);
-      const modelo   = (document.getElementById('modeloInput').value || '').trim();
-      const anno     = parseInt(document.getElementById('annoInput').value || '0', 10);
-      const placa    = (document.getElementById('placaInput').value || '').trim().toUpperCase();
-
-      const yearNow = new Date().getFullYear();
-      if(!uid) return showMsg('Seleccione un usuario.');
-      if(!id_marca) return showMsg('Seleccione una marca.');
-      if(!modelo) return showMsg('El modelo es requerido.');
-      if(!anno || anno < 1950 || anno > yearNow + 1) return showMsg(`El año debe estar entre 1950 y ${yearNow + 1}.`);
-      if(!placa) return showMsg('La placa es requerida.');
-
+      const { ok, msg, payload } = getFormData();
+      if(!ok){ showMsg(msg); return; }
       showMsg('');
 
-      // PUT al mismo endpoint, sin path param; el id viaja en el body
-      const payload = {
-        id_vehiculo: Number(currentVehiculoId),
-        cliente_id: uid,
-        id_marca,
-        anno,
-        modelo,
-        placa
-      };
+      const body = { id_vehiculo: Number(currentVehiculoId), ...payload };
 
       const r = await fetch(URL_VEHICULOS, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(payload)
+        body: JSON.stringify(body)
       });
 
       if(!r.ok){
@@ -373,12 +475,56 @@
         return showMsg(m);
       }
 
-      alert('Vehículo actualizado correctamente.');
-      salirModoEdicion();     // vuelve a modo crear
+      Modal.show({ titleText: 'Éxito', bodyText: 'Vehículo actualizado correctamente.', kind: 'ok' });
+      salirModoEdicion();
       cargarVehiculosAsociados();
     }
 
+    /* =================== Eliminar =================== */
+    async function eliminarVehiculo(id){
+      const r = await fetch(`${URL_VEHICULOS}/${id}`, { method:'DELETE', credentials:'include' });
+      if(r.ok){
+        // si estabas editando ese mismo vehículo, sal de edición y limpia form
+        if(currentVehiculoId && Number(currentVehiculoId) === Number(id)){
+          salirModoEdicion();
+        }
+        Modal.show({ titleText:'Eliminado', bodyText:'Vehículo eliminado correctamente.', kind:'ok', onCloseCb: () => cargarVehiculosAsociados() });
+      }else{
+        let m='Error al eliminar.'; try { m=(await r.json())?.message || m; } catch {}
+        Modal.show({ titleText:'Error', bodyText:m, kind:'error' });
+      }
+    }
 
+    function confirmarEliminar(id){
+      const btn = document.getElementById('modalPrimary');
+      const prevText = btn.textContent;
+      const prevClose = btn.getAttribute('data-close');
+      btn.textContent = 'Eliminar';
+      btn.removeAttribute('data-close');
+
+      const handler = async () => {
+        btn.removeEventListener('click', handler);
+        try { await eliminarVehiculo(id); } finally {
+          btn.textContent = prevText;
+          if(prevClose) btn.setAttribute('data-close', prevClose);
+          Modal.hide();
+        }
+      };
+
+      btn.addEventListener('click', handler, { once:true });
+      Modal.show({
+        titleText: 'Confirmar eliminación',
+        bodyText: '¿Desea eliminar este vehículo?',
+        kind: 'warn',
+        onCloseCb: () => {
+          btn.removeEventListener('click', handler);
+          btn.textContent = prevText;
+          if(prevClose) btn.setAttribute('data-close', prevClose);
+        }
+      });
+    }
+
+    /* =================== Modo crear/editar =================== */
     function setModoCrear(){
       currentVehiculoId = null;
       document.getElementById('formTitle').textContent = 'Registrar vehículo';
@@ -404,18 +550,15 @@
     }
 
     function salirModoEdicion(){
-      // Limpia query string ?id=...
       const url = new URL(window.location.href);
       url.searchParams.delete('id');
       window.history.replaceState({}, '', url.toString());
-
       setModoCrear();
       limpiarFormulario();
     }
 
-    // ---------- Cargar vehículo (para editar) ----------
+    /* =================== Cargar vehículo por id (modo edición) =================== */
     async function cargarVehiculoPorId(id){
-      // Asegura que usuarios y marcas estén cargados para setear selects
       if(!usersLoaded || !marcasLoaded){
         await Promise.all([cargarUsuarios(), cargarMarcas()]);
       }
@@ -429,7 +572,6 @@
       const clienteId = v.cliente_id ?? v.clienteId ?? v.ClienteId ?? v.cliente?.id ?? null;
       const marcaId   = v.id_marca ?? v.idMarca ?? v.MarcaId ?? null;
 
-      // Setea selects y campos
       if(clienteId){
         pendingClienteId = Number(clienteId);
         document.getElementById('usuarioInput').value = String(pendingClienteId);
@@ -444,7 +586,7 @@
       setModoEditar(Number(v.id_vehiculo ?? v.id ?? v.Id ?? id));
     }
 
-    // ---------- Init ----------
+    /* =================== Init =================== */
     document.addEventListener('DOMContentLoaded', async () => {
       setModoCrear();
       await Promise.all([cargarUsuarios(), cargarMarcas()]);
@@ -452,14 +594,8 @@
 
       const qsId = getQS('id');
       if(qsId){
-        // Modo edición
-        try {
-          await cargarVehiculoPorId(qsId);
-        } catch (e) {
-          console.error(e);
-          showMsg('Error al cargar el vehículo.');
-          setModoCrear();
-        }
+        try { await cargarVehiculoPorId(qsId); }
+        catch (e) { console.error(e); showMsg('Error al cargar el vehículo.'); setModoCrear(); }
       }
     });
 </script>

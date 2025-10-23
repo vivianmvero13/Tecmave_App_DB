@@ -96,5 +96,21 @@ namespace Tecmave.Api.Controllers
 
             return NoContent();
         }
+
+        [HttpDelete("{id:int}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var v = await _db.Vehiculos.FirstOrDefaultAsync(x => x.IdVehiculo == id);
+            if (v is null)
+                return NotFound(new { message = $"Vehículo {id} no existe." });
+
+            _db.Vehiculos.Remove(v);
+            await _db.SaveChangesAsync();
+
+            _log.LogInformation("Vehículo {Id} eliminado correctamente.", id);
+            return NoContent();
+        }
     }
 }
