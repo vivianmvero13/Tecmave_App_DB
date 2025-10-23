@@ -1,87 +1,100 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Tecmave.Api.Data;
 using Tecmave.Api.Models;
-using Tecmave.Api.Services;
 
 namespace Tecmave.Api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-    public class VehiculosController : Controller
+    [Route("vehiculos")]
+    public class VehiculosController : ControllerBase
     {
-        private readonly VehiculosService _VehiculosService;
+        private readonly AppDbContext _db;
+        private readonly ILogger<VehiculosController> _log;
 
-        public VehiculosController(VehiculosService VehiculosService)
+        public VehiculosController(AppDbContext db, ILogger<VehiculosController> log)
         {
-            _VehiculosService = VehiculosService;
+            _db = db; _log = log;
         }
 
-        //Apis GET, POST, PUT   y DELETE
         [HttpGet]
-        public ActionResult<IEnumerable<VehiculosModel>> GetVehiculosModel()
-        {
-            return _VehiculosService.GetVehiculosModel();
-        }
+        [ProducesResponseType(typeof(IEnumerable<Vehiculo>), 200)]
+        public async Task<ActionResult<IEnumerable<Vehiculo>>> List()
+            => Ok(await _db.Vehiculos.AsNoTracking().ToListAsync());
 
-        [HttpGet("{id}")]
-        public ActionResult<VehiculosModel> GetById(int id)
-        {
-            return _VehiculosService.GetByid_vehiculo(id);
-        }
+        [HttpGet("{id:int}")]
+        [ProducesResponseType(typeof(Vehiculo), 200)]
+        [ProducesResponseType(404)]
+        public async Task<ActionResult<Vehiculo>> GetById(int id)
+            => await _db.Vehiculos.FindAsync(id) is { } v ? Ok(v) : NotFound();
 
-        //Apis POST
         [HttpPost]
-        public ActionResult<VehiculosModel> AddVehiculos(VehiculosModel VehiculosModel)
+        [ProducesResponseType(typeof(Vehiculo), 201)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(409)]
+        public async Task<IActionResult> Create([FromBody] Vehiculo dto)
         {
+            if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-            var newVehiculosModel = _VehiculosService.AddVehiculos(VehiculosModel);
+            if (dto.Anno < 1950 || dto.Anno > DateTime.UtcNow.Year + 1)
+                return BadRequest(new { message = "Año fuera de rango." });
 
-            return
-                CreatedAtAction(
-                        nameof(GetVehiculosModel), new
-                        {
-                            id = newVehiculosModel.id_vehiculo,
-                        },
-                        newVehiculosModel);
+            var v = new Vehiculo
+            {
+                ClienteId = dto.ClienteId,
+                IdMarca = dto.IdMarca,
+                Anno = dto.Anno,
+                Modelo = dto.Modelo,
+                Placa = (dto.Placa ?? string.Empty).ToUpperInvariant()
+            };
 
+            _db.Vehiculos.Add(v);
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _log.LogWarning(ex, "Error creando vehículo (posible placa duplicada).");
+                return Conflict(new { message = "No se pudo crear el vehículo (posible duplicado de placa)." });
+            }
+
+            return CreatedAtAction(nameof(GetById), new { id = v.IdVehiculo }, v);
         }
 
-        //APIS PUT
         [HttpPut]
-        public IActionResult UpdateVehiculos(VehiculosModel VehiculosModel)
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(409)]
+        public async Task<IActionResult> Update([FromBody] Vehiculo dto)
         {
+            if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-            if (!_VehiculosService.UpdateVehiculos(VehiculosModel))
+            var v = await _db.Vehiculos.FirstOrDefaultAsync(x => x.IdVehiculo == dto.IdVehiculo);
+            if (v is null)
+                return NotFound(new { message = $"Vehículo {dto.IdVehiculo} no existe." });
+
+            if (dto.Anno < 1950 || dto.Anno > DateTime.UtcNow.Year + 1)
+                return BadRequest(new { message = "Año fuera de rango." });
+
+            v.ClienteId = dto.ClienteId;
+            v.IdMarca = dto.IdMarca;
+            v.Anno = dto.Anno;
+            v.Modelo = dto.Modelo;
+            v.Placa = (dto.Placa ?? string.Empty).ToUpperInvariant();
+
+            try
             {
-                return NotFound(
-                        new
-                        {
-                            elmsneaje = "El vehiculo no fue encontrado"
-                        }
-                    );
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _log.LogWarning(ex, "Error actualizando vehículo (posible placa duplicada).");
+                return Conflict(new { message = "No se pudo actualizar el vehículo (posible duplicado de placa)." });
             }
 
             return NoContent();
-
         }
-
-        //APIS DELETE
-        [HttpDelete]
-        public IActionResult DeleteVehiculosModel(int id)
-        {
-
-            if (!_VehiculosService.DeleteVehiculos(id))
-            {
-                return NotFound(
-                        new
-                        {
-                            elmsneaje = "El vehiculo no fue encontrado"
-                        }
-                    );
-            }
-
-            return NoContent();
-
-        }
-
     }
 }

@@ -7,7 +7,7 @@
 <section class="section">
     <div class="container grid cols-2">
         <div class="card">
-            <h3>Registrar vehículo</h3>
+            <h3 id="formTitle">Registrar vehículo</h3>
 
             <div class="form-row">
                 <div>
@@ -42,11 +42,6 @@
                 </div>
             </div>
 
-            <div class="mt-3 d-flex gap-2">
-                <button id="guardarBtn" class="btn btn-orange" type="button" onclick="guardarVehiculo()">Guardar</button>
-                <a class="btn btn-outline-secondary" href="/Vehiculos">Volver</a>
-            </div>
-
             <div id="formMsg" class="text-danger mt-2" style="display:none;"></div>
         </div>
 
@@ -67,8 +62,9 @@
                 </tbody>
             </table>
         </div>
+
         <div class="mt-4 d-flex gap-2">
-            <button id="btnSave" type="submit" class="btn btn-primary">Guardar</button>
+            <button id="guardarBtn" class="btn btn-orange" type="button">Guardar</button>
             <a class="btn btn-secondary" asp-page="/Vehiculos/Index">Volver</a>
         </div>
     </div>
@@ -130,12 +126,17 @@
 </style>
 
 <script>
-    
     const API_BASE      = "https://localhost:7096";
     const URL_VEHICULOS = `${API_BASE}/vehiculos`;
     const URL_MARCAS    = `${API_BASE}/marcas`;
     const URL_USUARIOS  = `${API_BASE}/api/usuarios`;
-    const marcasMap = new Map(); 
+
+    const marcasMap = new Map();
+
+    let currentVehiculoId = null;   // null = crear, número = editar
+    let usersLoaded = false;
+    let marcasLoaded = false;
+    let pendingClienteId = null;    // para setear el usuario cuando cargue el vehículo
 
     function showMsg(text){
       const el = document.getElementById('formMsg');
@@ -143,7 +144,18 @@
       el.style.display = text ? 'block' : 'none';
     }
 
-    //  Usuarios 
+    function esc(s){
+      return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;','=':'&#61;','/':'&#47;'
+      }[c]));
+    }
+
+    function getQS(name){
+      const p = new URLSearchParams(window.location.search);
+      return p.get(name);
+    }
+
+    // ---------- Usuarios ----------
     function nombreCompleto(u){
       const n = (u.nombre ?? u.Nombre ?? '').trim();
       const a = (u.apellidos ?? u.Apellidos ?? '').trim();
@@ -152,7 +164,7 @@
     }
 
     function cargarUsuarios(){
-      fetch(URL_USUARIOS, { credentials: 'include' })
+      return fetch(URL_USUARIOS, { credentials: 'include' })
         .then(r => r.json())
         .then(list => {
           const data = Array.isArray(list) ? list : (Array.isArray(list?.data) ? list.data : []);
@@ -167,13 +179,19 @@
             opt.textContent = nombreCompleto(u);
             sel.appendChild(opt);
           }
+          usersLoaded = true;
+          // Si ya sabemos a qué cliente pertenece el vehículo que estamos editando
+          if (pendingClienteId) {
+            sel.value = String(pendingClienteId);
+            cargarVehiculosAsociados(); // refresca tabla a ese usuario
+          }
         })
         .catch(err => { console.error('usuarios', err); showMsg('Error al cargar usuarios.'); });
     }
 
-    //  Marcas 
+    // ---------- Marcas ----------
     function cargarMarcas(){
-      fetch(URL_MARCAS, { credentials: 'include' })
+      return fetch(URL_MARCAS, { credentials: 'include' })
         .then(r => r.json())
         .then(data => {
           const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
@@ -194,11 +212,13 @@
               opt.textContent = nombre;
               sel.appendChild(opt);
             });
+
+          marcasLoaded = true;
         })
         .catch(err => { console.error('marcas', err); showMsg('Error al cargar marcas.'); });
     }
 
-    //  Listado por usuario 
+    // ---------- Listado por usuario ----------
     function cargarVehiculosAsociados(){
       const uid = parseInt(document.getElementById('usuarioInput').value || '0', 10);
       const tb  = document.getElementById('listaDatos');
@@ -219,24 +239,24 @@
           }
 
           tb.innerHTML = propios.map(v => {
-            const id     = v.id_vehiculo ?? v.id ?? v.Id;
-            const placa  = String(v.placa ?? '').toUpperCase();
-            const annoVal = Number(v.anno ?? v.anno ?? 0);
-            const annoTxt = annoVal > 0 ? String(annoVal) : '—';
-
-            const modelo = v.modelo ?? v.Modelo ?? '';
-            const idMarca = Number(v.id_marca ?? v.idMarca ?? 0);
-            const marcaNombre = (typeof v.marca === 'string' && v.marca.trim())
-                                  ? v.marca
-                                  : (marcasMap.get(idMarca) || (idMarca ? `#${idMarca}` : '—'));
+            const id       = v.id_vehiculo ?? v.id ?? v.Id;
+            const placa    = String(v.placa ?? '').toUpperCase();
+            const annoVal  = Number(v.anno ?? v.Anno ?? 0);
+            const annoTxt  = annoVal > 0 ? String(annoVal) : '—';
+            const modelo   = v.modelo ?? v.Modelo ?? '';
+            const idMarca  = Number(v.id_marca ?? v.idMarca ?? v.MarcaId ?? 0);
+            const marcaNom = (typeof v.marca === 'string' && v.marca.trim())
+                              ? v.marca
+                              : (marcasMap.get(idMarca) || (idMarca ? `#${idMarca}` : '—'));
+            const selfUrl  = `${location.pathname}?id=${encodeURIComponent(id)}`;
 
             return `
               <tr>
                 <td>${esc(placa)}</td>
-                <td>${esc(marcaNombre)}</td>
+                <td>${esc(marcaNom)}</td>
                 <td>${esc(String(modelo))}</td>
                 <td>${esc(annoTxt)}</td>
-                <td><a class="btn btn-outline-primary btn-sm" href="/Vehiculos/Editar?id=${encodeURIComponent(id)}">Editar</a></td>
+                <td><a class="btn btn-outline-primary btn-sm" href="${selfUrl}">Editar</a></td>
               </tr>`;
           }).join('');
         })
@@ -246,9 +266,75 @@
         });
     }
 
-    //  Guardar 
-    function guardarVehiculo(){
+    // ---------- Crear / Actualizar ----------
+    function getFormData(){
+      const uid      = parseInt(document.getElementById('usuarioInput').value || '0', 10);
+      const id_marca = parseInt(document.getElementById('marcaInput').value || '0', 10);
+      const modelo   = (document.getElementById('modeloInput').value || '').trim();
+      const anno     = parseInt(document.getElementById('annoInput').value || '0', 10);
+      const placa    = (document.getElementById('placaInput').value || '').trim().toUpperCase();
+
+      if(!uid) return { ok:false, msg:'Seleccione un usuario.' };
+      if(!id_marca) return { ok:false, msg:'Seleccione una marca.' };
+      if(!modelo) return { ok:false, msg:'El modelo es requerido.' };
+      const yearNow = new Date().getFullYear();
+      if(!anno || anno < 1950 || anno > yearNow + 1) return { ok:false, msg:`El año debe estar entre 1950 y ${yearNow + 1}.` };
+      if(!placa) return { ok:false, msg:'La placa es requerida.' };
+
+      return { ok:true, payload:{ cliente_id: uid, id_marca, modelo, anno, placa } };
+    }
+
+        async function crearVehiculo(){
+      const uid      = parseInt(document.getElementById('usuarioInput').value || '0', 10);
+      const id_marca = parseInt(document.getElementById('marcaInput').value || '0', 10);
+      const modelo   = (document.getElementById('modeloInput').value || '').trim();
+      const anno     = parseInt(document.getElementById('annoInput').value || '0', 10);
+      const placa    = (document.getElementById('placaInput').value || '').trim().toUpperCase();
+
+      // validaciones rápidas (usa las tuyas si prefieres)
+      const yearNow = new Date().getFullYear();
+      if(!uid) return showMsg('Seleccione un usuario.');
+      if(!id_marca) return showMsg('Seleccione una marca.');
+      if(!modelo) return showMsg('El modelo es requerido.');
+      if(!anno || anno < 1950 || anno > yearNow + 1) return showMsg(`El año debe estar entre 1950 y ${yearNow + 1}.`);
+      if(!placa) return showMsg('La placa es requerida.');
+
       showMsg('');
+
+      // El API acepta este shape; en crear mandamos id_vehiculo: 0
+      const payload = {
+        id_vehiculo: 0,
+        cliente_id: uid,
+        id_marca,
+        anno,
+        modelo,
+        placa
+      };
+
+      const r = await fetch(URL_VEHICULOS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+
+      if(!r.ok){
+        let m = 'Error al registrar.'; try { m = (await r.json())?.message || m; } catch {}
+        return showMsg(m);
+      }
+
+      // limpiar y refrescar
+      document.getElementById('marcaInput').value = '';
+      document.getElementById('modeloInput').value = '';
+      document.getElementById('annoInput').value = '';
+      document.getElementById('placaInput').value = '';
+      showMsg('');
+      cargarVehiculosAsociados();
+      alert('Vehículo registrado correctamente.');
+    }
+
+    async function actualizarVehiculo(){
+      if(!currentVehiculoId) return showMsg('No hay vehículo cargado para editar.');
 
       const uid      = parseInt(document.getElementById('usuarioInput').value || '0', 10);
       const id_marca = parseInt(document.getElementById('marcaInput').value || '0', 10);
@@ -256,48 +342,124 @@
       const anno     = parseInt(document.getElementById('annoInput').value || '0', 10);
       const placa    = (document.getElementById('placaInput').value || '').trim().toUpperCase();
 
-      if(!uid){ showMsg('Seleccione un usuario.'); return; }
-      if(!id_marca){ showMsg('Seleccione una marca.'); return; }
-      if(!modelo){ showMsg('El modelo es requerido.'); return; }
       const yearNow = new Date().getFullYear();
-      if(!anno || anno < 1950 || anno > yearNow + 1){ showMsg(`El año debe estar entre 1950 y ${yearNow + 1}.`); return; }
-      if(!placa){ showMsg('La placa es requerida.'); return; }
+      if(!uid) return showMsg('Seleccione un usuario.');
+      if(!id_marca) return showMsg('Seleccione una marca.');
+      if(!modelo) return showMsg('El modelo es requerido.');
+      if(!anno || anno < 1950 || anno > yearNow + 1) return showMsg(`El año debe estar entre 1950 y ${yearNow + 1}.`);
+      if(!placa) return showMsg('La placa es requerida.');
 
-      const payload = { cliente_id: uid, id_marca, modelo, anno, placa };
+      showMsg('');
 
-      fetch(URL_VEHICULOS, {
-        method: 'POST',
+      // PUT al mismo endpoint, sin path param; el id viaja en el body
+      const payload = {
+        id_vehiculo: Number(currentVehiculoId),
+        cliente_id: uid,
+        id_marca,
+        anno,
+        modelo,
+        placa
+      };
+
+      const r = await fetch(URL_VEHICULOS, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(payload)
-      })
-      .then(async r => {
-        if(!r.ok){
-          let m = 'Error al registrar.'; try { m = (await r.json())?.message || m; } catch {}
-          throw new Error(m);
-        }
-        // limpiar
-        document.getElementById('marcaInput').value = '';
-        document.getElementById('modeloInput').value = '';
-        document.getElementById('annoInput').value = '';
-        document.getElementById('placaInput').value = '';
-        showMsg('');
+      });
+
+      if(!r.ok){
+        let m = 'Error al actualizar.'; try { m = (await r.json())?.message || m; } catch {}
+        return showMsg(m);
+      }
+
+      alert('Vehículo actualizado correctamente.');
+      salirModoEdicion();     // vuelve a modo crear
+      cargarVehiculosAsociados();
+    }
+
+
+    function setModoCrear(){
+      currentVehiculoId = null;
+      document.getElementById('formTitle').textContent = 'Registrar vehículo';
+      const btn = document.getElementById('guardarBtn');
+      btn.textContent = 'Guardar';
+      btn.onclick = crearVehiculo;
+    }
+
+    function setModoEditar(id){
+      currentVehiculoId = id;
+      document.getElementById('formTitle').textContent = 'Editar vehículo';
+      const btn = document.getElementById('guardarBtn');
+      btn.textContent = 'Actualizar';
+      btn.onclick = actualizarVehiculo;
+    }
+
+    function limpiarFormulario(){
+      document.getElementById('marcaInput').value = '';
+      document.getElementById('modeloInput').value = '';
+      document.getElementById('annoInput').value = '';
+      document.getElementById('placaInput').value = '';
+      showMsg('');
+    }
+
+    function salirModoEdicion(){
+      // Limpia query string ?id=...
+      const url = new URL(window.location.href);
+      url.searchParams.delete('id');
+      window.history.replaceState({}, '', url.toString());
+
+      setModoCrear();
+      limpiarFormulario();
+    }
+
+    // ---------- Cargar vehículo (para editar) ----------
+    async function cargarVehiculoPorId(id){
+      // Asegura que usuarios y marcas estén cargados para setear selects
+      if(!usersLoaded || !marcasLoaded){
+        await Promise.all([cargarUsuarios(), cargarMarcas()]);
+      }
+      const r = await fetch(`${URL_VEHICULOS}/${encodeURIComponent(id)}`, { credentials:'include' });
+      if(!r.ok){
+        let m = 'No se pudo cargar el vehículo.'; try { m = (await r.json())?.message || m; } catch {}
+        showMsg(m); return;
+      }
+      const v = await r.json();
+
+      const clienteId = v.cliente_id ?? v.clienteId ?? v.ClienteId ?? v.cliente?.id ?? null;
+      const marcaId   = v.id_marca ?? v.idMarca ?? v.MarcaId ?? null;
+
+      // Setea selects y campos
+      if(clienteId){
+        pendingClienteId = Number(clienteId);
+        document.getElementById('usuarioInput').value = String(pendingClienteId);
         cargarVehiculosAsociados();
-        alert('Vehículo registrado correctamente.');
-      })
-      .catch(err => { showMsg(err.message || 'Error al registrar.'); console.error(err); });
+      }
+      if(marcaId) document.getElementById('marcaInput').value = String(marcaId);
+
+      document.getElementById('modeloInput').value = v.modelo ?? v.Modelo ?? '';
+      document.getElementById('annoInput').value   = v.anno ?? v.Anno ?? '';
+      document.getElementById('placaInput').value  = (v.placa ?? '').toString().toUpperCase();
+
+      setModoEditar(Number(v.id_vehiculo ?? v.id ?? v.Id ?? id));
     }
 
-    function esc(s){
-      return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
-        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;','=':'&#61;','/':'&#47;'
-      }[c]));
-    }
-
-    // Init
-    document.addEventListener('DOMContentLoaded', () => {
-      cargarUsuarios();
-      cargarMarcas();
+    // ---------- Init ----------
+    document.addEventListener('DOMContentLoaded', async () => {
+      setModoCrear();
+      await Promise.all([cargarUsuarios(), cargarMarcas()]);
       document.getElementById('usuarioInput').addEventListener('change', cargarVehiculosAsociados);
+
+      const qsId = getQS('id');
+      if(qsId){
+        // Modo edición
+        try {
+          await cargarVehiculoPorId(qsId);
+        } catch (e) {
+          console.error(e);
+          showMsg('Error al cargar el vehículo.');
+          setModoCrear();
+        }
+      }
     });
 </script>
