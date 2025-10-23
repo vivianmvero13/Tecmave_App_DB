@@ -2,3 +2,290 @@
 @model Front.Pages.Servicios.IndexModel
 @{
 }
+
+    <div class="container grid cols-2">
+        <div class="card">
+            <h3>Registrar servicio</h3>
+
+            <div class="form-row">
+                <div>
+                    <label>Tipo de servicio</label>
+                    <select id="tipoServicioInput" class="input">
+                        <option value="">Seleccione tipo</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Vehículo</label>
+                    <select id="vehiculoInput" class="input">
+                        <option value="">Seleccione vehículo</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="preventivoSection" style="display:none;">
+                <h4>Preventivo</h4>
+                <div class="form-row">
+                    <div>
+                        <label>Marca</label>
+                        <select id="marcaInput" class="input">
+                            <option value="">Seleccione una marca</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Kilometraje</label>
+                        <select id="kmInput" class="input">
+                            <option value="">Seleccione rango</option>
+                            <option value="0-10k">0-10k</option>
+                            <option value="10k-30k">10k-30k</option>
+                            <option value="30k-60k">30k-60k</option>
+                        </select>
+                    </div>
+                </div>
+                <label>Precio sugerido</label>
+                <input id="precioInput" class="input" readonly placeholder="$ -" />
+                <p class="help">Valores ilustrativos.</p>
+            </div>
+
+            <div id="correctivoSection" style="display:none;">
+                <h4>Correctivo</h4>
+                <label>Descripción</label>
+                <textarea id="descripcionCorrectivo" class="input" rows="4" placeholder="Detalle del mantenimiento correctivo..."></textarea>
+            </div>
+
+            <div id="fallasSection" style="display:none;">
+                <h4>Fallas específicas</h4>
+                <label>Seleccione falla</label>
+                <select id="fallaInput" class="input">
+                    <option value="">Seleccione una falla</option>
+                </select>
+            </div>
+
+            <button onclick="registrarRevision()" style="margin-top:1rem;">Registrar servicio</button>
+        </div>
+    <div class="card">
+        <h3>Revisiones asociadas</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Placa</th>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>Año</th>
+                    <th>Servicio</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="tablaRevisiones">
+            </tbody>
+        </table>
+    </div>
+    </div>
+
+      
+
+
+
+    
+
+
+<script>
+    const API_SERVICIOS = "https://localhost:7096/Servicios";
+    const API_TIPO_SERVICIO = "https://localhost:7096/TipoServicios";
+    const API_ESTADO = "https://localhost:7096/Estados";
+    const API_REVISION = "https://localhost:7096/Revision";
+    const API_VEHICULO = "https://localhost:7096/Vehiculos";
+    const API_MARCA = "https://localhost:7096/Marcas";
+    const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
+
+    let marcas = [];
+    let vehiculos = [];
+    let tipoServicios = [];
+    let servicios = [];
+    let estados = [];
+
+    function cargarDatosIniciales() {
+        $.get(API_VEHICULO, function (data) {
+            vehiculos = data;
+            $.get(API_SERVICIOS, function (data) {
+                servicios = data;
+                $.get(API_ESTADO, function (data) {
+                    estados = data;
+                    cargarRevisiones();
+                });
+            });
+        });
+    }
+
+    function cargarRevisiones() {
+        $.get(API_REVISION, function (data) {
+            $("#tablaRevisiones").empty();
+            data.forEach(rev => {
+                const vehiculo = vehiculos.find(v => v.id_vehiculo === rev.vehiculo_id && v.cliente_id.toString() === userId);
+                if (vehiculo) {
+                    const servicio = servicios.find(s => s.id_servicio === rev.id_servicio);
+                    const estado = estados.find(e => e.id_estado === rev.id_estado);
+
+                    $("#tablaRevisiones").append(`
+                        <tr>
+                            <td>${vehiculo.placa}</td>
+                            <td>${(marcas.find(m => m.id_marca === vehiculo.id_marca)?.nombre) || "Desconocida"}</td>
+                            <td>${vehiculo.modelo}</td>
+                            <td>${vehiculo.anno}</td>
+                            <td>${servicio ? servicio.nombre : "Desconocido"}</td>
+                            <td>${estado ? estado.nombre : "Desconocido"}</td>
+                        </tr>
+                    `);
+                }
+            });
+        });
+    }
+
+    function cargarTipoServicios() {
+        $.get(API_TIPO_SERVICIO, function (data) {
+            tipoServicios = data;
+            const select = $("#tipoServicioInput");
+            select.empty().append('<option value="">Seleccione tipo</option>');
+            data.forEach(tipo => {
+                select.append(`<option value="${tipo.id_tipo_servicio}">${tipo.nombre}</option>`);
+            });
+        });
+    }
+
+    function cargarVehiculos() {
+        $.get(API_VEHICULO, function (data) {
+            vehiculos = data.filter(v => v.cliente_id.toString() === userId);
+            const select = $("#vehiculoInput");
+            select.empty().append('<option value="">Seleccione vehículo</option>');
+            vehiculos.forEach(v => {
+                select.append(`<option value="${v.id_vehiculo}">${v.placa} - ${v.modelo}</option>`);
+            });
+        });
+    }
+
+    function cargarMarcas() {
+        $.get(API_MARCA, function (data) {
+            marcas = data;
+        });
+    }
+
+    function cargarFallasEspecificas() {
+        $.get(API_SERVICIOS, function (data) {
+            const fallas = data.filter(s => s.tipo_servicio_id === 3);
+            const select = $("#fallaInput");
+            select.empty().append('<option value="">Seleccione una falla</option>');
+            fallas.forEach(f => {
+                select.append(`<option value="${f.id_servicio}">${f.nombre}</option>`);
+            });
+        });
+    }
+
+    function calcPreventivo() {
+        const marca = $("#marcaInput").val();
+        const km = $("#kmInput").val();
+        let precio = 0;
+
+        if (marca && km) {
+            if (km === "0-10k") precio = 50;
+            else if (km === "10k-30k") precio = 100;
+            else if (km === "30k-60k") precio = 150;
+
+            $("#precioInput").val(`$ ${precio.toFixed(2)}`);
+        } else {
+            $("#precioInput").val("$ -");
+        }
+    }
+
+    function registrarRevision() {
+        const tipoId = parseInt($("#tipoServicioInput").val());
+        const vehiculoId = parseInt($("#vehiculoInput").val());
+        let servicioId = null;
+
+        if (tipoId === 1) {
+            
+            const servicio = servicios.find(s => s.tipo_servicio_id === 1);
+            servicioId = servicio ? servicio.id_servicio : null;
+        } else if (tipoId === 2) {
+            
+            const servicio = servicios.find(s => s.tipo_servicio_id === 2);
+            servicioId = servicio ? servicio.id_servicio : null;
+        } else if (tipoId === 3) {
+            
+            servicioId = parseInt($("#fallaInput").val());
+        }
+
+        const estadoPendiente = estados.find(e => e.nombre.toLowerCase() === "pendiente");
+        const estadoId = estadoPendiente ? estadoPendiente.id_estado : null;
+
+        if (!vehiculoId || !servicioId || !estadoId) {
+            alert("Faltan datos para registrar la revisión.");
+            return;
+        }
+
+        const revision = {
+            id_revision: 0,
+            vehiculo_id: vehiculoId,
+            id_servicio: servicioId,
+            id_estado: estadoId,
+            fecha_ingreso: new Date().toISOString(),
+            fecha_estimada_entrega: new Date().toISOString(),
+            fecha_entrega_final: new Date().toISOString()
+        };
+
+        $.ajax({
+            url: API_REVISION,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(revision),
+            success: function () {
+                alert("Revisión registrada correctamente.");
+                cargarRevisiones();
+            },
+            error: function (xhr, status, error) {
+                console.error("Error al registrar revisión:", error);
+                alert("Error al registrar revisión.");
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        cargarTipoServicios();
+        cargarVehiculos();
+        cargarMarcas();
+        cargarFallasEspecificas();
+        cargarDatosIniciales();
+
+        $("#tipoServicioInput").change(function () {
+            const tipoId = parseInt($(this).val());
+            $("#preventivoSection, #correctivoSection, #fallasSection").hide();
+
+            if (tipoId === 1) {
+                $("#preventivoSection").show();
+            } else if (tipoId === 2) {
+                $("#correctivoSection").show();
+            } else if (tipoId === 3) {
+                $("#fallasSection").show();
+            }
+        });
+
+        $("#vehiculoInput").change(function () {
+            const vehiculoId = parseInt($(this).val());
+            const vehiculo = vehiculos.find(v => v.id_vehiculo === vehiculoId);
+
+            if (vehiculo) {
+                const marca = marcas.find(m => m.id_marca === vehiculo.id_marca);
+                const selectMarca = $("#marcaInput");
+                selectMarca.empty();
+
+                if (marca) {
+                    selectMarca.append(`<option value="${marca.nombre}">${marca.nombre}</option>`);
+                } else {
+                    selectMarca.append('<option value="">Marca no encontrada</option>');
+                }
+
+                $("#precioInput").val("$ -");
+            }
+        });
+
+        $("#marcaInput, #kmInput").change(calcPreventivo);
+    });
+</script>
