@@ -1,20 +1,25 @@
 ﻿@page
-@model Front.Pages.Vehiculos.IndexModel
+@model Front.Pages.Vehiculos.CrearModel
 @{
+    ViewData["Title"] = "Registrar vehículo";
 }
 
 <section class="section">
     <div class="container grid cols-2">
         <div class="card">
-            <h3>Registrar vehículo</h3>
+            <h3 id="formTitle">Registrar vehículo</h3>
 
             <div class="form-row">
                 <div>
-                    <label>Placa</label>
-                    <input id="placaInput" class="input" placeholder="ABC123" />
+                    <label for="usuarioInput">Usuario</label>
+                    <select id="usuarioInput" class="input">
+                        <option value="">Seleccione un usuario</option>
+                    </select>
+                    <!-- Usado cuando no es admin -->
+                    <input id="usuarioIdHidden" type="hidden" />
                 </div>
                 <div>
-                    <label>Marca</label>
+                    <label for="marcaInput">Marca</label>
                     <select id="marcaInput" class="input">
                         <option value="">Seleccione una marca</option>
                     </select>
@@ -36,7 +41,7 @@
         </div>
 
         <div class="card">
-            <h3>Estado y detalles</h3>
+            <h3>Vehículos del usuario</h3>
             <table class="table">
                 <thead>
                     <tr>
@@ -128,6 +133,46 @@
             anno,
             cliente_id: userId
         };
+        const k = map[kind] || map.info;
+        icon.style.background = k.bg;
+        icon.style.color = k.color;
+        icon.textContent = k.text;
+      }
+
+      function show({ titleText='Información', bodyText='', autoFocus=true, onCloseCb=null, kind='ok' }){
+        setKind(kind);
+        title.textContent = titleText;
+        body.textContent = bodyText;
+        onClose = typeof onCloseCb === 'function' ? onCloseCb : null;
+        root.classList.add('show');
+        root.style.display = 'block';
+        root.setAttribute('aria-hidden', 'false');
+        if (autoFocus) {
+          const primary = document.getElementById('modalPrimary');
+          setTimeout(() => primary?.focus(), 0);
+        }
+        document.addEventListener('keydown', escListener);
+      }
+      function hide(){
+        root.classList.remove('show');
+        root.style.display = 'none';
+        root.setAttribute('aria-hidden', 'true');
+        document.removeEventListener('keydown', escListener);
+        if (onClose) { const cb = onClose; onClose = null; try { cb(); } catch {} }
+      }
+      function escListener(e){ if (e.key === 'Escape') hide(); }
+      root.addEventListener('click', (e) => { if (e.target?.dataset?.close === '1') hide(); });
+
+      return { show, hide };
+    })();
+
+    // Usuarios y marcas
+    function nombreCompleto(u){
+      const n = (u.nombre ?? u.Nombre ?? '').trim();
+      const a = (u.apellidos ?? u.Apellidos ?? '').trim();
+      const full = [n, a].filter(Boolean).join(' ').trim();
+      return full || (u.userName ?? u.UserName ?? 'Usuario');
+    }
 
         $.ajax({
             url: API_VEHICULO,
@@ -145,8 +190,238 @@
         });
     }
 
-    $(document).ready(function () {
-        cargarMarcas();
+    // Crear / Actualizar
+    function getFormData(){
+      const uid      = selectedUserId();
+      const id_marca = parseInt(document.getElementById('marcaInput').value || '0', 10);
+      const modelo   = (document.getElementById('modeloInput').value || '').trim();
+      const anno     = parseInt(document.getElementById('annoInput').value || '0', 10);
+      const placa    = (document.getElementById('placaInput').value || '').trim().toUpperCase();
+
+      if(!uid) return { ok:false, msg:'Seleccione un usuario.' };
+      if(!id_marca) return { ok:false, msg:'Seleccione una marca.' };
+      if(!modelo) return { ok:false, msg:'El modelo es requerido.' };
+      const yearNow = new Date().getFullYear();
+      if(!anno || anno < 1950 || anno > yearNow + 1) return { ok:false, msg:`El año debe estar entre 1950 y ${yearNow + 1}.` };
+      if(!placa) return { ok:false, msg:'La placa es requerida.' };
+
+      return { ok:true, payload:{ cliente_id: uid, id_marca, modelo, anno, placa } };
+    }
+
+    async function crearVehiculo(){
+      const { ok, msg, payload } = getFormData();
+      if(!ok){ showMsg(msg); return; }
+      showMsg('');
+
+      const body = { id_vehiculo: 0, ...payload };
+
+      const r = await fetch(URL_VEHICULOS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body)
+      });
+
+      if(!r.ok){
+        let m = 'Error al registrar.'; try { m = (await r.json())?.message || m; } catch {}
+        return showMsg(m);
+      }
+
+      document.getElementById('marcaInput').value = '';
+      document.getElementById('modeloInput').value = '';
+      document.getElementById('annoInput').value = '';
+      document.getElementById('placaInput').value = '';
+      cargarVehiculosAsociados();
+
+      Modal.show({ titleText: 'Éxito', bodyText: 'Vehículo registrado correctamente.', kind: 'ok' });
+    }
+
+    async function actualizarVehiculo(){
+      if(!currentVehiculoId) return showMsg('No hay vehículo cargado para editar.');
+
+      const { ok, msg, payload } = getFormData();
+      if(!ok){ showMsg(msg); return; }
+      showMsg('');
+
+      const body = { id_vehiculo: Number(currentVehiculoId), ...payload };
+
+      const r = await fetch(URL_VEHICULOS, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body)
+      });
+
+      if(!r.ok){
+        let m = 'Error al actualizar.'; try { m = (await r.json())?.message || m; } catch {}
+        return showMsg(m);
+      }
+
+      Modal.show({ titleText: 'Éxito', bodyText: 'Vehículo actualizado correctamente.', kind: 'ok' });
+      salirModoEdicion();
+      cargarVehiculosAsociados();
+    }
+
+    // Eliminar
+    async function eliminarVehiculo(id){
+      const r = await fetch(`${URL_VEHICULOS}/${id}`, { method:'DELETE', credentials:'include' });
+      if(r.ok){
+        if(currentVehiculoId && Number(currentVehiculoId) === Number(id)){
+          salirModoEdicion();
+        }
+        Modal.show({ titleText:'Eliminado', bodyText:'Vehículo eliminado correctamente.', kind:'ok', onCloseCb: () => cargarVehiculosAsociados() });
+      }else{
+        let m='Error al eliminar.'; try { m=(await r.json())?.message || m; } catch {}
+        Modal.show({ titleText:'Error', bodyText:m, kind:'error' });
+      }
+    }
+
+    function confirmarEliminar(id){
+      const btn = document.getElementById('modalPrimary');
+      const prevText = btn.textContent;
+      const prevClose = btn.getAttribute('data-close');
+      btn.textContent = 'Eliminar';
+      btn.removeAttribute('data-close');
+
+      const handler = async () => {
+        btn.removeEventListener('click', handler);
+        try { await eliminarVehiculo(id); } finally {
+          btn.textContent = prevText;
+          if(prevClose) btn.setAttribute('data-close', prevClose);
+          Modal.hide();
+        }
+      };
+
+      btn.addEventListener('click', handler, { once:true });
+      Modal.show({
+        titleText: 'Confirmar eliminación',
+        bodyText: '¿Desea eliminar este vehículo?',
+        kind: 'warn',
+        onCloseCb: () => {
+          btn.removeEventListener('click', handler);
+          btn.textContent = prevText;
+          if(prevClose) btn.setAttribute('data-close', prevClose);
+        }
+      });
+    }
+
+    // Modo crear/editar
+    function setModoCrear(){
+      currentVehiculoId = null;
+      document.getElementById('formTitle').textContent = 'Registrar vehículo';
+      const btn = document.getElementById('guardarBtn');
+      btn.textContent = 'Guardar';
+      btn.onclick = crearVehiculo;
+    }
+
+    function setModoEditar(id){
+      currentVehiculoId = id;
+      document.getElementById('formTitle').textContent = 'Editar vehículo';
+      const btn = document.getElementById('guardarBtn');
+      btn.textContent = 'Actualizar';
+      btn.onclick = actualizarVehiculo;
+    }
+
+    function limpiarFormulario(){
+      document.getElementById('marcaInput').value = '';
+      document.getElementById('modeloInput').value = '';
+      document.getElementById('annoInput').value = '';
+      document.getElementById('placaInput').value = '';
+      showMsg('');
+    }
+
+    function salirModoEdicion(){
+      const url = new URL(window.location.href);
+      url.searchParams.delete('id');
+      window.history.replaceState({}, '', url.toString());
+      setModoCrear();
+      limpiarFormulario();
+    }
+
+    // Cargar vehículo por id (modo edición)
+    async function cargarVehiculoPorId(id){
+      // Cargar solo lo necesario
+      const bodyIsAdmin  = (document.body?.dataset?.isAdmin || 'false') === 'true';
+      if (!marcasLoaded) await cargarMarcas();
+      if (bodyIsAdmin && !usersLoaded) await cargarUsuarios();
+
+      const r = await fetch(`${URL_VEHICULOS}/${encodeURIComponent(id)}`, { credentials:'include' });
+      if(!r.ok){
+        let m = 'No se pudo cargar el vehículo.'; try { m = (await r.json())?.message || m; } catch {}
+        showMsg(m); return;
+      }
+      const v = await r.json();
+
+      const clienteId = v.cliente_id ?? v.clienteId ?? v.ClienteId ?? v.cliente?.id ?? null;
+      const marcaId   = v.id_marca ?? v.idMarca ?? v.MarcaId ?? null;
+
+      if(clienteId){
+        pendingClienteId = Number(clienteId);
+        const sel = document.getElementById('usuarioInput');
+        const hidden = document.getElementById('usuarioIdHidden');
+        if (sel) sel.value = String(pendingClienteId);
+        if (hidden) hidden.value = String(pendingClienteId);
         cargarVehiculosAsociados();
+      }
+      if(marcaId) document.getElementById('marcaInput').value = String(marcaId);
+
+      document.getElementById('modeloInput').value = v.modelo ?? v.Modelo ?? '';
+      document.getElementById('annoInput').value   = v.anno ?? v.Anno ?? '';
+      document.getElementById('placaInput').value  = (v.placa ?? '').toString().toUpperCase();
+
+      setModoEditar(Number(v.id_vehiculo ?? v.id ?? v.Id ?? id));
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', async () => {
+      setModoCrear();
+
+      const bodyUserId   = (document.body?.dataset?.userId || '').trim();
+      const bodyUserName = (document.body?.dataset?.userName || '').trim();
+      const bodyIsAdmin  = (document.body?.dataset?.isAdmin || 'false') === 'true';
+
+      // Cargar recursos necesarios según rol
+      if (bodyIsAdmin) {
+        await Promise.all([cargarUsuarios(), cargarMarcas()]);
+      } else {
+        await cargarMarcas();
+      }
+
+      const usuarioSelect = document.getElementById('usuarioInput');
+
+      if (!bodyIsAdmin && bodyUserId) {
+        // Mostrar texto fijo en lugar de dropdown
+        const label = document.querySelector('label[for="usuarioInput"]');
+        if (label) label.textContent = "Usuario";
+
+        const parent = usuarioSelect.parentElement;
+
+        // Campo visible solo lectura (nombre)
+        const display = document.createElement('input');
+        display.type = 'text';
+        display.className = 'input';
+        display.readOnly = true;
+        display.value = bodyUserName || `Usuario #${bodyUserId}`;
+
+        // Setear hidden con el ID real
+        const hidden = document.getElementById('usuarioIdHidden');
+        hidden.value = String(bodyUserId);
+
+        // Reemplazar el select por el display
+        parent.replaceChild(display, usuarioSelect);
+
+        // Fijar y cargar
+        pendingClienteId = Number(bodyUserId);
+        await cargarVehiculosAsociados();
+      } else {
+        // Admin: dropdown activo
+        usuarioSelect.addEventListener('change', cargarVehiculosAsociados);
+      }
+
+      const qsId = getQS('id');
+      if (qsId) {
+        try { await cargarVehiculoPorId(qsId); }
+        catch (e) { console.error(e); showMsg('Error al cargar el vehículo.'); setModoCrear(); }
+      }
     });
 </script>
