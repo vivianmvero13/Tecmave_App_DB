@@ -1,20 +1,25 @@
 ﻿@page
-@model Front.Pages.Vehiculos.IndexModel
+@model Front.Pages.Vehiculos.CrearModel
 @{
+    ViewData["Title"] = "Registrar vehículo";
 }
 
 <section class="section">
     <div class="container grid cols-2">
         <div class="card">
-            <h3>Registrar vehículo</h3>
+            <h3 id="formTitle">Registrar vehículo</h3>
 
             <div class="form-row">
                 <div>
-                    <label>Placa</label>
-                    <input id="placaInput" class="input" placeholder="ABC123" />
+                    <label for="usuarioInput">Usuario</label>
+                    <select id="usuarioInput" class="input">
+                        <option value="">Seleccione un usuario</option>
+                    </select>
+                    <!-- Usado cuando no es admin -->
+                    <input id="usuarioIdHidden" type="hidden" />
                 </div>
                 <div>
-                    <label>Marca</label>
+                    <label for="marcaInput">Marca</label>
                     <select id="marcaInput" class="input">
                         <option value="">Seleccione una marca</option>
                     </select>
@@ -36,7 +41,7 @@
         </div>
 
         <div class="card">
-            <h3>Estado y detalles</h3>
+            <h3>Vehículos del usuario</h3>
             <table class="table">
                 <thead>
                     <tr>

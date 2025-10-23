@@ -8,8 +8,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
 
-
-
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<MyIdentityDBContext>(opt =>
     opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
@@ -29,11 +27,13 @@ builder.Services.AddIdentity<Usuario, IdentityRole<int>>(
         options.Lockout.MaxFailedAccessAttempts = 5;
     })
     .AddDefaultTokenProviders()
-    .AddEntityFrameworkStores<MyIdentityDBContext>()
-    ;
+    .AddEntityFrameworkStores<MyIdentityDBContext>();
 
-
-
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+});
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace Front.Pages.Vehículos
+namespace Front.Pages.Vehiculos
 {
     public class IndexModel : PageModel
     {

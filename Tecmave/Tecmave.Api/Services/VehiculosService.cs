@@ -1,11 +1,11 @@
-﻿using Tecmave.Api.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 
 namespace Tecmave.Api.Services
 {
     public class VehiculosService
     {
-
         private readonly AppDbContext _context;
 
         public VehiculosService(AppDbContext context)
@@ -13,65 +13,52 @@ namespace Tecmave.Api.Services
             _context = context;
         }
 
-        //Aca necesitamos el modelo de datos para el almacenamiento temporal
-        private readonly List<VehiculosModel> _canton = new List<VehiculosModel>();
-        private int _nextid_vehiculo = 1;
+        // Listar todos
+        public async Task<List<Vehiculo>> ListAsync(CancellationToken ct = default)
+            => await _context.Vehiculos.AsNoTracking().ToListAsync(ct);
 
+        // Obtener por id
+        public async Task<Vehiculo?> GetByIdAsync(int id, CancellationToken ct = default)
+            => await _context.Vehiculos.AsNoTracking()
+                   .FirstOrDefaultAsync(v => v.IdVehiculo == id, ct);
 
-        //funcion de obtener cantons
-        public List<VehiculosModel> GetVehiculosModel()
+        // Crear
+        public async Task<Vehiculo> AddAsync(Vehiculo v, CancellationToken ct = default)
         {
-            return _context.vehiculos.ToList();
+            // Normaliza placa, valida mínimos si quieres
+            v.Placa = (v.Placa ?? string.Empty).ToUpperInvariant();
+
+            _context.Vehiculos.Add(v);
+            await _context.SaveChangesAsync(ct);
+            return v;
         }
 
-
-        public VehiculosModel GetByid_vehiculo(int id)
+        // Actualizar (retorna false si no existe)
+        public async Task<bool> UpdateAsync(Vehiculo input, CancellationToken ct = default)
         {
-            return _context.vehiculos.FirstOrDefault(p => p.id_vehiculo == id);
-        }
+            var v = await _context.Vehiculos
+                                  .FirstOrDefaultAsync(x => x.IdVehiculo == input.IdVehiculo, ct);
+            if (v is null) return false;
 
-        public VehiculosModel AddVehiculos(VehiculosModel VehiculosModel)
-        {
-            _context.vehiculos.Add(VehiculosModel);
-            _context.SaveChanges();
-            return VehiculosModel;
-        }
+            v.ClienteId = input.ClienteId;
+            v.IdMarca = input.IdMarca;
+            v.Anno = input.Anno;
+            v.Modelo = input.Modelo;
+            v.Placa = (input.Placa ?? string.Empty).ToUpperInvariant();
 
-
-        public bool UpdateVehiculos(VehiculosModel VehiculosModel)
-        {
-            var entidad = _context.vehiculos.FirstOrDefault(p => p.id_vehiculo == VehiculosModel.id_vehiculo);
-
-            if (entidad == null)
-            {
-                return false;
-            }
-
-            entidad.placa = VehiculosModel.placa;
-
-
-            _context.SaveChanges();
-
+            await _context.SaveChangesAsync(ct);
             return true;
-
         }
 
-
-        public bool DeleteVehiculos(int id)
+        // Eliminar (retorna false si no existe)
+        public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
-            var entidad = _context.vehiculos.FirstOrDefault(p => p.id_vehiculo == id);
+            var v = await _context.Vehiculos.FirstOrDefaultAsync(x => x.IdVehiculo == id, ct);
+            if (v is null) return false;
 
-            if (entidad == null)
-            {
-                return false;
-            }
-
-            _context.vehiculos.Remove(entidad);
-            _context.SaveChanges();
+            _context.Vehiculos.Remove(v);
+            await _context.SaveChangesAsync(ct);
             return true;
-
         }
-
-
     }
 }
