@@ -1,4 +1,22 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using Tecmave.Front.Models
+@inject SignInManager<Usuario> SignInManager
+@inject UserManager<Usuario> UserManager
+
+@{
+    var roles = new List<string>();
+    if (SignInManager.IsSignedIn(User))
+    {
+        var user = await UserManager.GetUserAsync(User);
+        if (user != null)
+        {
+            roles = (await UserManager.GetRolesAsync(user)).ToList();
+        }
+    }
+
+    bool isAdmin = roles.Contains("Administrador");
+}
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
@@ -27,17 +45,21 @@
             </div>
             <div class="subtle">Gestión</div>
             <nav class="nav">
-                <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
-                <a asp-page="/Vehiculos/Index" class="client-only"><i class="fa-solid fa-car"></i> Vehículos</a>
-                <a asp-page="/Usuarios/Index" class="client-only"><i class="fa-solid fa-user-group"></i> Usuarios</a>
-                <a asp-page="/Servicios/Index" class="client-only"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
-                <a asp-page="/Agendamiento/Index" class="client-only"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
+                <a asp-page="/Vehiculos/Index"><i class="fa-solid fa-car"></i> Vehículos</a>
 
-                <a asp-page="/Colaboradores/Index" class="admin-only"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
-                <a asp-page="/Facturacion/Index" class="admin-only"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación</a>
-                <a asp-page="/Estadisticas/Index" class="admin-only"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
-                <a asp-page="/Administracion/Index" class="admin-only"><i class="fa-solid fa-gear"></i> Administración</a>
-                <a asp-page="/Carrusel/Index" class="admin-only"><i class="fa-regular fa-images"></i> Carrusel</a>
+                @if (isAdmin)
+                {
+                    <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
+                    <a asp-page="/Usuarios/Index"><i class="fa-solid fa-user-group"></i> Usuarios</a>
+                    <a asp-page="/Servicios/Index"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
+                    <a asp-page="/Agendamiento/Index"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
+                    <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
+                    <a asp-page="/Facturacion/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación</a>
+                    <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
+                    <a asp-page="/Administracion/Index"><i class="fa-solid fa-gear"></i> Administración</a>
+                    <a asp-page="/Carrusel/Index"><i class="fa-regular fa-images"></i> Carrusel</a>
+                }
+
             </nav>
             <div class="subtle">Cuenta</div>
     <!--       <nav class="nav">
