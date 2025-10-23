@@ -48,7 +48,7 @@ builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<ResenasService>();
 builder.Services.AddScoped<PromocionesService>();
 builder.Services.AddScoped<NotificacionesService>();
-builder.Services.AddScoped<ModelosService>();
+builder.Services.AddScoped<RevisionService>();
 builder.Services.AddScoped<MarcasService>();
 builder.Services.AddScoped<FacturasService>();
 builder.Services.AddScoped<EstadosService>();

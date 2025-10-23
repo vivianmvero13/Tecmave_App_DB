@@ -8,8 +8,10 @@ namespace Tecmave.Api.Models
         public int id_vehiculo { get; set; } // [pk, increment]
         public int cliente_id { get; set; }
         public int id_marca { get; set; } // [pk, increment]
-        public int anio { get; set; }
+        public int anno { get; set; }
         public string placa { get; set; }
-        public int id_modelo { get; set; }
+
+        public string modelo { get; set; }
+
     }
 }
