@@ -29,23 +29,27 @@ DROP TABLE IF EXISTS role_change_audit;
 
 CREATE TABLE aspnetusers (
   Id INT NOT NULL AUTO_INCREMENT,
-  UserName VARCHAR(256) NULL,
-  NormalizedUserName VARCHAR(256) NULL,
-  Email VARCHAR(256) NULL,
-  NormalizedEmail VARCHAR(256) NULL,
+  Nombre VARCHAR(150) NOT NULL,
+  Apellido VARCHAR(150) NOT NULL,
+  Cedula VARCHAR(50) NOT NULL,
+  Direccion VARCHAR(250) NOT NULL,
+  UserName VARCHAR(256) DEFAULT NULL,
+  NormalizedUserName VARCHAR(256) DEFAULT NULL,
+  Email VARCHAR(256) DEFAULT NULL,
+  NormalizedEmail VARCHAR(256) DEFAULT NULL,
   EmailConfirmed TINYINT(1) NOT NULL DEFAULT 0,
-  PasswordHash LONGTEXT NULL,
-  SecurityStamp LONGTEXT NULL,
-  ConcurrencyStamp LONGTEXT NULL,
-  PhoneNumber LONGTEXT NULL,
+  PasswordHash LONGTEXT,
+  SecurityStamp LONGTEXT,
+  ConcurrencyStamp LONGTEXT,
+  PhoneNumber VARCHAR(50) DEFAULT NULL,
   PhoneNumberConfirmed TINYINT(1) NOT NULL DEFAULT 0,
   TwoFactorEnabled TINYINT(1) NOT NULL DEFAULT 0,
-  LockoutEnd DATETIME(6) NULL,
+  LockoutEnd DATETIME(6) DEFAULT NULL,
   LockoutEnabled TINYINT(1) NOT NULL DEFAULT 0,
   AccessFailedCount INT NOT NULL DEFAULT 0,
   PRIMARY KEY (Id),
-  UNIQUE KEY IX_UserName (NormalizedUserName),
-  KEY IX_Email (NormalizedEmail)
+  UNIQUE KEY UserNameIndex (NormalizedUserName),
+  KEY EmailIndex (NormalizedEmail)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE aspnetroles (
@@ -154,6 +158,7 @@ CREATE TABLE vehiculos (
   id_marca INT NOT NULL,
   anno int NOT NULL,
   placa VARCHAR(255) NOT NULL,
+  modelo VARCHAR(255),
   PRIMARY KEY (id_vehiculo),
   KEY FK_Vehiculos_Cliente (cliente_id),
   KEY FK_Vehiculos_Marca (id_marca),
@@ -302,3 +307,135 @@ ALTER TABLE aspnetroles
   ADD COLUMN IsActive tinyint(1) NOT NULL DEFAULT 1 AFTER Description;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+INSERT INTO estados (id_estado, nombre) VALUES
+(4, 'Ingresado'),
+(5, 'En Diagnóstico'),
+(6, 'Pendiente de aprobación'),
+(7, 'En mantenimiento'),
+(8, 'En pruebas'),
+(9, 'Finalizado'),
+(10, 'Entregado'),
+(11, 'Cancelado');
+
+-- 1) Quitar la foreign key de 'marca' que apunta a 'modelo'
+ALTER TABLE marca DROP FOREIGN KEY FK_Marca_Modelo;
+ALTER TABLE marca DROP INDEX FK_Marca_Modelo;
+ALTER TABLE marca DROP COLUMN id_modelo;
+DROP TABLE modelo;
+
+USE tecmave;
+
+INSERT INTO marca (nombre) VALUES
+('Sin marca'),
+('Jeep'),
+('Dodge'),
+('Toyota'),
+('Nissan'),
+('Honda'),
+('Mitsubishi'),
+('Suzuki'),
+('Hyundai'),
+('Chevrolet'),
+('Chrysler'),
+('Daihatsu'),
+('RAM'),
+('Ford'),
+('GMC'),
+('Hummer'),
+('Isuzu'),
+('Kia'),
+('Lexus'),
+('Mazda');
+
+  
+INSERT INTO aspnetroles (Id, Name, NormalizedName, Description, IsActive)
+VALUES
+(1, 'Admin', 'ADMIN', 'Administrador con acceso completo al sistema', 1),
+(2, 'Colaborador', 'COLABORADOR', 'Empleado o técnico del taller con permisos limitados', 1),
+(3, 'Cliente', 'CLIENTE', 'Usuario cliente que puede ver y registrar sus vehículos', 1);
+
+
+INSERT INTO aspnetusers
+(Nombre, Apellidos, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed,
+ PasswordHash, SecurityStamp, ConcurrencyStamp, PhoneNumber, PhoneNumberConfirmed,
+ TwoFactorEnabled, LockoutEnabled, AccessFailedCount)
+VALUES
+('Vivian', 'Velazquez', 'Vivian', 'VIVIAN', 'vivian@tecmave.com', 'VIVIAN@TECMAVE.COM', 1,
+ 'AQAAAAIAAYagAAAAEAdminHashDemo==', 'SEC123', 'CONC123', '88888888', 1, 0, 0, 0),
+
+('Joshua','Lopez', 'Joshua', 'JOSHUA', 'joshua@tecmave.com', 'joshua@TECMAVE.COM', 1,
+ 'AQAAAAIAAYagAAAAEColabHashDemo==', 'SEC456', 'CONC456', '87777777', 1, 0, 0, 0),
+
+('Khaled', 'Gonzalez', 'Khaled', 'KHALED', 'khaled@tecmave.com', 'KHALED@TECMAVE.COM', 1,
+ 'AQAAAAIAAYagAAAAEClienteHashDemo==', 'SEC789', 'CONC789', '86666666', 1, 0, 0, 0),
+
+('Daniel', 'Lopez', 'Daniel', 'DANIEL', 'Daniel@tecmave.com', 'DANIEL@TECMAVE.COM', 1,
+ 'AQAAAAIAAYagAAAAEClienteHashDemo==', 'SEC789', 'CONC789', '86666666', 1, 0, 0, 0);
+
+INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
+VALUES
+('Electrónica', 'Diagnóstico y reparación de sistemas electrónicos', 'Falla específica', 120.00, 3),
+('Aire acondicionado', 'Revisión y reparación del sistema de A/C', 'Falla específica', 150.00, 3),
+('Transmisiones', 'Reparación de cajas de transmisión manual y automática', 'Falla específica', 250.00, 3),
+('Electricidad', 'Revisión de cableado, luces y alternadores', 'Falla específica', 100.00, 3),
+('Parabrisas', 'Reemplazo y sellado de parabrisas', 'Falla específica', 180.00, 3),
+('Tapicería', 'Reparación y limpieza de interiores', 'Falla específica', 130.00, 3),
+('Pintura', 'Pintura general o parcial del vehículo', 'Falla específica', 300.00, 3);
+
+-- Mantenimiento preventivo
+INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
+VALUES
+('Cambio de aceite', 'Sustitución de aceite y filtro para mantener el motor en óptimas condiciones', 'Mantenimiento preventivo', 80.00, 1),
+('Revisión general', 'Chequeo completo del vehículo para prevenir averías', 'Mantenimiento preventivo', 100.00, 1);
+
+-- Mantenimiento correctivo
+INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
+VALUES
+('Cambio de frenos', 'Reemplazo de pastillas y discos de freno', 'Mantenimiento correctivo', 200.00, 2),
+('Reparación de motor', 'Corrección de fallas graves en el motor', 'Mantenimiento correctivo', 500.00, 2);
+
+
+-- Tabla: vehiculos
+ALTER TABLE vehiculos
+  ADD CONSTRAINT FK_Vehiculos_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
+
+-- Tabla: factura
+ALTER TABLE factura
+  ADD CONSTRAINT FK_Factura_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
+
+-- Tabla: resenas
+ALTER TABLE resenas
+  ADD CONSTRAINT FK_Resenas_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
+
+-- Tabla: notificaciones
+ALTER TABLE notificaciones
+  ADD CONSTRAINT FK_Notificaciones_Usuario FOREIGN KEY (usuario_id) REFERENCES aspnetusers(Id);
+
+-- Tabla: agendamiento
+ALTER TABLE agendamiento
+  ADD CONSTRAINT FK_Agendamiento_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
+
+-- Tabla: colaboradores
+ALTER TABLE colaboradores
+  ADD CONSTRAINT FK_Colab_Usuario FOREIGN KEY (id_usuario) REFERENCES aspnetusers(Id) ON DELETE CASCADE;
+  
+  
+  -- Tabla: vehiculos
+ALTER TABLE vehiculos DROP FOREIGN KEY FK_Vehiculos_Cliente;
+
+-- Tabla: factura
+ALTER TABLE factura DROP FOREIGN KEY FK_Factura_Cliente;
+
+-- Tabla: resenas
+ALTER TABLE resenas DROP FOREIGN KEY FK_Resenas_Cliente;
+
+-- Tabla: notificaciones
+ALTER TABLE notificaciones DROP FOREIGN KEY FK_Notificaciones_Usuario;
+
+-- Tabla: agendamiento
+ALTER TABLE agendamiento DROP FOREIGN KEY FK_Agendamiento_Cliente;
+
+-- Tabla: colaboradores
+ALTER TABLE colaboradores DROP FOREIGN KEY FK_Colab_Usuario;
+
