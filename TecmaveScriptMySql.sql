@@ -29,25 +29,27 @@ DROP TABLE IF EXISTS role_change_audit;
 
 CREATE TABLE aspnetusers (
   Id INT NOT NULL AUTO_INCREMENT,
-  Apellidos VARCHAR(256) NOT NULL,
-  Nombre VARCHAR(256) NOT NULL,
-  UserName VARCHAR(256) NULL,
-  NormalizedUserName VARCHAR(256) NULL,
-  Email VARCHAR(256) NULL,
-  NormalizedEmail VARCHAR(256) NULL,
+  Nombre VARCHAR(150) NOT NULL,
+  Apellido VARCHAR(150) NOT NULL,
+  Cedula VARCHAR(50) NOT NULL,
+  Direccion VARCHAR(250) NOT NULL,
+  UserName VARCHAR(256) DEFAULT NULL,
+  NormalizedUserName VARCHAR(256) DEFAULT NULL,
+  Email VARCHAR(256) DEFAULT NULL,
+  NormalizedEmail VARCHAR(256) DEFAULT NULL,
   EmailConfirmed TINYINT(1) NOT NULL DEFAULT 0,
-  PasswordHash LONGTEXT NULL,
-  SecurityStamp LONGTEXT NULL,
-  ConcurrencyStamp LONGTEXT NULL,
-  PhoneNumber LONGTEXT NULL,
+  PasswordHash LONGTEXT,
+  SecurityStamp LONGTEXT,
+  ConcurrencyStamp LONGTEXT,
+  PhoneNumber VARCHAR(50) DEFAULT NULL,
   PhoneNumberConfirmed TINYINT(1) NOT NULL DEFAULT 0,
   TwoFactorEnabled TINYINT(1) NOT NULL DEFAULT 0,
-  LockoutEnd DATETIME(6) NULL,
+  LockoutEnd DATETIME(6) DEFAULT NULL,
   LockoutEnabled TINYINT(1) NOT NULL DEFAULT 0,
   AccessFailedCount INT NOT NULL DEFAULT 0,
   PRIMARY KEY (Id),
-  UNIQUE KEY IX_UserName (NormalizedUserName),
-  KEY IX_Email (NormalizedEmail)
+  UNIQUE KEY UserNameIndex (NormalizedUserName),
+  KEY EmailIndex (NormalizedEmail)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE aspnetroles (
@@ -370,4 +372,70 @@ VALUES
 
 ('Daniel', 'Lopez', 'Daniel', 'DANIEL', 'Daniel@tecmave.com', 'DANIEL@TECMAVE.COM', 1,
  'AQAAAAIAAYagAAAAEClienteHashDemo==', 'SEC789', 'CONC789', '86666666', 1, 0, 0, 0);
+
+INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
+VALUES
+('Electrónica', 'Diagnóstico y reparación de sistemas electrónicos', 'Falla específica', 120.00, 3),
+('Aire acondicionado', 'Revisión y reparación del sistema de A/C', 'Falla específica', 150.00, 3),
+('Transmisiones', 'Reparación de cajas de transmisión manual y automática', 'Falla específica', 250.00, 3),
+('Electricidad', 'Revisión de cableado, luces y alternadores', 'Falla específica', 100.00, 3),
+('Parabrisas', 'Reemplazo y sellado de parabrisas', 'Falla específica', 180.00, 3),
+('Tapicería', 'Reparación y limpieza de interiores', 'Falla específica', 130.00, 3),
+('Pintura', 'Pintura general o parcial del vehículo', 'Falla específica', 300.00, 3);
+
+-- Mantenimiento preventivo
+INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
+VALUES
+('Cambio de aceite', 'Sustitución de aceite y filtro para mantener el motor en óptimas condiciones', 'Mantenimiento preventivo', 80.00, 1),
+('Revisión general', 'Chequeo completo del vehículo para prevenir averías', 'Mantenimiento preventivo', 100.00, 1);
+
+-- Mantenimiento correctivo
+INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
+VALUES
+('Cambio de frenos', 'Reemplazo de pastillas y discos de freno', 'Mantenimiento correctivo', 200.00, 2),
+('Reparación de motor', 'Corrección de fallas graves en el motor', 'Mantenimiento correctivo', 500.00, 2);
+
+
+-- Tabla: vehiculos
+ALTER TABLE vehiculos
+  ADD CONSTRAINT FK_Vehiculos_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
+
+-- Tabla: factura
+ALTER TABLE factura
+  ADD CONSTRAINT FK_Factura_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
+
+-- Tabla: resenas
+ALTER TABLE resenas
+  ADD CONSTRAINT FK_Resenas_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
+
+-- Tabla: notificaciones
+ALTER TABLE notificaciones
+  ADD CONSTRAINT FK_Notificaciones_Usuario FOREIGN KEY (usuario_id) REFERENCES aspnetusers(Id);
+
+-- Tabla: agendamiento
+ALTER TABLE agendamiento
+  ADD CONSTRAINT FK_Agendamiento_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
+
+-- Tabla: colaboradores
+ALTER TABLE colaboradores
+  ADD CONSTRAINT FK_Colab_Usuario FOREIGN KEY (id_usuario) REFERENCES aspnetusers(Id) ON DELETE CASCADE;
+  
+  
+  -- Tabla: vehiculos
+ALTER TABLE vehiculos DROP FOREIGN KEY FK_Vehiculos_Cliente;
+
+-- Tabla: factura
+ALTER TABLE factura DROP FOREIGN KEY FK_Factura_Cliente;
+
+-- Tabla: resenas
+ALTER TABLE resenas DROP FOREIGN KEY FK_Resenas_Cliente;
+
+-- Tabla: notificaciones
+ALTER TABLE notificaciones DROP FOREIGN KEY FK_Notificaciones_Usuario;
+
+-- Tabla: agendamiento
+ALTER TABLE agendamiento DROP FOREIGN KEY FK_Agendamiento_Cliente;
+
+-- Tabla: colaboradores
+ALTER TABLE colaboradores DROP FOREIGN KEY FK_Colab_Usuario;
 
