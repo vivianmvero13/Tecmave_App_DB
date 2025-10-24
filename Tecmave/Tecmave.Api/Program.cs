@@ -18,7 +18,7 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// --- CONEXIÓN A MySQL ---
+// --- CONEXIÃ“N A MySQL ---
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
@@ -63,6 +63,7 @@ builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<ResenasService>();
 builder.Services.AddScoped<PromocionesService>();
 builder.Services.AddScoped<NotificacionesService>();
+builder.Services.AddScoped<RevisionService>();
 builder.Services.AddScoped<MarcasService>();
 builder.Services.AddScoped<FacturasService>();
 builder.Services.AddScoped<EstadosService>();
