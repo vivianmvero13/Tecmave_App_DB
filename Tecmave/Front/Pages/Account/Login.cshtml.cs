@@ -12,16 +12,16 @@ namespace Front.Pages.Account
         private readonly UserManager<Usuario> _userManager;
         private readonly SignInManager<Usuario> _signInManager;
 
-        public LoginModel(
-            UserManager<Usuario> userManager,
-            SignInManager<Usuario> signInManager)
+        public LoginModel(SignInManager<Usuario> signInManager, UserManager<Usuario> userManager)
         {
-            _userManager = userManager;
             _signInManager = signInManager;
+            _userManager = userManager;
         }
 
         [BindProperty]
         public LoginDTO Login { get; set; }
+
+        public string ErrorMessage { get; set; }
 
 
         public void OnGet()
@@ -30,10 +30,34 @@ namespace Front.Pages.Account
 
         public async Task<IActionResult> OnPostAsync()
         {
-            var res = await _signInManager
-                .PasswordSignInAsync(Login.Email, Login.Password, true, true);
+            if (!ModelState.IsValid)
+                return Page();
 
-            return LocalRedirect("/");
+            var user = await _userManager.FindByEmailAsync(Login.Email);
+            if (user == null)
+            {
+                ErrorMessage = "Usuario y/o contraseña son incorrectos";
+                return Page();
+            }
+
+            var result = await _signInManager.PasswordSignInAsync(
+                user.UserName,
+                Login.Password,
+                isPersistent: true,
+                lockoutOnFailure: false
+            );
+            if (!result.Succeeded)
+            {
+                ErrorMessage = "Usuario y/o contraseña son inválidos";
+                return Page();
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            if (roles.Contains("Administrador"))
+                return RedirectToPage("/Vehiculos/Index");
+            else
+                return RedirectToPage("/Vehiculos/Index");
         }
     }
 

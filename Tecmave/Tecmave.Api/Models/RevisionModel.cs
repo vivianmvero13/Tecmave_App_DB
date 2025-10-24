@@ -6,7 +6,7 @@ namespace Tecmave.Api.Models
     {
         [Key]
         public int id_revision { get; set; } // [pk, increment]
-        public int vehiculo_id { get; set; }
+        public string vehiculo_id { get; set; }
         public DateTime fecha_ingreso { get; set; }
         public int id_servicio { get; set; }
         public int id_estado { get; set; }

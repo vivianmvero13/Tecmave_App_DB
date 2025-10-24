@@ -1,0 +1,443 @@
+[33mcommit 78aa022d8b6173f548e5f8a72560557904132fa4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Kaled <dgonzalez00893@ufide.ac.cr>
+Date:   Thu Oct 23 14:34:03 2025 -0600
+
+    resolviendo cosas
+
+[33mcommit f091c5aa60836c57dc406b3d62e9f84f69f990ef[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Merge: 78e8e4f 77fcb28
+Author: KaledGR <126337811+KaledGR@users.noreply.github.com>
+Date:   Thu Oct 23 14:12:55 2025 -0600
+
+    Merge pull request #10 from vivianmvero13/kaled
+    
+    Kaled
+
+[33mcommit 77fcb28920ceaf540f754ea723a27872621f34e4[m
+Merge: e5f60e3 78e8e4f
+Author: KaledGR <126337811+KaledGR@users.noreply.github.com>
+Date:   Thu Oct 23 14:12:40 2025 -0600
+
+    Merge branch 'main' into kaled
+
+[33mcommit e5f60e3dd93e51ddad4123d0b9843df3e70bdb53[m[33m ([m[1;31morigin/kaled[m[33m, [m[1;32mkaled[m[33m)[m
+Author: Kaled <dgonzalez00893@ufide.ac.cr>
+Date:   Thu Oct 23 14:03:26 2025 -0600
+
+    Actualizacion del script
+
+[33mcommit 47a76a171ed3a4b5d295a8670f0a7f2e48d277d6[m
+Author: Kaled <dgonzalez00893@ufide.ac.cr>
+Date:   Thu Oct 23 13:56:33 2025 -0600
+
+    Finalizacion de servicios, agendamiento, datos personasles extra y asignacion de role cliente al registrarse
+
+[33mcommit 78e8e4fa4f789ecd8bdb2bc53e16ab233ae52b5e[m
+Merge: 8663b84 0540ca4
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 22 23:51:12 2025 -0600
+
+    Permisos finales vehiculo
+
+[33mcommit 8663b84b0bd60e05299efef6c1b2e2fba364066c[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 22 23:12:35 2025 -0600
+
+    Accesos a Vehiculos
+
+[33mcommit 0540ca49c969ca3f36e2fa896483a16c775bec4c[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 22 22:43:30 2025 -0600
+
+    Vehiculos eliminar
+
+[33mcommit 70fcca65393f9a30bc6c05786f87e7f43f5a946f[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 22 22:27:57 2025 -0600
+
+    Editar vehiculos
+
+[33mcommit f5ffbd2d035d76d7c58ef1afa042568d640c75bb[m
+Author: Kaled <dgonzalez00893@ufide.ac.cr>
+Date:   Tue Oct 21 20:51:04 2025 -0600
+
+    Agendamientos
+
+[33mcommit 0053b6640cd61a67defc547a3ee14979900e6659[m
+Merge: dc82b21 99a866f
+Author: KaledGR <126337811+KaledGR@users.noreply.github.com>
+Date:   Sun Oct 19 19:03:47 2025 -0600
+
+    Merge pull request #9 from vivianmvero13/main
+    
+    poniendo al dia
+
+[33mcommit 8e28d8eef56531ca662212b100366fa15d2699e7[m[33m ([m[1;31morigin/vehiculos[m[33m, [m[1;32mvehiculos[m[33m)[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Thu Oct 16 21:15:01 2025 -0600
+
+    Index Vehiculos funcional
+
+[33mcommit 09de8683d64eb6de81c4ff4f1349860387efc1f8[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Thu Oct 16 20:58:57 2025 -0600
+
+    Base de datos con correcciones para vehiculo y usuario
+
+[33mcommit 889470e919f44a9871d78613525348e500efbafb[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Thu Oct 16 20:58:06 2025 -0600
+
+    Agregar vehiculo
+
+[33mcommit 047d3596c8b55561385ae00870f4d4ad302ea8ef[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Thu Oct 16 18:36:48 2025 -0600
+
+    nuevos estados
+
+[33mcommit 99a866fad7ac3780498beb0d5b2f4562b4365ad0[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Tue Oct 14 16:29:10 2025 -0600
+
+    Correcciones usuarios
+
+[33mcommit 637fa3e82a141a40ce42c7005527ed6e1096f0e4[m[33m ([m[1;31morigin/permisos[m[33m)[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Sun Oct 12 13:37:41 2025 -0600
+
+    Exportar a excel corregido
+
+[33mcommit 7a3674b5deccf04b837b551b743e2ecdf830cf5e[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Sat Oct 11 14:15:34 2025 -0600
+
+    SQL fix
+
+[33mcommit bcd8cea8e10ffc18bdc49da92b8956ca3bd040ac[m
+Merge: 68c1929 d72ba71
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 1 23:53:44 2025 -0600
+
+    Merge branch 'roles'
+
+[33mcommit d72ba710d131337765d2eac433093b6c14f41e62[m[33m ([m[1;31morigin/roles[m[33m)[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 1 23:53:24 2025 -0600
+
+    Mejoras esteticas
+
+[33mcommit dc82b210e7c28203d1cb312d289d3381c707732f[m
+Merge: 9792d42 68c1929
+Author: KaledGR <126337811+KaledGR@users.noreply.github.com>
+Date:   Wed Oct 1 23:52:46 2025 -0600
+
+    Merge pull request #8 from vivianmvero13/main
+    
+    Merge pull request Promociones from vivianmvero13/kaled
+
+[33mcommit 0abd78ba1ba0b8a68ae885f29e8a8049bf6c2709[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 1 23:52:21 2025 -0600
+
+    Tabla auditoria
+
+[33mcommit 68c1929b23f858b4de339356c9c3dc327d03610d[m
+Merge: 331d191 9792d42
+Author: KaledGR <126337811+KaledGR@users.noreply.github.com>
+Date:   Wed Oct 1 23:48:14 2025 -0600
+
+    Merge pull request Promociones from vivianmvero13/kaled
+    
+    Modulo de promociones
+
+[33mcommit 4f77dd539a57b705f30e1945eb4ee70ebaf6b184[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 1 23:45:00 2025 -0600
+
+    Correcciones menores
+
+[33mcommit 9792d42847a783b9df8aaf35d25dec3c28d7780f[m
+Author: Kaled <dgonzalez00893@ufide.ac.cr>
+Date:   Wed Oct 1 23:40:37 2025 -0600
+
+    Rango e insercion de promociones
+
+[33mcommit 8cd39269f1739726581185f551549ea8be28092f[m
+Merge: 5e56a00 331d191
+Author: KaledGR <126337811+KaledGR@users.noreply.github.com>
+Date:   Wed Oct 1 23:23:59 2025 -0600
+
+    Merge pull request #6 from vivianmvero13/main
+    
+    Estar al dia
+
+[33mcommit 331d191991b040f7e010ba1e7c7c0f1de0a68126[m
+Merge: e357ea5 76d670a
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 1 23:19:53 2025 -0600
+
+    Merge branch 'main' of https://github.com/vivianmvero13/Tecmave_App_DB
+
+[33mcommit e357ea55d0235efee9f7fbf5709043c23a29f826[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 1 23:19:29 2025 -0600
+
+    Tabla auditoria
+
+[33mcommit 76d670abbc8a075b93261b94cfaf1fd8d8d963df[m
+Merge: e1373b4 5e56a00
+Author: KaledGR <126337811+KaledGR@users.noreply.github.com>
+Date:   Wed Oct 1 23:19:00 2025 -0600
+
+    Agregando Revision y insercion de resenas
+    
+    Agregar resenas y visualizar resenas
+
+[33mcommit 5e56a00532dda09d634897d4bb25b0b513af9487[m
+Author: Kaled <dgonzalez00893@ufide.ac.cr>
+Date:   Wed Oct 1 23:17:02 2025 -0600
+
+    Agregar resenas y visualizar resenas
+
+[33mcommit e1373b4d64547c0d55a2ba41c9e3c4240a889ee9[m
+Merge: ea8cb93 d207c7c
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 1 23:14:45 2025 -0600
+
+    Merge branch 'roles'
+
+[33mcommit d207c7cded720fdea6600863605d107b3bf73daf[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 1 23:14:00 2025 -0600
+
+    Roles funcionales
+
+[33mcommit e38930e5e7a6bf2e67dbbfc95d3cd0d331971ebd[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 1 23:05:43 2025 -0600
+
+    Usuarios con acceso a roles
+
+[33mcommit ea8cb93b69bd80325a15a58915d057ccb54c2fb8[m
+Merge: d40822d d5a0364
+Author: KaledGR <126337811+KaledGR@users.noreply.github.com>
+Date:   Wed Oct 1 21:42:52 2025 -0600
+
+    Eliminamos mvc, registro y login
+    
+    Login y register en pages
+
+[33mcommit d5a0364ad51c68c5e6ce6581de28095c42168428[m
+Author: Kaled <dgonzalez00893@ufide.ac.cr>
+Date:   Wed Oct 1 17:51:59 2025 -0600
+
+    Login y register en pages
+
+[33mcommit d40822d2cbed3865ad2dbc434d693c0b3dc20ca2[m
+Merge: fc3f28f e751a8c
+Author: Kaled <dgonzalez00893@ufide.ac.cr>
+Date:   Wed Oct 1 14:47:30 2025 -0600
+
+    Arreglando conlictos
+
+[33mcommit e751a8c1dcba904a7a32e0d02baae5c6f16cade0[m
+Merge: d4ebbfa 3a6bd78
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 1 13:18:19 2025 -0600
+
+    Merge branch 'usuarios'
+
+[33mcommit 3a6bd783e494b4a7a7e3e932aa31431df611ffc9[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 1 12:55:46 2025 -0600
+
+    HU-16 Visualizacion de Usuarios
+
+[33mcommit b4362ba195950fe75d8ea2424d90df4a480e1edd[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 1 02:25:39 2025 -0600
+
+    Arreglos menores
+
+[33mcommit b7e6fbb633c4209fcf692599623ca942a3888d1c[m
+Merge: ebf9ea4 6f16854
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Wed Oct 1 01:35:38 2025 -0600
+
+    Visualizacion roles y usuarios
+
+[33mcommit 6f168542f4748a47670f0a6a2ca1b6035252981a[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Tue Sep 30 23:54:19 2025 -0600
+
+    Proyecto front con razor
+
+[33mcommit ebf9ea4e6380e4a41eb35b8de198b0617db8d912[m
+Merge: 88fe177 9fc7cff
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Tue Sep 30 23:51:06 2025 -0600
+
+    pruebas
+
+[33mcommit d4ebbfac02cfe56fb77396337a447888034ec605[m
+Merge: 88fe177 2889ca6
+Author: KaledGR <126337811+KaledGR@users.noreply.github.com>
+Date:   Tue Sep 30 23:44:21 2025 -0600
+
+    Merge pull request #2 from vivianmvero13/kaled
+    
+    Registro y Login
+
+[33mcommit 2889ca653d2f834d779158755a2962b1c1308eb0[m
+Merge: 9fc7cff 88fe177
+Author: KaledGR <126337811+KaledGR@users.noreply.github.com>
+Date:   Tue Sep 30 23:43:55 2025 -0600
+
+    Merge branch 'main' into kaled
+
+[33mcommit fc3f28fe7f85805c11efdbd0142bac9371c2e8bc[m
+Merge: 88fe177 9fc7cff
+Author: unknown <dgonzalez00893@ufide.ac.cr>
+Date:   Tue Sep 30 23:32:38 2025 -0600
+
+             Cexit
+     cts:
+            Tecmave/Tecmave.Mvc/wwwroot/css/auth-pro.css
+            Tecmave/Tecmave.Mvc/wwwroot/css/brand-red-hard.css
+            Tecmave/Tecmave.Mvc/wwwroot/css/dashboard.css
+
+[33mcommit 9fc7cffd15207b602bf76e29ae4936f7ca352c1a[m
+Author: unknown <dgonzalez00893@ufide.ac.cr>
+Date:   Tue Sep 30 22:54:28 2025 -0600
+
+    Registro y Login
+
+[33mcommit 88fe1771ffd833f5f776379faf554aadddb7ae9a[m[33m ([m[1;31morigin/Usuarios[m[33m)[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Tue Sep 30 15:09:07 2025 -0600
+
+    Script SQL
+
+[33mcommit 530a7be5c3ceb40fde3e9788ecf02014f18bc9cb[m
+Merge: 21b007e 8622807
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Mon Sep 29 13:49:12 2025 -0600
+
+    Merge branch 'APIs'
+
+[33mcommit 8622807557873ae584894f421c0c73c5959233f3[m[33m ([m[1;31morigin/APIs[m[33m)[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Sun Sep 28 19:10:24 2025 -0600
+
+    APIs finales
+
+[33mcommit 9ddca78a48202ceee02cce7ac054d8ddccbc29f7[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Sun Sep 28 17:27:07 2025 -0600
+
+    Todos los APIs
+
+[33mcommit b9099053f72080f51d4e6cab6e6297dd7146ad80[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Sun Sep 28 16:56:57 2025 -0600
+
+    CRUD facturas
+
+[33mcommit 90565afd7a57bfcca48ec6255a63448d6ce3bdd1[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Fri Sep 26 17:27:38 2025 -0600
+
+    API Modelos
+
+[33mcommit 21b007e8fb30603832c31df484bdc4df3178649c[m
+Author: Josh181i <136003412+Josh181i@users.noreply.github.com>
+Date:   Thu Sep 25 20:03:40 2025 -0600
+
+    Add files via upload
+
+[33mcommit bcbe5f732c21ab21c7ef85c821d56ca05c3a8f18[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Tue Sep 23 16:18:20 2025 -0600
+
+    Correcciones en las tablas
+
+[33mcommit 6b29d38b3af05aef69bf6e217e26b054c4c050d7[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Tue Sep 23 13:23:38 2025 -0600
+
+    APIs Tipo Servicio
+
+[33mcommit 792c1c26096f362a4e809fd08ef9902cc5521d8a[m
+Author: Vivian Velazquez <vivianmvero@gmail.com>
+Date:   Tue Sep 23 12:47:44 2025 -0600
+
+    API agendamientos
+
+[33mcommit 2098acb7011e75644dfdaddff05ae1ad422b2ce1[m
+Author: unknown <dgonzalez00893@ufide.ac.cr>
+Date:   Wed Sep 17 22:50:56 2025 -0600
+
+    Script de la base de datos
+
+[33mcommit a67c528edea98a44d31f7515b1af778baa959529[m
+Author: Josh181i <136003412+Josh181i@users.noreply.github.com>
+Date:   Wed Sep 17 22:09:49 2025 -0600
+
+    Add files via upload
+
+[33mcommit cb19df6100394e4b031cb581eb766b810f04acb0[m
+Author: Josh181i <136003412+Josh181i@users.noreply.github.com>
+Date:   Wed Sep 17 22:06:33 2025 -0600
+
+    Add files via upload
+    
+    prototipo
+
+[33mcommit f149a2cf5665276fc96dc1bc2e62f85780a34ae4[m
+Author: unknown <dgonzalez00893@ufide.ac.cr>
+Date:   Wed Sep 17 22:00:43 2025 -0600
+
+    Proyecto inicial
+
+[33mcommit d0eb2445b45133919326031973d2fcf40dbe12bb[m
+Author: vivianmvero13 <165861899+vivianmvero13@users.noreply.github.com>
+Date:   Wed Sep 17 21:56:18 2025 -0600
+
+    Update .gitignore
+
+[33mcommit 640debfcb4f2bdc9b40c157a1314acfb77b0854f[m
+Author: vivianmvero13 <165861899+vivianmvero13@users.noreply.github.com>
+Date:   Wed Sep 17 21:48:49 2025 -0600
+
+    Update README.md
+
+[33mcommit d2f3c9ccfddfc96dfc330efd0329fca7c0539e95[m
+Author: vivianmvero13 <165861899+vivianmvero13@users.noreply.github.com>
+Date:   Sat Jul 26 10:19:02 2025 -0600
+
+    Update README.md
+
+[33mcommit b85bf9794118fd54ede7bdb2aa661a1377cbaf3d[m
+Author: vivianmvero13 <165861899+vivianmvero13@users.noreply.github.com>
+Date:   Sat Jul 26 10:15:53 2025 -0600
+
+    Update README.md
+
+[33mcommit c4271c153fc6e511cd44580fc76a7d5dd229a44b[m
+Author: vivianmvero13 <165861899+vivianmvero13@users.noreply.github.com>
+Date:   Sat Jul 26 10:13:35 2025 -0600
+
+    Update README.md
+
+[33mcommit e3cc743306be136f212ea77c1f01473b5844ebfc[m
+Author: vivianmvero13 <165861899+vivianmvero13@users.noreply.github.com>
+Date:   Sat Jul 26 10:12:21 2025 -0600
+
+    Update README.md
+
+[33mcommit 963d4a0636e3e884c1627be91d27a7f7983b1ddf[m
+Author: vivianmvero13 <165861899+vivianmvero13@users.noreply.github.com>
+Date:   Sat Jul 26 10:03:27 2025 -0600
+
+    Initial commit

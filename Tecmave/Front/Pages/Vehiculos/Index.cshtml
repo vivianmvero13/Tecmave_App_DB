@@ -1,5 +1,5 @@
 ﻿@page
-@model Front.Pages.Vehículos.IndexModel
+@model Front.Pages.Vehiculos.IndexModel
 @{
     Layout = "_Layout";
     ViewData["Title"] = "Vehículos Registrados";
@@ -8,17 +8,10 @@
 <h1>Vehículos Registrados</h1>
 
 <div class="row g-3 align-items-end mt-3">
-    <div class="col-12 col-md-4">
-        <label for="roleFilter" class="form-label">Filtrar por rol</label>
-        <select id="roleFilter" class="form-select">
-            <option value="">(Todos)</option>
-            <option value="__SIN_ROL__">(Sin rol)</option>
-        </select>
-    </div>
     <div class="col-12 col-md-8">
         <label for="localSearch" class="form-label">Buscar</label>
         <div class="input-group">
-            <input id="localSearch" class="form-control" placeholder="Buscar por username, email, teléfono o rol…" />
+            <input id="localSearch" class="form-control" placeholder="Buscar por placa, marca, modelo, año o cliente…" />
             <button id="clearSearch" class="btn btn-outline-secondary" type="button">Limpiar</button>
         </div>
     </div>
@@ -27,9 +20,11 @@
 <div class="d-flex justify-content-between align-items-center mt-3">
     <small id="resultsBadge" class="text-muted">Mostrando 0 de 0</small>
     <div class="d-flex gap-2">
-        <a id="manageRolesBtn" class="btn btn-royal btn-sm" href="/Roles">Administrar Roles</a>
         <button id="exportBtn" class="btn btn-orange btn-sm" type="button">
             <i class="fa-solid fa-file-excel"></i> Exportar
+        </button>
+        <button id="registrarBtn" class="btn btn-orange btn-sm" type="button" onclick="location.href='/Vehiculos/Crear'">
+            <i class="fa-solid fa-plus"></i> Registrar
         </button>
     </div>
 </div>
@@ -38,15 +33,17 @@
     <table class="table align-middle">
         <thead>
             <tr>
-                <th>Username</th>
+                <th>Placa</th>
+                <th>Año</th>
+                <th>Marca</th>
+                <th>Modelo</th>
+                <th>Cliente</th>
                 <th>Email</th>
-                <th>Teléfono</th>
-                <th>Rol</th>
-                <th>Acciones</th>
+                <th style="width:150px;">Acciones</th>
             </tr>
         </thead>
-        <tbody id="userTable">
-            <tr><td colspan="5">Cargando Vehículos…</td></tr>
+        <tbody id="vehiculosTable">
+            <tr><td colspan="7">Cargando vehículos…</td></tr>
         </tbody>
     </table>
 </div>
@@ -59,20 +56,196 @@
     }
 
         .btn-orange:hover {
-            background: #9FAA13 !important;
+            background: #8f9a11 !important;
         }
-
-    .btn-royal {
-        background: #C36721 !important;
-        border: 1px solid #C36721 !important;
-        color: #fff !important;
-    }
 </style>
 
 <script>
-    const API_BASE = '@(Model?.ApiBase ?? "https://localhost:7096")';
-    const VEHICULOS_URL = `${API_BASE}/api/Vehículos`;
+    const API_BASE = 'https://localhost:7096';
 
+    // Endpoints (sin /api)
+    const VEHICULOS_URL = `${API_BASE}/vehiculos`;
+    const USUARIOS_URL  = `${API_BASE}/api/usuarios`;
+    const MARCAS_URL    = `${API_BASE}/marcas`;
 
+    const $tableBody = document.getElementById('vehiculosTable');
+    const $search    = document.getElementById('localSearch');
+    const $clear     = document.getElementById('clearSearch');
+    const $badge     = document.getElementById('resultsBadge');
+    const $export    = document.getElementById('exportBtn');
+
+    let allRows = [];
+    let filteredRows = [];
+
+    // Diccionarios auxiliares
+    const usersMap  = new Map(); // id -> { nombre, email }
+    const marcasMap = new Map(); // id -> nombre
+
+    // ===== Helpers =====
+    function pick(obj, paths, def = '') {
+        for (const p of paths) {
+            const v = p.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
+            if (v !== undefined && v !== null) return v;
+        }
+        return def;
+    }
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;','=':'&#61;','/':'&#47;'
+        }[c]));
+    }
+    function nombreCompleto(u){
+        const n = (u.nombre ?? u.Nombre ?? '').trim();
+        const a = (u.apellidos ?? u.Apellidos ?? '').trim();
+        const user = (u.userName ?? u.UserName ?? '').trim();
+        const full = [n,a].filter(Boolean).join(' ').trim();
+        return full || user || 'Usuario';
+    }
+
+    // ===== Cargas base =====
+    async function loadUsuarios() {
+        const r = await fetch(USUARIOS_URL, { credentials: 'include' });
+        if (!r.ok) throw new Error(`Usuarios HTTP ${r.status}`);
+        const payload = await r.json();
+        const list = Array.isArray(payload) ? payload : (Array.isArray(payload?.data) ? payload.data : []);
+        usersMap.clear();
+        for (const u of list) {
+            const id = Number(u.id ?? u.Id);
+            if (!id) continue;
+            usersMap.set(id, {
+                nombre: nombreCompleto(u),
+                email: (u.email ?? u.Email ?? '').trim()
+            });
+        }
+    }
+
+    async function loadMarcas() {
+        const r = await fetch(MARCAS_URL, { credentials: 'include' });
+        if (!r.ok) throw new Error(`Marcas HTTP ${r.status}`);
+        const payload = await r.json();
+        const list = Array.isArray(payload) ? payload : (Array.isArray(payload?.data) ? payload.data : []);
+        marcasMap.clear();
+        for (const m of list) {
+            const id = Number(m.id_marca ?? m.id ?? m.Id);
+            const nombre = (m.nombre ?? m.Nombre ?? '').trim();
+            if (id && nombre) marcasMap.set(id, nombre);
+        }
+    }
+
+    // ===== Transformación de fila del API a modelo UI =====
+    function mapApiRow(r) {
+        const id       = pick(r, ['id','id_vehiculo','idVehiculo']);
+        const placa    = String(pick(r, ['placa','Placa'], '')).toUpperCase();
+        const annoRaw  = Number(pick(r, ['anno','anio','Año','year'], 0));
+        const anno     = annoRaw > 0 ? annoRaw : '—';
+
+        const idMarca  = Number(pick(r, ['id_marca','idMarca'], 0));
+        // usar 'marca' string si viene, si no resolver por marcasMap, si no mostrar #id
+        const marca    = (pick(r, ['marca','Marca'], '') || marcasMap.get(idMarca) || (idMarca ? `#${idMarca}` : '—'));
+
+        const modelo   = pick(r, ['modelo','Modelo','modelo.nombre','Modelo.Nombre'], '');
+        const clienteId= Number(pick(r, ['cliente_id','clienteId','cliente.id','cliente.Id'], 0));
+
+        // Si el backend ya envía 'cliente' y 'email', úsalos; si no, resolver desde usersMap
+        const cliente  = pick(r, ['cliente','Cliente'], '') || (usersMap.get(clienteId)?.nombre || '');
+        const email    = pick(r, ['email','Email','cliente.email','Cliente.Email'], '') || (usersMap.get(clienteId)?.email || '');
+
+        return { id, placa, anno, marca, modelo, cliente, email };
+    }
+
+    // ===== Render =====
+    function renderRows(rows) {
+        if (!rows.length) {
+            $tableBody.innerHTML = `<tr><td colspan="7">Sin resultados</td></tr>`;
+            $badge.textContent = `Mostrando 0 de ${allRows.length}`;
+            return;
+        }
+        const html = rows.map(r => `
+            <tr>
+                <td>${escapeHtml(r.placa)}</td>
+                <td>${escapeHtml(String(r.anno))}</td>
+                <td>${escapeHtml(r.marca)}</td>
+                <td>${escapeHtml(r.modelo)}</td>
+                <td>${escapeHtml(r.cliente)}</td>
+                <td>${escapeHtml(r.email)}</td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a class="btn btn-outline-primary" href="/Vehiculos/Detalle?id=${encodeURIComponent(r.id)}">Ver</a>
+                        <a class="btn btn-outline-secondary" href="/Vehiculos/Editar?id=${encodeURIComponent(r.id)}">Editar</a>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+        $tableBody.innerHTML = html;
+        $badge.textContent = `Mostrando ${rows.length} de ${allRows.length}`;
+    }
+
+    // ===== Filtro local =====
+    function applyFilter() {
+        const q = $search.value.trim().toLowerCase();
+        if (!q) {
+            filteredRows = [...allRows];
+            renderRows(filteredRows);
+            return;
+        }
+        filteredRows = allRows.filter(r =>
+            r.placa.toLowerCase().includes(q) ||
+            String(r.anno).toLowerCase().includes(q) ||
+            r.marca.toLowerCase().includes(q) ||
+            r.modelo.toLowerCase().includes(q) ||
+            r.cliente.toLowerCase().includes(q) ||
+            r.email.toLowerCase().includes(q)
+        );
+        renderRows(filteredRows);
+    }
+
+    // ===== Exportar CSV =====
+    function exportCsv() {
+        const rows = filteredRows.length ? filteredRows : allRows;
+        if (!rows.length) return;
+
+        const header = ['Placa','Año','Marca','Modelo','Cliente','Email'];
+        const csvRows = [ header.join(',') ]
+            .concat(rows.map(r => [r.placa, r.anno, r.marca, r.modelo, r.cliente, r.email]
+                .map(val => `"${String(val ?? '').replace(/"/g, '""')}"`).join(',')));
+
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+        a.href = url; a.download = `vehiculos_${ts}.csv`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // ===== Carga principal =====
+    async function loadVehiculos() {
+        try {
+            // Cargar primero usuarios (para nombre/email) y marcas (para resolver nombre por id)
+            await Promise.all([loadUsuarios(), loadMarcas()]);
+
+            const res = await fetch(VEHICULOS_URL, { credentials: 'include' });
+            if (!res.ok) throw new Error(`Vehículos HTTP ${res.status}`);
+            const data = await res.json();
+            const list = Array.isArray(data) ? data
+                       : Array.isArray(data?.data) ? data.data
+                       : [];
+
+            allRows = list.map(mapApiRow);
+            filteredRows = [...allRows];
+            renderRows(filteredRows);
+        } catch (err) {
+            console.error(err);
+            $tableBody.innerHTML = `<tr><td colspan="7">Error cargando datos.</td></tr>`;
+            $badge.textContent = `Mostrando 0 de 0`;
+        }
+    }
+
+    // Eventos
+    $search.addEventListener('input', applyFilter);
+    $clear.addEventListener('click', () => { $search.value = ''; applyFilter(); });
+    $export.addEventListener('click', exportCsv);
+
+    // Init
+    loadVehiculos();
 </script>
-
