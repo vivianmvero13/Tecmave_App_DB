@@ -51,13 +51,13 @@
             <div class="subtle">Gestión</div>
             <nav class="nav">
                 <a asp-page="/Vehiculos/Crear"><i class="fa-solid fa-car"></i> Vehículos</a>
-
-                @if (isAdmin)
+                <a asp-page="/Servicios/Index"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
+                <a asp-page="/Agendamiento/Index"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
+                @if (User.IsInRole("Admin"))
                 {
                         <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
                         <a asp-page="/Usuarios/Index"><i class="fa-solid fa-user-group"></i> Usuarios</a>
-                        <a asp-page="/Servicios/Index"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
-                        <a asp-page="/Agendamiento/Index"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
+                        
                         <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
                         <a asp-page="/Facturacion/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación</a>
                         <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>

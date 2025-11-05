@@ -84,6 +84,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+/*
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
@@ -122,5 +123,6 @@ using (var scope = app.Services.CreateScope())
         await userManager.AddToRoleAsync(normalUser, "Usuarios");
     }
 }
+*/
 
 app.Run();

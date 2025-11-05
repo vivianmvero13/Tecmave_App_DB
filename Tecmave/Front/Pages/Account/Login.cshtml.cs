@@ -55,9 +55,9 @@ namespace Front.Pages.Account
             var roles = await _userManager.GetRolesAsync(user);
 
             if (roles.Contains("Administrador"))
-                return RedirectToPage("/Vehiculos/Index");
+                return RedirectToPage("/Index");
             else
-                return RedirectToPage("/Vehiculos/Index");
+                return RedirectToPage("/Index");
         }
     }
 
