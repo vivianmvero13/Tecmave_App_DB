@@ -45,7 +45,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Aquí se insertan los agendamientos -->
+                   
                 </tbody>
             </table>
             <div class="banner" style="margin-top:1rem">
@@ -63,22 +63,26 @@
     const API_VEHICULO = "https://localhost:7096/Vehiculos";
     const API_ESTADO = "https://localhost:7096/Estados";
     const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
+    console.log("User ID:", userId);
 
     const horasDisponibles = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"];
 
-    // Cargar vehículos del usuario logeado
+    
     function cargarVehiculosUsuario() {
         $.get(API_VEHICULO, function (vehiculos) {
             $("#vehiculos").empty().append('<option value="">Selecciona</option>');
-            vehiculos.forEach(v => {
-                if (v.cliente_id.toString() === userId) {
-                    $("#vehiculos").append(`<option value="${v.id_vehiculo}">${v.placa}</option>`);
-                }
-            });
+
+    vehiculos.forEach(v => {
+        console.log("Vehículo:", v); 
+        if (v.cliente_id.toString() === userId) {
+            $("#vehiculos").append(`<option value="${v.id_vehiculo}">${v.placa}</option>`);
+        }
+    });
+
         });
     }
 
-    // Mostrar todas las horas disponibles siempre
+    
     function cargarHoras() {
         $("#hora").empty().append('<option value="">Selecciona</option>');
         horasDisponibles.forEach(h => {
@@ -86,7 +90,7 @@
         });
     }
 
-    // Validar y guardar agendamiento
+   
     function guardarAgendamiento() {
         const vehiculoId = $("#vehiculos").val();
         const fecha = $("#fecha").val();
@@ -103,7 +107,7 @@
             return;
         }
 
-        // Verificar si ya existe un agendamiento en esa fecha y hora
+        
         $.get(API_AGENDAMIENTO, function (agendamientos) {
             const existe = agendamientos.some(a =>
                 a.fecha_estimada === fecha &&
@@ -115,15 +119,22 @@
                 return;
             }
 
-            // Si no existe, guardar
-            const nuevoAgendamiento = {
-                cliente_id: userId,
-                vehiculo_id: parseInt(vehiculoId),
-                fecha_agregada: hoy,
-                fecha_estimada: fecha,
-                hora_llegada: hora,
-                id_estado: 2 // Pendiente
-            };
+            
+
+    const vehiculoId = $("#vehiculos").val();
+    console.log("ID del vehículo seleccionado:", vehiculoId);
+
+             const nuevoAgendamiento = {
+
+    cliente_id: parseInt(userId),
+     vehiculo_id: parseInt(vehiculoId),
+     fecha_agregada: hoy,
+     fecha_estimada: fecha,
+     hora_llegada: hora,
+     id_estado: 2
+
+         };
+
 
             $.ajax({
                 url: API_AGENDAMIENTO,
@@ -141,7 +152,7 @@
         });
     }
 
-    // Mostrar agendamientos del usuario
+ 
     function cargarAgendamientosUsuario() {
         $.get(API_AGENDAMIENTO, function (agendamientos) {
             $("table tbody").empty();
@@ -153,10 +164,12 @@
                     $.get(`${API_ESTADO}/${a.id_estado}`, function (estado) {
                         $("table tbody").append(`
                             <tr>
-                                <td>${vehiculo.placa}</td>
-                                <td>${a.fecha_agregada}</td>
-                                <td>${a.fecha_estimada}</td>
-                                <td>${estado.nombre}</td>
+
+                        <td>${vehiculo.placa}</td>
+                        <td>${a.fecha_agregada}</td>
+                        <td>${a.fecha_estimada}</td>
+                        <td>${estado.nombre}</td>
+
                             </tr>
                         `);
                     });
@@ -165,7 +178,7 @@
         });
     }
 
-    // Eventos al cargar la página
+   
     $(document).ready(function () {
 
     const hoy = new Date().toISOString().split('T')[0];
