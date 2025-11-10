@@ -1,6 +1,79 @@
-﻿namespace Front.Pages.Planillas
-{
-    public class Index
-    {
-    }
+﻿@page
+@model Front.Pages.Planillas.IndexModel
+@{
+    ViewData["Title"] = "Planillas";
 }
+<h1 class="mb-4">Planillas</h1>
+<div class="row g-3 align-items-end mb-3">
+    <div class="col-12 col-md-4">
+        <label class="form-label">Filtrar por colaborador</label>
+        <select asp-for="FiltroColaboradorId" asp-items="Model.ColaboradoresSelect" class="form-select">
+            <option value="">(Todos)</option>
+        </select>
+    </div>
+    <div class="col-6 col-md-3">
+        <label class="form-label">Fecha inicio</label>
+        <input asp-for="FiltroInicio" class="form-control" type="date" />
+    </div>
+    <div class="col-6 col-md-3">
+        <label class="form-label">Fecha fin</label>
+        <input asp-for="FiltroFin" class="form-control" type="date" />
+    </div>
+    <div class="col-12 col-md-2 d-grid">
+        <button class="btn btn-primary" type="submit" form="filterForm">Filtrar</button>
+    </div>
+</div>
+<form method="get" id="filterForm">
+    <input type="hidden" asp-for="FiltroColaboradorId" />
+    <input type="hidden" asp-for="FiltroInicio" />
+    <input type="hidden" asp-for="FiltroFin" />
+</form>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <small class="text-muted">Mostrando @Model.Planillas.Count planillas</small>
+    <a asp-page="Create" class="btn btn-royal">Nueva planilla</a>
+</div>
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Colaborador</th>
+                <th>Periodo</th>
+                <th>Horas</th>
+                <th>Valor Hora</th>
+                <th>Total</th>
+                <th>Deducciones</th>
+                <th>Neto</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Planillas.Any())
+            {
+                <tr><td colspan="10" class="text-muted">No hay planillas.</td></tr>
+            }
+            else
+            {
+                foreach (var p in Model.Planillas)
+                {
+                    <tr>
+                        <td>@p.Id</td>
+                        <td>@(p.Colaborador != null ? p.Colaborador.Nombre + " " + p.Colaborador.Apellido : "—")</td>
+                        <td>@p.PeriodoInicio.ToString("yyyy-MM-dd") - @p.PeriodoFin.ToString("yyyy-MM-dd")</td>
+                        <td>@p.HorasTrabajadas</td>
+                        <td>@p.ValorHora.ToString("F2")</td>
+                        <td>@p.TotalSalario.ToString("F2")</td>
+                        <td>@p.Deducciones.ToString("F2")</td>
+                        <td>@p.NetoPagar.ToString("F2")</td>
+                        <td>@p.Estado</td>
+                        <td>
+                            <a asp-page="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-warning">Editar</a>
+                            <a asp-page="Delete" asp-route-id="@p.Id" class="btn btn-sm btn-danger">Eliminar</a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

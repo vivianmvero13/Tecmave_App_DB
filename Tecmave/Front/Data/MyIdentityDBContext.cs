@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Front.Models;
-using Microsoft.AspNetCore.Identity;
 using Tecmave.Front.Models;
 
 namespace Front.Data
@@ -14,5 +14,6 @@ namespace Front.Data
         }
 
         public DbSet<Colaborador> Colaboradores { get; set; }
+        public DbSet<Planilla> Planillas { get; set; }
     }
 }

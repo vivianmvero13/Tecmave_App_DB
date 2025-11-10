@@ -1,6 +1,28 @@
-﻿namespace Front.Pages.Planillas
+﻿@page "{id:int}"
+@model Front.Pages.Planillas.DeleteModel
+@{
+    ViewData["Title"] = "Eliminar Planilla";
+}
+<h1 class="mb-4">Eliminar Planilla</h1>
+@if (Model.Planilla == null)
 {
-    public class Delete
-    {
-    }
+    <div class="alert alert-warning">La planilla no existe.</div>
+}
+else
+{
+    <div class="border p-3 rounded">
+        <dl class="row">
+            <dt class="col-sm-3">Colaborador</dt>
+            <dd class="col-sm-9">@Model.Planilla.Colaborador?.Nombre @Model.Planilla.Colaborador?.Apellido</dd>
+            <dt class="col-sm-3">Periodo</dt>
+            <dd class="col-sm-9">@Model.Planilla.PeriodoInicio.ToString("yyyy-MM-dd") - @Model.Planilla.PeriodoFin.ToString("yyyy-MM-dd")</dd>
+            <dt class="col-sm-3">Neto a pagar</dt>
+            <dd class="col-sm-9">@Model.Planilla.NetoPagar.ToString("F2")</dd>
+        </dl>
+    </div>
+    <form method="post" class="mt-3">
+        <input type="hidden" asp-for="Planilla.Id" />
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a asp-page="Index" class="btn btn-secondary ms-2">Cancelar</a>
+    </form>
 }
