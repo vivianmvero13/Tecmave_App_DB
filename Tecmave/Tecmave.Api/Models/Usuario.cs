@@ -9,5 +9,7 @@ namespace Tecmave.Api.Models
         public string Apellidos { get; set; } = "";
         public string Cedula { get; set; } = "";
         public string Direccion { get; set; } = "";
+        public string NombreCompleto => $"{Nombre} {Apellidos}".Trim();
+        public bool NotificacionesActivadas { get; set; } = false;
     }
 }

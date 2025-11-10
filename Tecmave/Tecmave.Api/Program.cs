@@ -55,7 +55,6 @@ builder.Services.AddCors(options =>
         .AllowCredentials()
     );
 });
-
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 
@@ -73,6 +72,7 @@ builder.Services.AddScoped<FacturasService>();
 builder.Services.AddScoped<EstadosService>();
 builder.Services.AddScoped<ColaboradoresService>();
 builder.Services.AddScoped<AgendamientoService>();
+builder.Services.AddScoped<EmailService>();
 
 var app = builder.Build();
 

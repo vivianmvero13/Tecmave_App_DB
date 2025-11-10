@@ -23,7 +23,8 @@ namespace Tecmave.Api.Data
         public DbSet<ColaboradoresModel> colaboradores { get; set; } = default!;
         public DbSet<ServiciosRevisionModel> servicios_revision { get; set; } = default!;
         public DbSet<RoleChangeAudit> role_change_audit { get; set; } = default!;
-
+        public DbSet<PromocionEnvio> promocion_envios { get; set; } = default!;
+        public DbSet<Usuario> usuarios { get; set; } = default!;
         protected override void OnModelCreating(ModelBuilder b)
         {
             base.OnModelCreating(b);
@@ -226,6 +227,18 @@ namespace Tecmave.Api.Data
                 e.HasOne<ServiciosModel>()
                     .WithMany()
                     .HasForeignKey(x => x.servicio_id)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            b.Entity<PromocionEnvio>().ToTable("promocion_envios").HasKey(x => x.IdEnvio);
+            b.Entity<PromocionEnvio>(e =>
+            {
+                e.Property(x => x.IdUsuario).HasColumnName("id_usuario");
+                e.Property(x => x.IdPromocion).HasColumnName("id_promocion");
+                e.Property(x => x.FechaEnvio).HasColumnName("fecha_envio");
+                e.HasOne<PromocionesModel>()
+                    .WithMany()
+                    .HasForeignKey(x => x.IdPromocion)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
