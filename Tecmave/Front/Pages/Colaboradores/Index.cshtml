@@ -1,0 +1,39 @@
+﻿@page
+@model Front.Pages.Colaboradores.IndexModel
+@{
+    ViewData["Title"] = "Gestión de Colaboradores";
+}
+
+<h1 class="mb-4">Lista de Colaboradores</h1>
+
+<p>
+    <a asp-page="Create" class="btn btn-primary">Agregar Colaborador</a>
+</p>
+
+<table class="table table-bordered table-striped mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>Nombre</th>
+            <th>Puesto</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Colaboradores)
+        {
+            <tr>
+                <td>@item.Nombre</td>
+                <td>@item.Puesto</td>
+                <td>@item.Correo</td>
+                <td>@item.Telefono</td>
+                <td>
+                    <a asp-page="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Editar</a>
+                    <a asp-page="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Detalles</a>
+                    <a asp-page="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

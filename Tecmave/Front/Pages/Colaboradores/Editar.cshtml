@@ -1,0 +1,102 @@
+﻿@page "{id:int}"
+@model Front.Pages.Colaboradores.EditarModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Editar Colaborador";
+}
+
+<h1 class="mb-4">Editar colaborador</h1>
+
+<div class="card p-4">
+    <form id="frmColab">
+        <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px;">
+            <div>
+                <label class="form-label">Nombre</label>
+                <input id="nombre" class="form-control" />
+            </div>
+            <div>
+                <label class="form-label">Apellidos</label>
+                <input id="apellidos" class="form-control" />
+            </div>
+            <div>
+                <label class="form-label">Cédula</label>
+                <input id="cedula" class="form-control" />
+            </div>
+            <div>
+                <label class="form-label">Correo Electrónico</label>
+                <input id="email" type="email" class="form-control" />
+            </div>
+            <div>
+                <label class="form-label">Teléfono</label>
+                <input id="telefono" class="form-control" />
+            </div>
+            <div>
+                <label class="form-label">Cargo</label>
+                <input id="cargo" class="form-control" />
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button id="btnSave" type="submit" class="btn btn-primary">Guardar</button>
+            <a class="btn btn-secondary" asp-page="/Colaboradores/Index">Volver</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery/jquery.min.js"></script>
+    <script>
+        const API = '@Model.ApiBase';
+        const COLAB_ID = @Model.Id;
+
+        $(function () {
+          loadColab();
+          $('#frmColab').on('submit', onSave);
+        });
+
+        function escapeHtml(s){ return String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
+
+        function loadColab() {
+          $.getJSON(`${API}/api/colaboradores/${COLAB_ID}`, function (c) {
+            $('#nombre').val(c.nombre ?? '');
+            $('#apellidos').val(c.apellidos ?? '');
+            $('#cedula').val(c.cedula ?? '');
+            $('#email').val(c.email ?? '');
+            $('#telefono').val(c.telefono ?? '');
+            $('#cargo').val(c.cargo ?? '');
+          }).fail(() => {
+            alert('Error al cargar los datos del colaborador.');
+          });
+        }
+
+        async function onSave(e) {
+          e.preventDefault();
+          $('#btnSave').prop('disabled', true);
+
+          const payload = {
+            nombre: $('#nombre').val(),
+            apellidos: $('#apellidos').val(),
+            cedula: $('#cedula').val(),
+            email: $('#email').val(),
+            telefono: $('#telefono').val(),
+            cargo: $('#cargo').val()
+          };
+
+          try {
+            await $.ajax({
+              url: `${API}/api/colaboradores/${COLAB_ID}`,
+              method: 'PUT',
+              contentType: 'application/json',
+              data: JSON.stringify(payload)
+            });
+
+            window.location.href = '/Colaboradores/Index';
+          } catch (err) {
+            console.error(err);
+            alert('No se pudo guardar el colaborador.');
+          } finally {
+            $('#btnSave').prop('disabled', false);
+          }
+        }
+    </script>
+}
