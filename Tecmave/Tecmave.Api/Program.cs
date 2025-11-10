@@ -21,7 +21,11 @@ builder.Services.AddSwaggerGen();
 // --- CONEXIÓN A MySQL ---
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
+    opt.UseMySql(cs, ServerVersion.AutoDetect(cs),
+        b => b.MigrationsHistoryTable("__EFMigrationsHistory_App")));
+
+
+
 
 // --- IDENTITY CONFIG ---
 builder.Services

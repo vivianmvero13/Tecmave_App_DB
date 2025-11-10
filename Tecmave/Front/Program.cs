@@ -10,7 +10,9 @@ builder.Services.AddRazorPages();
 
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<MyIdentityDBContext>(opt =>
-    opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
+    opt.UseMySql(cs, ServerVersion.AutoDetect(cs),
+        b => b.MigrationsHistoryTable("__EFMigrationsHistory_Identity"))
+);
 
 builder.Services.AddIdentity<Usuario, IdentityRole<int>>(
     options =>
