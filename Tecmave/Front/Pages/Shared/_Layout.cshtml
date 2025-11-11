@@ -65,21 +65,17 @@
                 <a asp-page="/Index"><i class="fa-solid fa-house"></i> Inicio</a>
                 <a asp-page="/Servicios/Index"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
                 <a asp-page="/Agendamiento/Index"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
-<<<<<<< HEAD
                 @if (User.IsInRole("Admin"))
                 {
                         <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
                         <a asp-page="/Usuarios/Index"><i class="fa-solid fa-user-group"></i> Usuarios</a>
-                    <a asp-page="/Promociones/Index"><i class="fa-solid fa-gear"></i> Administración</a>
                         <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
                         <a asp-page="/Facturacion/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación</a>
                         <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
                         <a asp-page="/Administracion/Index"><i class="fa-solid fa-gear"></i> Administración</a>
                         <a asp-page="/Carrusel/Index"><i class="fa-regular fa-images"></i> Carrusel</a>
                 }
-=======
-                <a asp-page="/Vehiculos/Crear"><i class="fa-solid fa-car"></i> Vehículos</a>
->>>>>>> main
+                
 
                 @* Solo admin *@
                 @if (isAdmin)
@@ -88,7 +84,8 @@
                     <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
                     <a asp-page="/Facturacion/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación</a>
                     <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
-                    <a asp-page="/Administracion/Index"><i class="fa-solid fa-gear"></i> Administración</a>
+                    <a asp-page="/Vehiculos/Index"><i class="fa-solid fa-gear"></i>Vehiculos</a>
+                    <a asp-page="/Promociones"><i class="fa-solid fa-gauge-high"></i> Promociones</a>
                     <a asp-page="/Carrusel/Index"><i class="fa-regular fa-images"></i> Carrusel</a>
                 }
             </nav>
@@ -102,6 +99,7 @@
                 else
                 {
                     <a asp-page="/Account/Manage/Index"><i class="fa-regular fa-user"></i> Mi cuenta</a>
+
                 }
             </nav>
         </aside>
