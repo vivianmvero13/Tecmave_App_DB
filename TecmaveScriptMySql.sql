@@ -1,7 +1,13 @@
+-- =========================================
+-- Tecmave DB - Rebuild Clean Script
+-- =========================================
 USE tecmave;
 
+-- 1) Desactivar validación de FKs para dropear en orden
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- 2) DROP (hijas -> padres)
+DROP TABLE IF EXISTS planillas;
 DROP TABLE IF EXISTS servicios_revision;
 DROP TABLE IF EXISTS detalle_factura;
 DROP TABLE IF EXISTS resenas;
@@ -13,7 +19,6 @@ DROP TABLE IF EXISTS notificaciones;
 DROP TABLE IF EXISTS servicios;
 DROP TABLE IF EXISTS tipo_servicios;
 DROP TABLE IF EXISTS marca;
-DROP TABLE IF EXISTS modelo;
 DROP TABLE IF EXISTS factura;
 DROP TABLE IF EXISTS colaboradores;
 
@@ -27,10 +32,11 @@ DROP TABLE IF EXISTS estados;
 DROP TABLE IF EXISTS aspnetusers;
 DROP TABLE IF EXISTS role_change_audit;
 
+-- 3) Crear tablas base de Identity
 CREATE TABLE aspnetusers (
   Id INT NOT NULL AUTO_INCREMENT,
   Nombre VARCHAR(150) NOT NULL,
-  Apellido VARCHAR(150) NOT NULL,
+  Apellidos VARCHAR(150) NOT NULL,
   Cedula VARCHAR(50) NOT NULL,
   Direccion VARCHAR(250) NOT NULL,
   UserName VARCHAR(256) DEFAULT NULL,
@@ -56,6 +62,8 @@ CREATE TABLE aspnetroles (
   Id INT NOT NULL AUTO_INCREMENT,
   Name VARCHAR(256) NULL,
   NormalizedName VARCHAR(256) NULL,
+  Description VARCHAR(256) NULL,
+  IsActive TINYINT(1) NOT NULL DEFAULT 1,
   ConcurrencyStamp LONGTEXT NULL,
   PRIMARY KEY (Id),
   UNIQUE KEY IX_RoleName (NormalizedName)
@@ -109,6 +117,7 @@ CREATE TABLE aspnetroleclaims (
   CONSTRAINT FK_AspNetRoleClaims_AspNetRoles_RoleId FOREIGN KEY (RoleId) REFERENCES aspnetroles (Id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- 4) Catálogos
 CREATE TABLE estados (
   id_estado INT NOT NULL,
   nombre VARCHAR(255) NOT NULL,
@@ -116,7 +125,10 @@ CREATE TABLE estados (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 INSERT INTO estados (id_estado, nombre) VALUES
-(1, 'activo'),(2, 'pendiente'),(3, 'inactivo');
+(1,'activo'),(2,'pendiente'),(3,'inactivo'),
+(4,'Ingresado'),(5,'En Diagnóstico'),(6,'Pendiente de aprobación'),
+(7,'En mantenimiento'),(8,'En pruebas'),(9,'Finalizado'),
+(10,'Entregado'),(11,'Cancelado');
 
 CREATE TABLE tipo_servicios (
   id_tipo_servicio INT NOT NULL AUTO_INCREMENT,
@@ -125,6 +137,13 @@ CREATE TABLE tipo_servicios (
   PRIMARY KEY (id_tipo_servicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- Seed tipo_servicios (antes de servicios)
+INSERT INTO tipo_servicios (id_tipo_servicio, nombre, descripcion) VALUES
+(1, 'Mantenimiento preventivo', 'Servicios de mantenimiento periódico'),
+(2, 'Mantenimiento correctivo', 'Reparaciones por fallas'),
+(3, 'Falla específica', 'Diagnóstico/Reparación de una falla puntual');
+
+-- 5) Dominio
 CREATE TABLE servicios (
   id_servicio INT NOT NULL AUTO_INCREMENT,
   nombre VARCHAR(150) NOT NULL,
@@ -137,26 +156,17 @@ CREATE TABLE servicios (
   CONSTRAINT FK_Servicios_TipoServicio FOREIGN KEY (tipo_servicio_id) REFERENCES tipo_servicios (id_tipo_servicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE modelo (
-  id_modelo INT NOT NULL AUTO_INCREMENT,
-  nombre VARCHAR(255) NOT NULL,
-  PRIMARY KEY (id_modelo)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 CREATE TABLE marca (
   id_marca INT NOT NULL AUTO_INCREMENT,
-  id_modelo INT NOT NULL,
   nombre VARCHAR(255) NOT NULL,
-  PRIMARY KEY (id_marca),
-  KEY FK_Marca_Modelo (id_modelo),
-  CONSTRAINT FK_Marca_Modelo FOREIGN KEY (id_modelo) REFERENCES modelo (id_modelo)
+  PRIMARY KEY (id_marca)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE vehiculos (
   id_vehiculo INT NOT NULL AUTO_INCREMENT,
   cliente_id INT DEFAULT NULL,
   id_marca INT NOT NULL,
-  anno int NOT NULL,
+  anno INT NOT NULL,
   placa VARCHAR(255) NOT NULL,
   modelo VARCHAR(255),
   PRIMARY KEY (id_vehiculo),
@@ -285,6 +295,22 @@ CREATE TABLE colaboradores (
   CONSTRAINT FK_Colab_Usuario FOREIGN KEY (id_usuario) REFERENCES aspnetusers (Id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE planillas (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  colaborador_id INT NOT NULL,
+  periodo_inicio DATE,
+  periodo_fin DATE,
+  horas_trabajadas DECIMAL(10,2),
+  valor_hora DECIMAL(12,2),
+  total_salario DECIMAL(12,2),
+  deducciones DECIMAL(12,2),
+  neto_pagar DECIMAL(12,2),
+  fecha_generada DATETIME DEFAULT CURRENT_TIMESTAMP,
+  estado VARCHAR(50),
+  observaciones VARCHAR(250),
+  CONSTRAINT FK_Planilla_Colab FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id_colaborador) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 CREATE TABLE role_change_audit (
   Id BIGINT AUTO_INCREMENT PRIMARY KEY,
   TargetUserId INT NOT NULL,
@@ -300,32 +326,14 @@ CREATE TABLE role_change_audit (
   INDEX IX_role_change_audit_TargetUserId (TargetUserId),
   INDEX IX_role_change_audit_ChangedAtUtc (ChangedAtUtc),
   INDEX IX_role_change_audit_Action (Action)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-ALTER TABLE aspnetroles
-  ADD COLUMN Description varchar(256) NULL AFTER NormalizedName,
-  ADD COLUMN IsActive tinyint(1) NOT NULL DEFAULT 1 AFTER Description;
-
+-- 6) Rehabilitar validación de FKs
 SET FOREIGN_KEY_CHECKS = 1;
 
-INSERT INTO estados (id_estado, nombre) VALUES
-(4, 'Ingresado'),
-(5, 'En Diagnóstico'),
-(6, 'Pendiente de aprobación'),
-(7, 'En mantenimiento'),
-(8, 'En pruebas'),
-(9, 'Finalizado'),
-(10, 'Entregado'),
-(11, 'Cancelado');
+-- 7) SEED catálogos/maestros
 
--- 1) Quitar la foreign key de 'marca' que apunta a 'modelo'
-ALTER TABLE marca DROP FOREIGN KEY FK_Marca_Modelo;
-ALTER TABLE marca DROP INDEX FK_Marca_Modelo;
-ALTER TABLE marca DROP COLUMN id_modelo;
-DROP TABLE modelo;
-
-USE tecmave;
-
+-- Marcas
 INSERT INTO marca (nombre) VALUES
 ('Sin marca'),
 ('Jeep'),
@@ -348,33 +356,20 @@ INSERT INTO marca (nombre) VALUES
 ('Lexus'),
 ('Mazda');
 
-  
+-- Roles (Ids fijos con mayúscula inicial)
 INSERT INTO aspnetroles (Id, Name, NormalizedName, Description, IsActive)
 VALUES
-(1, 'Admin', 'ADMIN', 'Administrador con acceso completo al sistema', 1),
-(2, 'Colaborador', 'COLABORADOR', 'Empleado o técnico del taller con permisos limitados', 1),
-(3, 'Cliente', 'CLIENTE', 'Usuario cliente que puede ver y registrar sus vehículos', 1);
+(1, 'Administrador', 'ADMINISTRADOR', 'Administrador con acceso completo al sistema', 1),
+(2, 'Colaborador',  'COLABORADOR',    'Empleado o técnico del taller con permisos limitados', 1),
+(3, 'Cliente',      'CLIENTE',        'Usuario cliente que puede ver y registrar sus vehículos', 1)
+ON DUPLICATE KEY UPDATE
+  Name = VALUES(Name),
+  NormalizedName = VALUES(NormalizedName),
+  Description = VALUES(Description),
+  IsActive = VALUES(IsActive);
 
-
-INSERT INTO aspnetusers
-(Nombre, Apellidos, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed,
- PasswordHash, SecurityStamp, ConcurrencyStamp, PhoneNumber, PhoneNumberConfirmed,
- TwoFactorEnabled, LockoutEnabled, AccessFailedCount)
-VALUES
-('Vivian', 'Velazquez', 'Vivian', 'VIVIAN', 'vivian@tecmave.com', 'VIVIAN@TECMAVE.COM', 1,
- 'AQAAAAIAAYagAAAAEAdminHashDemo==', 'SEC123', 'CONC123', '88888888', 1, 0, 0, 0),
-
-('Joshua','Lopez', 'Joshua', 'JOSHUA', 'joshua@tecmave.com', 'joshua@TECMAVE.COM', 1,
- 'AQAAAAIAAYagAAAAEColabHashDemo==', 'SEC456', 'CONC456', '87777777', 1, 0, 0, 0),
-
-('Khaled', 'Gonzalez', 'Khaled', 'KHALED', 'khaled@tecmave.com', 'KHALED@TECMAVE.COM', 1,
- 'AQAAAAIAAYagAAAAEClienteHashDemo==', 'SEC789', 'CONC789', '86666666', 1, 0, 0, 0),
-
-('Daniel', 'Lopez', 'Daniel', 'DANIEL', 'Daniel@tecmave.com', 'DANIEL@TECMAVE.COM', 1,
- 'AQAAAAIAAYagAAAAEClienteHashDemo==', 'SEC789', 'CONC789', '86666666', 1, 0, 0, 0);
-
-INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
-VALUES
+-- Servicios (después de tipo_servicios)
+INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id) VALUES
 ('Electrónica', 'Diagnóstico y reparación de sistemas electrónicos', 'Falla específica', 120.00, 3),
 ('Aire acondicionado', 'Revisión y reparación del sistema de A/C', 'Falla específica', 150.00, 3),
 ('Transmisiones', 'Reparación de cajas de transmisión manual y automática', 'Falla específica', 250.00, 3),
@@ -384,58 +379,11 @@ VALUES
 ('Pintura', 'Pintura general o parcial del vehículo', 'Falla específica', 300.00, 3);
 
 -- Mantenimiento preventivo
-INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
-VALUES
+INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id) VALUES
 ('Cambio de aceite', 'Sustitución de aceite y filtro para mantener el motor en óptimas condiciones', 'Mantenimiento preventivo', 80.00, 1),
 ('Revisión general', 'Chequeo completo del vehículo para prevenir averías', 'Mantenimiento preventivo', 100.00, 1);
 
 -- Mantenimiento correctivo
-INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
-VALUES
+INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id) VALUES
 ('Cambio de frenos', 'Reemplazo de pastillas y discos de freno', 'Mantenimiento correctivo', 200.00, 2),
 ('Reparación de motor', 'Corrección de fallas graves en el motor', 'Mantenimiento correctivo', 500.00, 2);
-
-
--- Tabla: vehiculos
-ALTER TABLE vehiculos
-  ADD CONSTRAINT FK_Vehiculos_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
-
--- Tabla: factura
-ALTER TABLE factura
-  ADD CONSTRAINT FK_Factura_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
-
--- Tabla: resenas
-ALTER TABLE resenas
-  ADD CONSTRAINT FK_Resenas_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
-
--- Tabla: notificaciones
-ALTER TABLE notificaciones
-  ADD CONSTRAINT FK_Notificaciones_Usuario FOREIGN KEY (usuario_id) REFERENCES aspnetusers(Id);
-
--- Tabla: agendamiento
-ALTER TABLE agendamiento
-  ADD CONSTRAINT FK_Agendamiento_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
-
--- Tabla: colaboradores
-ALTER TABLE colaboradores
-  ADD CONSTRAINT FK_Colab_Usuario FOREIGN KEY (id_usuario) REFERENCES aspnetusers(Id) ON DELETE CASCADE;
-  
-  
-  -- Tabla: vehiculos
-ALTER TABLE vehiculos DROP FOREIGN KEY FK_Vehiculos_Cliente;
-
--- Tabla: factura
-ALTER TABLE factura DROP FOREIGN KEY FK_Factura_Cliente;
-
--- Tabla: resenas
-ALTER TABLE resenas DROP FOREIGN KEY FK_Resenas_Cliente;
-
--- Tabla: notificaciones
-ALTER TABLE notificaciones DROP FOREIGN KEY FK_Notificaciones_Usuario;
-
--- Tabla: agendamiento
-ALTER TABLE agendamiento DROP FOREIGN KEY FK_Agendamiento_Cliente;
-
--- Tabla: colaboradores
-ALTER TABLE colaboradores DROP FOREIGN KEY FK_Colab_Usuario;
-
