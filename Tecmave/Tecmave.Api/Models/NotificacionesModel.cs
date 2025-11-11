@@ -5,7 +5,7 @@ namespace Tecmave.Api.Models
     public class NotificacionesModel
     {
         [Key]
-        public int id_notificaciones { get; set; } // [pk, increment]
+        public int id_notificaciones { get; set; } 
         public int usuario_id { get; set; }
         public string mensaje { get; set; }
         public DateOnly fecha_envio { get; set; }

@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;                
+using System.Text.Json;
 using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 using Tecmave.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
@@ -16,6 +18,7 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddScoped<Tecmave.Api.Services.FacturasService>();
 builder.Services.AddSwaggerGen();
 
 // --- CONEXIÓN A MySQL ---
