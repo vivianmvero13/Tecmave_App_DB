@@ -150,6 +150,9 @@ namespace Tecmave.Api.Data
 
                 e.Property(x => x.cliente_id).HasColumnName("cliente_id"); // FK INT a aspnetusers.Id
                 e.Property(x => x.servicio_id).HasColumnName("servicio_id");
+                e.Property(x => x.fecha)
+                 .HasColumnType("datetime(6)")
+                 .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
 
                 // Sin navegación a Usuario
                 e.HasOne<ServiciosModel>()

@@ -15,6 +15,11 @@ builder.Services.AddDbContext<MyIdentityDBContext>(opt =>
         b => b.MigrationsHistoryTable("__EFMigrationsHistory_Identity"))
 );
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ClienteOnly", p => p.RequireRole("Cliente"));
+});
+
 builder.Services.AddIdentity<Usuario, IdentityRole<int>>(
     options =>
     {
@@ -52,13 +57,5 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-
-
-
-
 app.MapRazorPages();
-
-app.MapFallbackToPage("/Account/Login");
-
 app.Run();

@@ -1,15 +1,12 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-
 namespace Tecmave.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class FixVehiculoProps : Migration
+    public partial class AddFechaToResenas : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

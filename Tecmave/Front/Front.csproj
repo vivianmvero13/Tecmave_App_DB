@@ -28,4 +28,8 @@
 		<ProjectReference Include="..\Tecmave.Api\Tecmave.Api.csproj" />
 	</ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\css\" />
+  </ItemGroup>
+
 </Project>
