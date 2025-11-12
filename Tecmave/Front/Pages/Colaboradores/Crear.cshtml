@@ -1,0 +1,62 @@
+﻿@page
+@model Front.Pages.Colaboradores.CrearModel
+@{
+    ViewData["Title"] = "Crear Colaborador";
+}
+
+<h2 class="mb-4">Registrar Nuevo Colaborador</h2>
+
+<form method="post" class="needs-validation">
+    <div class="form-group mb-3">
+        <label asp-for="Colaborador.Nombre" class="form-label"></label>
+        <input asp-for="Colaborador.Nombre" class="form-control" />
+        <span asp-validation-for="Colaborador.Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Colaborador.Apellido" class="form-label"></label>
+        <input asp-for="Colaborador.Apellido" class="form-control" />
+        <span asp-validation-for="Colaborador.Apellido" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Colaborador.Cedula" class="form-label"></label>
+        <input asp-for="Colaborador.Cedula" class="form-control" />
+        <span asp-validation-for="Colaborador.Cedula" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Colaborador.Correo" class="form-label"></label>
+        <input asp-for="Colaborador.Correo" class="form-control" />
+        <span asp-validation-for="Colaborador.Correo" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Colaborador.Telefono" class="form-label"></label>
+        <input asp-for="Colaborador.Telefono" class="form-control" />
+        <span asp-validation-for="Colaborador.Telefono" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Colaborador.Cargo" class="form-label"></label>
+        <input asp-for="Colaborador.Cargo" class="form-control" />
+        <span asp-validation-for="Colaborador.Cargo" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Colaborador.Estado" class="form-label"></label>
+        <select asp-for="Colaborador.Estado" class="form-select">
+            <option value="">Seleccione un estado</option>
+            <option>Activo</option>
+            <option>Inactivo</option>
+        </select>
+        <span asp-validation-for="Colaborador.Estado" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-page="Index" class="btn btn-secondary ms-2">Volver al listado</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
