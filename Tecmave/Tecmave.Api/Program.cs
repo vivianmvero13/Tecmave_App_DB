@@ -105,7 +105,7 @@ using (var scope = app.Services.CreateScope())
     var admin = await userManager.FindByEmailAsync(adminEmail);
     if (admin == null)
     {
-        admin = new Usuario { UserName = "admin", Nombre = "Admin", Apellidos = "Principal", Email = adminEmail };
+        admin = new Usuario { UserName = "admin", Nombre = "Admin", Apellido = "Principal", Email = adminEmail };
         await userManager.CreateAsync(admin, "Admin1234");
         await userManager.AddToRoleAsync(admin, "Administrador");
     }
@@ -118,7 +118,7 @@ using (var scope = app.Services.CreateScope())
         {
             UserName = "usuario",
             Nombre = "Usuario",
-            Apellidos = "Prueba",
+            Apellido = "Prueba",
             Email = userEmail
         };
 

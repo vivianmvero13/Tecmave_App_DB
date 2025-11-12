@@ -245,7 +245,7 @@
           const u = USUARIOS.find(x => Number(x.id) === Number(id) || Number(x.Id) === Number(id));
           if(!u) return id ?? '';
           const nombre = (u.nombre || u.Nombre || '').toString().trim();
-          const ap = (u.apellidos || u.Apellidos || '').toString().trim();
+          const ap = (u.apellido || u.Apellido || '').toString().trim();
           return (nombre + ' ' + ap).trim() || (u.email || u.Email || id);
         }
         function formatCRC(n){

@@ -10,7 +10,7 @@
         public string Password2 { get; set; }
 
         public string Nombre { get; set; }
-        public string Apellidos { get; set; }
+        public string Apellido { get; set; }
         public string Cedula { get; set; }
         public string Direccion { get; set; }
         public string PhoneNumber { get; set; }

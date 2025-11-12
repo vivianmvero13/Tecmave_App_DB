@@ -97,7 +97,7 @@
     function nombreClienteById(id) {
         const u = usuarios.find(x => Number(x.id || x.Id || x.usuario_id) === Number(id));
         if (!u) return { nombre: "Desconocido", correo: "-", telefono: "-" };
-        const nombre = [u.nombre || u.Nombre, u.apellidos || u.Apellidos].filter(Boolean).join(" ").trim() || (u.user_name || u.UserName || "Usuario");
+        const nombre = [u.nombre || u.Nombre, u.apellido || u.Apellido].filter(Boolean).join(" ").trim() || (u.user_name || u.UserName || "Usuario");
         return { nombre, correo: u.email || u.Email || u.correo || "-", telefono: u.phone_number || u.PhoneNumber || "-" };
     }
     const fmtFecha = d => { const dt = new Date(d); return isNaN(dt) ? (d || "") : dt.toLocaleDateString(); };
