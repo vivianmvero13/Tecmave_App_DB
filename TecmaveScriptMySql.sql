@@ -268,10 +268,12 @@ CREATE TABLE servicios_revision (
 
 CREATE TABLE agendamiento (
   id_agendamiento INT NOT NULL AUTO_INCREMENT,
-  cliente_id INT DEFAULT NULL,
+  cliente_id INT NOT NULL,
   vehiculo_id INT NOT NULL,
-  fecha_agregada VARCHAR(150) NOT NULL,
+  fecha_agregada DATE NOT NULL,
   id_estado INT NOT NULL DEFAULT 2,
+  fecha_estimada DATE NULL,
+  hora_llegada TIME NULL,
   PRIMARY KEY (id_agendamiento),
   KEY FK_Agendamiento_Vehiculo (vehiculo_id),
   KEY FK_Agendamiento_Cliente (cliente_id),
@@ -280,6 +282,7 @@ CREATE TABLE agendamiento (
   CONSTRAINT FK_Agendamiento_Vehiculo FOREIGN KEY (vehiculo_id) REFERENCES vehiculos (id_vehiculo),
   CONSTRAINT FK_Agendamiento_Estado FOREIGN KEY (id_estado) REFERENCES estados (id_estado)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 CREATE TABLE colaboradores (
   id_colaborador INT NOT NULL AUTO_INCREMENT,
