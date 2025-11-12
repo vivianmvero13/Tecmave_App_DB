@@ -24,61 +24,84 @@ namespace Tecmave.Api.Services
             while (!stoppingToken.IsCancellationRequested)
             {
                 await EnviarRecordatorios(stoppingToken);
-                await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
+                await Task.Delay(TimeSpan.FromHours(30), stoppingToken);
             }
         }
 
         private async Task EnviarRecordatorios(CancellationToken ct)
         {
+
+            _logger.LogInformation("Prueba de la comprobación de los recordatorios");
             using var scope = _scopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            _logger.LogInformation("El contexto si se cargó");
+
+           
             var emailService = scope.ServiceProvider.GetRequiredService<EmailService>();
             var notificacionesService = scope.ServiceProvider.GetRequiredService<NotificacionesService>();
-            var fechaObjectivo = DateTime.Today.AddDays(3);
+            var SeisMeses = DateOnly.FromDateTime(DateTime.Today.AddMonths(-6));
 
-            var promociones = await context.promociones
-                .Where(p => p.fecha_inicio == DateOnly.FromDateTime(fechaObjectivo))
+            var mantenimientos = await context.agendamientos
+                .GroupBy(a => a.vehiculo_id)
+                .Select(g => g.OrderByDescending(a => a.fecha_agregada).FirstOrDefault())
                 .ToListAsync(ct);
 
-            if (!promociones.Any())
+            _logger.LogInformation("Se encontró {count} registros de mantenimiento", mantenimientos.Count);
+            foreach (var m in mantenimientos)
             {
-                _logger.LogInformation("No hay promociones para enviar recordatorios.");
-                return;
-            }
-
-            var usuarios = await context.usuarios
-                .Where(u => u.NotificacionesActivadas)
-                .ToListAsync(ct);
-
-            if (!usuarios.Any())
-            {
-                _logger.LogInformation("No hay usuarios con notificaciones activadas.");
-                return;
-            }
-
-            foreach (var promo in promociones)
-            {
-                foreach (var usuario in usuarios)
+                if (m.fecha_agregada <= SeisMeses)
                 {
-                    var asunto = "Recordatorio de Promoción Próxima: {promo.Titulo}";
-                    var cuerpo = $@"
-                        <h1>Hola {usuario.NombreCompleto},</h1>
-                        <p>Te recordamos que la promoción <strong>{promo.titulo}</strong> comienza el {promo.fecha_inicio:dd/MM/yyyy}.</p>
-                        <p>{promo.descripcion}</p>
-                        <p>¡No te la pierdas!</p>";
-
-                    try
+                    var vehiculo = await context.Vehiculos.FirstOrDefaultAsync(v => v.IdVehiculo == m.vehiculo_id, ct);
+                    if (vehiculo == null)
                     {
-                        await notificacionesService.CrearNotificacionAsync(usuario.Id, $"Recordatorio: {promo.titulo}", "Recordatorio");
-                        await emailService.EnviarCorreo(usuario.Email, asunto, cuerpo);
-                        _logger.LogInformation("Recordatorio enviado a {Email} para la promoción {PromoTitulo}.", usuario.Email, promo.titulo);
+                        continue;
                     }
-                    catch (Exception ex)
+                    if (vehiculo.Proximo.HasValue)
                     {
-                        _logger.LogError(ex, "Error al enviar recordatorio a {Email} para la promoción {PromoTitulo}.", usuario.Email, promo.titulo);
+                        var usuario = await context.usuarios.FirstOrDefaultAsync(u => u.Id == m.cliente_id && u.NotificacionesActivadas, ct);
+                        if (usuario == null)
+                        {
+                            continue;
+                        }
+
+                        var asunto = $"Recordatorio de mantenimiento para su vehículo {vehiculo.Placa}";
+                        var cuerpo = $@"
+                        <p>Estimado/a {usuario.Nombre},</p>
+                        <p>Le recordamos que su vehículo con placa <strong>{vehiculo.Placa}</strong> no ha tenido un mantenimiento en los últimos seis meses.</p>
+                        <p>Es importante realizar mantenimientos periódicos para asegurar el buen funcionamiento y la seguridad de su vehículo.</p>
+                        <p>Por favor, póngase en contacto con nosotros para programar una cita de mantenimiento.</p>
+                        <p>Atentamente,<br/>El equipo de Tecmave</p>";
+                        try
+                        {
+                            await notificacionesService.CrearNotificacionAsync(
+                                usuario.Id,
+                                "Recordatorio de Mantenimiento",
+                                "Es hora de realizar el mantenimiento de su vehículo."
+                                );
+
+                            await emailService.EnviarCorreo(usuario.Email, asunto, cuerpo);
+                            context.recordatorios.Add(new Recordatorio
+                            {
+                                UsuarioId = usuario.Id,
+                                VehiculoId = vehiculo.IdVehiculo,
+                                FechaEnvio = DateTime.Now,
+                                Tipo = "Semestre"
+                            });
+
+                            await context.SaveChangesAsync(ct);
+
+                            _logger.LogInformation("Recordatorio enviado a {Email} para vehículo {Placa}", usuario.Email, vehiculo.Placa);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error al enviar recordatorio a {Email} para vehículo {Placa}", usuario.Email, vehiculo.Placa);
+
+                        }
                     }
                 }
             }
+
         }
     }
 }

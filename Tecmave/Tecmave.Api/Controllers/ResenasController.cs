@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+﻿using Microsoft.AspNetCore.Mvc;
 using Tecmave.Api.Models;
 using Tecmave.Api.Services;
 
@@ -8,68 +6,82 @@ namespace Tecmave.Api.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class ResenasController : ControllerBase
+    public class ResenasController : Controller
     {
-        private readonly ResenasService _svc;
-        public ResenasController(ResenasService svc) => _svc = svc;
+        private readonly ResenasService _ResenasService;
 
-        public record CrearResenaDto(int servicio_id, string comentario, float calificacion);
+        public ResenasController(ResenasService ResenasService)
+        {
+            _ResenasService = ResenasService;
+        }
 
-        // GET: Reseñas públicas
+        //Apis GET, POST, PUT   y DELETE
         [HttpGet]
-        [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<ResenasModel>>> GetResenas()
-            => Ok(await _svc.GetResenasAsync());
-
-        // GET: /Resenas/5
-        [HttpGet("{id:int}")]
-        [AllowAnonymous]
-        public async Task<ActionResult<ResenasModel>> GetById(int id)
+        public ActionResult<IEnumerable<ResenasModel>> GetResenasModel()
         {
-            var item = await _svc.GetByIdAsync(id);
-            return item is null ? NotFound() : Ok(item);
+            return _ResenasService.GetResenasModel();
         }
 
-        // POST: crear reseña (solo Cliente)
+        [HttpGet("{id}")]
+        public ActionResult<ResenasModel> GetById(int id)
+        {
+            return _ResenasService.GetByid_resena(id);
+        }
+
+        //Apis POST
         [HttpPost]
-        [Authorize(Roles = "Cliente")]
-        public async Task<ActionResult<ResenasModel>> Create([FromBody] CrearResenaDto dto)
+        public ActionResult<ResenasModel> AddResenas(ResenasModel ResenasModel)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-            // Doble verificación defensiva
-            if (!User.IsInRole("Cliente")) return Forbid();
+            var newResenasModel = _ResenasService.AddResenas(ResenasModel);
 
-            var nuevo = new ResenasModel
+            return
+                CreatedAtAction(
+                        nameof(GetResenasModel), new
+                        {
+                            id = newResenasModel.id_resena,
+                        },
+                        newResenasModel);
+
+        }
+
+        //APIS PUT
+        [HttpPut]
+        public IActionResult UpdateResenas(ResenasModel ResenasModel)
+        {
+
+            if (!_ResenasService.UpdateResenas(ResenasModel))
             {
-                cliente_id = userId,
-                servicio_id = dto.servicio_id,
-                comentario = dto.comentario,
-                calificacion = dto.calificacion,
-                fecha = DateTime.UtcNow
-            };
+                return NotFound(
+                        new
+                        {
+                            elmsneaje = "La  resena no fue encontrado"
+                        }
+                    );
+            }
 
-            var creado = await _svc.AddAsync(nuevo);
-            return CreatedAtAction(nameof(GetById), new { id = creado.id_resena }, creado);
+            return NoContent();
+
         }
 
-        // PUT: actualizar comentario (puedes restringir a dueño o admins si quieres)
-        [HttpPut("{id:int}/comentario")]
-        [Authorize] // opcional: Roles = "Cliente,Administrador"
-        public async Task<IActionResult> UpdateComentario(int id, [FromBody] string comentario)
+        //APIS DELETE
+        [HttpDelete]
+        public IActionResult DeleteResenasModel(int id)
         {
-            var ok = await _svc.UpdateComentarioAsync(id, comentario);
-            return ok ? NoContent() : NotFound(new { mensaje = "La reseña no fue encontrada" });
+
+            if (!_ResenasService.DeleteResenas(id))
+            {
+                return NotFound(
+                        new
+                        {
+                            elmsneaje = "La  resena no fue encontrado"
+                        }
+                    );
+            }
+
+            return NoContent();
+
         }
 
-        // DELETE
-        [HttpDelete("{id:int}")]
-        [Authorize(Roles = "Administrador")] // sugerido: solo admin borra
-        public async Task<IActionResult> Delete(int id)
-        {
-            var ok = await _svc.DeleteAsync(id);
-            return ok ? NoContent() : NotFound(new { mensaje = "La reseña no fue encontrada" });
-        }
     }
 }

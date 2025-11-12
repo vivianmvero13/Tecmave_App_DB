@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
     {
-        o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
         o.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
 
@@ -21,11 +21,7 @@ builder.Services.AddSwaggerGen();
 // --- CONEXIÓN A MySQL ---
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseMySql(cs, ServerVersion.AutoDetect(cs),
-        b => b.MigrationsHistoryTable("__EFMigrationsHistory_App")));
-
-
-
+    opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
 
 // --- IDENTITY CONFIG ---
 builder.Services
@@ -55,6 +51,7 @@ builder.Services.AddCors(options =>
         .AllowCredentials()
     );
 });
+
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 
@@ -65,6 +62,7 @@ builder.Services.AddScoped<TipoServiciosService>();
 builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<ResenasService>();
 builder.Services.AddScoped<PromocionesService>();
+builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<NotificacionesService>();
 builder.Services.AddScoped<RevisionService>();
 builder.Services.AddScoped<MarcasService>();
@@ -72,7 +70,9 @@ builder.Services.AddScoped<FacturasService>();
 builder.Services.AddScoped<EstadosService>();
 builder.Services.AddScoped<ColaboradoresService>();
 builder.Services.AddScoped<AgendamientoService>();
-builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<AgendamientoService>();
+builder.Services.AddHostedService<RecordatorioService>();
+builder.Services.AddScoped<MantenimientoService>();
 
 var app = builder.Build();
 
@@ -88,7 +88,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-/*
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
@@ -106,7 +105,7 @@ using (var scope = app.Services.CreateScope())
     var admin = await userManager.FindByEmailAsync(adminEmail);
     if (admin == null)
     {
-        admin = new Usuario { UserName = "admin", Nombre = "Admin", Apellidos = "Principal", Email = adminEmail };
+        admin = new Usuario { UserName = "admin", Nombre = "Admin", Apellido = "Principal", Email = adminEmail };
         await userManager.CreateAsync(admin, "Admin1234");
         await userManager.AddToRoleAsync(admin, "Administrador");
     }
@@ -119,7 +118,7 @@ using (var scope = app.Services.CreateScope())
         {
             UserName = "usuario",
             Nombre = "Usuario",
-            Apellidos = "Prueba",
+            Apellido = "Prueba",
             Email = userEmail
         };
 
@@ -127,6 +126,5 @@ using (var scope = app.Services.CreateScope())
         await userManager.AddToRoleAsync(normalUser, "Usuarios");
     }
 }
-*/
 
 app.Run();

@@ -1,47 +1,77 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Tecmave.Api.Data;
+﻿using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 
 namespace Tecmave.Api.Services
 {
     public class ResenasService
     {
+
         private readonly AppDbContext _context;
-        public ResenasService(AppDbContext context) => _context = context;
 
-        public Task<List<ResenasModel>> GetResenasAsync()
-            => _context.resenas
-                .OrderByDescending(r => r.fecha)
-                .ToListAsync();
-
-        public Task<ResenasModel?> GetByIdAsync(int id)
-            => _context.resenas.FirstOrDefaultAsync(p => p.id_resena == id);
-
-        public async Task<ResenasModel> AddAsync(ResenasModel item)
+        public ResenasService(AppDbContext context)
         {
-            _context.resenas.Add(item);
-            await _context.SaveChangesAsync();
-            return item;
+            _context = context;
         }
 
-        public async Task<bool> UpdateComentarioAsync(int id, string comentario)
-        {
-            var entidad = await _context.resenas.FirstOrDefaultAsync(p => p.id_resena == id);
-            if (entidad == null) return false;
+        //Aca necesitamos el modelo de datos para el almacenamiento temporal
+        private readonly List<ResenasModel> _canton = new List<ResenasModel>();
+        private int _nextid_resena = 1;
 
-            entidad.comentario = comentario;
-            await _context.SaveChangesAsync();
+
+        //funcion de obtener cantons
+        public List<ResenasModel> GetResenasModel()
+        {
+            return _context.resenas.ToList();
+        }
+
+
+        public ResenasModel GetByid_resena(int id)
+        {
+            return _context.resenas.FirstOrDefault(p => p.id_resena == id);
+        }
+
+        public ResenasModel AddResenas(ResenasModel ResenasModel)
+        {
+            _context.resenas.Add(ResenasModel);
+            _context.SaveChanges();
+            return ResenasModel;
+        }
+
+
+        public bool UpdateResenas(ResenasModel ResenasModel)
+        {
+            var entidad = _context.resenas.FirstOrDefault(p => p.id_resena == ResenasModel.id_resena);
+
+            if (entidad == null)
+            {
+                return false;
+            }
+
+            entidad.comentario = ResenasModel.comentario;
+
+
+            _context.SaveChanges();
+
             return true;
+
         }
 
-        public async Task<bool> DeleteAsync(int id)
+
+        public bool DeleteResenas(int id)
         {
-            var entidad = await _context.resenas.FirstOrDefaultAsync(p => p.id_resena == id);
-            if (entidad == null) return false;
+            var entidad = _context.resenas.FirstOrDefault(p => p.id_resena == id);
+
+            if (entidad == null)
+            {
+                return false;
+            }
 
             _context.resenas.Remove(entidad);
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
             return true;
+
         }
+
+
     }
 }

@@ -43,7 +43,6 @@ namespace Tecmave.Api.Services
             v.ClienteId = input.ClienteId;
             v.IdMarca = input.IdMarca;
             v.Anno = input.Anno;
-            v.Modelo = input.Modelo;
             v.Placa = (input.Placa ?? string.Empty).ToUpperInvariant();
 
             await _context.SaveChangesAsync(ct);

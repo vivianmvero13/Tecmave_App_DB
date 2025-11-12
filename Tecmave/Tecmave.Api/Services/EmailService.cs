@@ -8,8 +8,8 @@ namespace Tecmave.Api.Services
     {
         private readonly string _smtpServer = "smtp.gmail.com";
         private readonly int _smtpPort = 587;
-        private readonly string _fromEmail = "tecmavenotificaciones@gmail.com";
-        private readonly string _fromPassword = "enrswfyojlohoiri";
+        private readonly string _fromEmail = "oyo.setiembre2004@gmail.com";
+        private readonly string _fromPassword = "watxxefkwbletqgk";
 
         public async Task EnviarCorreo(string destino, string asunto, string cuerpo)
         {

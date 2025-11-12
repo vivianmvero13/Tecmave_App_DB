@@ -1,15 +1,23 @@
-﻿// Tecmave.Api/Models/Usuario.cs  (o en tu lib compartida)
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace Tecmave.Api.Models
 {
     public class Usuario : IdentityUser<int>
     {
-        public string Nombre { get; set; } = "";
-        public string Apellidos { get; set; } = "";
-        public string Cedula { get; set; } = "";
-        public string Direccion { get; set; } = "";
-        public string NombreCompleto => $"{Nombre} {Apellidos}".Trim();
+        [MaxLength(50)]
+        public string? Nombre { get; set; }
+
+        [MaxLength(50)]
+        public string? Apellido { get; set; }
+
+        [MaxLength(50)]
+        public string? Cedula { get; set; }
+
+        public string? Direccion { get; set; }
+
+        public string NombreCompleto => $"{Nombre} {Apellido}".Trim();
+
         public bool NotificacionesActivadas { get; set; } = false;
     }
 }
