@@ -14,19 +14,15 @@
                       <img src="../assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave Logo" class="footer-logo">
                       <p class="footer-slogan">${c.descripcion}</p>
                       <div class="footer-v2-socials">
-                          <a href="#"><i class="fab fa-facebook-f"></i></a>
-                          <a href="#"><i class="fab fa-twitter"></i></a>
-                          <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                          <a href="#"><i class="fab fa-instagram"></i></a>
-                          <a href="#"><i class="fab fa-pinterest"></i></a>
-                          <a href="#"><i class="fab fa-youtube"></i></a>
-                          <a href="#"><i class="fas fa-rss"></i></a>
+                         <a href="#"><i class="fab fa-facebook-f"></i></a>
+                      <a href="#"><i class="fab fa-instagram"></i></a>
+                      <a href="https://wa.me/50687059379"><i class="fab fa-whatsapp"></i></a>
                       </div>
                   </div>
                   <div class="footer-col">
                       <h4>Quick Links</h4>
                       <ul class="footer-list">
-                          <li><a href="index.html">Home</a></li>
+                          <li><a href="home.html">Home</a></li>
                           <li><a href="#">List Layout</a></li>
                           <li><a href="informacion.html">Blog</a></li>
                           <li><a href="contacto.html">Contact</a></li>
@@ -61,8 +57,14 @@
     const isAdmin = document.documentElement.classList.contains('role-admin');
     const el = document.getElementById('site-footer');
     if(!isAdmin || !el) return;
-    const btn = document.createElement('button'); btn.textContent='Editar footer'; btn.className='btn secondary'; btn.style.margin='8px 0 12px';
-    el.parentElement.insertBefore(btn, el);
+    const btn = document.createElement('button');
+    btn.textContent = 'Editar footer';
+    btn.className = 'btn secondary btn-small';
+    btn.style.cssText = 'padding: 4px 8px; font-size: 0.8rem; width: auto;'; // Margin is now handled by the container
+    const container = document.createElement('div');
+    container.style.cssText = 'display: flex; justify-content: center; padding: 1rem 0;';
+    container.appendChild(btn);
+    el.parentElement.insertBefore(container, el);
     btn.addEventListener('click', ()=>{
       const c = get();
       const panel = document.createElement('div');
@@ -99,5 +101,5 @@
     });
   }
   const page = location.pathname.split('/').pop() || 'index.html';
-  if(page==='index.html'){ render(); mountEditor(); }
+  if(page==='index.html' || page==='home.html'){ render(); mountEditor(); }
 })();

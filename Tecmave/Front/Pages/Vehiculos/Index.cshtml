@@ -96,7 +96,7 @@
     }
     function nombreCompleto(u){
         const n = (u.nombre ?? u.Nombre ?? '').trim();
-        const a = (u.apellido ?? u.Apellido ?? '').trim();
+        const a = (u.apellidos ?? u.Apellidos ?? '').trim();
         const user = (u.userName ?? u.UserName ?? '').trim();
         const full = [n,a].filter(Boolean).join(' ').trim();
         return full || user || 'Usuario';

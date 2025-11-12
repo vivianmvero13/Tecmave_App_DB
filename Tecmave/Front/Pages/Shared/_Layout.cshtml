@@ -6,8 +6,9 @@
 @{
     var roles = new List<string>();
     Usuario? currentUser = null;
+    var isAuthenticated = SignInManager.IsSignedIn(User);
 
-    if (SignInManager.IsSignedIn(User))
+    if (isAuthenticated)
     {
         currentUser = await UserManager.GetUserAsync(User);
         if (currentUser != null)
@@ -16,79 +17,106 @@
         }
     }
 
-    bool isAdmin = roles.Contains("Administrador");
+    bool isAdmin = roles.Contains("Administrador") || User.IsInRole("Admin");
+    bool isCliente = roles.Contains("Cliente") || User.IsInRole("Cliente");
+    bool isColaborador = roles.Contains("Colaborador") || User.IsInRole("Colaborador");
 }
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta name="api-base" content="https://localhost:7096">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - TECMAVE CR</title>
 
+    <!-- Estética global -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
 
-    <link rel="stylesheet" href="~/css/styles.css" />
-    <link rel="stylesheet" href="~/css/dashboard.css" />
-    <link rel="stylesheet" href="~/css/theme-lighten.css" />
+    <!-- CSS del proyecto -->
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/theme-lighten.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/brand-red-hard.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <link rel="stylesheet" href="~/css/brand-red-hard.css" />
+
+    <!-- jQuery (una sola vez) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="~/lib/jquery/jquery.min.js"></script>
+    <!-- Utilidades globales -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    @RenderSection("Styles", required: false)
 </head>
 <body data-user-id="@(currentUser?.Id)"
       data-user-name="@(currentUser?.UserName ?? "Usuario")"
-      data-is-admin="@(isAdmin.ToString().ToLower())">
-    data-is-admin="@(isAdmin.ToString().ToLower())">
+      data-is-admin="@(isAdmin.ToString().ToLower())"
+      data-is-cliente="@(isCliente.ToString().ToLower())"
+      data-is-colaborador="@(isColaborador.ToString().ToLower())">
+
     <div class="app">
         <aside class="sidebar">
             <div class="brand">
                 <img src="~/img/tecmave_logo_innovacion.jpg" alt="Tecmave" />
                 <span>Tecmave</span>
             </div>
+
             <div class="subtle">Gestión</div>
             <nav class="nav">
-                <a asp-page="/Vehiculos/Crear"><i class="fa-solid fa-car"></i> Vehículos</a>
+                <a asp-page="/Index"><i class="fa-solid fa-house"></i> Inicio</a>
                 <a asp-page="/Servicios/Index"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
                 <a asp-page="/Agendamiento/Index"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
-                @if (User.IsInRole("Admin"))
-                {
-                    <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
-                    <a asp-page="/Usuarios/Index"><i class="fa-solid fa-user-group"></i> Usuarios</a>
+                <a asp-page="/Vehiculos/Crear"><i class="fa-solid fa-car"></i> Vehículos</a>
 
+                @* Solo admin *@
+                @if (isAdmin)
+                {
+                    <a asp-page="/Usuarios/Index"><i class="fa-solid fa-user-group"></i> Usuarios</a>
                     <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
-                    <a asp-page="/Factura/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Factura</a>
+                    <a asp-page="/Facturacion/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación</a>
                     <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
                     <a asp-page="/Administracion/Index"><i class="fa-solid fa-gear"></i> Administración</a>
                     <a asp-page="/Carrusel/Index"><i class="fa-regular fa-images"></i> Carrusel</a>
                 }
-
             </nav>
+
             <div class="subtle">Cuenta</div>
-            <!--       <nav class="nav">
-                        <a id="login-link" asp-page="/Login"><i class="fa-regular fa-circle-user"></i> Iniciar sesión</a>
-                        <a id="logout-btn" asp-page="#"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
-                            </nav>-->
+            <nav class="nav">
+                @if (!isAuthenticated)
+                {
+                    <a asp-page="/Account/Login"><i class="fa-regular fa-circle-user"></i> Iniciar sesión</a>
+                }
+                else
+                {
+                    <a asp-page="/Account/Manage/Index"><i class="fa-regular fa-user"></i> Mi cuenta</a>
+                }
+            </nav>
         </aside>
 
         <header class="topbar">
             <button class="iconbtn" data-toggle-sidebar><i class="fa-solid fa-bars"></i></button>
+
             <div id="site-header" class="brand2">
                 <img class="logo-xs" src="~/img/tecmave_logo_innovacion.jpg" alt="Tecmave"
                      style="width:20px;height:20px;border-radius:6px;margin-right:6px;" />
-                <span>@ViewData["Title"] | TECMAVE CR</span>
+                <span>@ViewData["Title"] | Innovación Tecmave</span>
             </div>
+
             <div class="search">
                 <input type="search" placeholder="Buscar clientes, placas, servicios…" />
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M21 21l-4.3-4.3M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="1.6" />
                 </svg>
             </div>
-            <partial name="_LoginPartial" />
+
+            @* En topbar: si NO está logueado, mostrar botón de login; si sí, usar el partial *@
+            @if (!isAuthenticated)
+            {
+                <a class="btn btn-primary" asp-page="/Account/Login">Iniciar sesión</a>
+            }
+            else
+            {
+                <partial name="_LoginPartial" />
+            }
         </header>
 
         <main class="main">
@@ -96,11 +124,12 @@
         </main>
     </div>
 
-    <script src="~/js/dashboard.js"></script>
-    <script defer src="~/js/nav-active.js"></script>
-    <script defer src="~/js/role-ui.js"></script>
-    <script defer src="~/js/carousel-polish.js"></script>
-    <script defer src="~/js/app.js"></script>
+    <!-- JS global -->
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
+    <script defer src="~/js/nav-active.js" asp-append-version="true"></script>
+    <script defer src="~/js/role-ui.js" asp-append-version="true"></script>
+    <script defer src="~/js/carousel-polish.js" asp-append-version="true"></script>
+    <script defer src="~/js/app.js" asp-append-version="true"></script>
 
     <footer class="footer-v2" id="site-footer">
         <div class="footer-v2-main">
@@ -108,32 +137,27 @@
                 <div class="footer-grid">
                     <div class="footer-col">
                         <img src="~/img/tecmave_logo_innovacion.jpg" alt="Tecmave Logo" class="footer-logo" />
-                        <p class="footer-slogan">Simply #1 Real Estate Theme</p>
+                        <p class="footer-slogan">Soluciones para su flota.</p>
                         <div class="footer-v2-socials">
-                            <a href="#"><i class="fab fa-facebook-f"></i></a>
-                            <a href="#"><i class="fab fa-twitter"></i></a>
-                            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="https://www.facebook.com/itecmave/?locale=es_LA"><i class="fab fa-facebook-f"></i></a>
                             <a href="#"><i class="fab fa-instagram"></i></a>
-                            <a href="#"><i class="fab fa-pinterest"></i></a>
-                            <a href="#"><i class="fab fa-youtube"></i></a>
-                            <a href="#"><i class="fas fa-rss"></i></a>
+                            <a href="https://wa.me/50687059379"><i class="fab fa-whatsapp"></i></a>
                         </div>
                     </div>
                     <div class="footer-col">
                         <h4>Quick Links</h4>
                         <ul class="footer-list">
                             <li><a href="/Index">Home</a></li>
-                            <li><a href="#">List Layout</a></li>
+                            <li><a href="/Contacto">Contacto</a></li>
                             <li><a href="/Informacion">Blog</a></li>
-                            <li><a href="/Contacto">Contact</a></li>
                         </ul>
                     </div>
                     <div class="footer-col">
                         <h4>Contact Us</h4>
                         <ul class="footer-list contact-info">
-                            <li><i class="fas fa-map-marker-alt"></i> <span>3015 Grand Ave, Coconut Grove, Merrick Way, FL 12345</span></li>
-                            <li><i class="fas fa-phone-alt"></i> <span>+123-456-789</span></li>
-                            <li><i class="fas fa-envelope"></i> <span>sales@example.com</span></li>
+                            <li><i class="fas fa-map-marker-alt"></i> <span>Alto de Guadalupe, 25 mts este y 15 mts sur del Colegio Madre del Divino Pastor, San José, CR.</span></li>
+                            <li><i class="fas fa-phone-alt"></i> <span>8705-9379</span></li>
+                            <li><i class="fas fa-envelope"></i> <span>miguel@itecmave.com</span></li>
                         </ul>
                     </div>
                     <div class="footer-col">
@@ -148,8 +172,8 @@
         </div>
         <div class="footer-v2-bottom">
             <div class="container">
-                <p>© 2025 All rights reserved.</p>
-                <p>Designed by TECMAVE</p>
+                <p>© 2025 Todos los derechos reservados.</p>
+                <p>Diseñado por Tecmave</p>
             </div>
         </div>
     </footer>

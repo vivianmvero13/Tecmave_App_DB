@@ -39,7 +39,7 @@
         <thead>
             <tr>
                 <th>Nombre</th>
-                <th>Apellido</th>
+                <th>Apellidos</th>
                 <th>Username</th>
                 <th>Email</th>
                 <th>Teléfono</th>
@@ -136,7 +136,7 @@
         const rolesText = (u.roles && u.roles.length) ? u.roles.map(U).join(', ') : '(SIN ROL)';
         $tb.append(`<tr>
             <td>${escapeHtml(u.nombre || 'Sin definir')}</td>
-            <td>${escapeHtml(u.apellido || 'Sin definir')}</td>
+            <td>${escapeHtml(u.apellidos || 'Sin definir')}</td>
             <td>${escapeHtml(u.userNameNorm || U(u.userName))}</td>
             <td>${escapeHtml(u.email)}</td>
             <td>${escapeHtml(u.phoneNumber)}</td>
