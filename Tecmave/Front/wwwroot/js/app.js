@@ -225,25 +225,12 @@ function toast(message, duration = 3000) {
     }, duration);
 }
 
-// Mejorar la función de búsqueda
-function enhanceSearch() {
-    const searchInput = document.querySelector('.search input');
-    if (searchInput) {
-        searchInput.addEventListener('focus', function() {
-            this.parentElement.style.transform = 'scale(1.02)';
-            this.parentElement.style.boxShadow = '0 8px 25px rgba(220,38,38,0.15)';
-        });
+    /**
+     * Main initialization function on DOMContentLoaded.
+     */
+    document.addEventListener("DOMContentLoaded", () => {
+        initCarousel();
+        initModals();
+    });
 
-        searchInput.addEventListener('blur', function() {
-            this.parentElement.style.transform = 'scale(1)';
-            this.parentElement.style.boxShadow = '';
-        });
-    }
-}
-
-// Inicializar mejoras de búsqueda cuando el DOM esté listo
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', enhanceSearch);
-} else {
-    enhanceSearch();
-}
+})();

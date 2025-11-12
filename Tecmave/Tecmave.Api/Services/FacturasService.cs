@@ -1,11 +1,11 @@
-﻿using Tecmave.Api.Data;
+﻿using System.Linq;
+using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 
 namespace Tecmave.Api.Services
 {
     public class FacturasService
     {
-
         private readonly AppDbContext _context;
 
         public FacturasService(AppDbContext context)
@@ -13,65 +13,49 @@ namespace Tecmave.Api.Services
             _context = context;
         }
 
-        //Aca necesitamos el modelo de datos para el almacenamiento temporal
-        private readonly List<FacturasModel> _canton = new List<FacturasModel>();
-        private int _nextid_factura = 1;
-
-
-        //funcion de obtener cantons
-        public List<FacturasModel> GetFacturasModel()
+        public IQueryable<FacturasModel> GetAll()
         {
-            return _context.factura.ToList();
+            return _context.factura.AsQueryable();
         }
 
-
-        public FacturasModel GetByid_factura(int id)
+        public FacturasModel? GetById(int id)
         {
-            return _context.factura.FirstOrDefault(p => p.id_factura == id);
+            return _context.factura.FirstOrDefault(f => f.id_factura == id);
         }
 
-        public FacturasModel AddFacturas(FacturasModel FacturasModel)
+        public bool UpdateEstado(int id, string nuevoEstado)
         {
-            _context.factura.Add(FacturasModel);
-            _context.SaveChanges();
-            return FacturasModel;
-        }
-
-
-        public bool UpdateFacturas(FacturasModel FacturasModel)
-        {
-            var entidad = _context.factura.FirstOrDefault(p => p.id_factura == FacturasModel.id_factura);
-
-            if (entidad == null)
-            {
-                return false;
-            }
-
-            entidad.total = FacturasModel.id_factura;
-
-
-            _context.SaveChanges();
-
-            return true;
-
-        }
-
-
-        public bool DeleteFacturas(int id)
-        {
-            var entidad = _context.factura.FirstOrDefault(p => p.id_factura == id);
-
-            if (entidad == null)
-            {
-                return false;
-            }
-
-            _context.factura.Remove(entidad);
+            var f = _context.factura.FirstOrDefault(x => x.id_factura == id);
+            if (f == null) return false;
+            f.estado_pago = nuevoEstado;
             _context.SaveChanges();
             return true;
-
         }
 
+        public FacturasModel Add(FacturasModel model)
+        {
+            if (model.fecha_emision == null) model.fecha_emision = System.DateTime.UtcNow;
+            if (string.IsNullOrWhiteSpace(model.estado_pago)) model.estado_pago = "Pendiente";
+            _context.factura.Add(model);
+            _context.SaveChanges();
+            return model;
+        }
 
+        public FacturasModel? GenerateFromService(int clienteId, int servicioId, string? metodoPago = null)
+        {
+            var servicio = _context.servicios.FirstOrDefault(s => s.id_servicio == servicioId);
+            if (servicio == null) return null;
+            var factura = new FacturasModel
+            {
+                cliente_id = clienteId,
+                fecha_emision = System.DateTime.UtcNow,
+                total = servicio.precio,
+                metodo_pago = string.IsNullOrWhiteSpace(metodoPago) ? "Pendiente" : metodoPago,
+                estado_pago = "Pendiente"
+            };
+            _context.factura.Add(factura);
+            _context.SaveChanges();
+            return factura;
+        }
     }
 }

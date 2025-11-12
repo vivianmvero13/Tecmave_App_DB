@@ -21,6 +21,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta name="api-base" content="https://localhost:7096">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - TECMAVE CR</title>
@@ -37,11 +38,12 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="~/lib/jquery/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body data-user-id="@(currentUser?.Id)"
       data-user-name="@(currentUser?.UserName ?? "Usuario")"
       data-is-admin="@(isAdmin.ToString().ToLower())">
-  data-is-admin="@(isAdmin.ToString().ToLower())">
+    data-is-admin="@(isAdmin.ToString().ToLower())">
     <div class="app">
         <aside class="sidebar">
             <div class="brand">
@@ -54,15 +56,14 @@
 
                 @if (isAdmin)
                 {
-                        <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
-                        <a asp-page="/Usuarios/Index"><i class="fa-solid fa-user-group"></i> Usuarios</a>
-                        <a asp-page="/Servicios/Index"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
-                        <a asp-page="/Agendamiento/Index"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
-                        <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
-                        <a asp-page="/Facturacion/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación</a>
-                        <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
-                        <a asp-page="/Administracion/Index"><i class="fa-solid fa-gear"></i> Administración</a>
-                        <a asp-page="/Carrusel/Index"><i class="fa-regular fa-images"></i> Carrusel</a>
+                    <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
+                    <a asp-page="/Usuarios/Index"><i class="fa-solid fa-user-group"></i> Usuarios</a>
+
+                    <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
+                    <a asp-page="/Factura/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Factura</a>
+                    <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
+                    <a asp-page="/Administracion/Index"><i class="fa-solid fa-gear"></i> Administración</a>
+                    <a asp-page="/Carrusel/Index"><i class="fa-regular fa-images"></i> Carrusel</a>
                 }
 
             </nav>

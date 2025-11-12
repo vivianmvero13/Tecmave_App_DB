@@ -38,7 +38,43 @@ img { max-width: 100%; display: block; }
 .nav { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; }
 .brand { display: flex; align-items: center; gap: 1rem; }
 
-.logo { width: 60px; height: 60px; border-radius: 50%;
+img {
+    max-width: 100%;
+    display: block;
+}
+
+.container {
+    width: min(1200px, 90%);
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
     box-shadow: var(--shadow); transition: var(--transition); }
@@ -72,7 +108,19 @@ img { max-width: 100%; display: block; }
 .dropdown a:hover { background: rgba(225, 6, 0, 0.05); color: var(--primary); padding-left: 1.7rem; }
 .dropdown a::before { content: "•"; margin-right: 0.8rem; color: var(--primary); }
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .menu > li > a {
+            padding: 0.8rem 1.2rem;
+            border-radius: var(--radius);
+            color: var(--dark);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
 
 /* Secciones y Grid */
 .section { padding: 3rem 0; background: var(--light-gray) !important; } /* Nuevo: Sección clara */
@@ -348,9 +396,9 @@ label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--da
     margin: 0;
 }
 
-.footer-v2 .footer-list li {
-    margin-bottom: 10px;
-}
+    .footer-v2 .footer-list li {
+        margin-bottom: 10px;
+    }
 
 .footer-v2 .footer-list a {
     color: var(--text-light);
@@ -505,10 +553,10 @@ label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--da
     align-items: center;
 }
 
-.chat-header h3 {
-    margin: 0;
-    color: #fff;
-}
+    .chat-header h3 {
+        margin: 0;
+        color: #fff;
+    }
 
 .close-chat {
     background: none;
