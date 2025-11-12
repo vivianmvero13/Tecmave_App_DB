@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Front.Migrations
 {
     [DbContext(typeof(MyIdentityDBContext))]
-    [Migration("20251021203016_Agregando datos personales")]
-    partial class Agregandodatospersonales
+    [Migration("20251112042245_nuevo")]
+    partial class nuevo
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -1,7 +1,7 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Inicio";
+    ViewData["Title"] = "Home page";
 }
 
 @using Microsoft.AspNetCore.Identity
@@ -10,252 +10,69 @@
 @inject UserManager<Usuario> UserManager
 
 @{
-    // === Contexto de autenticación/roles (en la propia página) ===
-    var roles = new List<string>();
-    Usuario? currentUser = null;
-    var isAuthenticated = SignInManager.IsSignedIn(User);
-
-    if (isAuthenticated)
+    if (!SignInManager.IsSignedIn(User))
     {
-        currentUser = await UserManager.GetUserAsync(User);
-        if (currentUser != null)
-        {
-            roles = (await UserManager.GetRolesAsync(currentUser)).ToList();
-        }
+        Response.Redirect("/Account/Login");
     }
 
-    bool isAdmin = roles.Contains("Administrador") || User.IsInRole("Admin");
-    bool isCliente = roles.Contains("CLIENTE") || User.IsInRole("CLIENTE");
-    bool isColaborador = roles.Contains("Colaborador") || User.IsInRole("Colaborador");
-}
+   }
 
-@section Styles {
-    <style>
-        .hide-admin-options {
-            display: none !important;
-        }
 
-        .hide-carrusel {
-            display: none !important;
-        }
+<section class="section client-only">
+    <h2>Escribe tu Reseña</h2>
+    <div class="card">
+        <label>Nombre</label>
+        <input class="input" id="client-review-name" placeholder="Tu nombre" readonly />
 
-        .hero-v2 {
-            padding: 48px 0;
-            background: var(--surface-2);
-            border-radius: 16px;
-        }
+        <label>Servicio</label>
+        <select class="input" id="client-review-service">
+            <option value="">Seleccione un servicio</option>
+        </select>
 
-        .hero-v2-content {
-            max-width: 900px;
-            margin: 0 auto;
-            text-align: center;
-        }
+        <label>Calificación</label>
+        <select class="input" id="client-review-rating">
+            <option value="5.0">★★★★★</option>
+            <option value="4.0">★★★★☆</option>
+            <option value="3.0">★★★☆☆</option>
+            <option value="2.0">★★☆☆☆</option>
+            <option value="1.0">★☆☆☆☆</option>
+        </select>
 
-        .hero-v2 .btn {
-            margin: 0 .4rem;
-        }
+        <label>Comentario</label>
+        <textarea class="input" id="client-review-comment" rows="4" placeholder="Comparte tu experiencia..."></textarea>
 
-        .promo-card h3 {
-            margin-bottom: .25rem;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.45);
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-        }
-
-            .modal.open {
-                display: flex;
-            }
-
-        .modal-content {
-            background: var(--surface);
-            border-radius: 12px;
-            padding: 24px;
-            max-width: 560px;
-            width: 100%;
-            box-shadow: var(--shadow-3);
-        }
-
-        .modal .close-button {
-            float: right;
-            cursor: pointer;
-            font-size: 20px;
-        }
-    </style>
-}
-
-<main class="container" data-user-id="@(currentUser?.Id)"
-      data-user-name="@(currentUser?.UserName ?? "Usuario")"
-      data-is-auth="@(isAuthenticated.ToString().ToLower())"
-      data-is-cliente="@(isCliente.ToString().ToLower())">
-    <!-- Hero (solo estética) -->
-    <section class="section client-only">
-        <section class="hero-v2">
-            <div class="hero-v2-content">
-                <h1>TECMAVE</h1>
-                <p>Soluciones para la Logística y Mantenimiento de su flota.</p>
-                <div class="hero-v2-buttons">
-                    <a asp-page="/Servicios/Index" class="btn btn-primary">Nuestros Servicios</a>
-                    <a asp-page="/Contacto" class="btn btn-secondary">Contacto</a>
-                </div>
-            </div>
-        </section>
-    </section>
-
-    <!-- Cards informativas (UI) -->
-    <section class="section client-only">
-        <div class="grid cols-3">
-            <div class="card fade-in-up"><h2>Servicios Profesionales</h2><p>Mantenimiento preventivo y correctivo de la más alta calidad</p></div>
-            <div class="card fade-in-up"><h2>Asistencia 24/7</h2><p>Asistencia en carretera disponible las 24 horas</p></div>
-            <div class="card fade-in-up"><h2>Expertos Certificados</h2><p>Técnicos con certificación internacional</p></div>
-        </div>
-    </section>
-
-    <!-- Promos (UI puro; no toca backend) -->
-    <section class="section client-only">
-        <h2>Promociones Destacadas</h2>
-        <div class="grid cols-3">
-            <div class="card promo-card">
-                <h3>Cambio de Aceite</h3>
-                <p>30% de descuento en cambio de aceite sintético</p>
-                <button class="btn btn-secondary" data-modal="promo-aceite">Ver Promoción</button>
-            </div>
-            <div class="card promo-card">
-                <h3>Alineación</h3>
-                <p>Alineación y balanceo con 20% de descuento</p>
-                <button class="btn btn-secondary" data-modal="promo-alineacion">Ver Promoción</button>
-            </div>
-            <div class="card promo-card">
-                <h3>Revisión Completa</h3>
-                <p>Revisión de 50 puntos gratuita</p>
-                <button class="btn btn-secondary" data-modal="promo-revision">Ver Promoción</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Modales (UI) -->
-    <div id="promo-aceite" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Cambio de Aceite</h2>
-            <p>Aprovecha nuestro 30% de descuento en cambio de aceite sintético. Incluye filtro y revisión de niveles.</p>
-        </div>
+        <button onclick="addClientReview()" style="margin-top:.8rem">Enviar Reseña</button>
     </div>
-    <div id="promo-alineacion" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Alineación y Balanceo</h2>
-            <p>20% de descuento. Mejora la vida de tus llantas y tu seguridad al conducir.</p>
-        </div>
+</section>
+
+
+
+<section class="section client-only">
+    <h2>Reseñas Públicas</h2>
+    <div class="grid cols-2" id="client-reviews-list">
+        <!-- Reviews will be loaded here by JavaScript -->
     </div>
-    <div id="promo-revision" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Revisión Completa</h2>
-            <p>Revisión de 50 puntos completamente gratuita. ¡Agenda tu cita hoy!</p>
-        </div>
-    </div>
+</section>
 
-    <!-- ======== Reseñas (solo CLIENTE) ======== -->
-    <section class="section client-only">
-        <h2>Escribe tu Reseña</h2>
 
-        @if (isCliente && isAuthenticated)
-        {
-            <div class="card" id="review-form">
-                <label>Nombre</label>
-                <input class="input" id="client-review-name" placeholder="Tu nombre" readonly />
 
-                <label>Servicio</label>
-                <select class="input" id="client-review-service">
-                    <option value="">Seleccione un servicio</option>
-                </select>
 
-                <label>Calificación</label>
-                <select class="input" id="client-review-rating">
-                    <option value="5.0">★★★★★</option>
-                    <option value="4.0">★★★★☆</option>
-                    <option value="3.0">★★★☆☆</option>
-                    <option value="2.0">★★☆☆☆</option>
-                    <option value="1.0">★☆☆☆☆</option>
-                </select>
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
 
-                <label>Comentario</label>
-                <textarea class="input" id="client-review-comment" rows="4" placeholder="Comparte tu experiencia..."></textarea>
+<script>
 
-                <button onclick="addClientReview()" class="btn btn-primary" style="margin-top:.8rem">Enviar Reseña</button>
-            </div>
-        }
-        else
-        {
-            <div class="card" id="review-form-blocked">
-                <p style="margin:0 0 .6rem 0;">
-                    Para escribir una reseña debes iniciar sesión con una cuenta de tipo <strong>Cliente</strong>.
-                </p>
-                @if (!isAuthenticated)
-                {
-                    <a class="btn btn-primary" asp-page="/Account/Login">Iniciar sesión</a>
-                }
-                else
-                {
-                    <span class="badge">Tu rol actual no permite escribir reseñas</span>
-                }
-            </div>
-        }
-    </section>
 
-    <section class="section client-only">
-        <h2>Reseñas Públicas</h2>
-        <div class="grid cols-2" id="client-reviews-list">
-            <!-- JS llenará aquí -->
-        </div>
-    </section>
-</main>
-
-@section Scripts {
-    <script>
-        // === Endpoints ===
-        const API_RESENA = "https://localhost:7096/Resenas";
+    const API_RESENA = "https://localhost:7096/Resenas";
         const API_SERVICIO = "https://localhost:7096/Servicios";
 
-        // === Contexto del usuario para UI ===
-        const username = "@(User.Identity?.Name ?? "")";
+        const username = "@User.Identity.Name";
         const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
-        const IS_AUTH = document.querySelector('main')?.dataset.isAuth === 'true';
-        const IS_CLIENTE = document.querySelector('main')?.dataset.isCliente === 'true';
 
-        // === Estética: abrir/cerrar modales ===
-        (function () {
-            document.querySelectorAll('[data-modal]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const id = btn.getAttribute('data-modal');
-                    const modal = document.getElementById(id);
-                    if (modal) modal.classList.add('open');
-                });
-            });
-            document.querySelectorAll('.modal .close-button').forEach(x => {
-                x.addEventListener('click', (e) => {
-                    e.target.closest('.modal').classList.remove('open');
-                });
-            });
-            document.querySelectorAll('.modal').forEach(m => {
-                m.addEventListener('click', (e) => {
-                    if (e.target === m) m.classList.remove('open');
-                });
-            });
-        })();
-
-        // === Lógica de reseñas ===
-        document.addEventListener('DOMContentLoaded', function () {
-            const nameInput = document.getElementById('client-review-name');
-            if (nameInput) nameInput.value = username || '';
-
+        $(document).ready(function () {
+            $("#client-review-name").val(username);
             cargarServicios();
             cargarResenas();
         });
@@ -264,26 +81,21 @@
             $.ajax({
                 url: API_SERVICIO,
                 method: 'GET',
-                success: function (data) {
+                success: function(data) {
                     const select = $("#client-review-service");
                     select.empty();
                     select.append('<option value="">Seleccione un servicio</option>');
-                    (data || []).forEach(servicio => {
+                    data.forEach(servicio => {
                         select.append(`<option value="${servicio.id_servicio}">${servicio.nombre}</option>`);
                     });
                 },
-                error: function (xhr, status, error) {
+                error: function(xhr, status, error) {
                     console.error("Error al cargar servicios:", error);
                 }
             });
         }
 
         function addClientReview() {
-            if (!IS_AUTH || !IS_CLIENTE) {
-                alert("Solo los usuarios con rol Cliente pueden publicar reseñas.");
-                return;
-            }
-
             const servicioId = $("#client-review-service").val();
             const calificacion = parseFloat($("#client-review-rating").val());
             const comentario = $("#client-review-comment").val();
@@ -293,8 +105,8 @@
                 return;
             }
 
-            // Importante: NO enviar cliente_id. El servidor lo toma del claim.
             const nuevaResena = {
+                cliente_id: userId,
                 servicio_id: parseInt(servicioId),
                 comentario: comentario,
                 calificacion: calificacion
@@ -305,18 +117,16 @@
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(nuevaResena),
-                success: function () {
+                success: function() {
                     alert("¡Gracias por tu reseña!");
                     $("#client-review-service").val("");
                     $("#client-review-rating").val("5.0");
                     $("#client-review-comment").val("");
                     cargarResenas();
                 },
-                error: function (xhr, status, error) {
-                    console.error("Error al enviar reseña:", xhr?.responseText || error);
-                    alert("No fue posible publicar la reseña.");
-                },
-                xhrFields: { withCredentials: true }
+                error: function(xhr, status, error) {
+                    console.error("Error al enviar reseña:", error);
+                }
             });
         }
 
@@ -324,13 +134,13 @@
             $.ajax({
                 url: API_RESENA,
                 method: 'GET',
-                success: function (data) {
+                success: function(data) {
                     const reviewsList = document.getElementById('client-reviews-list');
                     if (!reviewsList) return;
 
                     reviewsList.innerHTML = '';
 
-                    if (!data || data.length === 0) {
+                    if (data.length === 0) {
                         reviewsList.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">Aún no hay reseñas. ¡Sé el primero en dejar una!</p>';
                         return;
                     }
@@ -338,19 +148,35 @@
                     data.forEach(review => {
                         const card = document.createElement('div');
                         card.className = 'card';
-                        const estrellas = Math.max(1, Math.min(5, Math.round(review.calificacion || 0)));
                         card.innerHTML = `
                             <strong>${review.nombre_usuario || 'Usuario'}</strong>
-                            <p>${'★'.repeat(estrellas)}${'☆'.repeat(5 - estrellas)}</p>
+                            <p>${'★'.repeat(Math.round(review.calificacion))}${'☆'.repeat(5 - Math.round(review.calificacion))}</p>
                             <p style="margin-top:.5rem">${review.comentario}</p>
+                            
                         `;
                         reviewsList.appendChild(card);
                     });
                 },
-                error: function (xhr, status, error) {
+                error: function(xhr, status, error) {
                     console.error("Error al cargar reseñas:", error);
                 }
             });
         }
-    </script>
-}
+
+
+    $(document).ready(function () {
+        
+        $("#client-review-name").val(username);
+
+        
+        cargarServicios();
+
+        
+        cargarResenas();
+    });
+
+
+</script>
+
+
+

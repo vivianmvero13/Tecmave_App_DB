@@ -165,7 +165,7 @@ namespace Front.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("Apellidos")
+                    b.Property<string>("Apellido")
                         .IsRequired()
                         .HasColumnType("longtext");
 

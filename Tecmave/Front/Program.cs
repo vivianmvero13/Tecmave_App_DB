@@ -1,4 +1,5 @@
 using Front.Data;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Tecmave.Front.Models;
@@ -8,17 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddHttpClient();
 
-
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<MyIdentityDBContext>(opt =>
-    opt.UseMySql(cs, ServerVersion.AutoDetect(cs),
-        b => b.MigrationsHistoryTable("__EFMigrationsHistory_Identity"))
-);
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("ClienteOnly", p => p.RequireRole("Cliente"));
-});
+    opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
 
 builder.Services.AddIdentity<Usuario, IdentityRole<int>>(
     options =>
@@ -57,5 +50,13 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+
+
+
+
 app.MapRazorPages();
+
+app.MapFallbackToPage("/Account/Login");
+
 app.Run();

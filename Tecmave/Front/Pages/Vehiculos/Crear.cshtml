@@ -24,12 +24,16 @@
                         <option value="">Seleccione una marca</option>
                     </select>
                 </div>
+                <div>
+                    <label>Modelo</label>
+                    <input id="modeloInput" class="input" placeholder="Corolla, Civic, etc." />
+                </div>
             </div>
 
             <div class="form-row">
                 <div>
-                    <label>Modelo</label>
-                    <input id="modeloInput" class="input" placeholder="Corolla, Civic, etc." />
+                    <label for="modeloInput">Modelo</label>
+                    <input id="modeloInput" class="input" maxlength="100" />
                 </div>
                 <div>
                     <label for="annoInput">Año</label>
@@ -388,7 +392,6 @@
             const placa    = String(v.placa ?? '').toUpperCase();
             const annoVal  = Number(v.anno ?? v.Anno ?? 0);
             const annoTxt  = annoVal > 0 ? String(annoVal) : '—';
-            const modelo   = v.modelo ?? v.Modelo ?? '';
             const idMarca  = Number(v.id_marca ?? v.idMarca ?? v.MarcaId ?? 0);
             const marcaNom = (typeof v.marca === 'string' && v.marca.trim())
                               ? v.marca
