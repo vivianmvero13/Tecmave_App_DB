@@ -16,6 +16,7 @@ DROP TABLE IF EXISTS marca;
 DROP TABLE IF EXISTS modelo;
 DROP TABLE IF EXISTS factura;
 DROP TABLE IF EXISTS colaboradores;
+DROP TABLE IF EXISTS planillas;
 
 DROP TABLE IF EXISTS aspnetroleclaims;
 DROP TABLE IF EXISTS aspnetuserclaims;
@@ -124,6 +125,12 @@ CREATE TABLE tipo_servicios (
   descripcion VARCHAR(100) NOT NULL,
   PRIMARY KEY (id_tipo_servicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- *** Corrección mínima #1: Seed requerido por FK de servicios ***
+INSERT INTO tipo_servicios (id_tipo_servicio, nombre, descripcion) VALUES
+(1, 'Mantenimiento preventivo', 'Servicios para prevenir fallas'),
+(2, 'Mantenimiento correctivo', 'Servicios para corregir fallas'),
+(3, 'Falla específica', 'Servicios por diagnóstico puntual');
 
 CREATE TABLE servicios (
   id_servicio INT NOT NULL AUTO_INCREMENT,
@@ -302,6 +309,22 @@ CREATE TABLE role_change_audit (
   INDEX IX_role_change_audit_Action (Action)
 );
 
+CREATE TABLE IF NOT EXISTS planillas (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  colaborador_id INT NOT NULL,
+  periodo_inicio DATE,
+  periodo_fin DATE,
+  horas_trabajadas DECIMAL(10,2),
+  valor_hora DECIMAL(12,2),
+  total_salario DECIMAL(12,2),
+  deducciones DECIMAL(12,2),
+  neto_pagar DECIMAL(12,2),
+  fecha_generada DATETIME DEFAULT CURRENT_TIMESTAMP,
+  estado VARCHAR(50),
+  observaciones VARCHAR(250),
+  CONSTRAINT FK_Planilla_Colab FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id_colaborador) ON DELETE CASCADE
+);
+
 ALTER TABLE aspnetroles
   ADD COLUMN Description varchar(256) NULL AFTER NormalizedName,
   ADD COLUMN IsActive tinyint(1) NOT NULL DEFAULT 1 AFTER Description;
@@ -318,7 +341,7 @@ INSERT INTO estados (id_estado, nombre) VALUES
 (10, 'Entregado'),
 (11, 'Cancelado');
 
--- 1) Quitar la foreign key de 'marca' que apunta a 'modelo'
+-- Quitar la foreign key de 'marca' que apunta a 'modelo' y eliminar 'modelo'
 ALTER TABLE marca DROP FOREIGN KEY FK_Marca_Modelo;
 ALTER TABLE marca DROP INDEX FK_Marca_Modelo;
 ALTER TABLE marca DROP COLUMN id_modelo;
@@ -348,31 +371,13 @@ INSERT INTO marca (nombre) VALUES
 ('Lexus'),
 ('Mazda');
 
-  
 INSERT INTO aspnetroles (Id, Name, NormalizedName, Description, IsActive)
 VALUES
 (1, 'Admin', 'ADMIN', 'Administrador con acceso completo al sistema', 1),
 (2, 'Colaborador', 'COLABORADOR', 'Empleado o técnico del taller con permisos limitados', 1),
 (3, 'Cliente', 'CLIENTE', 'Usuario cliente que puede ver y registrar sus vehículos', 1);
 
-
-INSERT INTO aspnetusers
-(Nombre, Apellidos, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed,
- PasswordHash, SecurityStamp, ConcurrencyStamp, PhoneNumber, PhoneNumberConfirmed,
- TwoFactorEnabled, LockoutEnabled, AccessFailedCount)
-VALUES
-('Vivian', 'Velazquez', 'Vivian', 'VIVIAN', 'vivian@tecmave.com', 'VIVIAN@TECMAVE.COM', 1,
- 'AQAAAAIAAYagAAAAEAdminHashDemo==', 'SEC123', 'CONC123', '88888888', 1, 0, 0, 0),
-
-('Joshua','Lopez', 'Joshua', 'JOSHUA', 'joshua@tecmave.com', 'joshua@TECMAVE.COM', 1,
- 'AQAAAAIAAYagAAAAEColabHashDemo==', 'SEC456', 'CONC456', '87777777', 1, 0, 0, 0),
-
-('Khaled', 'Gonzalez', 'Khaled', 'KHALED', 'khaled@tecmave.com', 'KHALED@TECMAVE.COM', 1,
- 'AQAAAAIAAYagAAAAEClienteHashDemo==', 'SEC789', 'CONC789', '86666666', 1, 0, 0, 0),
-
-('Daniel', 'Lopez', 'Daniel', 'DANIEL', 'Daniel@tecmave.com', 'DANIEL@TECMAVE.COM', 1,
- 'AQAAAAIAAYagAAAAEClienteHashDemo==', 'SEC789', 'CONC789', '86666666', 1, 0, 0, 0);
-
+-- Cargas iniciales de servicios (ya con tipo_servicio_id válidos)
 INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
 VALUES
 ('Electrónica', 'Diagnóstico y reparación de sistemas electrónicos', 'Falla específica', 120.00, 3),
@@ -386,56 +391,11 @@ VALUES
 -- Mantenimiento preventivo
 INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
 VALUES
-('Cambio de aceite', 'Sustitución de aceite y filtro para mantener el motor en óptimas condiciones', 'Mantenimiento preventivo', 80.00, 1),
-('Revisión general', 'Chequeo completo del vehículo para prevenir averías', 'Mantenimiento preventivo', 100.00, 1);
+('Cambio de aceite', 'Sustitución de aceite y filtro', 'Mantenimiento preventivo', 80.00, 1),
+('Revisión general', 'Chequeo completo del vehículo', 'Mantenimiento preventivo', 100.00, 1);
 
 -- Mantenimiento correctivo
 INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
 VALUES
 ('Cambio de frenos', 'Reemplazo de pastillas y discos de freno', 'Mantenimiento correctivo', 200.00, 2),
 ('Reparación de motor', 'Corrección de fallas graves en el motor', 'Mantenimiento correctivo', 500.00, 2);
-
-
--- Tabla: vehiculos
-ALTER TABLE vehiculos
-  ADD CONSTRAINT FK_Vehiculos_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
-
--- Tabla: factura
-ALTER TABLE factura
-  ADD CONSTRAINT FK_Factura_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
-
--- Tabla: resenas
-ALTER TABLE resenas
-  ADD CONSTRAINT FK_Resenas_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
-
--- Tabla: notificaciones
-ALTER TABLE notificaciones
-  ADD CONSTRAINT FK_Notificaciones_Usuario FOREIGN KEY (usuario_id) REFERENCES aspnetusers(Id);
-
--- Tabla: agendamiento
-ALTER TABLE agendamiento
-  ADD CONSTRAINT FK_Agendamiento_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
-
--- Tabla: colaboradores
-ALTER TABLE colaboradores
-  ADD CONSTRAINT FK_Colab_Usuario FOREIGN KEY (id_usuario) REFERENCES aspnetusers(Id) ON DELETE CASCADE;
-  
-  
-  -- Tabla: vehiculos
-ALTER TABLE vehiculos DROP FOREIGN KEY FK_Vehiculos_Cliente;
-
--- Tabla: factura
-ALTER TABLE factura DROP FOREIGN KEY FK_Factura_Cliente;
-
--- Tabla: resenas
-ALTER TABLE resenas DROP FOREIGN KEY FK_Resenas_Cliente;
-
--- Tabla: notificaciones
-ALTER TABLE notificaciones DROP FOREIGN KEY FK_Notificaciones_Usuario;
-
--- Tabla: agendamiento
-ALTER TABLE agendamiento DROP FOREIGN KEY FK_Agendamiento_Cliente;
-
--- Tabla: colaboradores
-ALTER TABLE colaboradores DROP FOREIGN KEY FK_Colab_Usuario;
-
