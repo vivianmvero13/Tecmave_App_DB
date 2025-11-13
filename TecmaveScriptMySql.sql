@@ -50,6 +50,7 @@ CREATE TABLE aspnetusers (
   LockoutEnd DATETIME(6) DEFAULT NULL,
   LockoutEnabled TINYINT(1) NOT NULL DEFAULT 0,
   AccessFailedCount INT NOT NULL DEFAULT 0,
+  NotificacionesActivadas TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (Id),
   UNIQUE KEY UserNameIndex (NormalizedUserName),
   KEY EmailIndex (NormalizedEmail)

@@ -42,7 +42,7 @@ namespace Front.Pages.Account
             user.Apellido = Register.Apellido;
             user.Direccion = Register.Direccion;
             user.PhoneNumber = Register.PhoneNumber;
-
+            user.NotificacionesActivadas = Register.NotificacionesActivadas;
 
             var res = await _userManager
                 .CreateAsync(user, Register.Password);

@@ -14,6 +14,7 @@
         public string Cedula { get; set; }
         public string Direccion { get; set; }
         public string PhoneNumber { get; set; }
+        public bool NotificacionesActivadas { get; set; } = false;
 
     }
 }

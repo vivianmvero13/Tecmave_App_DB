@@ -38,6 +38,19 @@
         <label asp-for="Register.Email">Correo Electrónico</label>
         <input asp-for="Register.Email" type="email" required />
     </div>
+            <div class="login-v2-input-group">
+                <input type="checkbox"
+                       id="notificacionesChk"
+                       name="Register.NotificacionesActivadas"
+                       value="true">
+                <input name="Register.NotificacionesActivadas" type="hidden" value="false">
+                <label for="notificacionesChk">
+                    Deseo recibir notificaciones y promociones por correo electrónico
+                </label>
+            </div>
+
+
+
     <div class="login-v2-input-group">
         <label asp-for="Register.Password">Contraseña</label>
         <input asp-for="Register.Password" type="password" required minlength="8" id="password" />
