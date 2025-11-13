@@ -26,6 +26,9 @@ namespace Tecmave.Api.Data
         public DbSet<ColaboradoresModel> colaboradores { get; set; }
         public DbSet<ServiciosRevisionModel> servicios_revision { get; set; }
 
+        public DbSet<RevisionPertenenciasModel> revision_pertenencias  { get; set; }
+        public DbSet<RevisionTrabajosModel> revision_trabajos { get; set; }
+
         public DbSet<RoleChangeAudit> role_change_audit { get; set; }
 
         protected override void OnModelCreating(ModelBuilder b)

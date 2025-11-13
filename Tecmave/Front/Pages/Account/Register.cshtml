@@ -59,17 +59,20 @@
 </div>
 
 <script>
-  
-    const passwordInput = document.getElementById("password");
-    const password2Input = document.getElementById("password2");
-    const passwordHelp = document.getElementById("passwordHelp");
-    const passwordMatchHelp = document.getElementById("passwordMatchHelp");
+    // =========================================
+    //     VALIDACIÓN DE CONTRASEÑA (igual que antes)
+    // =========================================
+
+    const passwordInput = $("#password");
+    const password2Input = $("#password2");
+    const passwordHelp = $("#passwordHelp");
+    const passwordMatchHelp = $("#passwordMatchHelp");
 
     function validatePasswordStrength(password) {
         const minLength = 8;
         const hasUppercase = /[A-Z]/.test(password);
         const hasNumber = /\d/.test(password);
-        const hasSpecial = /[!&#64;#$%^&*(),.?":{}|<>_]/.test(password);
+        const hasSpecial = /[!#$%^&*(),.?":{}|<>_]/.test(password);
 
         let message = "";
         if (password.length < minLength) message += `Debe tener al menos ${minLength} caracteres. `;
@@ -80,17 +83,107 @@
         return message;
     }
 
-    passwordInput.addEventListener("input", () => {
-        const message = validatePasswordStrength(passwordInput.value);
-        passwordHelp.textContent = message;
+    passwordInput.on("input", () => {
+        passwordHelp.text(validatePasswordStrength(passwordInput.val()));
+        validarSubmit();
     });
 
-    password2Input.addEventListener("input", () => {
-        if (passwordInput.value !== password2Input.value) {
-            passwordMatchHelp.textContent = "Las contraseñas no coinciden.";
+    password2Input.on("input", () => {
+        if (passwordInput.val() !== password2Input.val()) {
+            passwordMatchHelp.text("Las contraseñas no coinciden.");
         } else {
-            passwordMatchHelp.textContent = "";
+            passwordMatchHelp.text("");
         }
+        validarSubmit();
     });
+
+
+    // =========================================
+    //        VALIDACIÓN DE TELÉFONO CR
+    // =========================================
+    const telefonoInput = $("#Register_PhoneNumber");
+    const telefonoHelp = $("<small style='color:red'></small>");
+    telefonoInput.parent().append(telefonoHelp);
+
+    const phoneRegex = /^[246789]\d{7}$/;
+
+    telefonoInput.on("input", function () {
+        const tel = telefonoInput.val().trim();
+
+        if (!phoneRegex.test(tel)) {
+            telefonoHelp.text("Formato inválido. Debe ser un número de Costa Rica de 8 dígitos.");
+            telefonoInput.data("valid", false);
+        } else {
+            telefonoHelp.text("");
+            telefonoInput.data("valid", true);
+        }
+
+        validarSubmit();
+    });
+
+
+    // =========================================
+    //      VALIDACIÓN DE CÉDULA CR + AJAX
+    // =========================================
+    const cedulaInput = $("#Register_Cedula");
+    const cedulaHelp = $("<small style='color:red'></small>");
+    cedulaInput.parent().append(cedulaHelp);
+
+    const cedulaRegex = /^[1-9]\d{8}$/;
+
+    cedulaInput.on("input", function () {
+        const cedula = cedulaInput.val().trim();
+
+        // Validación de formato
+        if (!cedulaRegex.test(cedula)) {
+            cedulaHelp.text("Formato de cédula inválido. Ejemplo: 703000893");
+            cedulaInput.data("valid", false);
+            validarSubmit();
+            return;
+        }
+            cedulaHelp.text("");
+            cedulaInput.data("valid", true);
+            validarSubmit();
+/*
+        cedulaHelp.text("Verificando cédula…");
+
+        // ======= AJAX a tu API =======
+        $.ajax({
+            url: `http://localhost:7504/cedula=${cedula}`,
+            method: "GET",
+            success: function (data) {
+                // Si la API devuelve datos válidos
+                if (data && data.nombre) {
+                    cedulaHelp.text(""); // válida
+                    cedulaInput.data("valid", true);
+                } else {
+                    cedulaHelp.text("La cédula no existe en el registro civil.");
+                    cedulaInput.data("valid", false);
+                }
+                validarSubmit();
+            },
+            error: function () {
+                cedulaHelp.text("No se pudo verificar la cédula (API no responde).");
+                cedulaInput.data("valid", false);
+                validarSubmit();
+            }
+        });
+        */
+    });
+
+
+    // =========================================
+    //      HABILITAR/DESHABILITAR SUBMIT
+    // =========================================
+    const btnSubmit = $(".login-v2-button");
+
+    function validarSubmit() {
+        const cedulaOk = cedulaInput.data("valid") === true;
+        const telOk = telefonoInput.data("valid") === true;
+        const passOk = passwordHelp.text().length === 0;
+        const pass2Ok = passwordMatchHelp.text().length === 0;
+
+        btnSubmit.prop("disabled", !(cedulaOk && telOk && passOk && pass2Ok));
+    }
 
 </script>

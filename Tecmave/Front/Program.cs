@@ -34,6 +34,15 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost",
+        policy => policy
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -53,7 +62,7 @@ app.UseAuthorization();
 
 
 
-
+app.UseCors("AllowLocalhost");
 app.MapRazorPages();
 
 app.MapFallbackToPage("/Account/Login");

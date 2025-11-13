@@ -72,6 +72,8 @@ builder.Services.AddScoped<FacturasService>();
 builder.Services.AddScoped<EstadosService>();
 builder.Services.AddScoped<ColaboradoresService>();
 builder.Services.AddScoped<AgendamientoService>();
+builder.Services.AddScoped<RevisionPertenenciasService>();
+builder.Services.AddScoped<RevisionTrabajosService>();
 
 var app = builder.Build();
 

@@ -361,6 +361,54 @@ ALTER TABLE aspnetroles
   ADD COLUMN IsActive tinyint(1) NOT NULL DEFAULT 1 AFTER Description;
 
 SET FOREIGN_KEY_CHECKS = 1;
+ALTER TABLE factura
+ADD COLUMN estado_pago VARCHAR(100) NULL AFTER metodo_pago;
+-- ============================================
+-- 3. Modificar tabla REVISION (agregar columnas de inspección y agendamiento)
+-- ============================================
+ALTER TABLE revision
+ADD COLUMN id_agendamiento INT NULL AFTER fecha_entrega_final,
+ADD COLUMN kilometraje INT NULL AFTER id_agendamiento,
+ADD COLUMN observaciones_cliente TEXT NULL AFTER kilometraje,
+ADD COLUMN notas_taller TEXT NULL AFTER observaciones_cliente,
+ADD COLUMN nivel_combustible ENUM('F','3/4','1/2','1/4','E') DEFAULT NULL AFTER notas_taller,
+ADD COLUMN golpes_delantera TINYINT(1) DEFAULT 0 AFTER nivel_combustible,
+ADD COLUMN golpes_trasera TINYINT(1) DEFAULT 0 AFTER golpes_delantera,
+ADD COLUMN golpes_izquierda TINYINT(1) DEFAULT 0 AFTER golpes_trasera,
+ADD COLUMN golpes_derecha TINYINT(1) DEFAULT 0 AFTER golpes_izquierda,
+ADD COLUMN golpes_arriba TINYINT(1) DEFAULT 0 AFTER golpes_derecha,
+ADD COLUMN vehiculo_sucio TINYINT(1) DEFAULT 0 AFTER golpes_arriba,
+ADD COLUMN vehiculo_mojado TINYINT(1) DEFAULT 0 AFTER vehiculo_sucio;
+
+ALTER TABLE revision
+ADD CONSTRAINT FK_Revision_Agendamiento
+FOREIGN KEY (id_agendamiento) REFERENCES agendamiento(id_agendamiento);
+
+
+CREATE TABLE IF NOT EXISTS revision_pertenencias (
+  id_pertenencia INT NOT NULL AUTO_INCREMENT,
+  revision_id INT NOT NULL,
+  nombre VARCHAR(100) NOT NULL,
+  presente TINYINT(1) DEFAULT 0,
+  PRIMARY KEY (id_pertenencia),
+  KEY revision_id (revision_id),
+  CONSTRAINT FK_RevisionPertenencias_Revision FOREIGN KEY (revision_id)
+    REFERENCES revision (id_revision)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE IF NOT EXISTS revision_trabajos (
+  id_trabajo INT NOT NULL AUTO_INCREMENT,
+  revision_id INT NOT NULL,
+  nombre VARCHAR(150) NOT NULL,
+  realizado TINYINT(1) DEFAULT 0,
+  PRIMARY KEY (id_trabajo),
+  KEY revision_id (revision_id),
+  CONSTRAINT FK_RevisionTrabajos_Revision FOREIGN KEY (revision_id)
+    REFERENCES revision (id_revision)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
 
 INSERT INTO estados (id_estado, nombre) VALUES
 (4, 'Ingresado'),
