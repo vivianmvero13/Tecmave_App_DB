@@ -4,7 +4,13 @@
     ViewData["Title"] = "Promociones";
 }
 
-<h2>Promociones</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Promociones</h2>
+
+    <a asp-page="/Promociones/Crear" class="btn btn-success">
+        <i class="fa-solid fa-plus"></i> Gestionar promociones
+    </a>
+</div>
 
 @if (TempData["Mensaje"] != null)
 {
