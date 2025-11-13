@@ -39,7 +39,7 @@ namespace Front.Pages.Account
             user.UserName = Register.Email;
             user.Cedula = Register.Cedula;
             user.Nombre = Register.Nombre;
-            user.Apellidos = Register.Apellidos;
+            user.Apellido = Register.Apellido;
             user.Direccion = Register.Direccion;
             user.PhoneNumber = Register.PhoneNumber;
 
@@ -68,7 +68,7 @@ namespace Front.Pages.Account
             }
             else
             {
-                // Manejo de errores si la creación falla
+                // Manejo de errores si la creaciï¿½n falla
                 throw new Exception("Error al crear el usuario: " + string.Join(", ", res.Errors.Select(e => e.Description)));
             }
 

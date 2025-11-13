@@ -16,7 +16,10 @@ DROP TABLE IF EXISTS marca;
 DROP TABLE IF EXISTS modelo;
 DROP TABLE IF EXISTS factura;
 DROP TABLE IF EXISTS colaboradores;
-
+DROP TABLE IF EXISTS Mantenimientos;
+DROP TABLE IF EXISTS recordatorios;
+DROP TABLE IF EXISTS promocion_envios;
+DROP TABLE IF EXISTS planillas;
 DROP TABLE IF EXISTS aspnetroleclaims;
 DROP TABLE IF EXISTS aspnetuserclaims;
 DROP TABLE IF EXISTS aspnetusertokens;
@@ -124,6 +127,11 @@ CREATE TABLE tipo_servicios (
   descripcion VARCHAR(100) NOT NULL,
   PRIMARY KEY (id_tipo_servicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+	
+INSERT INTO tipo_servicios (id_tipo_servicio, nombre, descripcion) VALUES
+(1, 'Mantenimiento preventivo', 'Servicios para prevenir fallas'),
+(2, 'Mantenimiento correctivo', 'Servicios para corregir fallas'),
+(3, 'Falla específica', 'Servicios por diagnóstico puntual');
 
 CREATE TABLE servicios (
   id_servicio INT NOT NULL AUTO_INCREMENT,
@@ -159,6 +167,7 @@ CREATE TABLE vehiculos (
   anno int NOT NULL,
   placa VARCHAR(255) NOT NULL,
   modelo VARCHAR(255),
+  Proximo DATE NULL,
   PRIMARY KEY (id_vehiculo),
   KEY FK_Vehiculos_Cliente (cliente_id),
   KEY FK_Vehiculos_Marca (id_marca),
@@ -197,6 +206,7 @@ CREATE TABLE resenas (
   servicio_id INT NOT NULL,
   comentario TEXT NOT NULL,
   calificacion FLOAT NOT NULL,
+  fecha DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   PRIMARY KEY (id_resena),
   KEY FK_Resenas_Servicio (servicio_id),
   KEY FK_Resenas_Cliente (cliente_id),
@@ -225,6 +235,7 @@ CREATE TABLE promociones (
   fecha_inicio DATE NOT NULL,
   fecha_fin DATE NOT NULL,
   id_estado INT NOT NULL,
+  recordatorio_enviado TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (id_promocion),
   KEY FK_Promociones_Estado (id_estado),
   CONSTRAINT FK_Promociones_Estado FOREIGN KEY (id_estado) REFERENCES estados (id_estado)
@@ -263,8 +274,10 @@ CREATE TABLE agendamiento (
   id_agendamiento INT NOT NULL AUTO_INCREMENT,
   cliente_id INT DEFAULT NULL,
   vehiculo_id INT NOT NULL,
-  fecha_agregada VARCHAR(150) NOT NULL,
+  fecha_agregada DATE NOT NULL,
   id_estado INT NOT NULL DEFAULT 2,
+  fecha_estimada DATE NULL,
+  hora_llegada TIME NULL,
   PRIMARY KEY (id_agendamiento),
   KEY FK_Agendamiento_Vehiculo (vehiculo_id),
   KEY FK_Agendamiento_Cliente (cliente_id),
@@ -301,6 +314,47 @@ CREATE TABLE role_change_audit (
   INDEX IX_role_change_audit_ChangedAtUtc (ChangedAtUtc),
   INDEX IX_role_change_audit_Action (Action)
 );
+
+CREATE TABLE IF NOT EXISTS planillas (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  colaborador_id INT NOT NULL,
+  periodo_inicio DATE,
+  periodo_fin DATE,
+  horas_trabajadas DECIMAL(10,2),
+  valor_hora DECIMAL(12,2),
+  total_salario DECIMAL(12,2),
+  deducciones DECIMAL(12,2),
+  neto_pagar DECIMAL(12,2),
+  fecha_generada DATETIME DEFAULT CURRENT_TIMESTAMP,
+  estado VARCHAR(50),
+  observaciones VARCHAR(250),
+  CONSTRAINT FK_Planilla_Colab FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id_colaborador) ON DELETE CASCADE
+);
+CREATE TABLE promocion_envios (
+  id_envio INT NOT NULL AUTO_INCREMENT,
+  id_usuario INT NOT NULL,
+  id_promocion INT NOT NULL,
+  fecha_envio DATETIME(6) NOT NULL,
+  CONSTRAINT PK_promocion_envios PRIMARY KEY (id_envio)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE recordatorios (
+  Id INT NOT NULL AUTO_INCREMENT,
+  UsuarioId INT NOT NULL,
+  VehiculoId INT NOT NULL,
+  FechaEnvio DATETIME(6) NOT NULL,
+  Tipo LONGTEXT NOT NULL,
+  CONSTRAINT PK_recordatorios PRIMARY KEY (Id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE Mantenimientos (
+  IdMantenimiento INT NOT NULL AUTO_INCREMENT,
+  IdVehiculo INT NOT NULL,
+  VehiculoIdVehiculo INT NOT NULL,
+  FechaMantenimiento DATE NOT NULL,
+  RecordatorioEnviado TINYINT(1) NOT NULL,
+  CONSTRAINT PK_Mantenimientos PRIMARY KEY (IdMantenimiento),
+  CONSTRAINT FK_Mantenimientos_vehiculos_VehiculoIdVehiculo FOREIGN KEY (VehiculoIdVehiculo) REFERENCES vehiculos (id_vehiculo) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE INDEX IX_Mantenimientos_VehiculoIdVehiculo ON Mantenimientos (VehiculoIdVehiculo);
 
 ALTER TABLE aspnetroles
   ADD COLUMN Description varchar(256) NULL AFTER NormalizedName,
@@ -355,24 +409,6 @@ VALUES
 (2, 'Colaborador', 'COLABORADOR', 'Empleado o técnico del taller con permisos limitados', 1),
 (3, 'Cliente', 'CLIENTE', 'Usuario cliente que puede ver y registrar sus vehículos', 1);
 
-
-INSERT INTO aspnetusers
-(Nombre, Apellidos, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed,
- PasswordHash, SecurityStamp, ConcurrencyStamp, PhoneNumber, PhoneNumberConfirmed,
- TwoFactorEnabled, LockoutEnabled, AccessFailedCount)
-VALUES
-('Vivian', 'Velazquez', 'Vivian', 'VIVIAN', 'vivian@tecmave.com', 'VIVIAN@TECMAVE.COM', 1,
- 'AQAAAAIAAYagAAAAEAdminHashDemo==', 'SEC123', 'CONC123', '88888888', 1, 0, 0, 0),
-
-('Joshua','Lopez', 'Joshua', 'JOSHUA', 'joshua@tecmave.com', 'joshua@TECMAVE.COM', 1,
- 'AQAAAAIAAYagAAAAEColabHashDemo==', 'SEC456', 'CONC456', '87777777', 1, 0, 0, 0),
-
-('Khaled', 'Gonzalez', 'Khaled', 'KHALED', 'khaled@tecmave.com', 'KHALED@TECMAVE.COM', 1,
- 'AQAAAAIAAYagAAAAEClienteHashDemo==', 'SEC789', 'CONC789', '86666666', 1, 0, 0, 0),
-
-('Daniel', 'Lopez', 'Daniel', 'DANIEL', 'Daniel@tecmave.com', 'DANIEL@TECMAVE.COM', 1,
- 'AQAAAAIAAYagAAAAEClienteHashDemo==', 'SEC789', 'CONC789', '86666666', 1, 0, 0, 0);
-
 INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
 VALUES
 ('Electrónica', 'Diagnóstico y reparación de sistemas electrónicos', 'Falla específica', 120.00, 3),
@@ -394,48 +430,3 @@ INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
 VALUES
 ('Cambio de frenos', 'Reemplazo de pastillas y discos de freno', 'Mantenimiento correctivo', 200.00, 2),
 ('Reparación de motor', 'Corrección de fallas graves en el motor', 'Mantenimiento correctivo', 500.00, 2);
-
-
--- Tabla: vehiculos
-ALTER TABLE vehiculos
-  ADD CONSTRAINT FK_Vehiculos_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
-
--- Tabla: factura
-ALTER TABLE factura
-  ADD CONSTRAINT FK_Factura_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
-
--- Tabla: resenas
-ALTER TABLE resenas
-  ADD CONSTRAINT FK_Resenas_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
-
--- Tabla: notificaciones
-ALTER TABLE notificaciones
-  ADD CONSTRAINT FK_Notificaciones_Usuario FOREIGN KEY (usuario_id) REFERENCES aspnetusers(Id);
-
--- Tabla: agendamiento
-ALTER TABLE agendamiento
-  ADD CONSTRAINT FK_Agendamiento_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers(Id);
-
--- Tabla: colaboradores
-ALTER TABLE colaboradores
-  ADD CONSTRAINT FK_Colab_Usuario FOREIGN KEY (id_usuario) REFERENCES aspnetusers(Id) ON DELETE CASCADE;
-  
-  
-  -- Tabla: vehiculos
-ALTER TABLE vehiculos DROP FOREIGN KEY FK_Vehiculos_Cliente;
-
--- Tabla: factura
-ALTER TABLE factura DROP FOREIGN KEY FK_Factura_Cliente;
-
--- Tabla: resenas
-ALTER TABLE resenas DROP FOREIGN KEY FK_Resenas_Cliente;
-
--- Tabla: notificaciones
-ALTER TABLE notificaciones DROP FOREIGN KEY FK_Notificaciones_Usuario;
-
--- Tabla: agendamiento
-ALTER TABLE agendamiento DROP FOREIGN KEY FK_Agendamiento_Cliente;
-
--- Tabla: colaboradores
-ALTER TABLE colaboradores DROP FOREIGN KEY FK_Colab_Usuario;
-

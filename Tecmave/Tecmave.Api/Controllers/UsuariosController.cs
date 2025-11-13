@@ -15,25 +15,25 @@ namespace Tecmave.Api.Controllers
         public UsuariosController(UserAdminService svc) => _svc = svc;
 
         // DTOs salida: no exponer campos sensibles
-        public record UsuarioItemDto(int Id, string? Nombre, string? Apellidos, string UserName, string? Email, string? PhoneNumber);
+        public record UsuarioItemDto(int Id, string? Nombre, string? Apellido, string UserName, string? Email, string? PhoneNumber);
 
         // DTOs entrada
         public record CreateUserDto(
             [Required, StringLength(50)] string nombre,
-            [Required, StringLength(50)] string apellidos,
+            [Required, StringLength(50)] string apellido,
             [Required, StringLength(256)] string UserName,
             [Required, EmailAddress] string Email,
             [Required, MinLength(6)] string Password,
             string? PhoneNumber);
 
-        public record UpdateUserDto(string? nombre, string? apellidos, string? UserName, string? Email, string? PhoneNumber);
+        public record UpdateUserDto(string? nombre, string? apellido, string? UserName, string? Email, string? PhoneNumber);
         public record AssignRoleDto([Required] string RoleName, bool ForceReplace = false);
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UsuarioItemDto>>> List()
         {
             var users = await _svc.ListAsync();
-            var data = users.Select(u => new UsuarioItemDto(u.Id, u.Nombre, u.Apellidos, u.UserName!, u.Email, u.PhoneNumber));
+            var data = users.Select(u => new UsuarioItemDto(u.Id, u.Nombre, u.Apellido, u.UserName!, u.Email, u.PhoneNumber));
             return Ok(data);
         }
 
@@ -42,16 +42,16 @@ namespace Tecmave.Api.Controllers
         {
             var u = await _svc.GetByIdAsync(id);
             if (u is null) return NotFound();
-            return Ok(new UsuarioItemDto(u.Id, u.Nombre, u.Apellidos, u.UserName!, u.Email, u.PhoneNumber));
+            return Ok(new UsuarioItemDto(u.Id, u.Nombre, u.Apellido, u.UserName!, u.Email, u.PhoneNumber));
         }
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
         {
             if (!ModelState.IsValid) return ValidationProblem(ModelState);
-            var (res, user) = await _svc.CreateAsync(dto.nombre, dto.apellidos, dto.UserName, dto.Email, dto.Password, dto.PhoneNumber);
+            var (res, user) = await _svc.CreateAsync(dto.nombre, dto.apellido, dto.UserName, dto.Email, dto.Password, dto.PhoneNumber);
             if (!res.Succeeded) return BadRequest(res.Errors);
-            var outDto = new UsuarioItemDto(user!.Id, user.Nombre, user.Apellidos, user.UserName!, user.Email, user.PhoneNumber);
+            var outDto = new UsuarioItemDto(user!.Id, user.Nombre, user.Apellido, user.UserName!, user.Email, user.PhoneNumber);
             return CreatedAtAction(nameof(Get), new { id = user!.Id }, outDto);
         }
 
@@ -59,7 +59,7 @@ namespace Tecmave.Api.Controllers
         public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto dto)
         {
             if (!ModelState.IsValid) return ValidationProblem(ModelState);
-            var res = await _svc.UpdateAsync(id, dto.nombre, dto.apellidos, dto.UserName, dto.Email, dto.PhoneNumber);
+            var res = await _svc.UpdateAsync(id, dto.nombre, dto.apellido, dto.UserName, dto.Email, dto.PhoneNumber);
             return res.Succeeded ? NoContent() : BadRequest(res.Errors);
         }
 

@@ -50,7 +50,7 @@ namespace Tecmave.Api.Services
         // -----------------------
         public async Task<(IdentityResult result, Usuario? user)> CreateAsync(
             string nombre,
-            string apellidos,
+            string apellido,
             string userName,
             string email,
             string password,
@@ -59,7 +59,7 @@ namespace Tecmave.Api.Services
             var user = new Usuario
             {
                 Nombre = nombre,
-                Apellidos = apellidos,
+                Apellido = apellido,
                 UserName = userName,
                 Email = email,
                 PhoneNumber = phone
@@ -187,7 +187,7 @@ namespace Tecmave.Api.Services
         public async Task<IdentityResult> UpdateAsync(
             int id,
             string? nombre = null,
-            string? apellidos = null,
+            string? apellido = null,
             string? userName = null,
             string? email = null,
             string? phone = null)
@@ -205,9 +205,9 @@ namespace Tecmave.Api.Services
                 user.Nombre = nombre;
                 changedNames = true;
             }
-            if (apellidos != null && apellidos != user.Apellidos)
+            if (apellido != null && apellido != user.Apellido)
             {
-                user.Apellidos = apellidos;
+                user.Apellido = apellido;
                 changedNames = true;
             }
 
@@ -275,10 +275,10 @@ namespace Tecmave.Api.Services
 
             if (!string.IsNullOrWhiteSpace(user.Nombre))
                 await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.GivenName, user.Nombre));
-            if (!string.IsNullOrWhiteSpace(user.Apellidos))
-                await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Surname, user.Apellidos));
+            if (!string.IsNullOrWhiteSpace(user.Apellido))
+                await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Surname, user.Apellido));
 
-            var nombreCompleto = $"{user.Nombre} {user.Apellidos}".Trim();
+            var nombreCompleto = $"{user.Nombre} {user.Apellido}".Trim();
             await _userManager.AddClaimAsync(user, new Claim("full_name", nombreCompleto));
         }
     }

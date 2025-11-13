@@ -1,0 +1,47 @@
+﻿@page
+@model Front.Pages.Planillas.CreateModel
+@{
+    ViewData["Title"] = "Crear Planilla";
+}
+<h1 class="mb-4">Nueva Planilla</h1>
+<form method="post">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Colaborador</label>
+            <select asp-for="Planilla.ColaboradorId" asp-items="Model.ColaboradoresSelect" class="form-select" required>
+                <option value="">Seleccione</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Periodo inicio</label>
+            <input asp-for="Planilla.PeriodoInicio" class="form-control" type="date" required />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Periodo fin</label>
+            <input asp-for="Planilla.PeriodoFin" class="form-control" type="date" required />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Horas trabajadas</label>
+            <input asp-for="Planilla.HorasTrabajadas" class="form-control" step="0.01" type="number" required />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Valor hora</label>
+            <input asp-for="Planilla.ValorHora" class="form-control" step="0.01" type="number" required />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Deducciones</label>
+            <input asp-for="Planilla.Deducciones" class="form-control" step="0.01" type="number" value="0" />
+        </div>
+        <div class="col-12">
+            <label class="form-label">Observaciones</label>
+            <textarea asp-for="Planilla.Observaciones" class="form-control"></textarea>
+        </div>
+    </div>
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Generar Planilla</button>
+        <a asp-page="Index" class="btn btn-secondary ms-2">Volver</a>
+    </div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

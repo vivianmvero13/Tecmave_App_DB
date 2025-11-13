@@ -24,10 +24,6 @@
                         <option value="">Seleccione una marca</option>
                     </select>
                 </div>
-                <div>
-                    <label>Modelo</label>
-                    <input id="modeloInput" class="input" placeholder="Corolla, Civic, etc." />
-                </div>
             </div>
 
             <div class="form-row">
@@ -71,7 +67,10 @@
 
         <div class="mt-4 d-flex gap-2">
             <button id="guardarBtn" class="btn btn-orange" type="button">Guardar</button>
+            @if (User.IsInRole("Admin"))
+                {
             <a class="btn btn-secondary" asp-page="/Vehiculos/Index">Volver</a>
+                }
         </div>
     </div>
 </section>
@@ -301,7 +300,7 @@
     // Usuarios y marcas
     function nombreCompleto(u){
       const n = (u.nombre ?? u.Nombre ?? '').trim();
-      const a = (u.apellidos ?? u.Apellidos ?? '').trim();
+      const a = (u.apellido ?? u.Apellido ?? '').trim();
       const full = [n, a].filter(Boolean).join(' ').trim();
       return full || (u.userName ?? u.UserName ?? 'Usuario');
     }

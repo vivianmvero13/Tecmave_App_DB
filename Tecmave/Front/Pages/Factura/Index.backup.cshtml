@@ -1,0 +1,391 @@
+@page
+@model Front.Pages.Factura.IndexModel
+@{
+}
+
+<section class="section">
+    <div class="container">
+        <div class="card" style="margin-bottom:1rem">
+            <div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+                <h3 style="margin:0">Facturas</h3>
+                <div>
+                    <button id="btnPdf" class="secondary">PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div id="estadoCarga" class="muted" style="margin-bottom:.5rem">Cargando…</div>
+            <div class="table-wrapper">
+                <table class="table" id="tablaFacturas">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Fecha emisión</th>
+                            <th>Cliente</th>
+                            <th>Total</th>
+                            <th>Método</th>
+                            <th>Estado</th>
+                            <th style="width:110px">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modal pequeño para cambiar estado -->
+<div id="modalEstado" class="modal" style="display:none" aria-hidden="true">
+    <div class="modal__backdrop"></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modalEstadoTitulo">
+        <div class="modal__header">
+            <h4 id="modalEstadoTitulo" style="margin:0">Cambiar estado</h4>
+            <button type="button" class="modal__close" id="btnCloseModal" aria-label="Cerrar">×</button>
+        </div>
+        <div class="modal__body">
+            <div class="form-row">
+                <label for="ddlEstado">Estado</label>
+                <select id="ddlEstado" class="input">
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Pagada">Pagada</option>
+                    <option value="Anulada">Anulada</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal__footer">
+            <button id="btnGuardarEstado" class="primary">Guardar</button>
+            <button id="btnCancelarEstado" class="secondary">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Texto gris legible (evita blanco sobre blanco) */
+    body, .table, .table td, .table th, .card, .muted {
+        color: #333;
+    }
+
+        .table th {
+            background: #f5f5f5;
+        }
+
+    .table-wrapper {
+        overflow: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .table th, .table td {
+            padding: 8px 10px;
+            border: 1px solid #e6e6e6;
+        }
+
+    .badge {
+        padding: .15rem .5rem;
+        border-radius: 10px;
+        font-size: .85rem;
+        border: 1px solid #ddd
+    }
+
+        .badge.badge--pendiente {
+            background: #fff6e6;
+            border-color: #ffd699
+        }
+
+        .badge.badge--pagada {
+            background: #eaffea;
+            border-color: #a8f0b0
+        }
+
+        .badge.badge--anulada {
+            background: #ffecec;
+            border-color: #ffb8b8
+        }
+
+    .btn {
+        padding: .35rem .65rem;
+        border: 1px solid #ccc;
+        background: #fafafa;
+        cursor: pointer
+    }
+
+        .btn.danger {
+            color: #fff;
+            background: #d9534f;
+            border-color: #c9302c
+        }
+
+        .btn:disabled {
+            opacity: .6;
+            cursor: not-allowed
+        }
+
+    .secondary {
+        padding: .35rem .65rem;
+        background: #f2f2f2;
+        border: 1px solid #d9d9d9;
+        cursor: pointer
+    }
+
+    .primary {
+        padding: .4rem .7rem;
+        background: #3b82f6;
+        color: #fff;
+        border: 1px solid #2f6fda;
+        cursor: pointer
+    }
+
+    .card {
+        background: #fff;
+        border: 1px solid #e9e9e9;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 1px 2px rgba(0,0,0,.03)
+    }
+
+    .container {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .muted {
+        color: #666;
+        font-size: .9rem
+    }
+
+    /* Modal básico sin dependencias */
+    .modal__backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.35);
+    }
+
+    .modal__dialog {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        width: 360px;
+        max-width: 90vw;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e9e9e9;
+        box-shadow: 0 10px 30px rgba(0,0,0,.2)
+    }
+
+    .modal__header, .modal__footer {
+        padding: 12px 14px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: space-between
+    }
+
+    .modal__footer {
+        border-top: 1px solid #eee;
+        border-bottom: none
+    }
+
+    .modal__body {
+        padding: 12px 14px
+    }
+
+    .modal__close {
+        background: transparent;
+        border: none;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer
+    }
+
+    .input {
+        width: 100%;
+        padding: .45rem .55rem;
+        border: 1px solid #d9d9d9;
+        border-radius: 8px;
+    }
+
+    .form-row {
+        display: flex;
+        flex-direction: column;
+        gap: .35rem
+    }
+</style>
+
+@section Scripts {
+    <!-- jQuery (para $.get / $.ajax) -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <!-- jsPDF + autoTable para exportar PDF -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        // Endpoints en UNA sola línea (formato absoluto como tu ejemplo)
+        const API_FACTURAS = "https://localhost:7096/facturas";
+        const API_USUARIOS = "https://localhost:7096/api/usuarios";
+
+        // Estado de UI
+        let FACTURAS = [];
+        let USUARIOS = [];
+        let facturaSeleccionada = null;
+
+        // Helpers
+        function badgeEstado(est){
+          const e = (est||'').toLowerCase();
+          if (e==='pagada') return '<span class="badge badge--pagada">Pagada</span>';
+          if (e==='anulada') return '<span class="badge badge--anulada">Anulada</span>';
+          return '<span class="badge badge--pendiente">Pendiente</span>';
+        }
+        function nombreClientePorId(id){
+          const u = USUARIOS.find(x => Number(x.id) === Number(id) || Number(x.Id) === Number(id));
+          if(!u) return id ?? '';
+          const nombre = (u.nombre || u.Nombre || '').toString().trim();
+          const ap = (u.apellido || u.Apellido || '').toString().trim();
+          return (nombre + ' ' + ap).trim() || (u.email || u.Email || id);
+        }
+        function formatCRC(n){
+          const v = Number(n||0);
+          return v.toLocaleString('es-CR', { style:'currency', currency:'CRC', maximumFractionDigits:0 });
+        }
+        function safeFecha(v){
+          if(!v) return '';
+          const d = new Date(v);
+          return isNaN(d) ? v : d.toLocaleString();
+        }
+
+        // Cargar todo (jQuery AJAX, como tu agendamiento)
+        function cargarTodo(){
+          $("#estadoCarga").text("Cargando…");
+          const g1 = $.ajax({ url: API_FACTURAS, method:'GET', xhrFields:{ withCredentials:true }});
+          const g2 = $.ajax({ url: API_USUARIOS, method:'GET', xhrFields:{ withCredentials:true }});
+
+          $.when(g1, g2).done((r1, r2) => {
+            // jQuery when => [data, statusText, jqXHR]
+            FACTURAS = Array.isArray(r1[0]) ? r1[0] : [];
+            USUARIOS = Array.isArray(r2[0]) ? r2[0] : [];
+            renderTabla();
+            $("#estadoCarga").text(FACTURAS.length ? "Listo" : "No hay facturas.");
+          }).fail((jq1, jq2) => {
+            console.error("Error al cargar:", jq1?.status, jq1?.responseText);
+            $("#estadoCarga").text("No se pudieron cargar los datos.");
+          });
+        }
+
+        function renderTabla(){
+          const $tb = $("#tablaFacturas tbody");
+          $tb.empty();
+          FACTURAS.forEach(f => {
+            const id = f.id_factura ?? f.id ?? f.Id;
+            const cliente = nombreClientePorId(f.cliente_id ?? f.ClienteId);
+            const fila = `
+              <tr>
+                <td>${id ?? ''}</td>
+                <td>${safeFecha(f.fecha_emision ?? f.FechaEmision)}</td>
+                <td>${cliente ?? ''}</td>
+                <td>${formatCRC(f.total)}</td>
+                <td>${f.metodo_pago ?? ''}</td>
+                <td>${badgeEstado(f.estado_pago ?? f.estado ?? f.Estado)}</td>
+                <td>
+                  <button class="btn danger btn-estado" data-id="${id}" data-estado="${f.estado_pago ?? 'Pendiente'}">Estado</button>
+                </td>
+              </tr>`;
+            $tb.append(fila);
+          });
+        }
+
+        // Modal simple (sin Bootstrap)
+        function abrirModalEstado(idFactura, estadoActual){
+          facturaSeleccionada = { id: idFactura };
+          $("#ddlEstado").val(estadoActual || "Pendiente");
+          $("#modalEstado").show().attr("aria-hidden","false");
+        }
+        function cerrarModalEstado(){
+          facturaSeleccionada = null;
+          $("#modalEstado").hide().attr("aria-hidden","true");
+        }
+
+        // PUT /facturas/{id}/estado  =>  { Estado: "Pagada" | "Anulada" | "Pendiente" }
+        function guardarEstado(){
+          if(!facturaSeleccionada?.id) return;
+          const nuevo = $("#ddlEstado").val();
+          const url = `${API_FACTURAS}/${facturaSeleccionada.id}/estado`;
+          $.ajax({
+            url, method:'PUT',
+            contentType:'application/json',
+            data: JSON.stringify({ Estado: nuevo }),
+            xhrFields:{ withCredentials:true },
+            success: function(){
+              // Refrescar fila en memoria y re-render
+              FACTURAS = FACTURAS.map(x => {
+                const xid = x.id_factura ?? x.id ?? x.Id;
+                if(Number(xid) === Number(facturaSeleccionada.id)){
+                  return { ...x, estado_pago: nuevo };
+                }
+                return x;
+              });
+              renderTabla();
+              cerrarModalEstado();
+            },
+            error: function(xhr){
+              console.error("Error al actualizar estado", xhr?.status, xhr?.responseText);
+              alert("No se pudo actualizar el estado.");
+            }
+          });
+        }
+
+        // PDF con jsPDF
+        function exportarPdf(){
+          try{
+            const { jsPDF } = window.jspdf || {};
+            if(!jsPDF || !window.jspdf?.jsPDF) { alert('Falta jsPDF'); return; }
+            const doc = new window.jspdf.jsPDF({ unit:'pt', format:'a4' });
+            doc.setFontSize(14);
+            doc.text('Listado de Facturas', 40, 40);
+
+            const body = FACTURAS.map(f => {
+              const id = f.id_factura ?? f.id ?? f.Id;
+              const fecha = safeFecha(f.fecha_emision ?? f.FechaEmision);
+              const cliente = nombreClientePorId(f.cliente_id ?? f.ClienteId);
+              const total = formatCRC(f.total);
+              const estado = f.estado_pago ?? f.estado ?? f.Estado ?? '';
+              const metodo = f.metodo_pago ?? '';
+              return [id, fecha, cliente, total, metodo, estado];
+            });
+
+            if(!doc.autoTable){ alert('Falta autoTable'); return; }
+            doc.autoTable({
+              head: [['Id', 'Fecha', 'Cliente', 'Total', 'Método', 'Estado']],
+              body,
+              startY: 70,
+              styles: { fontSize: 9 }
+            });
+
+            const name = `facturas_${new Date().toISOString().replace(/[:.]/g,'-')}.pdf`;
+            doc.save(name);
+          }catch(e){
+            console.error(e);
+            alert("No se pudo generar el PDF.");
+          }
+        }
+
+        // Eventos
+        $(document).on("click", ".btn-estado", function(){
+          const id = $(this).data("id");
+          const est = $(this).data("estado");
+          abrirModalEstado(id, est);
+        });
+        $("#btnGuardarEstado").on("click", guardarEstado);
+        $("#btnCancelarEstado, #btnCloseModal, .modal__backdrop").on("click", cerrarModalEstado);
+        $("#btnPdf").on("click", exportarPdf);
+
+        // Inicio
+        $(document).ready(function(){
+          cargarTodo();
+        });
+    </script>
+}
