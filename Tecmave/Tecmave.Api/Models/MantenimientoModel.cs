@@ -9,8 +9,9 @@ namespace Tecmave.Api.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int IdMantenimiento { get; set; }
         public int IdVehiculo { get; set; }
-        public Vehiculo Vehiculo { get; set; }
+        public Vehiculo? Vehiculo { get; set; }
         public DateOnly FechaMantenimiento { get; set; }
+        public DateOnly? ProximoMantenimiento { get; set; }
         public bool RecordatorioEnviado { get; set; } = false;  
     }
 }

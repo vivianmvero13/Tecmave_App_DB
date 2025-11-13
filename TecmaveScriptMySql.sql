@@ -346,16 +346,21 @@ CREATE TABLE recordatorios (
   Tipo LONGTEXT NOT NULL,
   CONSTRAINT PK_recordatorios PRIMARY KEY (Id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS Mantenimientos;
+
 CREATE TABLE Mantenimientos (
   IdMantenimiento INT NOT NULL AUTO_INCREMENT,
   IdVehiculo INT NOT NULL,
-  VehiculoIdVehiculo INT NOT NULL,
   FechaMantenimiento DATE NOT NULL,
-  RecordatorioEnviado TINYINT(1) NOT NULL,
+  ProximoMantenimiento DATE NULL,
+  RecordatorioEnviado TINYINT(1) NOT NULL DEFAULT 0,
   CONSTRAINT PK_Mantenimientos PRIMARY KEY (IdMantenimiento),
-  CONSTRAINT FK_Mantenimientos_vehiculos_VehiculoIdVehiculo FOREIGN KEY (VehiculoIdVehiculo) REFERENCES vehiculos (id_vehiculo) ON DELETE CASCADE
+  CONSTRAINT FK_Mantenimientos_vehiculos_IdVehiculo
+    FOREIGN KEY (IdVehiculo) REFERENCES vehiculos (id_vehiculo) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-CREATE INDEX IX_Mantenimientos_VehiculoIdVehiculo ON Mantenimientos (VehiculoIdVehiculo);
+
+CREATE INDEX IX_Mantenimientos_IdVehiculo ON Mantenimientos (IdVehiculo);
 
 ALTER TABLE aspnetroles
   ADD COLUMN Description varchar(256) NULL AFTER NormalizedName,
