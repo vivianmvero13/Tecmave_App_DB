@@ -1,52 +1,58 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http;
 using System.Net.Http.Json;
-using ApiProm = Tecmave.Api.Models;
-
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Tecmave.Api.Models;
 
 namespace Front.Pages.Promociones
 {
-    [Authorize]
-    public class PromocionesPageModel : PageModel
+    public class PromocionesIndexModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
 
-        public PromocionesPageModel(IHttpClientFactory httpClientFactory)
+        public PromocionesIndexModel(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory;
         }
 
-        [BindProperty]
-        public List<ApiProm.PromocionesModel> Promociones { get; set; } = new();
-
-        [BindProperty]
-        public string EmailDestino { get; set; }
+        // OJO: lista del modelo de API, NO de IndexModel
+        public List<PromocionesModel> Promociones { get; set; } = new();
 
         public async Task OnGetAsync()
         {
             var client = _httpClientFactory.CreateClient();
-            Promociones= await client.GetFromJsonAsync<List<ApiProm.PromocionesModel>>("http://localhost:7096/Promociones");
 
+            Promociones = await client.GetFromJsonAsync<List<PromocionesModel>>(
+                              "http://localhost:7096/Promociones")
+                          ?? new List<PromocionesModel>();
         }
 
-        public async Task<IActionResult> OnPostEnviarAsync(int idUsuario)
+        public async Task<IActionResult> OnPostEnviarPromoAsync(int idPromocion)
         {
             var client = _httpClientFactory.CreateClient();
+
             var response = await client.PostAsync(
-                $"http://localhost:7096/Promociones/enviar/{idUsuario}?email={EmailDestino}", null);
+                $"http://localhost:7096/Promociones/enviar-promo/{idPromocion}",
+                null);
+
+            string mensaje = "Promoción enviada.";
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["Mensaje"] = "Las promociones fueron enviadas correctamente.";
+                var info = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                if (info != null && info.TryGetValue("mensaje", out var msg))
+                {
+                    mensaje = msg;
+                }
             }
-
             else
             {
-                TempData["Mensaje"] = "Se dio un error al enviar las promociones";
+                mensaje = "Ocurrió un error al enviar la promoción.";
             }
 
+            TempData["Mensaje"] = mensaje;
             return RedirectToPage();
         }
     }

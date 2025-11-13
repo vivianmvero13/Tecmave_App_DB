@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Tecmave.Api.Models;
 using Tecmave.Api.Services;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Tecmave.Api.Controllers
 {
@@ -10,12 +12,11 @@ namespace Tecmave.Api.Controllers
     {
         private readonly PromocionesService _PromocionesService;
 
-        public PromocionesController(PromocionesService PromocionesService)
+        public PromocionesController(PromocionesService promocionesService)
         {
-            _PromocionesService = PromocionesService;
+            _PromocionesService = promocionesService;
         }
 
-        //Apis GET, POST, PUT   y DELETE
         [HttpGet]
         public ActionResult<IEnumerable<PromocionesModel>> GetPromocionesModel()
         {
@@ -25,86 +26,67 @@ namespace Tecmave.Api.Controllers
         [HttpGet("{id}")]
         public ActionResult<PromocionesModel> GetById(int id)
         {
-            return _PromocionesService.GetByid_promocion(id);
+            var promo = _PromocionesService.GetByid_promocion(id);
+            if (promo == null)
+                return NotFound();
+
+            return promo;
         }
 
-        //Apis POST
         [HttpPost]
-        public ActionResult<PromocionesModel> AddPromociones(PromocionesModel PromocionesModel)
+        public ActionResult<PromocionesModel> AddPromociones(PromocionesModel model)
         {
+            var nueva = _PromocionesService.AddPromociones(model);
 
-            var newPromocionesModel = _PromocionesService.AddPromociones(PromocionesModel);
-
-            return
-                CreatedAtAction(
-                        nameof(GetPromocionesModel), new
-                        {
-                            id = newPromocionesModel.id_promocion,
-                        },
-                        newPromocionesModel);
-
+            return CreatedAtAction(
+                nameof(GetPromocionesModel),
+                new { id = nueva.id_promocion },
+                nueva);
         }
 
-        //APIS PUT
         [HttpPut]
-        public IActionResult UpdatePromociones(PromocionesModel PromocionesModel)
+        public IActionResult UpdatePromociones(PromocionesModel model)
         {
-
-            if (!_PromocionesService.UpdatePromociones(PromocionesModel))
+            if (!_PromocionesService.UpdatePromociones(model))
             {
-                return NotFound(
-                        new
-                        {
-                            elmsneaje = "La  promocion no fue encontrado"
-                        }
-                    );
+                return NotFound(new { mensaje = "La promoción no fue encontrada" });
             }
 
             return NoContent();
-
         }
 
-        //APIS DELETE
         [HttpDelete]
         public IActionResult DeletePromocionesModel(int id)
         {
-
             if (!_PromocionesService.DeletePromociones(id))
             {
-                return NotFound(
-                        new
-                        {
-                            elmsneaje = "La  promocion no fue encontrado"
-                        }
-                    );
+                return NotFound(new { mensaje = "La promoción no fue encontrada" });
             }
 
             return NoContent();
-
         }
 
-        // Envio de los recordatorios de las promociones
-
         [HttpPost("enviar-recordatorios")]
-
         public async Task<IActionResult> EnviarRecordatorios()
         {
             await _PromocionesService.EnviarRecordatoriosAsync();
             return Ok(new { mensaje = "Recordatorios enviados correctamente." });
         }
 
-        [HttpPost("enviar/{idUsuario}")]
-        public async Task<IActionResult> EnviarPromociones(int idUsuario, [FromQuery] string email)
+        [HttpPost("enviar-promo/{idPromocion}")]
+        public async Task<IActionResult> EnviarPromocionPorPromo(int idPromocion)
         {
-            if (string.IsNullOrEmpty(email))
-                return BadRequest(new { mensaje = "Debe proporcionar un email de destino." });
-
-            var cantidad = await _PromocionesService.EnviarPromocion(idUsuario, email);
+            var cantidad = await _PromocionesService.EnviarPromocionMasivoPorPromoAsync(idPromocion);
 
             if (cantidad == 0)
-                return Ok(new { mensaje = "No hay promociones nuevas para enviar o ya fueron enviadas." });
+            {
+                return Ok(new
+                {
+                    mensaje = "No se enviaron correos. Puede que no haya usuarios suscritos, la promoción no esté activa o ya se haya enviado a todos."
+                });
+            }
 
-            return Ok(new { mensaje = $"Se enviaron {cantidad} promociones activas al usuario {idUsuario}." });
+            return Ok(new { mensaje = $"Se enviaron {cantidad} correos para la promoción {idPromocion}." });
         }
     }
 }

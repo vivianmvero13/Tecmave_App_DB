@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace Front.Pages.Mantenimientos
 {
 
-    public class IndexModel : PageModel
+    public class CrearModel : PageModel
     {
         public void OnGet()
         {

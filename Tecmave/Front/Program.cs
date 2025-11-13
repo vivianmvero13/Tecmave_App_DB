@@ -57,6 +57,6 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 
-app.MapFallbackToPage("/Account/Login");
+app.MapFallbackToPage("/Index");
 
 app.Run();

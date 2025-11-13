@@ -22,11 +22,11 @@ namespace Tecmave.Api.Data
         public DbSet<DetalleFacturaModel> detalle_factura { get; set; }
         public DbSet<ResenasModel> resenas { get; set; }
         public DbSet<NotificacionesModel> notificaciones { get; set; }
-        public DbSet<PromocionesModel> promociones { get; set; }
         public DbSet<ColaboradoresModel> colaboradores { get; set; }
         public DbSet<ServiciosRevisionModel> servicios_revision { get; set; }
 
         public DbSet<RoleChangeAudit> role_change_audit { get; set; }
+        public DbSet<PromocionesModel> promociones { get; set; }
 
         public DbSet<PromocionEnvio> promocion_envios { get; set; }
         public DbSet<Usuario> usuarios { get; set; }

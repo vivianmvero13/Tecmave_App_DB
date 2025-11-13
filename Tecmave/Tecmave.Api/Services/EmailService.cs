@@ -15,7 +15,6 @@ namespace Tecmave.Api.Services
 
         public EmailService(IConfiguration configuration)
         {
-            // Lee la sección "Smtp" del appsettings.json
             _smtpServer = configuration["Smtp:Host"] ?? "smtp.gmail.com";
             _smtpPort = int.TryParse(configuration["Smtp:Port"], out var port) ? port : 587;
             _fromEmail = configuration["Smtp:From"] ?? configuration["Smtp:Username"];

@@ -1,5 +1,5 @@
-﻿@page
-@model Front.Pages.Promociones.PromocionesPageModel
+﻿@page "/Promociones"
+@model Front.Pages.Promociones.PromocionesIndexModel
 @{
     ViewData["Title"] = "Promociones";
 }
@@ -35,10 +35,11 @@
                 <td>@promo.fecha_inicio.ToShortDateString()</td>
                 <td>@promo.fecha_fin.ToShortDateString()</td>
                 <td>
-                    <form method="post" asp-page-handler="Enviar">
-                        <input type="hidden" name="idUsuario" value="1" /> 
-                        <input type="email" name="EmailDestino" placeholder="Correo destino" required />
-                        <button type="submit" class="btn btn-primary btn-sm">Enviar</button>
+                    <form method="post" asp-page-handler="EnviarPromo" class="d-inline">
+                        <input type="hidden" name="idPromocion" value="@promo.id_promocion" />
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            Enviar a suscritos
+                        </button>
                     </form>
                 </td>
             </tr>

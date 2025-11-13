@@ -1,6 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tecmave.Api.Data;
 using Tecmave.Api.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Tecmave.Api.Services
 {
@@ -10,22 +14,21 @@ namespace Tecmave.Api.Services
         private readonly EmailService _emailService;
         private readonly NotificacionesService _notificacionesService;
 
-        public PromocionesService(AppDbContext context, EmailService emailService, NotificacionesService notificacionesService)
+        public PromocionesService(
+            AppDbContext context,
+            EmailService emailService,
+            NotificacionesService notificacionesService)
         {
             _context = context;
             _emailService = emailService;
             _notificacionesService = notificacionesService;
         }
 
-        public List<PromocionesModel> GetPromocionesModel()
-        {
-            return _context.promociones.ToList();
-        }
+        public List<PromocionesModel> GetPromocionesModel() =>
+            _context.promociones.ToList();
 
-        public PromocionesModel GetByid_promocion(int id)
-        {
-            return _context.promociones.FirstOrDefault(p => p.id_promocion == id);
-        }
+        public PromocionesModel GetByid_promocion(int id) =>
+            _context.promociones.FirstOrDefault(p => p.id_promocion == id);
 
         public PromocionesModel AddPromociones(PromocionesModel model)
         {
@@ -50,20 +53,43 @@ namespace Tecmave.Api.Services
             return true;
         }
 
-        public async Task<int> EnviarPromocion(int idUsuario, string emailDestino)
+        public bool DeletePromociones(int id)
+        {
+            var entidad = _context.promociones.FirstOrDefault(p => p.id_promocion == id);
+            if (entidad == null)
+                return false;
+
+            _context.promociones.Remove(entidad);
+            _context.SaveChanges();
+            return true;
+        }
+
+        public async Task<int> EnviarPromocionMasivoPorPromoAsync(int idPromocion)
         {
             var hoy = DateOnly.FromDateTime(DateTime.Now);
 
-            var promocionesActivas = await _context.promociones
-                .Where(p => p.fecha_inicio <= hoy && p.fecha_fin >= hoy)
+            var promo = await _context.promociones
+                .FirstOrDefaultAsync(p =>
+                    p.id_promocion == idPromocion &&
+                    p.fecha_inicio <= hoy &&
+                    p.fecha_fin >= hoy);
+
+            if (promo == null)
+                return 0;
+
+            var usuarios = await _context.usuarios
+                .Where(u => u.NotificacionesActivadas && !string.IsNullOrEmpty(u.Email))
                 .ToListAsync();
 
-            int enviadas = 0;
+            if (!usuarios.Any())
+                return 0;
 
-            foreach (var promo in promocionesActivas)
+            int totalEnviadas = 0;
+
+            foreach (var usuario in usuarios)
             {
                 bool yaEnviada = await _context.promocion_envios.AnyAsync(pe =>
-                    pe.IdUsuario == idUsuario && pe.IdPromocion == promo.id_promocion);
+                    pe.IdUsuario == usuario.Id && pe.IdPromocion == promo.id_promocion);
 
                 if (yaEnviada)
                     continue;
@@ -72,29 +98,28 @@ namespace Tecmave.Api.Services
                 string cuerpo = $@"
                     <h3>{promo.titulo}</h3>
                     <p>{promo.descripcion}</p>
-                    <p><b>Válida hasta:</b> {promo.fecha_fin}</p>";
+                    <p><b>Válida hasta:</b> {promo.fecha_fin:dd/MM/yyyy}</p>";
 
-                await _emailService.EnviarCorreo(emailDestino, asunto, cuerpo);
+                await _emailService.EnviarCorreo(usuario.Email, asunto, cuerpo);
 
-                var registro = new PromocionEnvio
+                _context.promocion_envios.Add(new PromocionEnvio
                 {
-                    IdUsuario = idUsuario,
+                    IdUsuario = usuario.Id,
                     IdPromocion = promo.id_promocion,
                     FechaEnvio = DateTime.UtcNow
-                };
+                });
 
-                _context.promocion_envios.Add(registro);
-                promo.recordatorio_enviado = true;
-                enviadas++;
+                totalEnviadas++;
             }
 
             await _context.SaveChangesAsync();
-            return enviadas;
+            return totalEnviadas;
         }
 
         public async Task EnviarRecordatoriosAsync()
         {
             var hoy = DateOnly.FromDateTime(DateTime.Now);
+
             var proximas = await _context.promociones
                 .Where(p => p.fecha_fin == hoy.AddDays(3) && !p.recordatorio_enviado)
                 .ToListAsync();
@@ -107,11 +132,10 @@ namespace Tecmave.Api.Services
 
                 foreach (var usuario in usuarios)
                 {
-                    string mensaje = $"La promoción '{promo.titulo}' finaliza el {promo.fecha_fin}. ¡Aprovecha antes de que expire!";
+                    string mensaje = $"La promoción '{promo.titulo}' finaliza el {promo.fecha_fin:dd/MM/yyyy}. Aproveche antes de que expire.";
                     string link = $"https://tecmave.com/promociones/{promo.id_promocion}";
 
                     await _notificacionesService.CrearNotificacionAsync(usuario.Id, mensaje, "promocion");
-
                     Console.WriteLine($"[Push] Enviado a {usuario.Email}: {mensaje} (Link: {link})");
                 }
 
@@ -119,21 +143,6 @@ namespace Tecmave.Api.Services
             }
 
             await _context.SaveChangesAsync();
-
-        }
-
-        public bool DeletePromociones(int id)
-        {
-            var entidad = _context.promociones.FirstOrDefault(p => p.id_promocion == id);
-
-            if (entidad == null)
-            {
-                return false;
-            }
-
-            _context.promociones.Remove(entidad);
-            _context.SaveChanges();
-            return true;
         }
     }
 }
