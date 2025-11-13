@@ -28,6 +28,10 @@ namespace Tecmave.Api.Data
 
         public DbSet<RoleChangeAudit> role_change_audit { get; set; }
 
+        public DbSet<PromocionEnvio> promocion_envios { get; set; }
+        public DbSet<Usuario> usuarios { get; set; }
+        public DbSet<Recordatorio> recordatorios { get; set; }
+        public DbSet<MantenimientoModel> Mantenimientos { get; set; }
         protected override void OnModelCreating(ModelBuilder b)
         {
             base.OnModelCreating(b);
@@ -105,6 +109,9 @@ namespace Tecmave.Api.Data
             b.Entity<PromocionesModel>().ToTable("promociones").HasKey(x => x.id_promocion);
             b.Entity<ColaboradoresModel>().ToTable("colaboradores").HasKey(x => x.id_colaborador);
             b.Entity<ServiciosRevisionModel>().ToTable("servicios_revision").HasKey(x => x.id_servicio_revision);
+            b.Entity<PromocionEnvio>().ToTable("promocion_envios").HasKey(x => x.IdEnvio);
+            b.Entity<Recordatorio>().ToTable("recordatorios").HasKey(x => x.Id);
+
         }
     }
 }

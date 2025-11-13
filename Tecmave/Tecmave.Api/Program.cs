@@ -1,14 +1,12 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
+using System.Text.Json;                
 using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 using Tecmave.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
@@ -18,7 +16,6 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddScoped<Tecmave.Api.Services.FacturasService>();
 builder.Services.AddSwaggerGen();
 
 // --- CONEXIÓN A MySQL ---
@@ -65,6 +62,7 @@ builder.Services.AddScoped<TipoServiciosService>();
 builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<ResenasService>();
 builder.Services.AddScoped<PromocionesService>();
+builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<NotificacionesService>();
 builder.Services.AddScoped<RevisionService>();
 builder.Services.AddScoped<MarcasService>();
@@ -72,6 +70,9 @@ builder.Services.AddScoped<FacturasService>();
 builder.Services.AddScoped<EstadosService>();
 builder.Services.AddScoped<ColaboradoresService>();
 builder.Services.AddScoped<AgendamientoService>();
+builder.Services.AddScoped<AgendamientoService>();
+builder.Services.AddHostedService<RecordatorioService>();
+builder.Services.AddScoped<MantenimientoService>();
 
 var app = builder.Build();
 
@@ -87,45 +88,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-/*
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Usuario>>();
-
-    string[] roles = { "Administrador", "Usuarios" };
-
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new AppRole { Name = role });
-    }
-
-    var adminEmail = "admin@tecmave.com";
-    var admin = await userManager.FindByEmailAsync(adminEmail);
-    if (admin == null)
-    {
-        admin = new Usuario { UserName = "admin", Nombre = "Admin", Apellido = "Principal", Email = adminEmail };
-        await userManager.CreateAsync(admin, "Admin1234");
-        await userManager.AddToRoleAsync(admin, "Administrador");
-    }
-
-    var userEmail = "usuario@tecmave.com";
-    var normalUser = await userManager.FindByEmailAsync(userEmail);
-    if (normalUser == null)
-    {
-        normalUser = new Usuario
-        {
-            UserName = "usuario",
-            Nombre = "Usuario",
-            Apellido = "Prueba",
-            Email = userEmail
-        };
-
-        await userManager.CreateAsync(normalUser, "Usuario1234");
-        await userManager.AddToRoleAsync(normalUser, "Usuarios");
-    }
-}
-*/
 
 app.Run();

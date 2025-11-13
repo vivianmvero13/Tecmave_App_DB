@@ -44,7 +44,6 @@ namespace Tecmave.Api.Controllers
                 ClienteId = dto.ClienteId,
                 IdMarca = dto.IdMarca,
                 Anno = dto.Anno,
-                Modelo = dto.Modelo,
                 Placa = (dto.Placa ?? string.Empty).ToUpperInvariant()
             };
 
@@ -81,7 +80,6 @@ namespace Tecmave.Api.Controllers
             v.ClienteId = dto.ClienteId;
             v.IdMarca = dto.IdMarca;
             v.Anno = dto.Anno;
-            v.Modelo = dto.Modelo;
             v.Placa = (dto.Placa ?? string.Empty).ToUpperInvariant();
 
             try

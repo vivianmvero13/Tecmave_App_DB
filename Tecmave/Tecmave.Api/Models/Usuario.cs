@@ -11,6 +11,13 @@ namespace Tecmave.Api.Models
         [MaxLength(50)]
         public string? Apellido { get; set; }
 
+        [MaxLength(50)]
+        public string? Cedula { get; set; }
+
+        public string? Direccion { get; set; }
+
         public string NombreCompleto => $"{Nombre} {Apellido}".Trim();
+
+        public bool NotificacionesActivadas { get; set; } = false;
     }
 }

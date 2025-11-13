@@ -19,9 +19,9 @@ namespace Tecmave.Api.Controllers
 
         
         public record LoginDTO(string Email, string Password);
-        public record LoginResponseDTO(int Id, string Nombre, string Apellido, string UserName, string Email, List<string> Roles);
-        public record RegisterDTO(string Nombre, string Apellido, string UserName, string Email, string Password);
-        public record RegisterResponseDTO(int Id, string Nombre, string Apellido, string UserName, string Email, List<string> Roles);
+        public record LoginResponseDTO(int Id, string Nombre, string Apellidos, string UserName, string Email, List<string> Roles);
+        public record RegisterDTO(string Nombre, string Apellidos, string UserName, string Email, string Password);
+        public record RegisterResponseDTO(int Id, string Nombre, string Apellidos, string UserName, string Email, List<string> Roles);
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO dto)
@@ -53,7 +53,7 @@ namespace Tecmave.Api.Controllers
             var user = new Usuario
             {
                 Nombre = dto.Nombre,
-                Apellido = dto.Apellido,
+                Apellido = dto.Apellidos,
                 UserName = dto.UserName,
                 Email = dto.Email
             };

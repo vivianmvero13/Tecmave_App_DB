@@ -94,8 +94,6 @@
     const API_REVISION = "https://localhost:7096/Revision";
     const API_VEHICULO = "https://localhost:7096/Vehiculos";
     const API_MARCA = "https://localhost:7096/Marcas";
-
-    
     const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
 
     let marcas = [];
@@ -125,13 +123,11 @@
                 if (vehiculo) {
                     const servicio = servicios.find(s => s.id_servicio === rev.id_servicio);
                     const estado = estados.find(e => e.id_estado === rev.id_estado);
-                    const marca = marcas.find(m => m.id_marca === vehiculo.id_marca);
 
                     $("#tablaRevisiones").append(`
                         <tr>
                             <td>${vehiculo.placa}</td>
-                            <td>${marca ? marca.nombre : "Desconocida"}</td>
-                            <td>${vehiculo.modelo}</td>
+                            <td>${(marcas.find(m => m.id_marca === vehiculo.id_marca)?.nombre) || "Desconocida"}</td>
                             <td>${vehiculo.anno}</td>
                             <td>${servicio ? servicio.nombre : "Desconocido"}</td>
                             <td>${estado ? estado.nombre : "Desconocido"}</td>
@@ -203,12 +199,15 @@
         let servicioId = null;
 
         if (tipoId === 1) {
+            
             const servicio = servicios.find(s => s.tipo_servicio_id === 1);
             servicioId = servicio ? servicio.id_servicio : null;
         } else if (tipoId === 2) {
+            
             const servicio = servicios.find(s => s.tipo_servicio_id === 2);
             servicioId = servicio ? servicio.id_servicio : null;
         } else if (tipoId === 3) {
+            
             servicioId = parseInt($("#fallaInput").val());
         }
 
@@ -230,8 +229,6 @@
             fecha_entrega_final: new Date().toISOString()
         };
 
-        console.log("Revisión a registrar:", revision);
-
         $.ajax({
             url: API_REVISION,
             method: 'POST',
@@ -249,11 +246,9 @@
     }
 
     $(document).ready(function () {
-        console.log("User ID:", userId);
-
-        cargarMarcas(); 
         cargarTipoServicios();
         cargarVehiculos();
+        cargarMarcas();
         cargarFallasEspecificas();
         cargarDatosIniciales();
 

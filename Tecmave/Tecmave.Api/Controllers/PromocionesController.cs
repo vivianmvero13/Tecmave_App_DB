@@ -83,5 +83,28 @@ namespace Tecmave.Api.Controllers
 
         }
 
+        // Envio de los recordatorios de las promociones
+
+        [HttpPost("enviar-recordatorios")]
+
+        public async Task<IActionResult> EnviarRecordatorios()
+        {
+            await _PromocionesService.EnviarRecordatoriosAsync();
+            return Ok(new { mensaje = "Recordatorios enviados correctamente." });
+        }
+
+        [HttpPost("enviar/{idUsuario}")]
+        public async Task<IActionResult> EnviarPromociones(int idUsuario, [FromQuery] string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return BadRequest(new { mensaje = "Debe proporcionar un email de destino." });
+
+            var cantidad = await _PromocionesService.EnviarPromocion(idUsuario, email);
+
+            if (cantidad == 0)
+                return Ok(new { mensaje = "No hay promociones nuevas para enviar o ya fueron enviadas." });
+
+            return Ok(new { mensaje = $"Se enviaron {cantidad} promociones activas al usuario {idUsuario}." });
+        }
     }
 }

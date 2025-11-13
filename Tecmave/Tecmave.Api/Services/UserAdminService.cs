@@ -50,7 +50,7 @@ namespace Tecmave.Api.Services
         // -----------------------
         public async Task<(IdentityResult result, Usuario? user)> CreateAsync(
             string nombre,
-            string apellido,
+            string apellidos,
             string userName,
             string email,
             string password,
@@ -59,7 +59,7 @@ namespace Tecmave.Api.Services
             var user = new Usuario
             {
                 Nombre = nombre,
-                Apellido = apellido,
+                Apellido = apellidos,
                 UserName = userName,
                 Email = email,
                 PhoneNumber = phone
@@ -187,7 +187,7 @@ namespace Tecmave.Api.Services
         public async Task<IdentityResult> UpdateAsync(
             int id,
             string? nombre = null,
-            string? apellido = null,
+            string? apellidos = null,
             string? userName = null,
             string? email = null,
             string? phone = null)
@@ -205,9 +205,9 @@ namespace Tecmave.Api.Services
                 user.Nombre = nombre;
                 changedNames = true;
             }
-            if (apellido != null && apellido != user.Apellido)
+            if (apellidos != null && apellidos != user.Apellido)
             {
-                user.Apellido = apellido;
+                user.Apellido = apellidos;
                 changedNames = true;
             }
 

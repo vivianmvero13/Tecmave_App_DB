@@ -4,10 +4,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Front.Models
 {
-    [Table("Colaboradores")] 
+    [Table("Colaboradores")]
     public class Colaborador
     {
-        [Key] 
+        [Key]
         public int Id { get; set; }
 
         [Required, StringLength(100)]

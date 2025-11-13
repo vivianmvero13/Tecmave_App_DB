@@ -12,8 +12,8 @@ using Tecmave.Api.Data;
 namespace Tecmave.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251018014623_AddNombreApellidoToUsuario")]
-    partial class AddNombreApellidoToUsuario
+    [Migration("20251018014623_AddNombreApellidosToUsuario")]
+    partial class AddNombreApellidosToUsuario
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -567,7 +567,7 @@ namespace Tecmave.Api.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("Apellido")
+                    b.Property<string>("Apellidos")
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
 

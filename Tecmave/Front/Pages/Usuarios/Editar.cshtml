@@ -15,8 +15,8 @@
                 <input id="nombre" class="form-control" />
             </div>
             <div>
-                <label class="form-label">Apellido</label>
-                <input id="apellido" class="form-control" />
+                <label class="form-label">Apellidos</label>
+                <input id="apellidos" class="form-control" />
             </div>
             <div>
                 <label class="form-label">Usuario</label>
@@ -67,7 +67,7 @@
         function loadUser() {
           $.getJSON(`${API}/api/usuarios/${USER_ID}`, function (u) {
             $('#nombre').val(u.nombre ?? '');
-            $('#apellido').val(u.apellido ?? '');
+            $('#apellidos').val(u.apellidos ?? '');
             $('#PhoneNumber').val(u.phoneNumber ?? '');
             $('#UserName').val(u.userName ?? '');
             $('#Email').val(u.email ?? '');
@@ -88,7 +88,7 @@
 
           const payload = {
             nombre: $('#nombre').val(),
-            apellido: $('#apellido').val(),
+            apellidos: $('#apellidos').val(),
             userName: $('#UserName').val(),
             email: $('#Email').val(),
             phoneNumber: $('#PhoneNumber').val()

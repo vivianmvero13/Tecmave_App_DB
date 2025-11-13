@@ -7,6 +7,8 @@
 
 <h1>Vehículos Registrados</h1>
 
+
+
 <div class="row g-3 align-items-end mt-3">
     <div class="col-12 col-md-8">
         <label for="localSearch" class="form-label">Buscar</label>
@@ -26,6 +28,12 @@
         <button id="registrarBtn" class="btn btn-orange btn-sm" type="button" onclick="location.href='/Vehiculos/Crear'">
             <i class="fa-solid fa-plus"></i> Registrar
         </button>
+        <button id="promocionesBtn" class="btn btn-orange btn-sm" type="submit" onclick="location.href='/Promociones/Promociones'">
+            <i class="fa-solid fa-tag"></i> Promociones
+        </button>
+        <button id="mantenimientoBtn" class="btn btn-orange btn-sm" type="button" onclick="location.href='/Mantenimientos/Mantenimientos'">
+            <i class="fa-solid fa-wrench"></i> Mantenimientos
+        </button>
     </div>
 </div>
 
@@ -36,7 +44,6 @@
                 <th>Placa</th>
                 <th>Año</th>
                 <th>Marca</th>
-                <th>Modelo</th>
                 <th>Cliente</th>
                 <th>Email</th>
                 <th style="width:150px;">Acciones</th>
@@ -61,12 +68,12 @@
 </style>
 
 <script>
-    const API_BASE = 'https://localhost:7096';
+    const API_BASE = 'http://localhost:7096';
 
     // Endpoints (sin /api)
     const VEHICULOS_URL = `${API_BASE}/vehiculos`;
     const USUARIOS_URL  = `${API_BASE}/api/usuarios`;
-    const MARCAS_URL    = `${API_BASE}/marcas`;
+    const MARCAS_URL    = `${API_BASE}/Marcas`;
 
     const $tableBody = document.getElementById('vehiculosTable');
     const $search    = document.getElementById('localSearch');
@@ -96,7 +103,7 @@
     }
     function nombreCompleto(u){
         const n = (u.nombre ?? u.Nombre ?? '').trim();
-        const a = (u.apellido ?? u.Apellido ?? '').trim();
+        const a = (u.apellidos ?? u.Apellidos ?? '').trim();
         const user = (u.userName ?? u.UserName ?? '').trim();
         const full = [n,a].filter(Boolean).join(' ').trim();
         return full || user || 'Usuario';

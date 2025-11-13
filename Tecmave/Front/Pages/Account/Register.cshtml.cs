@@ -68,7 +68,7 @@ namespace Front.Pages.Account
             }
             else
             {
-                // Manejo de errores si la creaciï¿½n falla
+                // Manejo de errores si la creación falla
                 throw new Exception("Error al crear el usuario: " + string.Join(", ", res.Errors.Select(e => e.Description)));
             }
 

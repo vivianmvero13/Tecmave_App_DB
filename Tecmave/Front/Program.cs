@@ -7,6 +7,7 @@ using Tecmave.Front.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
+builder.Services.AddHttpClient();
 
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<MyIdentityDBContext>(opt =>
