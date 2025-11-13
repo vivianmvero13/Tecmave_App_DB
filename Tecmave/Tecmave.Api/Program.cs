@@ -70,6 +70,7 @@ builder.Services.AddScoped<MarcasService>();
 builder.Services.AddScoped<FacturasService>();
 builder.Services.AddScoped<EstadosService>();
 builder.Services.AddScoped<ColaboradoresService>();
+builder.Services.AddScoped<PlanillasService>();
 builder.Services.AddScoped<AgendamientoService>();
 builder.Services.AddScoped<AgendamientoService>();
 builder.Services.AddHostedService<RecordatorioService>();

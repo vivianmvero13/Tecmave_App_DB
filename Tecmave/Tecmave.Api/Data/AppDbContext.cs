@@ -35,6 +35,7 @@ namespace Tecmave.Api.Data
         public DbSet<Usuario> usuarios { get; set; }
         public DbSet<Recordatorio> recordatorios { get; set; }
         public DbSet<MantenimientoModel> Mantenimientos { get; set; }
+        public DbSet<PlanillasModel> planillas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder b)
         {

@@ -3,77 +3,214 @@
 @{
     ViewData["Title"] = "Planillas";
 }
-<h1 class="mb-4">Planillas</h1>
-<div class="row g-3 align-items-end mb-3">
-    <div class="col-12 col-md-4">
-        <label class="form-label">Filtrar por colaborador</label>
-        <select asp-for="FiltroColaboradorId" asp-items="Model.ColaboradoresSelect" class="form-select">
-            <option value="">(Todos)</option>
-        </select>
-    </div>
-    <div class="col-6 col-md-3">
-        <label class="form-label">Fecha inicio</label>
-        <input asp-for="FiltroInicio" class="form-control" type="date" />
-    </div>
-    <div class="col-6 col-md-3">
-        <label class="form-label">Fecha fin</label>
-        <input asp-for="FiltroFin" class="form-control" type="date" />
-    </div>
-    <div class="col-12 col-md-2 d-grid">
-        <button class="btn btn-primary" type="submit" form="filterForm">Filtrar</button>
-    </div>
-</div>
-<form method="get" id="filterForm">
-    <input type="hidden" asp-for="FiltroColaboradorId" />
-    <input type="hidden" asp-for="FiltroInicio" />
-    <input type="hidden" asp-for="FiltroFin" />
-</form>
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <small class="text-muted">Mostrando @Model.Planillas.Count planillas</small>
-    <a asp-page="Create" class="btn btn-royal">Nueva planilla</a>
-</div>
-<div class="table-responsive">
-    <table class="table table-striped align-middle">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Colaborador</th>
-                <th>Periodo</th>
-                <th>Horas</th>
-                <th>Valor Hora</th>
-                <th>Total</th>
-                <th>Deducciones</th>
-                <th>Neto</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (!Model.Planillas.Any())
-            {
-                <tr><td colspan="10" class="text-muted">No hay planillas.</td></tr>
-            }
-            else
-            {
-                foreach (var p in Model.Planillas)
-                {
+
+
+<section class="section">
+    <div class="container grid cols-2">
+
+        <!-- Formulario de nueva planilla -->
+        <div class="card">
+            <h3>Nueva Planilla</h3>
+            <div class="form-row">
+                <div>
+                    <label>Colaborador</label>
+                    <select class="input" id="colaborador_id"></select>
+                </div>
+                <div>
+                    <label>Periodo Inicio</label>
+                    <input class="input" id="periodo_inicio" type="date" />
+                </div>
+                <div>
+                    <label>Periodo Fin</label>
+                    <input class="input" id="periodo_fin" type="date" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label>Horas Trabajadas</label>
+                    <input class="input" id="horas_trabajadas" type="number" step="0.01" />
+                </div>
+                <div>
+                    <label>Valor Hora</label>
+                    <input class="input" id="valor_hora" type="number" step="0.01" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label>Deducciones</label>
+                    <input class="input" id="deducciones" type="number" step="0.01" />
+                </div>
+                <div>
+                    <label>Estado</label>
+                    <input class="input" id="estado" type="text" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label>Observaciones</label>
+                    <input class="input" id="observaciones" type="text" />
+                </div>
+            </div>
+
+            <button id="btnAgregarPlanilla" type="button">Agregar</button>
+        </div>
+
+        <!-- TABLA PLANILLAS -->
+        <div class="card">
+            <h3>Lista de Planillas</h3>
+            <table class="table">
+                <thead>
                     <tr>
-                        <td>@p.Id</td>
-                        <td>@(p.Colaborador != null ? p.Colaborador.Nombre + " " + p.Colaborador.Apellido : "—")</td>
-                        <td>@p.PeriodoInicio.ToString("yyyy-MM-dd") - @p.PeriodoFin.ToString("yyyy-MM-dd")</td>
-                        <td>@p.HorasTrabajadas</td>
-                        <td>@p.ValorHora.ToString("F2")</td>
-                        <td>@p.TotalSalario.ToString("F2")</td>
-                        <td>@p.Deducciones.ToString("F2")</td>
-                        <td>@p.NetoPagar.ToString("F2")</td>
-                        <td>@p.Estado</td>
+                        <th>ID</th>
+                        <th>Colaborador</th>
+                        <th>Periodo</th>
+                        <th>Neto Pagar</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+    </div>
+</section>
+
+<script>
+
+    const API_PLANILLA     = "http://localhost:7096/api/Planillas";
+    const API_COLABORADOR  = "http://localhost:7096/Colaboradores";
+    const API_USUARIOS     = "http://localhost:7096/api/usuarios";
+
+    let cacheColaboradores = {};
+    let cacheUsuarios = {};
+
+    // ===============================
+    // 1. Cargar usuarios
+    // ===============================
+    function cargarUsuarios() {
+        return $.get(API_USUARIOS, function (usuarios) {
+            usuarios.forEach(u => cacheUsuarios[u.id] = u);
+        });
+    }
+
+    // ===============================
+    // 2. Cargar colaboradores
+    // ===============================
+    function cargarColaboradores() {
+        return $.get(API_COLABORADOR, function (colab) {
+
+            $("#colaborador_id").empty();
+            $("#colaborador_id").append(`<option value="">Seleccione un colaborador</option>`);
+
+            colab.forEach(c => {
+                cacheColaboradores[c.id_colaborador] = c;
+
+                const usuario = cacheUsuarios[c.id_usuario];
+
+                $("#colaborador_id").append(`
+                    <option value="${c.id_colaborador}">
+                        ${usuario ? usuario.nombre + " " + usuario.apellidos : "Usuario desconocido"}
+                    </option>
+                `);
+            });
+        });
+    }
+
+    // ===============================
+    // 3. Cargar planillas
+    // ===============================
+        function cargarPlanillas() {
+        $.get(API_PLANILLA, function (data) {
+
+            $("table tbody").empty();
+
+            data.forEach(p => {
+                const colab = cacheColaboradores[p.colaborador_id];
+                const usuario = colab ? cacheUsuarios[colab.id_usuario] : null;
+
+                $("table tbody").append(`
+                    <tr>
+                        <td>${p.id}</td>
+                        <td>${usuario ? usuario.nombre + " " + usuario.apellidos : "Desconocido"}</td>
+                        <td>${p.periodo_inicio} – ${p.periodo_fin}</td>
+                        <td>${p.neto_pagar}</td>
+                        <td>${p.estado}</td>
+
                         <td>
-                            <a asp-page="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-warning">Editar</a>
-                            <a asp-page="Delete" asp-route-id="@p.Id" class="btn btn-sm btn-danger">Eliminar</a>
+                            <button class="danger" onclick="eliminarPlanilla(${p.id})">
+                                Eliminar
+                            </button>
                         </td>
                     </tr>
-                }
+                `);
+            });
+        });
+    }
+
+           function eliminarPlanilla(id) {
+        if (!confirm("¿Seguro que quieres eliminar esta planilla?")) return;
+
+        $.ajax({
+            url: `${API_PLANILLA}?id=${id}`,   // ← ESTA ES LA RUTA CORRECTA
+            method: "DELETE",
+            success: function () {
+                alert("Planilla eliminada");
+                cargarPlanillas();
+            },
+            error: function (xhr) {
+                console.error("Error eliminando planilla:", xhr.responseText);
+                alert("No se pudo eliminar la planilla.");
             }
-        </tbody>
-    </table>
-</div>
+        });
+    }
+
+
+
+    // ===============================
+    // 4. Agregar planilla
+    // ===============================
+    function agregarPlanilla() {
+
+        const nuevo = {
+            colaborador_id: parseInt($("#colaborador_id").val()),
+            periodo_inicio: $("#periodo_inicio").val(),
+            periodo_fin: $("#periodo_fin").val(),
+            horas_trabajadas: parseFloat($("#horas_trabajadas").val()),
+            valor_hora: parseFloat($("#valor_hora").val()),
+            deducciones: parseFloat($("#deducciones").val()),
+            fecha_generada: new Date().toISOString(),
+            estado: $("#estado").val(),
+            observaciones: $("#observaciones").val(),
+            total_salario: parseFloat($("#horas_trabajadas").val()) * parseFloat($("#valor_hora").val()),
+            neto_pagar: (parseFloat($("#horas_trabajadas").val()) * parseFloat($("#valor_hora").val())) - parseFloat($("#deducciones").val())
+        };
+
+        $.ajax({
+            url: API_PLANILLA,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(nuevo),
+            success: function () {
+                alert("Planilla agregada");
+                cargarPlanillas();
+            }
+        });
+    }
+
+    // ===============================
+    // 5. Inicialización
+    // ===============================
+    $(document).ready(function () {
+
+        cargarUsuarios()
+            .then(() => cargarColaboradores())
+            .then(() => cargarPlanillas());
+
+        $("#btnAgregarPlanilla").on("click", agregarPlanilla);
+    });
+
+</script>
