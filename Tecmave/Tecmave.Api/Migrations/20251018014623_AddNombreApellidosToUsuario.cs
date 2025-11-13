@@ -5,7 +5,7 @@
 namespace Tecmave.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class AddNombreApellidosToUsuario : Migration
+    public partial class AddNombreApellidoToUsuario : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,7 +19,7 @@ namespace Tecmave.Api.Migrations
                 defaultValue: "");
 
             migrationBuilder.AddColumn<string>(
-                name: "Apellidos",
+                name: "Apellido",
                 table: "aspnetusers",
                 type: "varchar(50)",
                 maxLength: 50,
@@ -35,7 +35,7 @@ namespace Tecmave.Api.Migrations
                 table: "aspnetusers");
 
             migrationBuilder.DropColumn(
-                name: "Apellidos",
+                name: "Apellido",
                 table: "aspnetusers");
 
         }

@@ -15,8 +15,8 @@
                 <input id="nombre" class="form-control" />
             </div>
             <div>
-                <label class="form-label">Apellidos</label>
-                <input id="apellidos" class="form-control" />
+                <label class="form-label">Apellido</label>
+                <input id="apellido" class="form-control" />
             </div>
             <div>
                 <label class="form-label">Cédula</label>
@@ -59,7 +59,7 @@
         function loadColab() {
           $.getJSON(`${API}/api/colaboradores/${COLAB_ID}`, function (c) {
             $('#nombre').val(c.nombre ?? '');
-            $('#apellidos').val(c.apellidos ?? '');
+            $('#apellido').val(c.apellido ?? '');
             $('#cedula').val(c.cedula ?? '');
             $('#email').val(c.email ?? '');
             $('#telefono').val(c.telefono ?? '');
@@ -75,7 +75,7 @@
 
           const payload = {
             nombre: $('#nombre').val(),
-            apellidos: $('#apellidos').val(),
+            apellido: $('#apellido').val(),
             cedula: $('#cedula').val(),
             email: $('#email').val(),
             telefono: $('#telefono').val(),

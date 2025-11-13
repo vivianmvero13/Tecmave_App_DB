@@ -564,7 +564,7 @@ namespace Tecmave.Api.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("Apellidos")
+                    b.Property<string>("Apellido")
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
 
