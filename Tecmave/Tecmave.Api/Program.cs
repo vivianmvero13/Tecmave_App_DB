@@ -74,6 +74,8 @@ builder.Services.AddScoped<AgendamientoService>();
 builder.Services.AddScoped<AgendamientoService>();
 builder.Services.AddHostedService<RecordatorioService>();
 builder.Services.AddScoped<MantenimientoService>();
+builder.Services.AddScoped<RevisionPertenenciasService>();
+builder.Services.AddScoped<RevisionTrabajosService>();
 
 var app = builder.Build();
 

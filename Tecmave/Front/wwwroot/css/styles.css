@@ -538,11 +538,325 @@ button.primary, .btn.btn-primary { background: var(--primary); }
     border-radius: 5px;
 }
 
-.chat-footer button {
-    padding: 10px 15px;
-    background-color: var(--primary, #e53935);
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    .chat-footer button {
+        padding: 10px 15px;
+        background-color: var(--primary, #e53935);
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+/* ===== Disposición general ===== */
+.facturas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
 }
+
+@media (max-width: 980px) {
+    .facturas-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.mt-16 {
+    margin-top: 16px;
+}
+
+.mb-12 {
+    margin-bottom: 12px;
+}
+
+/* ===== Tarjetas suaves estilo neumorfismo ligero ===== */
+.card-soft {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #f3e0e0; /* borde sutil rosado */
+    box-shadow: 0 8px 22px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.6);
+}
+
+.card-title {
+    font-weight: 700;
+    color: #2a3c4c;
+    margin: 4px 0 14px;
+}
+
+/* ===== Form ===== */
+.stack {
+    display: flex;
+    flex-direction: column;
+}
+
+.gap-12 {
+    gap: 12px;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 700px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.field .label {
+    display: block;
+    font-size: .9rem;
+    color: #5b6b7a;
+    margin-bottom: 6px;
+}
+
+.input, .form-select, select.input {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #f1d7d7;
+    padding: 10px 12px;
+    border-radius: 10px;
+    outline: none;
+    transition: box-shadow .2s, border-color .2s;
+}
+
+    .input:focus, .form-select:focus, select.input:focus {
+        border-color: #e8b3b3;
+        box-shadow: 0 0 0 3px rgba(255,104,104,.15);
+    }
+
+/* ===== Botones ===== */
+.btn-punch {
+    display: inline-block;
+    padding: 10px 18px;
+    color: #fff;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ff5454, #d42d2d);
+    box-shadow: 0 8px 18px rgba(212,45,45,.25);
+    font-weight: 700;
+    letter-spacing: .25px;
+    text-transform: uppercase;
+}
+
+    .btn-punch:hover {
+        filter: brightness(.98);
+    }
+
+.btn-outline, .btn-outline-primary, .btn-outline-success {
+    display: inline-block;
+    padding: 9px 14px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #e8b3b3;
+    color: #2a3c4c;
+}
+
+.btn-outline-primary {
+    border-color: #bcd3ff;
+    color: #1140a0;
+}
+
+.btn-outline-success {
+    border-color: #bfe8cc;
+    color: #1f7a3a;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+/* ===== Tablas ===== */
+.table-wrap {
+    width: 100%;
+    overflow: auto;
+}
+
+.table.clean {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+    .table.clean thead th {
+        background: linear-gradient(180deg, #fff3f3, #ffe9e9);
+        color: #2a3c4c;
+        font-weight: 700;
+        font-size: .9rem;
+        border-bottom: 1px solid #f1d7d7;
+        padding: 12px;
+    }
+
+    .table.clean tbody td {
+        padding: 12px;
+        border-bottom: 1px solid #f6eeee;
+        color: #2a3c4c;
+    }
+
+    .table.clean tbody tr:hover {
+        background: #fff9f9;
+    }
+
+.text-end {
+    text-align: right;
+}
+
+/* ===== Mensajes ===== */
+.msg-error {
+    color: #b3261e;
+    font-size: .95rem;
+}
+
+.help {
+    color: #6c7a86;
+    font-size: .9rem;
+}
+
+
+/* === Facturas (merged) === */
+.fx-center {
+    text-align: center
+}
+
+.table td, .table th {
+    vertical-align: middle
+}
+
+.pill {
+    display: inline-block;
+    border-radius: 999px;
+    padding: .2rem .6rem;
+    font-weight: 600;
+    font-size: .8rem;
+    border: 1px solid #e5e7eb
+}
+
+    .pill.green {
+        background: #e6f7ef;
+        color: #155e36;
+        border-color: #bfe9d7
+    }
+
+    .pill.yellow {
+        background: #fff5da;
+        color: #8a6100;
+        border-color: #ffe7a6
+    }
+
+    .pill.red {
+        background: #ffe5e5;
+        color: #7a1d1d;
+        border-color: #ffcccc
+    }
+
+.select-estado {
+    min-width: 9rem
+}
+
+/* -- Modal (global lightweight) -- */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000
+}
+
+    .modal.hidden {
+        display: none
+    }
+
+.modal-content {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    min-width: 320px;
+    max-width: 720px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2)
+}
+
+.modal-header, .modal-footer {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #e5e7eb
+}
+
+.modal-footer {
+    border-top: 1px solid #e5e7eb;
+    border-bottom: none
+}
+
+.modal-body {
+    padding: 16px
+}
+
+.modal .close {
+    border: 0;
+    background: transparent;
+    font-size: 20px;
+    cursor: pointer
+}
+
+
+/* ======= FIX COMPLETO PARA QUE EL ACCORDION DE BOOTSTRAP FUNCIONE ======= */
+
+/* Ocultar contenido cuando no tiene la clase show */
+.collapse:not(.show) {
+    display: none !important;
+}
+
+/* Estado visible */
+.collapse.show {
+    display: block !important;
+}
+
+/* Animación del colapso (Bootstrap original) */
+.collapsing {
+    height: 0;
+    overflow: hidden;
+    transition: height 0.35s ease !important;
+}
+
+/* Botón clickeable */
+.accordion-button {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+    /* Forzar flecha del botón (Bootstrap genera un pseudo-elemento) */
+    .accordion-button::after {
+        flex-shrink: 0;
+        margin-left: auto;
+        content: "";
+        background-image: var(--bs-accordion-btn-icon);
+        background-repeat: no-repeat;
+        background-size: 1.25rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    /* Rotar flecha cuando está abierto */
+    .accordion-button:not(.collapsed)::after {
+        transform: rotate(-180deg);
+    }
+
+    /* Fondo cuando está abierto */
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(255,255,255,0.05);
+    }

@@ -40,10 +40,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body data-user-id="@(currentUser?.Id)"
-      data-user-name="@(currentUser?.UserName ?? "Usuario")"
-      data-is-admin="@(isAdmin.ToString().ToLower())">
-    data-is-admin="@(isAdmin.ToString().ToLower())">
+<body>
     <div class="app">
         <aside class="sidebar">
             <div class="brand">
@@ -65,7 +62,7 @@
                     <a asp-page="/Vehiculos/Index"><i class="fa-solid fa-car"></i> Vehículos</a>
                     <a asp-page="/Promociones/Index"><i class="fa-solid fa-user-group"></i> Promociones</a>
                     <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
-                    <a asp-page="/Factura/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Factura</a>
+                        <a asp-page="/Factura/Index.backup.cshtml"><i class="fa-solid fa-file-invoice-dollar"></i> Factura</a>
                     <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
                     </nav>
                 }
