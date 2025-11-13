@@ -62,6 +62,7 @@ builder.Services.AddScoped<TipoServiciosService>();
 builder.Services.AddScoped<ServiciosService>();
 builder.Services.AddScoped<ResenasService>();
 builder.Services.AddScoped<PromocionesService>();
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<NotificacionesService>();
 builder.Services.AddScoped<RevisionService>();

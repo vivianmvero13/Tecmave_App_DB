@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Tecmave.Api.Models
 {
-    [Table("vehiculos")] 
+    [Table("vehiculos")]
     public class Vehiculo
     {
         [Key]

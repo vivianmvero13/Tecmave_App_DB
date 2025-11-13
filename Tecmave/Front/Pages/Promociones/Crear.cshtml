@@ -1,46 +1,40 @@
 ﻿@page
-@model Front.Pages.Vehiculos.CrearModel
+@model Front.Pages.Promociones.CrearModel
 @{
-    ViewData["Title"] = "Registrar vehículo";
+    ViewData["Title"] = "Registrar promoción";
 }
 
 <section class="section">
     <div class="container grid cols-2">
         <div class="card">
-            <h3 id="formTitle">Registrar vehículo</h3>
+            <h3 id="formTitle">Registrar promoción</h3>
 
             <div class="form-row">
                 <div>
-                    <label for="usuarioInput">Usuario</label>
-                    <select id="usuarioInput" class="input">
-                        <option value="">Seleccione un usuario</option>
-                    </select>
-                    <!-- Usado cuando no es admin -->
-                    <input id="usuarioIdHidden" type="hidden" />
+                    <label for="tituloInput">Título</label>
+                    <input id="tituloInput" class="input" maxlength="120" />
                 </div>
                 <div>
-                    <label for="marcaInput">Marca</label>
-                    <select id="marcaInput" class="input">
-                        <option value="">Seleccione una marca</option>
-                    </select>
+                    <label for="estadoInput">Estado (ID)</label>
+                    <input id="estadoInput" class="input" type="number" min="1" step="1" placeholder="Ej. 1 = Activa" />
                 </div>
             </div>
 
             <div class="form-row">
                 <div>
-                    <label for="modeloInput">Modelo</label>
-                    <input id="modeloInput" class="input" maxlength="100" />
+                    <label for="inicioInput">Fecha inicio</label>
+                    <input id="inicioInput" class="input" type="date" />
                 </div>
                 <div>
-                    <label for="annoInput">Año</label>
-                    <input id="annoInput" class="input" type="number" min="1950" max="2100" />
+                    <label for="finInput">Fecha fin</label>
+                    <input id="finInput" class="input" type="date" />
                 </div>
             </div>
 
             <div class="form-row">
-                <div>
-                    <label for="placaInput">Placa</label>
-                    <input id="placaInput" class="input" maxlength="10" />
+                <div style="grid-column: 1 / span 2;">
+                    <label for="descripcionInput">Descripción</label>
+                    <textarea id="descripcionInput" class="input" rows="4" maxlength="1000"></textarea>
                 </div>
             </div>
 
@@ -48,26 +42,25 @@
         </div>
 
         <div class="card">
-            <h3>Vehículos del usuario</h3>
+            <h3>Promociones</h3>
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Placa</th>
-                        <th>Marca</th>
-                        <th>Modelo</th>
-                        <th>Año</th>
+                        <th>Título</th>
+                        <th>Vigencia</th>
+                        <th>Estado</th>
                         <th>Acción</th>
                     </tr>
                 </thead>
                 <tbody id="listaDatos">
-                    <tr><td colspan="5">Seleccione un usuario…</td></tr>
+                    <tr><td colspan="4">Sin datos…</td></tr>
                 </tbody>
             </table>
         </div>
 
         <div class="mt-4 d-flex gap-2">
             <button id="guardarBtn" class="btn btn-orange" type="button">Guardar</button>
-            <a class="btn btn-secondary" asp-page="/Vehiculos/Index">Volver</a>
+            <a class="btn btn-secondary" asp-page="/Promociones/Index">Volver</a>
         </div>
     </div>
 </section>
@@ -156,7 +149,6 @@
             padding: .5rem;
             border-bottom: 1px solid #eee
         }
-
     /* Modal */
     .modal {
         position: fixed;
@@ -219,34 +211,38 @@
 
 <script>
     const API_BASE = "http://localhost:7096";
-    const URL_VEHICULOS = `${API_BASE}/vehiculos`;
-    const URL_MARCAS = `${API_BASE}/Marcas`;
-    const URL_USUARIOS = `${API_BASE}/api/usuarios`;
+    const URL_PROMOCIONES = `${API_BASE}/promociones`;
 
-    const marcasMap = new Map();
-    let currentVehiculoId = null; // null = crear, número = editar
-    let usersLoaded = false;
-    let marcasLoaded = false;
-    let pendingClienteId = null; // para setear el usuario cuando cargue el vehículo
+    let currentPromoId = null; // null = crear, número = editar
 
     function showMsg(text){
       const el = document.getElementById('formMsg');
       el.textContent = text || '';
       el.style.display = text ? 'block' : 'none';
     }
-
     function esc(s){
       return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
         '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;','=':'&#61;','/':'&#47;'
       }[c]));
     }
-
-    function getQS(name){
-      const p = new URLSearchParams(window.location.search);
-      return p.get(name);
+    function fmtDateToInput(v){
+      // acepta Date | string | DateOnly-like
+      if (!v) return '';
+      try {
+        const d = new Date(v);
+        if (Number.isNaN(d.getTime())) return String(v);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth()+1).padStart(2,'0');
+        const dd = String(d.getDate()).padStart(2,'0');
+        return `${yyyy}-${mm}-${dd}`;
+      } catch { return ''; }
+    }
+    function parseInputDate(id){
+      const val = (document.getElementById(id).value || '').trim();
+      return val; // API espera 'yyyy-MM-dd' (DateOnly)
     }
 
-    // Modal
+    // Modal utilitario
     const Modal = (() => {
       const root = document.getElementById('appModal');
       const title = document.getElementById('modalTitle');
@@ -255,151 +251,51 @@
       let onClose = null;
 
       function setKind(kind){
-        const map = {
-          ok:{ bg:'#e7f6ec', color:'#2e7d32', text:'✓' },
-          warn:{ bg:'#fff4e5', color:'#a15c00', text:'!' },
-          error:{ bg:'#fdecea', color:'#b3261e', text:'!' },
-          info:{ bg:'#e7f1ff', color:'#0b57d0', text:'ℹ' }
-        };
+        const map = { ok:{bg:'#e7f6ec',color:'#2e7d32',text:'✓'},
+                      warn:{bg:'#fff4e5',color:'#a15c00',text:'!'},
+                      error:{bg:'#fdecea',color:'#b3261e',text:'!'},
+                      info:{bg:'#e7f1ff',color:'#0b57d0',text:'ℹ'} };
         const k = map[kind] || map.info;
-        icon.style.background = k.bg;
-        icon.style.color = k.color;
-        icon.textContent = k.text;
+        icon.style.background = k.bg; icon.style.color = k.color; icon.textContent = k.text;
       }
-
-      function show({ titleText='Información', bodyText='', autoFocus=true, onCloseCb=null, kind='ok' }){
-        setKind(kind);
-        title.textContent = titleText;
-        body.textContent = bodyText;
+      function show({ titleText='Información', bodyText='', onCloseCb=null, kind='ok' }){
+        setKind(kind); title.textContent = titleText; body.textContent = bodyText;
         onClose = typeof onCloseCb === 'function' ? onCloseCb : null;
-        root.classList.add('show');
-        root.style.display = 'block';
-        root.setAttribute('aria-hidden', 'false');
-        if (autoFocus) {
-          const primary = document.getElementById('modalPrimary');
-          setTimeout(() => primary?.focus(), 0);
-        }
+        root.classList.add('show'); root.style.display = 'block'; root.setAttribute('aria-hidden','false');
         document.addEventListener('keydown', escListener);
       }
       function hide(){
-        root.classList.remove('show');
-        root.style.display = 'none';
-        root.setAttribute('aria-hidden', 'true');
+        root.classList.remove('show'); root.style.display = 'none'; root.setAttribute('aria-hidden','true');
         document.removeEventListener('keydown', escListener);
         if (onClose) { const cb = onClose; onClose = null; try { cb(); } catch {} }
       }
       function escListener(e){ if (e.key === 'Escape') hide(); }
       root.addEventListener('click', (e) => { if (e.target?.dataset?.close === '1') hide(); });
-
       return { show, hide };
     })();
 
-    // Usuarios y marcas
-    function nombreCompleto(u){
-      const n = (u.nombre ?? u.Nombre ?? '').trim();
-      const a = (u.apellidos ?? u.Apellidos ?? '').trim();
-      const full = [n, a].filter(Boolean).join(' ').trim();
-      return full || (u.userName ?? u.UserName ?? 'Usuario');
-    }
-
-    function cargarUsuarios(){
-      return fetch(URL_USUARIOS, { credentials: 'include' })
-        .then(r => r.json())
-        .then(list => {
-          const data = Array.isArray(list) ? list : (Array.isArray(list?.data) ? list.data : []);
-          const sel = document.getElementById('usuarioInput');
-          sel.innerHTML = '<option value="">Seleccione un usuario</option>';
-          data.sort((a,b) => nombreCompleto(a).localeCompare(nombreCompleto(b)));
-          for(const u of data){
-            const id = u.id ?? u.Id;
-            if(!id) continue;
-            const opt = document.createElement('option');
-            opt.value = id;
-            opt.textContent = nombreCompleto(u);
-            sel.appendChild(opt);
-          }
-          usersLoaded = true;
-          if (pendingClienteId && sel) {
-            sel.value = String(pendingClienteId);
-            cargarVehiculosAsociados();
-          }
-        })
-        .catch(err => { console.error('usuarios', err); showMsg('Error al cargar usuarios.'); });
-    }
-
-    function cargarMarcas(){
-      return fetch(URL_MARCAS, { credentials: 'include' })
-        .then(r => r.json())
-        .then(data => {
-          const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
-          marcasMap.clear();
-          for(const m of list){
-            const id = m.id_marca ?? m.id ?? m.Id;
-            const nombre = (m.nombre ?? m.Nombre ?? '').trim();
-            if(id && nombre) marcasMap.set(Number(id), nombre);
-          }
-          const sel = document.getElementById('marcaInput');
-          sel.innerHTML = '<option value="">Seleccione una marca</option>';
-          [...marcasMap.entries()]
-            .sort((a,b) => a[1].localeCompare(b[1]))
-            .forEach(([id, nombre]) => {
-              const opt = document.createElement('option');
-              opt.value = String(id);
-              opt.textContent = nombre;
-              sel.appendChild(opt);
-            });
-          marcasLoaded = true;
-        })
-        .catch(err => { console.error('marcas', err); showMsg('Error al cargar marcas.'); });
-    }
-
-    // Fuente única de verdad para el ID de usuario
-    function selectedUserId() {
-      const hiddenVal = document.getElementById('usuarioIdHidden')?.value || '';
-      if (hiddenVal) return Number(hiddenVal);
-      const selVal = document.getElementById('usuarioInput')?.value || '';
-      if (selVal) return Number(selVal);
-      if (pendingClienteId) return Number(pendingClienteId);
-      return 0;
-    }
-
-    // Listado por usuario
-    function cargarVehiculosAsociados(){
-      const uid = selectedUserId();
-      const tb  = document.getElementById('listaDatos');
-      if(!uid){ tb.innerHTML = '<tr><td colspan="5">Seleccione un usuario…</td></tr>'; return; }
-
-      fetch(URL_VEHICULOS, { credentials: 'include' })
+    // Listado
+    function cargarListado(){
+      const tb = document.getElementById('listaDatos');
+      fetch(URL_PROMOCIONES, { credentials: 'include' })
         .then(r => { if(!r.ok) throw r; return r.json(); })
         .then(data => {
           const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
-          const propios = list.filter(v => {
-            const cid = v.cliente_id ?? v.clienteId ?? v.cliente?.id ?? v.ClienteId ?? 0;
-            return Number(cid) === uid;
-          });
-
-          if(!propios.length){
-            tb.innerHTML = '<tr><td colspan="5">Sin vehículos para este usuario.</td></tr>';
-            return;
-          }
-
-          tb.innerHTML = propios.map(v => {
-            const id       = v.id_vehiculo ?? v.id ?? v.Id;
-            const placa    = String(v.placa ?? '').toUpperCase();
-            const annoVal  = Number(v.anno ?? v.Anno ?? 0);
-            const annoTxt  = annoVal > 0 ? String(annoVal) : '—';
-            const idMarca  = Number(v.id_marca ?? v.idMarca ?? v.MarcaId ?? 0);
-            const marcaNom = (typeof v.marca === 'string' && v.marca.trim())
-                              ? v.marca
-                              : (marcasMap.get(idMarca) || (idMarca ? `#${idMarca}` : '—'));
-            const selfUrl  = `${location.pathname}?id=${encodeURIComponent(id)}`;
-
+          if (!list.length) { tb.innerHTML = '<tr><td colspan="4">Sin datos…</td></tr>'; return; }
+          tb.innerHTML = list.map(p => {
+            const id    = p.id_promocion ?? p.id ?? p.Id;
+            const tit   = p.titulo ?? p.Titulo ?? '';
+            const desc  = p.descripcion ?? p.Descripcion ?? '';
+            const fi    = p.fecha_inicio ?? p.FechaInicio ?? p.fechaInicio ?? '';
+            const ff    = p.fecha_fin ?? p.FechaFin ?? p.fechaFin ?? '';
+            const est   = p.id_estado ?? p.idEstado ?? p.IdEstado ?? '—';
+            const selfUrl = `${location.pathname}?id=${encodeURIComponent(id)}`;
+            const rango = `${esc(fmtDateToInput(fi))} → ${esc(fmtDateToInput(ff))}`;
             return `
               <tr>
-                <td>${esc(placa)}</td>
-                <td>${esc(marcaNom)}</td>
-                <td>${esc(String(modelo))}</td>
-                <td>${esc(annoTxt)}</td>
+                <td title="${esc(desc)}">${esc(tit)}</td>
+                <td>${rango}</td>
+                <td>${esc(String(est))}</td>
                 <td>
                   <a class="btn btn-outline-primary btn-sm" href="${selfUrl}">Editar</a>
                   <button class="btn btn-red btn-sm" onclick="confirmarEliminar(${id})">Eliminar</button>
@@ -408,37 +304,37 @@
           }).join('');
         })
         .catch(async err => {
-          let msg = 'Error cargando vehículos.'; try { msg = (await err.json())?.message || msg; } catch {}
-          tb.innerHTML = `<tr><td colspan="5">${esc(msg)}</td></tr>`;
+          let msg='Error cargando promociones.'; try { msg = (await err.json())?.message || msg; } catch{}
+          tb.innerHTML = `<tr><td colspan="4">${esc(msg)}</td></tr>`;
         });
     }
 
-    // Crear / Actualizar
+    // Form helpers
     function getFormData(){
-      const uid      = selectedUserId();
-      const id_marca = parseInt(document.getElementById('marcaInput').value || '0', 10);
-      const modelo   = (document.getElementById('modeloInput').value || '').trim();
-      const anno     = parseInt(document.getElementById('annoInput').value || '0', 10);
-      const placa    = (document.getElementById('placaInput').value || '').trim().toUpperCase();
+      const titulo = (document.getElementById('tituloInput').value || '').trim();
+      const descripcion = (document.getElementById('descripcionInput').value || '').trim();
+      const fecha_inicio = parseInputDate('inicioInput');
+      const fecha_fin    = parseInputDate('finInput');
+      const id_estado    = parseInt(document.getElementById('estadoInput').value || '0', 10);
 
-      if(!uid) return { ok:false, msg:'Seleccione un usuario.' };
-      if(!id_marca) return { ok:false, msg:'Seleccione una marca.' };
-      if(!modelo) return { ok:false, msg:'El modelo es requerido.' };
-      const yearNow = new Date().getFullYear();
-      if(!anno || anno < 1950 || anno > yearNow + 1) return { ok:false, msg:`El año debe estar entre 1950 y ${yearNow + 1}.` };
-      if(!placa) return { ok:false, msg:'La placa es requerida.' };
+      if(!titulo) return { ok:false, msg:'El título es requerido.' };
+      if(!fecha_inicio) return { ok:false, msg:'La fecha de inicio es requerida.' };
+      if(!fecha_fin) return { ok:false, msg:'La fecha de fin es requerida.' };
 
-      return { ok:true, payload:{ cliente_id: uid, id_marca, modelo, anno, placa } };
+      // Validar rango de fechas simple (comparando strings yyyy-MM-dd)
+      if (fecha_inicio > fecha_fin) return { ok:false, msg:'La fecha de inicio no puede ser mayor a la fecha fin.' };
+
+      return { ok:true, payload: { titulo, descripcion, fecha_inicio, fecha_fin, id_estado } };
     }
 
-    async function crearVehiculo(){
+    async function crearPromocion(){
       const { ok, msg, payload } = getFormData();
       if(!ok){ showMsg(msg); return; }
       showMsg('');
 
-      const body = { id_vehiculo: 0, ...payload };
+      const body = { id_promocion: 0, ...payload };
 
-      const r = await fetch(URL_VEHICULOS, {
+      const r = await fetch(URL_PROMOCIONES, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -446,29 +342,25 @@
       });
 
       if(!r.ok){
-        let m = 'Error al registrar.'; try { m = (await r.json())?.message || m; } catch {}
+        let m='Error al registrar.'; try { m=(await r.json())?.message || m; } catch {}
         return showMsg(m);
       }
 
-      document.getElementById('marcaInput').value = '';
-      document.getElementById('modeloInput').value = '';
-      document.getElementById('annoInput').value = '';
-      document.getElementById('placaInput').value = '';
-      cargarVehiculosAsociados();
-
-      Modal.show({ titleText: 'Éxito', bodyText: 'Vehículo registrado correctamente.', kind: 'ok' });
+      limpiarFormulario();
+      cargarListado();
+      Modal.show({ titleText:'Éxito', bodyText:'Promoción registrada correctamente.', kind:'ok' });
     }
 
-    async function actualizarVehiculo(){
-      if(!currentVehiculoId) return showMsg('No hay vehículo cargado para editar.');
+    async function actualizarPromocion(){
+      if(!currentPromoId) return showMsg('No hay promoción cargada para editar.');
 
       const { ok, msg, payload } = getFormData();
       if(!ok){ showMsg(msg); return; }
       showMsg('');
 
-      const body = { id_vehiculo: Number(currentVehiculoId), ...payload };
+      const body = { id_promocion: Number(currentPromoId), ...payload };
 
-      const r = await fetch(URL_VEHICULOS, {
+      const r = await fetch(URL_PROMOCIONES, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -476,23 +368,20 @@
       });
 
       if(!r.ok){
-        let m = 'Error al actualizar.'; try { m = (await r.json())?.message || m; } catch {}
+        let m='Error al actualizar.'; try { m=(await r.json())?.message || m; } catch {}
         return showMsg(m);
       }
 
-      Modal.show({ titleText: 'Éxito', bodyText: 'Vehículo actualizado correctamente.', kind: 'ok' });
+      Modal.show({ titleText:'Éxito', bodyText:'Promoción actualizada correctamente.', kind:'ok' });
       salirModoEdicion();
-      cargarVehiculosAsociados();
+      cargarListado();
     }
 
-    // Eliminar
-    async function eliminarVehiculo(id){
-      const r = await fetch(`${URL_VEHICULOS}/${id}`, { method:'DELETE', credentials:'include' });
+    async function eliminarPromocion(id){
+      const r = await fetch(`${URL_PROMOCIONES}/${id}`, { method:'DELETE', credentials:'include' });
       if(r.ok){
-        if(currentVehiculoId && Number(currentVehiculoId) === Number(id)){
-          salirModoEdicion();
-        }
-        Modal.show({ titleText:'Eliminado', bodyText:'Vehículo eliminado correctamente.', kind:'ok', onCloseCb: () => cargarVehiculosAsociados() });
+        if(currentPromoId && Number(currentPromoId) === Number(id)) salirModoEdicion();
+        Modal.show({ titleText:'Eliminado', bodyText:'Promoción eliminada correctamente.', kind:'ok', onCloseCb: () => cargarListado() });
       }else{
         let m='Error al eliminar.'; try { m=(await r.json())?.message || m; } catch {}
         Modal.show({ titleText:'Error', bodyText:m, kind:'error' });
@@ -508,7 +397,7 @@
 
       const handler = async () => {
         btn.removeEventListener('click', handler);
-        try { await eliminarVehiculo(id); } finally {
+        try { await eliminarPromocion(id); } finally {
           btn.textContent = prevText;
           if(prevClose) btn.setAttribute('data-close', prevClose);
           Modal.hide();
@@ -518,7 +407,7 @@
       btn.addEventListener('click', handler, { once:true });
       Modal.show({
         titleText: 'Confirmar eliminación',
-        bodyText: '¿Desea eliminar este vehículo?',
+        bodyText: '¿Desea eliminar esta promoción?',
         kind: 'warn',
         onCloseCb: () => {
           btn.removeEventListener('click', handler);
@@ -528,31 +417,28 @@
       });
     }
 
-    // Modo crear/editar
     function setModoCrear(){
-      currentVehiculoId = null;
-      document.getElementById('formTitle').textContent = 'Registrar vehículo';
+      currentPromoId = null;
+      document.getElementById('formTitle').textContent = 'Registrar promoción';
       const btn = document.getElementById('guardarBtn');
       btn.textContent = 'Guardar';
-      btn.onclick = crearVehiculo;
+      btn.onclick = crearPromocion;
     }
-
     function setModoEditar(id){
-      currentVehiculoId = id;
-      document.getElementById('formTitle').textContent = 'Editar vehículo';
+      currentPromoId = id;
+      document.getElementById('formTitle').textContent = 'Editar promoción';
       const btn = document.getElementById('guardarBtn');
       btn.textContent = 'Actualizar';
-      btn.onclick = actualizarVehiculo;
+      btn.onclick = actualizarPromocion;
     }
-
     function limpiarFormulario(){
-      document.getElementById('marcaInput').value = '';
-      document.getElementById('modeloInput').value = '';
-      document.getElementById('annoInput').value = '';
-      document.getElementById('placaInput').value = '';
+      document.getElementById('tituloInput').value = '';
+      document.getElementById('descripcionInput').value = '';
+      document.getElementById('inicioInput').value = '';
+      document.getElementById('finInput').value = '';
+      document.getElementById('estadoInput').value = '';
       showMsg('');
     }
-
     function salirModoEdicion(){
       const url = new URL(window.location.href);
       url.searchParams.delete('id');
@@ -561,90 +447,36 @@
       limpiarFormulario();
     }
 
-    // Cargar vehículo por id (modo edición)
-    async function cargarVehiculoPorId(id){
-      // Cargar solo lo necesario
-      const bodyIsAdmin  = (document.body?.dataset?.isAdmin || 'false') === 'true';
-      if (!marcasLoaded) await cargarMarcas();
-      if (bodyIsAdmin && !usersLoaded) await cargarUsuarios();
-
-      const r = await fetch(`${URL_VEHICULOS}/${encodeURIComponent(id)}`, { credentials:'include' });
+    async function cargarPromocionPorId(id){
+      const r = await fetch(`${URL_PROMOCIONES}/${encodeURIComponent(id)}`, { credentials:'include' });
       if(!r.ok){
-        let m = 'No se pudo cargar el vehículo.'; try { m = (await r.json())?.message || m; } catch {}
+        let m='No se pudo cargar la promoción.'; try { m=(await r.json())?.message || m; } catch {}
         showMsg(m); return;
       }
-      const v = await r.json();
+      const p = await r.json();
 
-      const clienteId = v.cliente_id ?? v.clienteId ?? v.ClienteId ?? v.cliente?.id ?? null;
-      const marcaId   = v.id_marca ?? v.idMarca ?? v.MarcaId ?? null;
+      document.getElementById('tituloInput').value = p.titulo ?? p.Titulo ?? '';
+      document.getElementById('descripcionInput').value = p.descripcion ?? p.Descripcion ?? '';
+      document.getElementById('inicioInput').value = fmtDateToInput(p.fecha_inicio ?? p.FechaInicio ?? p.fechaInicio ?? '');
+      document.getElementById('finInput').value    = fmtDateToInput(p.fecha_fin ?? p.FechaFin ?? p.fechaFin ?? '');
+      document.getElementById('estadoInput').value = p.id_estado ?? p.idEstado ?? p.IdEstado ?? '';
 
-      if(clienteId){
-        pendingClienteId = Number(clienteId);
-        const sel = document.getElementById('usuarioInput');
-        const hidden = document.getElementById('usuarioIdHidden');
-        if (sel) sel.value = String(pendingClienteId);
-        if (hidden) hidden.value = String(pendingClienteId);
-        cargarVehiculosAsociados();
-      }
-      if(marcaId) document.getElementById('marcaInput').value = String(marcaId);
-
-      document.getElementById('modeloInput').value = v.modelo ?? v.Modelo ?? '';
-      document.getElementById('annoInput').value   = v.anno ?? v.Anno ?? '';
-      document.getElementById('placaInput').value  = (v.placa ?? '').toString().toUpperCase();
-
-      setModoEditar(Number(v.id_vehiculo ?? v.id ?? v.Id ?? id));
+      setModoEditar(Number(p.id_promocion ?? p.id ?? p.Id ?? id));
     }
 
-    // Init
+    function getQS(name){
+      const p = new URLSearchParams(window.location.search);
+      return p.get(name);
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
       setModoCrear();
-
-      const bodyUserId   = (document.body?.dataset?.userId || '').trim();
-      const bodyUserName = (document.body?.dataset?.userName || '').trim();
-      const bodyIsAdmin  = (document.body?.dataset?.isAdmin || 'false') === 'true';
-
-      // Cargar recursos necesarios según rol
-      if (bodyIsAdmin) {
-        await Promise.all([cargarUsuarios(), cargarMarcas()]);
-      } else {
-        await cargarMarcas();
-      }
-
-      const usuarioSelect = document.getElementById('usuarioInput');
-
-      if (!bodyIsAdmin && bodyUserId) {
-        // Mostrar texto fijo en lugar de dropdown
-        const label = document.querySelector('label[for="usuarioInput"]');
-        if (label) label.textContent = "Usuario";
-
-        const parent = usuarioSelect.parentElement;
-
-        // Campo visible solo lectura (nombre)
-        const display = document.createElement('input');
-        display.type = 'text';
-        display.className = 'input';
-        display.readOnly = true;
-        display.value = bodyUserName || `Usuario #${bodyUserId}`;
-
-        // Setear hidden con el ID real
-        const hidden = document.getElementById('usuarioIdHidden');
-        hidden.value = String(bodyUserId);
-
-        // Reemplazar el select por el display
-        parent.replaceChild(display, usuarioSelect);
-
-        // Fijar y cargar
-        pendingClienteId = Number(bodyUserId);
-        await cargarVehiculosAsociados();
-      } else {
-        // Admin: dropdown activo
-        usuarioSelect.addEventListener('change', cargarVehiculosAsociados);
-      }
+      cargarListado();
 
       const qsId = getQS('id');
       if (qsId) {
-        try { await cargarVehiculoPorId(qsId); }
-        catch (e) { console.error(e); showMsg('Error al cargar el vehículo.'); setModoCrear(); }
+        try { await cargarPromocionPorId(qsId); }
+        catch (e) { console.error(e); showMsg('Error al cargar la promoción.'); setModoCrear(); }
       }
     });
 </script>

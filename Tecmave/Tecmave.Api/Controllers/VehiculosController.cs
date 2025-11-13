@@ -44,7 +44,8 @@ namespace Tecmave.Api.Controllers
                 ClienteId = dto.ClienteId,
                 IdMarca = dto.IdMarca,
                 Anno = dto.Anno,
-                Placa = (dto.Placa ?? string.Empty).ToUpperInvariant()
+                Placa = (dto.Placa ?? string.Empty).ToUpperInvariant(),
+                Modelo = (dto.Modelo ?? string.Empty).Trim()
             };
 
             _db.Vehiculos.Add(v);
@@ -81,6 +82,8 @@ namespace Tecmave.Api.Controllers
             v.IdMarca = dto.IdMarca;
             v.Anno = dto.Anno;
             v.Placa = (dto.Placa ?? string.Empty).ToUpperInvariant();
+            v.Modelo = (dto.Modelo ?? string.Empty).Trim(); 
+
 
             try
             {
