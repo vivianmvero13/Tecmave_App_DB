@@ -11,6 +11,7 @@ namespace Tecmave.Api.Controllers
     public class MantenimientosController : Controller
     {
         private readonly MantenimientoService _mantenimientosService;
+
         public MantenimientosController(MantenimientoService mantenimientosService)
         {
             _mantenimientosService = mantenimientosService;
@@ -25,7 +26,11 @@ namespace Tecmave.Api.Controllers
         [HttpGet("{id}")]
         public ActionResult<MantenimientoModel> GetById(int id)
         {
-            return _mantenimientosService.GetById(id);
+            var m = _mantenimientosService.GetById(id);
+            if (m == null)
+                return NotFound();
+
+            return m;
         }
 
         [HttpPost]
@@ -33,7 +38,7 @@ namespace Tecmave.Api.Controllers
         {
             var nuevo = _mantenimientosService.AddMantenimiento(mantenimiento);
 
-            return CreatedAtAction(nameof(GetMantenimientos),
+            return CreatedAtAction(nameof(GetById),
                 new { id = nuevo.IdMantenimiento },
                 nuevo);
         }
@@ -47,7 +52,7 @@ namespace Tecmave.Api.Controllers
             return NoContent();
         }
 
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public IActionResult DeleteMantenimiento(int id)
         {
             if (!_mantenimientosService.DeleteMantenimiento(id))
@@ -56,12 +61,24 @@ namespace Tecmave.Api.Controllers
             return NoContent();
         }
 
+        // 🔹 MASIVO: el que ya tenías
         [HttpPost("Enviar-recordatorios")]
         public async Task<IActionResult> EnviarRecordatorios()
         {
             await _mantenimientosService.EnviarRecordatorioAsync();
             return Ok(new { mensaje = "Recordatorios enviados" });
+        }
 
+        // 🔹 NUEVO: individual por mantenimiento
+        [HttpPost("{id}/enviar-recordatorio")]
+        public async Task<IActionResult> EnviarRecordatorioIndividual(int id)
+        {
+            var ok = await _mantenimientosService.EnviarRecordatorioIndividualAsync(id);
+
+            if (!ok)
+                return NotFound(new { mensaje = "Mantenimiento no encontrado o sin cliente asociado." });
+
+            return Ok(new { mensaje = "Recordatorio enviado correctamente." });
         }
     }
 }

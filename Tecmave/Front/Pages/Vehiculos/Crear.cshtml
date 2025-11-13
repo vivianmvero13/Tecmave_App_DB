@@ -587,15 +587,41 @@
     }
 
     /* =================== Init =================== */
-    document.addEventListener('DOMContentLoaded', async () => {
-      setModoCrear();
-      await Promise.all([cargarUsuarios(), cargarMarcas()]);
-      document.getElementById('usuarioInput').addEventListener('change', cargarVehiculosAsociados);
+        document.addEventListener('DOMContentLoaded', async () => {
+        setModoCrear();
 
-      const qsId = getQS('id');
-      if(qsId){
-        try { await cargarVehiculoPorId(qsId); }
-        catch (e) { console.error(e); showMsg('Error al cargar el vehículo.'); setModoCrear(); }
-      }
+        const body = document.body;
+        const currentUserId = parseInt(body.dataset.userId || '0', 10);
+        const isAdmin = body.dataset.isAdmin === 'true';
+
+        // Si NO es admin y tiene userId, lo usamos como cliente "por defecto"
+        if (!isAdmin && currentUserId) {
+            pendingClienteId = currentUserId;
+        }
+
+        // Cargamos usuarios y marcas
+        await Promise.all([cargarUsuarios(), cargarMarcas()]);
+
+        const usuarioSelect = document.getElementById('usuarioInput');
+        usuarioSelect.addEventListener('change', cargarVehiculosAsociados);
+
+        // Si es cliente (no admin), fijamos su usuario y bloqueamos el select
+        if (!isAdmin && currentUserId) {
+            usuarioSelect.value = String(currentUserId);
+            usuarioSelect.disabled = true; // opcional, para que no lo cambie
+            cargarVehiculosAsociados();
+        }
+
+        // Soporte para modo edición vía ?id=
+        const qsId = getQS('id');
+        if (qsId) {
+            try { await cargarVehiculoPorId(qsId); }
+            catch (e) {
+                console.error(e);
+                showMsg('Error al cargar el vehículo.');
+                setModoCrear();
+            }
+        }
     });
+
 </script>

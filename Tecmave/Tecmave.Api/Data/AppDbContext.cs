@@ -32,10 +32,12 @@ namespace Tecmave.Api.Data
         public DbSet<Usuario> usuarios { get; set; }
         public DbSet<Recordatorio> recordatorios { get; set; }
         public DbSet<MantenimientoModel> Mantenimientos { get; set; }
+
         protected override void OnModelCreating(ModelBuilder b)
         {
             base.OnModelCreating(b);
 
+            // ---------------- IDENTITY ----------------
             b.Entity<Usuario>().ToTable("aspnetusers");
             b.Entity<AppRole>().ToTable("aspnetroles");
 
@@ -68,12 +70,13 @@ namespace Tecmave.Api.Data
                 e.Property(r => r.IsActive).HasDefaultValue(true);
             });
 
-            b.Entity<Usuario>(b =>
+            b.Entity<Usuario>(e =>
             {
-                b.Property(u => u.Nombre).HasMaxLength(50);
-                b.Property(u => u.Apellido).HasMaxLength(50);
+                e.Property(u => u.Nombre).HasMaxLength(50);
+                e.Property(u => u.Apellido).HasMaxLength(50);
             });
 
+            // ---------------- AUDITORÍA ROLES ----------------
             b.Entity<RoleChangeAudit>(e =>
             {
                 e.ToTable("role_change_audit");
@@ -95,6 +98,7 @@ namespace Tecmave.Api.Data
                 e.HasIndex(x => x.Action);
             });
 
+            // ---------------- TABLAS DE NEGOCIO ----------------
             b.Entity<EstadosModel>().ToTable("estados").HasKey(x => x.id_estado);
             b.Entity<TipoServiciosModel>().ToTable("tipo_servicios").HasKey(x => x.id_tipo_servicio);
             b.Entity<MarcasModel>().ToTable("marca").HasKey(x => x.id_marca);
@@ -112,6 +116,26 @@ namespace Tecmave.Api.Data
             b.Entity<PromocionEnvio>().ToTable("promocion_envios").HasKey(x => x.IdEnvio);
             b.Entity<Recordatorio>().ToTable("recordatorios").HasKey(x => x.Id);
 
+            // ---------------- MANTENIMIENTOS ----------------
+            b.Entity<MantenimientoModel>(e =>
+            {
+                // Nombre EXACTO de la tabla en MySQL
+                e.ToTable("Mantenimientos");
+
+                e.HasKey(x => x.IdMantenimiento);
+
+                e.Property(x => x.IdMantenimiento).HasColumnName("IdMantenimiento");
+                e.Property(x => x.IdVehiculo).HasColumnName("IdVehiculo");
+                e.Property(x => x.FechaMantenimiento).HasColumnName("FechaMantenimiento");
+                e.Property(x => x.ProximoMantenimiento).HasColumnName("ProximoMantenimiento");
+                e.Property(x => x.RecordatorioEnviado).HasColumnName("RecordatorioEnviado");
+
+                // Relación con Vehiculo: FK = IdVehiculo
+                e.HasOne(x => x.Vehiculo)
+                 .WithMany() // usar .WithMany(v => v.Mantenimientos) SOLO si tienes la colección en Vehiculo
+                 .HasForeignKey(x => x.IdVehiculo)
+                 .HasConstraintName("FK_Mantenimientos_vehiculos_IdVehiculo");
+            });
         }
     }
 }
