@@ -420,13 +420,13 @@
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 
     <script>
-        const API_FACTURAS = "http://localhost:7096/facturas";
-        const API_USUARIOS = "http://localhost:7096/api/usuarios";
-        // Si tienes API de servicios, puedes agregarla:
-        // const API_SERVICIOS = "http://localhost:7096/servicios";
+        const API_FACTURAS  = "http://localhost:7096/facturas";
+        const API_USUARIOS  = "http://localhost:7096/api/usuarios";
+        const API_SERVICIOS = "http://localhost:7096/servicios"; // si en tu API es /api/servicios, cámbialo aquí
 
         let FACTURAS = [];
         let USUARIOS = [];
+        let SERVICIOS = [];
         let facturaSeleccionada = null;
 
         // ===== HELPERS =====
@@ -490,9 +490,43 @@
                 llenarCombosClientes();
                 renderTabla();
                 $("#estadoCarga").text(FACTURAS.length ? "Listo" : "No hay facturas.");
+
+                // cargar servicios después de usuarios (para llenar combo auto_servicio)
+                cargarServicios();
             }).fail((jq1, jq2) => {
                 console.error("Error al cargar:", jq1?.status, jq1?.responseText);
                 $("#estadoCarga").text("No se pudieron cargar los datos.");
+            });
+        }
+
+        // ===== CARGAR SERVICIOS (para "Generar desde servicio") =====
+        function cargarServicios() {
+            $.ajax({
+                url: API_SERVICIOS,
+                method: 'GET',
+                xhrFields: { withCredentials: true }
+            }).done(function (data) {
+                SERVICIOS = Array.isArray(data) ? data : [];
+                console.log("SERVICIOS:", SERVICIOS);
+
+                const $sel = $("#auto_servicio");
+                $sel.empty();
+
+                if (!SERVICIOS.length) {
+                    $sel.append('<option value="">(No hay servicios)</option>');
+                    return;
+                }
+
+                SERVICIOS.forEach(s => {
+                    const id = s.id_servicio ?? s.id ?? s.Id;
+                    const nombre = (s.nombre || s.Nombre || s.descripcion || s.Descripcion || `Servicio ${id}`).toString();
+                    $sel.append(`<option value="${id}">${nombre}</option>`);
+                });
+            }).fail(function (xhr) {
+                console.error("Error al cargar servicios:", xhr?.status, xhr?.responseText);
+                const $sel = $("#auto_servicio");
+                $sel.empty();
+                $sel.append('<option value="">(Error al cargar servicios)</option>');
             });
         }
 
@@ -558,9 +592,9 @@
             const $tb = $("#tablaFacturas");
             $tb.empty();
 
-            const filaFacturas = FACTURAS.filter(pasaFiltros);
+            const lista = FACTURAS.filter(pasaFiltros);
 
-            filaFacturas.forEach(f => {
+            lista.forEach(f => {
                 const id = f.id_factura ?? f.id ?? f.Id;
                 const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
                 const cliente = nombreClientePorId(clienteId);
@@ -583,15 +617,16 @@
                         <td>${formatCRC(total)}</td>
                         <td>
                             <button class="btn danger btn-estado" data-id="${id}" data-estado="${estado}">Estado</button>
+                            <button class="btn btn-secondary btn-enviar" data-id="${id}">Enviar</button>
                         </td>
                     </tr>`;
                 $tb.append(fila);
             });
 
-            $("#badge").text(`${filaFacturas.length} factura(s) mostradas`);
+            $("#badge").text(`${lista.length} factura(s) mostradas`);
         }
 
-        // ===== MODALES (GENÉRICOS) =====
+        // ===== MODALES GENÉRICOS =====
         function abrirModal(id) {
             const $m = $("#" + id);
             $m.removeClass("hidden").css("display", "flex");
@@ -614,7 +649,6 @@
             $("#modalEstado").css("display", "none").attr("aria-hidden", "true");
         }
 
-        // PUT /facturas/{id}/estado  =>  { estado: "Pagada" | "Anulada" | "Pendiente" }
         function guardarEstado() {
             if (!facturaSeleccionada?.id) return;
             const nuevo = $("#ddlEstado").val();
@@ -640,6 +674,27 @@
                 error: function (xhr) {
                     console.error("Error al actualizar estado", xhr?.status, xhr?.responseText);
                     alert("No se pudo actualizar el estado.");
+                }
+            });
+        }
+
+        // ===== ENVIAR FACTURA POR EMAIL (botón "Enviar") =====
+        function enviarFacturaEmail(idFactura) {
+            const url = `${API_FACTURAS}/${idFactura}/enviar-email`;
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({}), // body vacío => el API busca el email del cliente en la BD
+                xhrFields: { withCredentials: true },
+                success: function (res) {
+                    console.log("Correo enviado:", res);
+                    alert(`Factura enviada al correo del cliente.`);
+                },
+                error: function (xhr) {
+                    console.error("Error al enviar factura por correo", xhr?.status, xhr?.responseText);
+                    alert("No se pudo enviar la factura por correo.");
                 }
             });
         }
@@ -739,7 +794,7 @@
             });
         }
 
-        // ===== EXPORTAR PDF =====
+        // ===== EXPORTAR PDF (general & variantes) =====
         function exportarPdf(facturas) {
             try {
                 const { jsPDF } = window.jspdf || {};
@@ -776,7 +831,6 @@
             }
         }
 
-        // ===== EXPORTACIONES ESPECÍFICAS =====
         function exportarMes() {
             const mes = $("#filtroMesExport").val(); // yyyy-MM
             if (!mes) {
@@ -835,6 +889,11 @@
             abrirModalEstado(id, est);
         });
 
+        $(document).on("click", ".btn-enviar", function () {
+            const id = $(this).data("id");
+            enviarFacturaEmail(id);
+        });
+
         $("#btnGuardarEstado").on("click", guardarEstado);
         $("#btnCancelarEstado, #btnCloseModal, .modal__backdrop").on("click", cerrarModalEstado);
 
@@ -868,3 +927,4 @@
         });
     </script>
 }
+
