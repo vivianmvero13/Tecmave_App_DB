@@ -42,9 +42,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermirFrontend", policy => policy
         .WithOrigins(
-            "https://localhost:7190",
+            "http://localhost:7190",
             "http://localhost:5173",
-            "https://localhost:5173"
+            "http://localhost:5173"
         )
         .AllowAnyHeader()
         .AllowAnyMethod()
