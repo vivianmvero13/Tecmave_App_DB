@@ -133,7 +133,7 @@ namespace Tecmave.Api.Services
                 foreach (var usuario in usuarios)
                 {
                     string mensaje = $"La promoción '{promo.titulo}' finaliza el {promo.fecha_fin:dd/MM/yyyy}. Aproveche antes de que expire.";
-                    string link = $"https://tecmave.com/promociones/{promo.id_promocion}";
+                    string link = $"http://tecmave.com/promociones/{promo.id_promocion}";
 
                     await _notificacionesService.CrearNotificacionAsync(usuario.Id, mensaje, "promocion");
                     Console.WriteLine($"[Push] Enviado a {usuario.Email}: {mensaje} (Link: {link})");

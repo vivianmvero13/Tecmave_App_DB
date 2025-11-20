@@ -21,26 +21,30 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta name="api-base" content="https://localhost:7096">
+    <meta name="api-base" content="http://localhost:7096">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - TECMAVE CR</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="http://fonts.googleapis.com" />
+    <link rel="preconnect" href="http://fonts.gstatic.com" crossorigin />
+    <link href="http://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
 
     <link rel="stylesheet" href="~/css/styles.css" />
     <link rel="stylesheet" href="~/css/dashboard.css" />
     <link rel="stylesheet" href="~/css/theme-lighten.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="~/css/brand-red-hard.css" />
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="http://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="~/lib/jquery/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="http://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body>
+<body data-user-id="@(currentUser?.Id)"
+
+      data-user-name="@(currentUser?.UserName ?? "Usuario")"
+      data-is-admin="@(isAdmin.ToString().ToLower())">
+   
     <div class="app">
         <aside class="sidebar">
             <div class="brand">
