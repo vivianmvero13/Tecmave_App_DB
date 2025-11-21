@@ -355,6 +355,8 @@ CREATE TABLE Mantenimientos (
   FechaMantenimiento DATE NOT NULL,
   ProximoMantenimiento DATE NULL,
   RecordatorioEnviado TINYINT(1) NOT NULL DEFAULT 0,
+  IdEstado INT NOT NULL DEFAULT 12,
+CONSTRAINT FK_Mantenimientos_Estado FOREIGN KEY (IdEstado) REFERENCES estados(id_estado),
   CONSTRAINT PK_Mantenimientos PRIMARY KEY (IdMantenimiento),
   CONSTRAINT FK_Mantenimientos_vehiculos_IdVehiculo
     FOREIGN KEY (IdVehiculo) REFERENCES vehiculos (id_vehiculo) ON DELETE CASCADE
@@ -414,8 +416,6 @@ CREATE TABLE IF NOT EXISTS revision_trabajos (
     REFERENCES revision (id_revision)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-
-
 INSERT INTO estados (id_estado, nombre) VALUES
 (4, 'Ingresado'),
 (5, 'En Diagnóstico'),
@@ -424,7 +424,8 @@ INSERT INTO estados (id_estado, nombre) VALUES
 (8, 'En pruebas'),
 (9, 'Finalizado'),
 (10, 'Entregado'),
-(11, 'Cancelado');
+(11, 'Cancelado'),
+(12, 'Programado');
 
 -- 1) Quitar la foreign key de 'marca' que apunta a 'modelo'
 ALTER TABLE marca DROP FOREIGN KEY FK_Marca_Modelo;

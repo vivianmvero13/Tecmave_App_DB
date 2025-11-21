@@ -22,7 +22,7 @@ namespace Tecmave.Api.Services
                     .ThenInclude(v => v.Cliente)
                 .ToList();
 
-        // DETALLE: también incluye Vehículo + Cliente (por si lo usas en la página Detalle)
+        // DETALLE: también incluye Vehículo + Cliente
         public MantenimientoModel? GetById(int id) =>
             _context.Mantenimientos
                 .Include(m => m.Vehiculo)
@@ -31,13 +31,16 @@ namespace Tecmave.Api.Services
 
         public MantenimientoModel AddMantenimiento(MantenimientoModel mantenimiento)
         {
-            // 1) Si el admin NO seteó PróximoMantenimiento, lo calculamos (historial)
+            if (mantenimiento.IdEstado == 0)
+            {
+                mantenimiento.IdEstado = 12;
+            }
+
             if (!mantenimiento.ProximoMantenimiento.HasValue)
             {
                 mantenimiento.ProximoMantenimiento = mantenimiento.FechaMantenimiento.AddMonths(6);
             }
 
-            // 2) Antes de agregar el nuevo, marcamos los anteriores de ese vehículo
             var anteriores = _context.Mantenimientos
                 .Where(m => m.IdVehiculo == mantenimiento.IdVehiculo && !m.RecordatorioEnviado)
                 .ToList();
@@ -47,14 +50,13 @@ namespace Tecmave.Api.Services
                 a.RecordatorioEnviado = true;
             }
 
-            // 3) Ahora sí agregamos el nuevo
             _context.Mantenimientos.Add(mantenimiento);
             _context.SaveChanges();
 
             return mantenimiento;
         }
 
-        // RECORDATORIO INDIVIDUAL (botón por fila)
+        // RECORDATORIO INDIVIDUAL
         public async Task<bool> EnviarRecordatorioIndividualAsync(int idMantenimiento)
         {
             var m = await _context.Mantenimientos
@@ -87,6 +89,30 @@ con placa <strong>{m.Vehiculo.Placa}</strong>.</p>
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        //Actualizar estado del mantenimiento
+        public async Task<(bool ok, string mensaje)> ActualizarEstadoAsync(int idMantenimiento, int idEstado)
+        {
+            try
+            {
+                var mantenimiento = await _context.Mantenimientos
+                    .Include(m => m.Vehiculo)
+                        .ThenInclude(v => v.Cliente)
+                    .FirstOrDefaultAsync(m => m.IdMantenimiento == idMantenimiento);
+
+                if (mantenimiento == null)
+                    return (false, "Mantenimiento no encontrado");
+
+                mantenimiento.IdEstado = idEstado;
+
+                await _context.SaveChangesAsync();
+                return (true, "Estado actualizado correctamente");
+            }
+            catch
+            {
+                return (false, "Error al actualizar estado del servicio");
+            }
         }
 
         public bool UpdateMantenimiento(MantenimientoModel mantenimiento)

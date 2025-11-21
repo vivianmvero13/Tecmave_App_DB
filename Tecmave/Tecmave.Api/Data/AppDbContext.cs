@@ -25,7 +25,7 @@ namespace Tecmave.Api.Data
         public DbSet<ColaboradoresModel> colaboradores { get; set; }
         public DbSet<ServiciosRevisionModel> servicios_revision { get; set; }
 
-        public DbSet<RevisionPertenenciasModel> revision_pertenencias  { get; set; }
+        public DbSet<RevisionPertenenciasModel> revision_pertenencias { get; set; }
         public DbSet<RevisionTrabajosModel> revision_trabajos { get; set; }
 
         public DbSet<RoleChangeAudit> role_change_audit { get; set; }
@@ -53,13 +53,11 @@ namespace Tecmave.Api.Data
                 e.HasOne<Usuario>()
                     .WithMany()
                     .HasForeignKey(ur => ur.UserId)
-                    .IsRequired()
                     .OnDelete(DeleteBehavior.Cascade);
 
                 e.HasOne<AppRole>()
                     .WithMany()
                     .HasForeignKey(ur => ur.RoleId)
-                    .IsRequired()
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
@@ -120,10 +118,9 @@ namespace Tecmave.Api.Data
             b.Entity<PromocionEnvio>().ToTable("promocion_envios").HasKey(x => x.IdEnvio);
             b.Entity<Recordatorio>().ToTable("recordatorios").HasKey(x => x.Id);
 
-            // ---------------- MANTENIMIENTOS ----------------
+            // ---------------- MANTENIMIENTOS (CORREGIDO) ----------------
             b.Entity<MantenimientoModel>(e =>
             {
-                // Nombre EXACTO de la tabla en MySQL
                 e.ToTable("Mantenimientos");
 
                 e.HasKey(x => x.IdMantenimiento);
@@ -133,12 +130,19 @@ namespace Tecmave.Api.Data
                 e.Property(x => x.FechaMantenimiento).HasColumnName("FechaMantenimiento");
                 e.Property(x => x.ProximoMantenimiento).HasColumnName("ProximoMantenimiento");
                 e.Property(x => x.RecordatorioEnviado).HasColumnName("RecordatorioEnviado");
+                e.Property(x => x.IdEstado).HasColumnName("IdEstado");  // 🔹 Mapeo explícito
 
-                // Relación con Vehiculo: FK = IdVehiculo
+                // 🔹 Relación: Mantenimientos → Vehículos
                 e.HasOne(x => x.Vehiculo)
-                 .WithMany() // usar .WithMany(v => v.Mantenimientos) SOLO si tienes la colección en Vehiculo
+                 .WithMany()
                  .HasForeignKey(x => x.IdVehiculo)
                  .HasConstraintName("FK_Mantenimientos_vehiculos_IdVehiculo");
+
+                // 🔹 Relación: Mantenimientos → Estados
+                e.HasOne(x => x.Estado)
+                 .WithMany()
+                 .HasForeignKey(x => x.IdEstado)
+                 .HasConstraintName("FK_Mantenimientos_Estado");
             });
         }
     }
