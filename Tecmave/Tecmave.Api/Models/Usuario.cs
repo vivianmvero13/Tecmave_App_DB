@@ -19,5 +19,7 @@ namespace Tecmave.Api.Models
         public string NombreCompleto => $"{Nombre} {Apellido}".Trim();
 
         public bool NotificacionesActivadas { get; set; } = false;
+        public int Estado { get; set; } = 1;
+
     }
 }

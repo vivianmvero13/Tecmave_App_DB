@@ -43,12 +43,13 @@
                 <th>Username</th>
                 <th>Email</th>
                 <th>Teléfono</th>
+                <th>Estado</th>
                 <th>Rol</th>
                 <th>Acciones</th>
             </tr>
         </thead>
         <tbody id="userTable">
-            <tr><td colspan="5">Cargando usuarios…</td></tr>
+            <tr><td colspan="8">Cargando usuarios…</td></tr>
         </tbody>
     </table>
 </div>
@@ -107,6 +108,16 @@
 
     function getSearchText(){ return ($('#localSearch').val() || '').toLowerCase(); }
 
+    function formatEstado(e){
+      const v = Number(e);
+      switch (v) {
+        case 1: return 'Activo';
+        case 2: return 'Inactivo';
+        default:
+          return e == null ? 'Sin estado' : `(${e})`;
+      }
+    }
+
     function applyFilters(){
       const selected = $('#roleFilter').val();
       const q = getSearchText();
@@ -115,12 +126,17 @@
         const roleOk = !selected
           ? true
           : (selected === '__SIN_ROL__' ? roles.length === 0 : roles.includes(U(selected)));
+
+        const estadoText = formatEstado(u.estado);
+
         const haystack = [
           u.userNameNorm || U(u.userName),
           u.email || '',
           u.phoneNumber || '',
-          ...roles
+          ...roles,
+          estadoText
         ].join(' ').toLowerCase();
+
         return roleOk && (!q || haystack.includes(q));
       });
     }
@@ -128,18 +144,20 @@
     function renderTable(users){
       const $tb = $('#userTable').empty();
       if(!users.length){
-        $tb.html(`<tr><td colspan="5" class="text-muted">No hay usuarios.</td></tr>`);
+        $tb.html(`<tr><td colspan="8" class="text-muted">No hay usuarios.</td></tr>`);
         $('#resultsBadge').text(`Mostrando 0 de ${allUsers.length}`);
         return;
       }
       users.forEach(u=>{
         const rolesText = (u.roles && u.roles.length) ? u.roles.map(U).join(', ') : '(SIN ROL)';
+        const estadoText = formatEstado(u.estado);
         $tb.append(`<tr>
             <td>${escapeHtml(u.nombre || 'Sin definir')}</td>
             <td>${escapeHtml(u.apellidos || 'Sin definir')}</td>
             <td>${escapeHtml(u.userNameNorm || U(u.userName))}</td>
             <td>${escapeHtml(u.email)}</td>
             <td>${escapeHtml(u.phoneNumber)}</td>
+            <td>${escapeHtml(estadoText)}</td>
             <td>${escapeHtml(rolesText)}</td>
             <td><a class="btn btn-primary btn-sm" href="/Usuarios/Editar/${encodeURIComponent(u.id)}">Editar</a></td>
         </tr>`);
@@ -149,43 +167,67 @@
 
     async function loadUsers(){
       try{
+        // 1) Intento optimizado: /api/usuarios/with-role (por si existe)
         try{
           const res = await fetch(`${USERS_URL}/with-role`);
           if(res.ok){
             const rows = await res.json();
-            allUsers = rows.map(u => ({
-              id: u.id,
-              userName: u.userName,
-              userNameNorm: U(u.userName),
-              email: u.email,
-              phoneNumber: u.phoneNumber,
-              roles: u.role ? [U(u.role)] : []
-            }));
-            populateRoleFilter(); renderTable(applyFilters());
+            allUsers = rows.map(u => {
+              const userName = u.userName ?? u.UserName ?? u.user_name ?? '';
+              const phone    = u.phoneNumber ?? u.PhoneNumber ?? u.phone_number ?? '';
+              const estado   = u.estado ?? u.Estado ?? 1;
+              return {
+                id: u.id ?? u.Id,
+                nombre: u.nombre ?? u.Nombre ?? '',
+                apellidos: u.apellidos ?? u.Apellidos ?? '',
+                userName,
+                userNameNorm: U(userName),
+                email: u.email ?? u.Email ?? '',
+                phoneNumber: phone,
+                estado,
+                roles: u.role ? [U(u.role)] : []
+              };
+            });
+            populateRoleFilter();
+            renderTable(applyFilters());
             return;
           }
         }catch{}
+
+        // 2) Fallback: /api/usuarios (el que ahora sabemos que devuelve snake_case)
         const users = await $.getJSON(USERS_URL);
         const roleFetches = users.map(async (u) => {
+          const baseUser = {
+            id: u.id ?? u.Id,
+            nombre: u.nombre ?? u.Nombre ?? '',
+            apellidos: u.apellidos ?? u.Apellidos ?? '',
+            userName: u.userName ?? u.UserName ?? u.user_name ?? '',
+            userNameNorm: U(u.userName ?? u.UserName ?? u.user_name ?? ''),
+            email: u.email ?? u.Email ?? '',
+            phoneNumber: u.phoneNumber ?? u.PhoneNumber ?? u.phone_number ?? '',
+            estado: u.estado ?? u.Estado ?? 1
+          };
           try{
-            const arr = await $.getJSON(`${USERS_URL}/${u.id}/roles`);
+            const arr = await $.getJSON(`${USERS_URL}/${baseUser.id}/roles`);
             const roles = Array.isArray(arr) ? arr.map(U) : [];
-            return { ...u, userNameNorm: U(u.userName), roles };
+            return { ...baseUser, roles };
           }catch{
             try{
-              const obj = await $.getJSON(`${USERS_URL}/${u.id}/role`);
+              const obj = await $.getJSON(`${USERS_URL}/${baseUser.id}/role`);
               const roleName = obj?.role ?? obj?.Role;
               const roles = roleName ? [U(roleName)] : [];
-              return { ...u, userNameNorm: U(u.userName), roles };
+              return { ...baseUser, roles };
             }catch{
-              return { ...u, userNameNorm: U(u.userName), roles: [] };
+              return { ...baseUser, roles: [] };
             }
           }
         });
         allUsers = await Promise.all(roleFetches);
-        populateRoleFilter(); renderTable(applyFilters());
+        populateRoleFilter();
+        renderTable(applyFilters());
       }catch(e){
-        $('#userTable').html(`<tr><td colspan="5" class="text-danger">Error cargando usuarios</td></tr>`);
+        console.error(e);
+        $('#userTable').html(`<tr><td colspan="8" class="text-danger">Error cargando usuarios</td></tr>`);
       }
     }
 
@@ -199,14 +241,16 @@
     }
 
     function buildCsv(rows){
-      const headers = ['Username','Email','Teléfono','Rol'];
+      const headers = ['Username','Email','Teléfono','Estado','Rol'];
       const lines = [headers.join(',')];
       rows.forEach(u => {
         const rol = (u.roles && u.roles.length) ? u.roles.join(' | ') : '(SIN ROL)';
+        const estadoText = formatEstado(u.estado);
         lines.push([
           csvEscape(u.userNameNorm || U(u.userName)),
           csvEscape(u.email || ''),
           csvEscape(u.phoneNumber || ''),
+          csvEscape(estadoText),
           csvEscape(rol)
         ].join(','));
       });
@@ -222,7 +266,6 @@
       const csv = buildCsv(rows);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
 
-      // Nombre con fecha/hora
       const now = new Date();
       const pad = n => n.toString().padStart(2,'0');
       const fname = `usuarios_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
@@ -247,4 +290,3 @@
       $('#exportBtn').on('click', ()=>window.exportToExcel());
     });
 </script>
-

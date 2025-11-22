@@ -30,6 +30,34 @@ DROP TABLE IF EXISTS estados;
 DROP TABLE IF EXISTS aspnetusers;
 DROP TABLE IF EXISTS role_change_audit;
 
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ============================================
+-- 1. Tabla ESTADOS (BASE para muchas FKs)
+-- ============================================
+CREATE TABLE estados (
+  id_estado INT NOT NULL,
+  nombre VARCHAR(255) NOT NULL,
+  PRIMARY KEY (id_estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO estados (id_estado, nombre) VALUES
+(1, 'activo'),
+(2, 'pendiente'),
+(3, 'inactivo'),
+(4, 'Ingresado'),
+(5, 'En Diagnóstico'),
+(6, 'Pendiente de aprobación'),
+(7, 'En mantenimiento'),
+(8, 'En pruebas'),
+(9, 'Finalizado'),
+(10, 'Entregado'),
+(11, 'Cancelado'),
+(12, 'Programado');
+
+-- ============================================
+-- 2. Tablas de identidad / usuarios / roles
+-- ============================================
 CREATE TABLE aspnetusers (
   Id INT NOT NULL AUTO_INCREMENT,
   Nombre VARCHAR(150) NOT NULL,
@@ -51,9 +79,15 @@ CREATE TABLE aspnetusers (
   LockoutEnabled TINYINT(1) NOT NULL DEFAULT 0,
   AccessFailedCount INT NOT NULL DEFAULT 0,
   NotificacionesActivadas TINYINT(1) NOT NULL DEFAULT 0,
+  Estado INT,
   PRIMARY KEY (Id),
   UNIQUE KEY UserNameIndex (NormalizedUserName),
-  KEY EmailIndex (NormalizedEmail)
+  KEY EmailIndex (NormalizedEmail),
+  CONSTRAINT FK_AspNetUsers_Estados
+    FOREIGN KEY (Estado)
+    REFERENCES estados(id_estado)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE aspnetroles (
@@ -113,22 +147,16 @@ CREATE TABLE aspnetroleclaims (
   CONSTRAINT FK_AspNetRoleClaims_AspNetRoles_RoleId FOREIGN KEY (RoleId) REFERENCES aspnetroles (Id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE estados (
-  id_estado INT NOT NULL,
-  nombre VARCHAR(255) NOT NULL,
-  PRIMARY KEY (id_estado)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-INSERT INTO estados (id_estado, nombre) VALUES
-(1, 'activo'),(2, 'pendiente'),(3, 'inactivo');
-
+-- ============================================
+-- 3. Catálogos de servicios
+-- ============================================
 CREATE TABLE tipo_servicios (
   id_tipo_servicio INT NOT NULL AUTO_INCREMENT,
   nombre VARCHAR(100) NOT NULL,
   descripcion VARCHAR(100) NOT NULL,
   PRIMARY KEY (id_tipo_servicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-	
+
 INSERT INTO tipo_servicios (id_tipo_servicio, nombre, descripcion) VALUES
 (1, 'Mantenimiento preventivo', 'Servicios para prevenir fallas'),
 (2, 'Mantenimiento correctivo', 'Servicios para corregir fallas'),
@@ -146,6 +174,9 @@ CREATE TABLE servicios (
   CONSTRAINT FK_Servicios_TipoServicio FOREIGN KEY (tipo_servicio_id) REFERENCES tipo_servicios (id_tipo_servicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- ============================================
+-- 4. Modelo / Marca / Vehículos
+-- ============================================
 CREATE TABLE modelo (
   id_modelo INT NOT NULL AUTO_INCREMENT,
   nombre VARCHAR(255) NOT NULL,
@@ -165,7 +196,7 @@ CREATE TABLE vehiculos (
   id_vehiculo INT NOT NULL AUTO_INCREMENT,
   cliente_id INT DEFAULT NULL,
   id_marca INT NOT NULL,
-  anno int NOT NULL,
+  anno INT NOT NULL,
   placa VARCHAR(255) NOT NULL,
   modelo VARCHAR(255),
   Proximo DATE NULL,
@@ -176,6 +207,9 @@ CREATE TABLE vehiculos (
   CONSTRAINT FK_Vehiculos_Marca FOREIGN KEY (id_marca) REFERENCES marca (id_marca)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- ============================================
+-- 5. Facturación y detalle
+-- ============================================
 CREATE TABLE factura (
   id_factura INT NOT NULL AUTO_INCREMENT,
   cliente_id INT NULL,
@@ -201,6 +235,9 @@ CREATE TABLE detalle_factura (
   CONSTRAINT FK_DetalleFactura_Servicio FOREIGN KEY (servicio_id) REFERENCES servicios (id_servicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- ============================================
+-- 6. Reseñas
+-- ============================================
 CREATE TABLE resenas (
   id_resena INT NOT NULL AUTO_INCREMENT,
   cliente_id INT DEFAULT NULL,
@@ -215,6 +252,9 @@ CREATE TABLE resenas (
   CONSTRAINT FK_Resenas_Servicio FOREIGN KEY (servicio_id) REFERENCES servicios (id_servicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- ============================================
+-- 7. Notificaciones y Promociones
+-- ============================================
 CREATE TABLE notificaciones (
   id_notificaciones INT NOT NULL AUTO_INCREMENT,
   usuario_id INT NOT NULL,
@@ -242,6 +282,9 @@ CREATE TABLE promociones (
   CONSTRAINT FK_Promociones_Estado FOREIGN KEY (id_estado) REFERENCES estados (id_estado)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- ============================================
+-- 8. Revisión / Servicios por revisión / Agendamiento
+-- ============================================
 CREATE TABLE revision (
   id_revision INT NOT NULL AUTO_INCREMENT,
   vehiculo_id INT NOT NULL,
@@ -288,6 +331,9 @@ CREATE TABLE agendamiento (
   CONSTRAINT FK_Agendamiento_Estado FOREIGN KEY (id_estado) REFERENCES estados (id_estado)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- ============================================
+-- 9. Colaboradores, auditoría y planillas
+-- ============================================
 CREATE TABLE colaboradores (
   id_colaborador INT NOT NULL AUTO_INCREMENT,
   id_usuario INT NOT NULL,
@@ -331,6 +377,10 @@ CREATE TABLE IF NOT EXISTS planillas (
   observaciones VARCHAR(250),
   CONSTRAINT FK_Planilla_Colab FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id_colaborador) ON DELETE CASCADE
 );
+
+-- ============================================
+-- 10. Promoción envíos y recordatorios
+-- ============================================
 CREATE TABLE promocion_envios (
   id_envio INT NOT NULL AUTO_INCREMENT,
   id_usuario INT NOT NULL,
@@ -338,6 +388,7 @@ CREATE TABLE promocion_envios (
   fecha_envio DATETIME(6) NOT NULL,
   CONSTRAINT PK_promocion_envios PRIMARY KEY (id_envio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 CREATE TABLE recordatorios (
   Id INT NOT NULL AUTO_INCREMENT,
   UsuarioId INT NOT NULL,
@@ -347,6 +398,9 @@ CREATE TABLE recordatorios (
   CONSTRAINT PK_recordatorios PRIMARY KEY (Id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- ============================================
+-- 11. Mantenimientos
+-- ============================================
 DROP TABLE IF EXISTS Mantenimientos;
 
 CREATE TABLE Mantenimientos (
@@ -356,7 +410,7 @@ CREATE TABLE Mantenimientos (
   ProximoMantenimiento DATE NULL,
   RecordatorioEnviado TINYINT(1) NOT NULL DEFAULT 0,
   IdEstado INT NOT NULL DEFAULT 12,
-CONSTRAINT FK_Mantenimientos_Estado FOREIGN KEY (IdEstado) REFERENCES estados(id_estado),
+  CONSTRAINT FK_Mantenimientos_Estado FOREIGN KEY (IdEstado) REFERENCES estados(id_estado),
   CONSTRAINT PK_Mantenimientos PRIMARY KEY (IdMantenimiento),
   CONSTRAINT FK_Mantenimientos_vehiculos_IdVehiculo
     FOREIGN KEY (IdVehiculo) REFERENCES vehiculos (id_vehiculo) ON DELETE CASCADE
@@ -364,35 +418,40 @@ CONSTRAINT FK_Mantenimientos_Estado FOREIGN KEY (IdEstado) REFERENCES estados(id
 
 CREATE INDEX IX_Mantenimientos_IdVehiculo ON Mantenimientos (IdVehiculo);
 
+-- ============================================
+-- 12. Extender aspnetroles
+-- ============================================
 ALTER TABLE aspnetroles
-  ADD COLUMN Description varchar(256) NULL AFTER NormalizedName,
-  ADD COLUMN IsActive tinyint(1) NOT NULL DEFAULT 1 AFTER Description;
+  ADD COLUMN Description VARCHAR(256) NULL AFTER NormalizedName,
+  ADD COLUMN IsActive TINYINT(1) NOT NULL DEFAULT 1 AFTER Description;
 
-SET FOREIGN_KEY_CHECKS = 1;
+-- ============================================
+-- 13. Alter factura y revision
+-- ============================================
 ALTER TABLE factura
-ADD COLUMN estado_pago VARCHAR(100) NULL AFTER metodo_pago;
--- ============================================
--- 3. Modificar tabla REVISION (agregar columnas de inspección y agendamiento)
--- ============================================
-ALTER TABLE revision
-ADD COLUMN id_agendamiento INT NULL AFTER fecha_entrega_final,
-ADD COLUMN kilometraje INT NULL AFTER id_agendamiento,
-ADD COLUMN observaciones_cliente TEXT NULL AFTER kilometraje,
-ADD COLUMN notas_taller TEXT NULL AFTER observaciones_cliente,
-ADD COLUMN nivel_combustible ENUM('F','3/4','1/2','1/4','E') DEFAULT NULL AFTER notas_taller,
-ADD COLUMN golpes_delantera TINYINT(1) DEFAULT 0 AFTER nivel_combustible,
-ADD COLUMN golpes_trasera TINYINT(1) DEFAULT 0 AFTER golpes_delantera,
-ADD COLUMN golpes_izquierda TINYINT(1) DEFAULT 0 AFTER golpes_trasera,
-ADD COLUMN golpes_derecha TINYINT(1) DEFAULT 0 AFTER golpes_izquierda,
-ADD COLUMN golpes_arriba TINYINT(1) DEFAULT 0 AFTER golpes_derecha,
-ADD COLUMN vehiculo_sucio TINYINT(1) DEFAULT 0 AFTER golpes_arriba,
-ADD COLUMN vehiculo_mojado TINYINT(1) DEFAULT 0 AFTER vehiculo_sucio;
+  ADD COLUMN estado_pago VARCHAR(100) NULL AFTER metodo_pago;
 
 ALTER TABLE revision
-ADD CONSTRAINT FK_Revision_Agendamiento
-FOREIGN KEY (id_agendamiento) REFERENCES agendamiento(id_agendamiento);
+  ADD COLUMN id_agendamiento INT NULL AFTER fecha_entrega_final,
+  ADD COLUMN kilometraje INT NULL AFTER id_agendamiento,
+  ADD COLUMN observaciones_cliente TEXT NULL AFTER kilometraje,
+  ADD COLUMN notas_taller TEXT NULL AFTER observaciones_cliente,
+  ADD COLUMN nivel_combustible ENUM('F','3/4','1/2','1/4','E') DEFAULT NULL AFTER notas_taller,
+  ADD COLUMN golpes_delantera TINYINT(1) DEFAULT 0 AFTER nivel_combustible,
+  ADD COLUMN golpes_trasera TINYINT(1) DEFAULT 0 AFTER golpes_delantera,
+  ADD COLUMN golpes_izquierda TINYINT(1) DEFAULT 0 AFTER golpes_trasera,
+  ADD COLUMN golpes_derecha TINYINT(1) DEFAULT 0 AFTER golpes_izquierda,
+  ADD COLUMN golpes_arriba TINYINT(1) DEFAULT 0 AFTER golpes_derecha,
+  ADD COLUMN vehiculo_sucio TINYINT(1) DEFAULT 0 AFTER golpes_arriba,
+  ADD COLUMN vehiculo_mojado TINYINT(1) DEFAULT 0 AFTER vehiculo_sucio;
 
+ALTER TABLE revision
+  ADD CONSTRAINT FK_Revision_Agendamiento
+  FOREIGN KEY (id_agendamiento) REFERENCES agendamiento(id_agendamiento);
 
+-- ============================================
+-- 14. Tablas de revisión: pertenencias y trabajos
+-- ============================================
 CREATE TABLE IF NOT EXISTS revision_pertenencias (
   id_pertenencia INT NOT NULL AUTO_INCREMENT,
   revision_id INT NOT NULL,
@@ -403,7 +462,6 @@ CREATE TABLE IF NOT EXISTS revision_pertenencias (
   CONSTRAINT FK_RevisionPertenencias_Revision FOREIGN KEY (revision_id)
     REFERENCES revision (id_revision)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 
 CREATE TABLE IF NOT EXISTS revision_trabajos (
   id_trabajo INT NOT NULL AUTO_INCREMENT,
@@ -416,25 +474,16 @@ CREATE TABLE IF NOT EXISTS revision_trabajos (
     REFERENCES revision (id_revision)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO estados (id_estado, nombre) VALUES
-(4, 'Ingresado'),
-(5, 'En Diagnóstico'),
-(6, 'Pendiente de aprobación'),
-(7, 'En mantenimiento'),
-(8, 'En pruebas'),
-(9, 'Finalizado'),
-(10, 'Entregado'),
-(11, 'Cancelado'),
-(12, 'Programado');
-
--- 1) Quitar la foreign key de 'marca' que apunta a 'modelo'
+-- ============================================
+-- 15. Ajuste de marca / modelo
+-- ============================================
+-- Quitar la foreign key de 'marca' que apunta a 'modelo' y eliminar modelo
 ALTER TABLE marca DROP FOREIGN KEY FK_Marca_Modelo;
 ALTER TABLE marca DROP INDEX FK_Marca_Modelo;
 ALTER TABLE marca DROP COLUMN id_modelo;
 DROP TABLE modelo;
 
-USE tecmave;
-
+-- Insertar marcas (ya sin columna id_modelo)
 INSERT INTO marca (nombre) VALUES
 ('Sin marca'),
 ('Jeep'),
@@ -457,13 +506,18 @@ INSERT INTO marca (nombre) VALUES
 ('Lexus'),
 ('Mazda');
 
-  
+-- ============================================
+-- 16. Roles iniciales
+-- ============================================
 INSERT INTO aspnetroles (Id, Name, NormalizedName, Description, IsActive)
 VALUES
 (1, 'Admin', 'ADMIN', 'Administrador con acceso completo al sistema', 1),
 (2, 'Colaborador', 'COLABORADOR', 'Empleado o técnico del taller con permisos limitados', 1),
 (3, 'Cliente', 'CLIENTE', 'Usuario cliente que puede ver y registrar sus vehículos', 1);
 
+-- ============================================
+-- 17. Servicios iniciales
+-- ============================================
 INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
 VALUES
 ('Electrónica', 'Diagnóstico y reparación de sistemas electrónicos', 'Falla específica', 120.00, 3),
