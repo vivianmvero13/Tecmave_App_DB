@@ -38,7 +38,12 @@
             <div class="form-row">
                 <div>
                     <label for="placaInput">Placa</label>
-                    <input id="placaInput" class="input" maxlength="10" />
+                    <!-- ✔ Máximo 6, solo alfanumérico -->
+                    <input id="placaInput"
+                           class="input"
+                           maxlength="6"
+                           pattern="[A-Za-z0-9]{1,6}"
+                           title="Solo 6 caracteres alfanuméricos (A-Z, 0-9)" />
                 </div>
             </div>
 
@@ -295,6 +300,16 @@
       return { show, hide };
     })();
 
+    /* =========== Normalizar placa (solo A-Z0-9, máx 6) =========== */
+    function normalizePlacaInput() {
+        const input = document.getElementById('placaInput');
+        if (!input) return;
+        let v = (input.value || '').toUpperCase();
+        v = v.replace(/[^A-Z0-9]/g, ''); // quitar todo lo que no sea alfanumérico
+        if (v.length > 6) v = v.slice(0, 6);
+        input.value = v;
+    }
+
     /* =================== Usuarios y marcas =================== */
     function nombreCompleto(u){
       const n = (u.nombre ?? u.Nombre ?? '').trim();
@@ -413,14 +428,19 @@
       const id_marca = parseInt(document.getElementById('marcaInput').value || '0', 10);
       const modelo   = (document.getElementById('modeloInput').value || '').trim();
       const anno     = parseInt(document.getElementById('annoInput').value || '0', 10);
-      const placa    = (document.getElementById('placaInput').value || '').trim().toUpperCase();
+
+      // normalizar placa igual que en input
+      let placa = (document.getElementById('placaInput').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (placa.length > 6) placa = placa.slice(0, 6);
 
       if(!uid) return { ok:false, msg:'Seleccione un usuario.' };
       if(!id_marca) return { ok:false, msg:'Seleccione una marca.' };
       if(!modelo) return { ok:false, msg:'El modelo es requerido.' };
       const yearNow = new Date().getFullYear();
       if(!anno || anno < 1950 || anno > yearNow + 1) return { ok:false, msg:`El año debe estar entre 1950 y ${yearNow + 1}.` };
+
       if(!placa) return { ok:false, msg:'La placa es requerida.' };
+      if(!/^[A-Z0-9]{1,6}$/.test(placa)) return { ok:false, msg:'La placa solo puede contener letras A-Z y números (máx 6).' };
 
       return { ok:true, payload:{ cliente_id: uid, id_marca, modelo, anno, placa } };
     }
@@ -587,8 +607,15 @@
     }
 
     /* =================== Init =================== */
-        document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         setModoCrear();
+
+        // ✔ Enlazar normalización de placa
+        const placaEl = document.getElementById('placaInput');
+        if (placaEl) {
+            placaEl.addEventListener('input', normalizePlacaInput);
+            normalizePlacaInput();
+        }
 
         const body = document.body;
         const currentUserId = parseInt(body.dataset.userId || '0', 10);
@@ -623,5 +650,4 @@
             }
         }
     });
-
 </script>

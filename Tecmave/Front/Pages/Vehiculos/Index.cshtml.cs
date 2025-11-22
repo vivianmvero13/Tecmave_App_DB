@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Front.Pages.Vehiculos
 {
+    [Authorize(Roles = "Admin,Colaborador")]
     public class IndexModel : PageModel
     {
         private readonly IConfiguration _cfg;
