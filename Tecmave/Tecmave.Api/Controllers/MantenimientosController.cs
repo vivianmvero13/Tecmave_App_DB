@@ -20,7 +20,8 @@ namespace Tecmave.Api.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<MantenimientoModel>> GetMantenimientos()
         {
-            return _mantenimientosService.GetMantenimientoModels();
+            var lista = _mantenimientosService.GetMantenimientoModels();
+            return Ok(lista);
         }
 
         [HttpGet("{id}")]
@@ -28,13 +29,13 @@ namespace Tecmave.Api.Controllers
         {
             var m = _mantenimientosService.GetById(id);
             if (m == null)
-                return NotFound();
+                return NotFound(new { mensaje = "Mantenimiento no encontrado" });
 
-            return m;
+            return Ok(m);
         }
 
         [HttpPost]
-        public ActionResult<MantenimientoModel> AddMantenimiento(MantenimientoModel mantenimiento)
+        public ActionResult<MantenimientoModel> AddMantenimiento([FromBody] MantenimientoModel mantenimiento)
         {
             var nuevo = _mantenimientosService.AddMantenimiento(mantenimiento);
 
@@ -44,7 +45,7 @@ namespace Tecmave.Api.Controllers
         }
 
         [HttpPut]
-        public IActionResult UpdateMantenimiento(MantenimientoModel mantenimiento)
+        public IActionResult UpdateMantenimiento([FromBody] MantenimientoModel mantenimiento)
         {
             if (!_mantenimientosService.UpdateMantenimiento(mantenimiento))
                 return NotFound(new { mensaje = "Mantenimiento no encontrado" });
@@ -61,7 +62,6 @@ namespace Tecmave.Api.Controllers
             return NoContent();
         }
 
-        // 🔹 MASIVO: el que ya tenías
         [HttpPost("Enviar-recordatorios")]
         public async Task<IActionResult> EnviarRecordatorios()
         {
@@ -69,7 +69,6 @@ namespace Tecmave.Api.Controllers
             return Ok(new { mensaje = "Recordatorios enviados" });
         }
 
-        // 🔹 NUEVO: individual por mantenimiento
         [HttpPost("{id}/enviar-recordatorio")]
         public async Task<IActionResult> EnviarRecordatorioIndividual(int id)
         {
@@ -79,6 +78,28 @@ namespace Tecmave.Api.Controllers
                 return NotFound(new { mensaje = "Mantenimiento no encontrado o sin cliente asociado." });
 
             return Ok(new { mensaje = "Recordatorio enviado correctamente." });
+        }
+
+        // Actualizar estado del servicio
+        public class ActualizarEstadoRequest
+        {
+            public int IdEstado { get; set; }
+        }
+
+        [HttpPut("{id}/estado")]
+        public async Task<IActionResult> ActualizarEstado(int id, [FromBody] ActualizarEstadoRequest body)
+        {
+            var (ok, mensaje) = await _mantenimientosService.ActualizarEstadoAsync(id, body.IdEstado);
+
+            if (!ok)
+            {
+                if (mensaje == "Mantenimiento no encontrado")
+                    return NotFound(new { mensaje });
+
+                return StatusCode(500, new { mensaje });
+            }
+
+            return Ok(new { mensaje });
         }
     }
 }

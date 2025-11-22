@@ -6,6 +6,6 @@ namespace Tecmave.Api.Models
     {
         [Key]
         public int id_estado { get; set; } // [pk, increment]
-        public string nombre { get; set; }
+        public string nombre { get; set; } = string.Empty;
     }
 }
