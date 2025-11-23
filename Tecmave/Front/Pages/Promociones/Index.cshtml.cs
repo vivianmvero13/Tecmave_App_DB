@@ -1,13 +1,15 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tecmave.Api.Models;
 
 namespace Front.Pages.Promociones
 {
+    [Authorize(Roles = "Admin,Colaborador")]
     public class PromocionesIndexModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;

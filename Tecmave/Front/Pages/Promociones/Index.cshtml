@@ -19,36 +19,65 @@
     </div>
 }
 
-<table class="table">
+<table class="table align-middle">
     <thead>
         <tr>
             <th>ID</th>
-            <th>Titulo</th>
+            <th>Título</th>
             <th>Descripción</th>
             <th>Fecha de Inicio</th>
             <th>Fecha de Fin</th>
-            <th>Acciones</th>
+            <th>Imagen</th>
+            <th style="width: 220px;">Acciones</th>
         </tr>
     </thead>
 
     <tbody>
-        @foreach (var promo in Model.Promociones)
+        @if (Model.Promociones == null || !Model.Promociones.Any())
         {
             <tr>
-                <td>@promo.id_promocion</td>
-                <td>@promo.titulo</td>
-                <td>@promo.descripcion</td>
-                <td>@promo.fecha_inicio.ToShortDateString()</td>
-                <td>@promo.fecha_fin.ToShortDateString()</td>
-                <td>
-                    <form method="post" asp-page-handler="EnviarPromo" class="d-inline">
-                        <input type="hidden" name="idPromocion" value="@promo.id_promocion" />
-                        <button type="submit" class="btn btn-primary btn-sm">
-                            Enviar a suscritos
-                        </button>
-                    </form>
+                <td colspan="7" class="text-center">
+                    No hay promociones registradas.
                 </td>
             </tr>
+        }
+        else
+        {
+            @foreach (var promo in Model.Promociones)
+            {
+                var tieneImagen = !string.IsNullOrWhiteSpace(promo.imagen_url);
+
+                <tr>
+                    <td>@promo.id_promocion</td>
+                    <td>@promo.titulo</td>
+                    <td>@promo.descripcion</td>
+                    <td>@promo.fecha_inicio.ToShortDateString()</td>
+                    <td>@promo.fecha_fin.ToShortDateString()</td>
+                    <td>
+                        @if (tieneImagen)
+                        {
+                            <a href="@promo.imagen_url"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="btn btn-outline-secondary btn-sm">
+                                Ver archivo
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted small">Sin archivo</span>
+                        }
+                    </td>
+                    <td>
+                        <form method="post" asp-page-handler="EnviarPromo" class="d-inline">
+                            <input type="hidden" name="idPromocion" value="@promo.id_promocion" />
+                            <button type="submit" class="btn btn-primary btn-sm me-1">
+                                Enviar a suscritos
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
         }
     </tbody>
 </table>

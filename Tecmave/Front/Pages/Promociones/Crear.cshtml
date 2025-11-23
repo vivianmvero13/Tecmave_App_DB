@@ -19,6 +19,7 @@
                     <select id="estadoInput" class="input">
                         <option value="1">Activa</option>
                         <option value="3">Inactiva</option>
+                        <option value="2">Pendiente</option>
                     </select>
                 </div>
             </div>
@@ -38,6 +39,22 @@
                 <div style="grid-column: 1 / span 2;">
                     <label for="descripcionInput">Descripción</label>
                     <textarea id="descripcionInput" class="input" rows="4" maxlength="1000"></textarea>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div style="grid-column: 1 / span 2;">
+                    <label for="imagenFileInput">Imagen de la promoción (archivo)</label>
+                    <input id="imagenFileInput" class="input" type="file" accept="image/*" />
+                    <small>Seleccioná una imagen JPG/PNG/GIF/WEBP.</small>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div style="grid-column: 1 / span 2;">
+                    <label for="imagenUrlInput">URL de la imagen</label>
+                    <input id="imagenUrlInput" class="input" maxlength="500" readonly />
+                    <small>Se llena automáticamente al subir la imagen.</small>
                 </div>
             </div>
 
@@ -216,6 +233,7 @@
 <script>
     const API_BASE = "http://localhost:7096";
     const URL_PROMOCIONES = `${API_BASE}/promociones`;
+    const URL_UPLOAD_PROMO = `${API_BASE}/uploads/promo`;
 
     let currentPromoId = null; // null = crear, número = editar
 
@@ -335,6 +353,7 @@
       const fecha_inicio = parseInputDate('inicioInput');
       const fecha_fin    = parseInputDate('finInput');
       const id_estado    = parseInt(document.getElementById('estadoInput').value || '0', 10);
+      const imagen_url   = (document.getElementById('imagenUrlInput').value || '').trim();
 
       if(!titulo) return { ok:false, msg:'El título es requerido.' };
       if(!fecha_inicio) return { ok:false, msg:'La fecha de inicio es requerida.' };
@@ -342,7 +361,17 @@
 
       if (fecha_inicio > fecha_fin) return { ok:false, msg:'La fecha de inicio no puede ser mayor a la fecha fin.' };
 
-      return { ok:true, payload: { titulo, descripcion, fecha_inicio, fecha_fin, id_estado } };
+      return {
+        ok:true,
+        payload: {
+          titulo,
+          descripcion,
+          fecha_inicio,
+          fecha_fin,
+          id_estado,
+          imagen_url
+        }
+      };
     }
 
     async function crearPromocion(){
@@ -457,6 +486,10 @@
       document.getElementById('inicioInput').value = '';
       document.getElementById('finInput').value = '';
       document.getElementById('estadoInput').value = '1';
+      const imgUrl = document.getElementById('imagenUrlInput');
+      const imgFile = document.getElementById('imagenFileInput');
+      if (imgUrl) imgUrl.value = '';
+      if (imgFile) imgFile.value = '';
       showMsg('');
     }
 
@@ -481,6 +514,7 @@
       document.getElementById('inicioInput').value = fmtDateToInput(p.fecha_inicio ?? p.FechaInicio ?? p.fechaInicio ?? '');
       document.getElementById('finInput').value    = fmtDateToInput(p.fecha_fin ?? p.FechaFin ?? p.fechaFin ?? '');
       document.getElementById('estadoInput').value = p.id_estado ?? p.idEstado ?? p.IdEstado ?? '1';
+      document.getElementById('imagenUrlInput').value = p.imagen_url ?? p.imagenUrl ?? '';
 
       setModoEditar(Number(p.id_promocion ?? p.id ?? p.Id ?? id));
     }
@@ -498,6 +532,42 @@
       if (qsId) {
         try { await cargarPromocionPorId(qsId); }
         catch (e) { console.error(e); showMsg('Error al cargar la promoción.'); setModoCrear(); }
+      }
+
+      // Manejo de subida de archivo de imagen
+      const fileInput = document.getElementById('imagenFileInput');
+      if (fileInput) {
+        fileInput.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const formData = new FormData();
+          formData.append('archivo', file);
+
+          showMsg('Subiendo imagen...');
+
+          try {
+            const resp = await fetch(URL_UPLOAD_PROMO, {
+              method: 'POST',
+              body: formData,
+              credentials: 'include'
+            });
+
+            if (!resp.ok) {
+              let m = 'Error al subir la imagen.';
+              try { m = (await resp.json())?.mensaje || m; } catch {}
+              showMsg(m);
+              return;
+            }
+
+            const data = await resp.json();
+            document.getElementById('imagenUrlInput').value = data.url || '';
+            showMsg('Imagen subida correctamente.');
+          } catch (err) {
+            console.error(err);
+            showMsg('Error inesperado al subir la imagen.');
+          }
+        });
       }
     });
 </script>

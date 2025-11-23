@@ -1,0 +1,417 @@
+﻿@page
+@model Front.Pages.Promociones.NuestrasPromocionesModel
+@{
+    ViewData["Title"] = "Promociones";
+}
+
+<section class="section">
+    <div class="container">
+        <h2 class="promos-title">Promociones activas</h2>
+        <p class="promos-subtitle">Descubrí las promociones vigentes. Hacé clic en la imagen o el título para ver más detalles.</p>
+
+        <div id="promoMsg" class="text-danger mt-2" style="display:none;"></div>
+
+        <div id="promoGrid" class="promo-grid">
+            <!-- Se rellenan con JS -->
+        </div>
+    </div>
+</section>
+
+<!-- Modal de detalle -->
+<div id="promoDetailModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="detalleTitulo" aria-describedby="detalleDescripcion">
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-dialog modal-dialog-wide" role="document">
+        <button class="modal-close" type="button" aria-label="Cerrar" data-close="1">×</button>
+
+        <div class="modal-body-content">
+            <div class="detalle-imagen-wrapper" id="detalleImagenWrapper">
+                <!-- Imagen se inyecta por JS -->
+            </div>
+            <div class="detalle-texto">
+                <h2 id="detalleTitulo"></h2>
+                <p id="detallePeriodo" class="detalle-periodo"></p>
+                <p id="detalleDescripcion" class="detalle-descripcion"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .promos-title {
+        font-size: 1.8rem;
+        margin-bottom: .25rem;
+    }
+
+    .promos-subtitle {
+        margin-bottom: 1.5rem;
+        color: #666;
+    }
+
+    .text-danger {
+        color: #dc3545;
+    }
+
+    .promo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .promo-card {
+        border-radius: .75rem;
+        overflow: hidden;
+        border: 1px solid #e5e5e5;
+        background: #fff;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+
+        .promo-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,.08);
+            border-color: #ff8c00;
+        }
+
+    .promo-image-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 */
+        background: #f5f5f5;
+        overflow: hidden;
+    }
+
+        .promo-image-wrapper img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+    .promo-image-placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .9rem;
+        color: #999;
+        background: repeating-linear-gradient( 45deg, #f5f5f5, #f5f5f5 10px, #ececec 10px, #ececec 20px );
+        text-align: center;
+        padding: .75rem;
+    }
+
+    .promo-card-body {
+        padding: .75rem .85rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: .25rem;
+    }
+
+    .promo-card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        color: #222;
+    }
+
+    .promo-card-periodo {
+        font-size: .8rem;
+        color: #777;
+        margin: 0;
+    }
+
+    /* Modal */
+    .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+    }
+
+        .modal.show {
+            display: block;
+        }
+
+    .modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,.45);
+    }
+
+    .modal-dialog {
+        position: relative;
+        max-width: 520px;
+        margin: 8vh auto 0;
+        background: #fff;
+        border-radius: .75rem;
+        padding: 1.25rem;
+        box-shadow: 0 10px 35px rgba(0,0,0,.25);
+    }
+
+    .modal-dialog-wide {
+        max-width: 900px;
+    }
+
+    .modal-close {
+        position: absolute;
+        right: .5rem;
+        top: .5rem;
+        border: 0;
+        background: transparent;
+        font-size: 1.5rem;
+        line-height: 1;
+        cursor: pointer;
+        color: #888;
+    }
+
+    .modal-body-content {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        gap: 1.25rem;
+        align-items: flex-start;
+    }
+
+    .detalle-imagen-wrapper {
+        border-radius: .75rem;
+        overflow: hidden;
+        background: #f5f5f5;
+        min-height: 200px;
+        position: relative;
+    }
+
+        .detalle-imagen-wrapper img {
+            width: 100%;
+            height: 100%;
+            max-height: 480px;
+            object-fit: cover;
+            display: block;
+        }
+
+    .detalle-imagen-placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: .9rem;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .detalle-texto h2 {
+        margin-top: 0;
+        margin-bottom: .25rem;
+    }
+
+    .detalle-periodo {
+        font-size: .9rem;
+        color: #777;
+        margin-bottom: 1rem;
+    }
+
+    .detalle-descripcion {
+        white-space: pre-wrap;
+        line-height: 1.5;
+    }
+
+    @@media (max-width: 768px) {
+        .modal-dialog {
+            margin: 5vh 1rem 0;
+            padding: 1rem;
+        }
+
+        .modal-body-content {
+            grid-template-columns: 1fr;
+        }
+
+        .detalle-imagen-wrapper {
+            min-height: 180px;
+        }
+    }
+</style>
+
+<script>
+        const API_BASE = "http://localhost:7096";
+        const URL_PROMOCIONES = `${API_BASE}/promociones`;
+
+        let promosActivas = [];
+
+        function showPromoMsg(text) {
+            const el = document.getElementById('promoMsg');
+            el.textContent = text || '';
+            el.style.display = text ? 'block' : 'none';
+        }
+
+        function esc(s) {
+            return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;', '=': '&#61;', '/': '&#47;'
+            }[c]));
+        }
+
+        function fmtDate(v) {
+            if (!v) return '';
+            try {
+                const d = new Date(v);
+                if (Number.isNaN(d.getTime())) return String(v);
+                const dd = String(d.getDate()).padStart(2, '0');
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const yyyy = d.getFullYear();
+                return `${dd}/${mm}/${yyyy}`;
+            } catch {
+                return '';
+            }
+        }
+
+        function hoyDateOnly() {
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function isWithinVigencia(fechaInicioRaw, fechaFinRaw) {
+            if (!fechaInicioRaw || !fechaFinRaw) return true; // por si vienen nulos
+            const hoyStr = hoyDateOnly();
+
+            const inicioStr = typeof fechaInicioRaw === 'string'
+                ? fechaInicioRaw.substring(0, 10)
+                : hoyStr;
+
+            const finStr = typeof fechaFinRaw === 'string'
+                ? fechaFinRaw.substring(0, 10)
+                : hoyStr;
+
+            return inicioStr <= hoyStr && finStr >= hoyStr;
+        }
+
+        async function cargarPromosActivas() {
+            showPromoMsg('');
+            const grid = document.getElementById('promoGrid');
+            grid.innerHTML = '<p>Cargando promociones…</p>';
+
+            try {
+                const r = await fetch(URL_PROMOCIONES, { credentials: 'include' });
+                if (!r.ok) throw r;
+                const data = await r.json();
+                const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+
+                promosActivas = list.filter(p => {
+                    const estado = Number(p.id_estado ?? p.idEstado ?? p.IdEstado ?? 0);
+                    if (estado !== 1) return false; // SOLO ACTIVAS
+
+                    const fiRaw = p.fecha_inicio ?? p.FechaInicio ?? p.fechaInicio ?? null;
+                    const ffRaw = p.fecha_fin ?? p.FechaFin ?? p.fechaFin ?? null;
+
+                    return isWithinVigencia(fiRaw, ffRaw);
+                });
+
+                if (!promosActivas.length) {
+                    grid.innerHTML = '<p>No hay promociones activas en este momento.</p>';
+                    return;
+                }
+
+                grid.innerHTML = promosActivas.map((p, idx) => {
+                    const titulo = p.titulo ?? p.Titulo ?? '';
+                    const fiRaw = p.fecha_inicio ?? p.FechaInicio ?? p.fechaInicio ?? null;
+                    const ffRaw = p.fecha_fin ?? p.FechaFin ?? p.fechaFin ?? null;
+                    const periodo = `${fmtDate(fiRaw)} - ${fmtDate(ffRaw)}`;
+
+                    const imagen = (p.imagen_url ?? p.imagenUrl ?? p.ImagenUrl ?? '').trim();
+
+                    const hasImage = !!imagen;
+                    const imgHtml = hasImage
+                        ? `<img src="${esc(imagen)}" alt="${esc(titulo)}" loading="lazy" />`
+                        : `<div class="promo-image-placeholder">Sin imagen disponible</div>`;
+
+                    return `
+    <div class="promo-card" onclick="verDetallePromo(${idx})">
+      <div class="promo-image-wrapper">
+        ${imgHtml}
+      </div>
+      <div class="promo-card-body">
+        <h3 class="promo-card-title">${esc(titulo)}</h3>
+        <p class="promo-card-periodo">${esc(periodo)}</p>
+      </div>
+    </div>`;
+                }).join('');
+
+            } catch (err) {
+                let msg = 'Error cargando promociones.';
+                try { msg = (await err.json())?.message || msg; } catch { }
+                showPromoMsg(msg);
+                grid.innerHTML = '';
+            }
+        }
+
+        // Modal detalle
+        const PromoDetalleModal = (() => {
+            const root = document.getElementById('promoDetailModal');
+            const tituloEl = document.getElementById('detalleTitulo');
+            const periodoEl = document.getElementById('detallePeriodo');
+            const descEl = document.getElementById('detalleDescripcion');
+            const imgWrapper = document.getElementById('detalleImagenWrapper');
+
+            function show(promo) {
+                const titulo = promo.titulo ?? promo.Titulo ?? '';
+                const desc = promo.descripcion ?? promo.Descripcion ?? '';
+                const fiRaw = promo.fecha_inicio ?? promo.FechaInicio ?? promo.fechaInicio ?? null;
+                const ffRaw = promo.fecha_fin ?? promo.FechaFin ?? promo.fechaFin ?? null;
+                const imagen = (promo.imagen_url ?? promo.imagenUrl ?? promo.ImagenUrl ?? '').trim();
+
+                tituloEl.textContent = titulo;
+                periodoEl.textContent = `Vigencia: ${fmtDate(fiRaw)} - ${fmtDate(ffRaw)}`;
+                descEl.textContent = desc;
+
+                imgWrapper.innerHTML = '';
+                if (imagen) {
+                    const img = document.createElement('img');
+                    img.src = imagen;
+                    img.alt = titulo;
+                    imgWrapper.appendChild(img);
+                } else {
+                    const div = document.createElement('div');
+                    div.className = 'detalle-imagen-placeholder';
+                    div.textContent = 'Esta promoción no tiene imagen asociada.';
+                    imgWrapper.appendChild(div);
+                }
+
+                root.classList.add('show');
+                root.setAttribute('aria-hidden', 'false');
+                document.addEventListener('keydown', escListener);
+            }
+
+            function hide() {
+                root.classList.remove('show');
+                root.setAttribute('aria-hidden', 'true');
+                document.removeEventListener('keydown', escListener);
+            }
+
+            function escListener(e) {
+                if (e.key === 'Escape') hide();
+            }
+
+            root.addEventListener('click', (e) => {
+                if (e.target?.dataset?.close === '1') {
+                    hide();
+                }
+            });
+
+            return { show, hide };
+        })();
+
+        function verDetallePromo(idx) {
+            const promo = promosActivas[idx];
+            if (!promo) return;
+            PromoDetalleModal.show(promo);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarPromosActivas();
+        });
+</script>

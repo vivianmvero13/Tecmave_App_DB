@@ -77,6 +77,8 @@ builder.Services.AddHostedService<RecordatorioService>();
 builder.Services.AddScoped<MantenimientoService>();
 builder.Services.AddScoped<RevisionPertenenciasService>();
 builder.Services.AddScoped<RevisionTrabajosService>();
+builder.WebHost.UseWebRoot("wwwroot");
+
 
 var app = builder.Build();
 
@@ -86,6 +88,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseCors("PermirFrontend");
 app.UseAuthentication();

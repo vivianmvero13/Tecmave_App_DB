@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Net; 
 
 namespace Tecmave.Api.Services
 {
@@ -48,6 +49,7 @@ namespace Tecmave.Api.Services
             entidad.fecha_inicio = model.fecha_inicio;
             entidad.fecha_fin = model.fecha_fin;
             entidad.id_estado = model.id_estado;
+            entidad.imagen_url = model.imagen_url;
 
             _context.SaveChanges();
             return true;
@@ -86,6 +88,23 @@ namespace Tecmave.Api.Services
 
             int totalEnviadas = 0;
 
+            // Sanitizar texto básico
+            string tituloSafe = WebUtility.HtmlEncode(promo.titulo ?? string.Empty);
+            string descSafe = WebUtility.HtmlEncode(promo.descripcion ?? string.Empty);
+
+            // Si hay URL de imagen, la agregamos al HTML
+            string imagenHtml = string.Empty;
+            if (!string.IsNullOrWhiteSpace(promo.imagen_url))
+            {
+                var imgUrlSafe = WebUtility.HtmlEncode(promo.imagen_url);
+                imagenHtml = $@"
+                    <div style=""margin: 16px 0;"">
+                        <img src=""{imgUrlSafe}""
+                             alt=""{tituloSafe}""
+                             style=""max-width:100%;height:auto;border-radius:8px;display:block;margin:0 auto;"" />
+                    </div>";
+            }
+
             foreach (var usuario in usuarios)
             {
                 bool yaEnviada = await _context.promocion_envios.AnyAsync(pe =>
@@ -95,10 +114,31 @@ namespace Tecmave.Api.Services
                     continue;
 
                 string asunto = $"Nueva promoción: {promo.titulo}";
+
                 string cuerpo = $@"
-                    <h3>{promo.titulo}</h3>
-                    <p>{promo.descripcion}</p>
-                    <p><b>Válida hasta:</b> {promo.fecha_fin:dd/MM/yyyy}</p>";
+<html>
+  <body style=""font-family: Arial, sans-serif; font-size: 14px; color: #333;"">
+    <div style=""max-width: 600px; margin: 0 auto; padding: 16px;"">
+      <h2 style=""color:#ff8c00; margin-top:0;"">{tituloSafe}</h2>
+
+      <p style=""line-height:1.5;"">
+        {descSafe}
+      </p>
+
+      {imagenHtml}
+
+      <p style=""margin-top:16px;"">
+        <b>Válida hasta:</b> {promo.fecha_fin:dd/MM/yyyy}
+      </p>
+
+      <hr style=""margin:24px 0; border:none; border-top:1px solid #eee;"" />
+
+      <p style=""font-size:12px; color:#777;"">
+        Estás recibiendo este correo porque tenés activadas las notificaciones en Tecmave.
+      </p>
+    </div>
+  </body>
+</html>";
 
                 await _emailService.EnviarCorreo(usuario.Email, asunto, cuerpo);
 

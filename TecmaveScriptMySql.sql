@@ -277,6 +277,7 @@ CREATE TABLE promociones (
   fecha_fin DATE NOT NULL,
   id_estado INT NOT NULL,
   recordatorio_enviado TINYINT(1) NOT NULL DEFAULT 0,
+  imagen_url VARCHAR(500) NULL,
   PRIMARY KEY (id_promocion),
   KEY FK_Promociones_Estado (id_estado),
   CONSTRAINT FK_Promociones_Estado FOREIGN KEY (id_estado) REFERENCES estados (id_estado)
