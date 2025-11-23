@@ -99,7 +99,7 @@
         justify-content: center;
         font-size: .9rem;
         color: #999;
-        background: repeating-linear-gradient( 45deg, #f5f5f5, #f5f5f5 10px, #ececec 10px, #ececec 20px );
+        background: repeating-linear-gradient(45deg, #f5f5f5, #f5f5f5 10px, #ececec 10px, #ececec 20px);
         text-align: center;
         padding: .75rem;
     }
@@ -236,100 +236,74 @@
 </style>
 
 <script>
-        const API_BASE = "http://localhost:7096";
-        const URL_PROMOCIONES = `${API_BASE}/promociones`;
+    const API_BASE = "http://localhost:7096";
+    const URL_PROMOCIONES = `${API_BASE}/promociones`;
 
-        let promosActivas = [];
+    let promosActivas = [];
 
-        function showPromoMsg(text) {
-            const el = document.getElementById('promoMsg');
-            el.textContent = text || '';
-            el.style.display = text ? 'block' : 'none';
-        }
+    function showPromoMsg(text) {
+        const el = document.getElementById('promoMsg');
+        el.textContent = text || '';
+        el.style.display = text ? 'block' : 'none';
+    }
 
-        function esc(s) {
-            return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;', '=': '&#61;', '/': '&#47;'
-            }[c]));
-        }
+    function esc(s) {
+        return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;', '=': '&#61;', '/': '&#47;'
+        }[c]));
+    }
 
-        function fmtDate(v) {
-            if (!v) return '';
-            try {
-                const d = new Date(v);
-                if (Number.isNaN(d.getTime())) return String(v);
-                const dd = String(d.getDate()).padStart(2, '0');
-                const mm = String(d.getMonth() + 1).padStart(2, '0');
-                const yyyy = d.getFullYear();
-                return `${dd}/${mm}/${yyyy}`;
-            } catch {
-                return '';
-            }
-        }
-
-        function hoyDateOnly() {
-            const d = new Date();
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
+    function fmtDate(v) {
+        if (!v) return '';
+        try {
+            const d = new Date(v);
+            if (Number.isNaN(d.getTime())) return String(v);
             const dd = String(d.getDate()).padStart(2, '0');
-            return `${yyyy}-${mm}-${dd}`;
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            return `${dd}/${mm}/${yyyy}`;
+        } catch {
+            return '';
         }
+    }
 
-        function isWithinVigencia(fechaInicioRaw, fechaFinRaw) {
-            if (!fechaInicioRaw || !fechaFinRaw) return true; // por si vienen nulos
-            const hoyStr = hoyDateOnly();
+    // Cargar SOLO promos con estado Activo (id_estado = 1)
+    async function cargarPromosActivas() {
+        showPromoMsg('');
+        const grid = document.getElementById('promoGrid');
+        grid.innerHTML = '<p>Cargando promociones…</p>';
 
-            const inicioStr = typeof fechaInicioRaw === 'string'
-                ? fechaInicioRaw.substring(0, 10)
-                : hoyStr;
+        try {
+            const r = await fetch(URL_PROMOCIONES, { credentials: 'include' });
+            if (!r.ok) throw r;
+            const data = await r.json();
+            const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
 
-            const finStr = typeof fechaFinRaw === 'string'
-                ? fechaFinRaw.substring(0, 10)
-                : hoyStr;
+            // 🔥 FILTRO ÚNICAMENTE POR ESTADO ACTIVO
+            promosActivas = list.filter(p => {
+                const estado = Number(p.id_estado ?? p.idEstado ?? p.IdEstado ?? 0);
+                return estado === 1; // solo activas
+            });
 
-            return inicioStr <= hoyStr && finStr >= hoyStr;
-        }
+            if (!promosActivas.length) {
+                grid.innerHTML = '<p>No hay promociones activas en este momento.</p>';
+                return;
+            }
 
-        async function cargarPromosActivas() {
-            showPromoMsg('');
-            const grid = document.getElementById('promoGrid');
-            grid.innerHTML = '<p>Cargando promociones…</p>';
+            grid.innerHTML = promosActivas.map((p, idx) => {
+                const titulo = p.titulo ?? p.Titulo ?? '';
+                const fiRaw = p.fecha_inicio ?? p.FechaInicio ?? p.fechaInicio ?? null;
+                const ffRaw = p.fecha_fin ?? p.FechaFin ?? p.fechaFin ?? null;
+                const periodo = `${fmtDate(fiRaw)} - ${fmtDate(ffRaw)}`;
 
-            try {
-                const r = await fetch(URL_PROMOCIONES, { credentials: 'include' });
-                if (!r.ok) throw r;
-                const data = await r.json();
-                const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+                const imagen = (p.imagen_url ?? p.imagenUrl ?? p.ImagenUrl ?? '').trim();
 
-                promosActivas = list.filter(p => {
-                    const estado = Number(p.id_estado ?? p.idEstado ?? p.IdEstado ?? 0);
-                    if (estado !== 1) return false; // SOLO ACTIVAS
+                const hasImage = !!imagen;
+                const imgHtml = hasImage
+                    ? `<img src="${esc(imagen)}" alt="${esc(titulo)}" loading="lazy" />`
+                    : `<div class="promo-image-placeholder">Sin imagen disponible</div>`;
 
-                    const fiRaw = p.fecha_inicio ?? p.FechaInicio ?? p.fechaInicio ?? null;
-                    const ffRaw = p.fecha_fin ?? p.FechaFin ?? p.fechaFin ?? null;
-
-                    return isWithinVigencia(fiRaw, ffRaw);
-                });
-
-                if (!promosActivas.length) {
-                    grid.innerHTML = '<p>No hay promociones activas en este momento.</p>';
-                    return;
-                }
-
-                grid.innerHTML = promosActivas.map((p, idx) => {
-                    const titulo = p.titulo ?? p.Titulo ?? '';
-                    const fiRaw = p.fecha_inicio ?? p.FechaInicio ?? p.fechaInicio ?? null;
-                    const ffRaw = p.fecha_fin ?? p.FechaFin ?? p.fechaFin ?? null;
-                    const periodo = `${fmtDate(fiRaw)} - ${fmtDate(ffRaw)}`;
-
-                    const imagen = (p.imagen_url ?? p.imagenUrl ?? p.ImagenUrl ?? '').trim();
-
-                    const hasImage = !!imagen;
-                    const imgHtml = hasImage
-                        ? `<img src="${esc(imagen)}" alt="${esc(titulo)}" loading="lazy" />`
-                        : `<div class="promo-image-placeholder">Sin imagen disponible</div>`;
-
-                    return `
+                return `
     <div class="promo-card" onclick="verDetallePromo(${idx})">
       <div class="promo-image-wrapper">
         ${imgHtml}
@@ -339,79 +313,79 @@
         <p class="promo-card-periodo">${esc(periodo)}</p>
       </div>
     </div>`;
-                }).join('');
+            }).join('');
 
-            } catch (err) {
-                let msg = 'Error cargando promociones.';
-                try { msg = (await err.json())?.message || msg; } catch { }
-                showPromoMsg(msg);
-                grid.innerHTML = '';
+        } catch (err) {
+            let msg = 'Error cargando promociones.';
+            try { msg = (await err.json())?.message || msg; } catch { }
+            showPromoMsg(msg);
+            grid.innerHTML = '';
+        }
+    }
+
+    // Modal detalle
+    const PromoDetalleModal = (() => {
+        const root = document.getElementById('promoDetailModal');
+        const tituloEl = document.getElementById('detalleTitulo');
+        const periodoEl = document.getElementById('detallePeriodo');
+        const descEl = document.getElementById('detalleDescripcion');
+        const imgWrapper = document.getElementById('detalleImagenWrapper');
+
+        function show(promo) {
+            const titulo = promo.titulo ?? promo.Titulo ?? '';
+            const desc = promo.descripcion ?? promo.Descripcion ?? '';
+            const fiRaw = promo.fecha_inicio ?? promo.FechaInicio ?? promo.fechaInicio ?? null;
+            const ffRaw = promo.fecha_fin ?? promo.FechaFin ?? promo.fechaFin ?? null;
+            const imagen = (promo.imagen_url ?? promo.imagenUrl ?? promo.ImagenUrl ?? '').trim();
+
+            tituloEl.textContent = titulo;
+            periodoEl.textContent = `Vigencia: ${fmtDate(fiRaw)} - ${fmtDate(ffRaw)}`;
+            descEl.textContent = desc;
+
+            imgWrapper.innerHTML = '';
+            if (imagen) {
+                const img = document.createElement('img');
+                img.src = imagen;
+                img.alt = titulo;
+                imgWrapper.appendChild(img);
+            } else {
+                const div = document.createElement('div');
+                div.className = 'detalle-imagen-placeholder';
+                div.textContent = 'Esta promoción no tiene imagen asociada.';
+                imgWrapper.appendChild(div);
             }
+
+            root.classList.add('show');
+            root.setAttribute('aria-hidden', 'false');
+            document.addEventListener('keydown', escListener);
         }
 
-        // Modal detalle
-        const PromoDetalleModal = (() => {
-            const root = document.getElementById('promoDetailModal');
-            const tituloEl = document.getElementById('detalleTitulo');
-            const periodoEl = document.getElementById('detallePeriodo');
-            const descEl = document.getElementById('detalleDescripcion');
-            const imgWrapper = document.getElementById('detalleImagenWrapper');
-
-            function show(promo) {
-                const titulo = promo.titulo ?? promo.Titulo ?? '';
-                const desc = promo.descripcion ?? promo.Descripcion ?? '';
-                const fiRaw = promo.fecha_inicio ?? promo.FechaInicio ?? promo.fechaInicio ?? null;
-                const ffRaw = promo.fecha_fin ?? promo.FechaFin ?? promo.fechaFin ?? null;
-                const imagen = (promo.imagen_url ?? promo.imagenUrl ?? promo.ImagenUrl ?? '').trim();
-
-                tituloEl.textContent = titulo;
-                periodoEl.textContent = `Vigencia: ${fmtDate(fiRaw)} - ${fmtDate(ffRaw)}`;
-                descEl.textContent = desc;
-
-                imgWrapper.innerHTML = '';
-                if (imagen) {
-                    const img = document.createElement('img');
-                    img.src = imagen;
-                    img.alt = titulo;
-                    imgWrapper.appendChild(img);
-                } else {
-                    const div = document.createElement('div');
-                    div.className = 'detalle-imagen-placeholder';
-                    div.textContent = 'Esta promoción no tiene imagen asociada.';
-                    imgWrapper.appendChild(div);
-                }
-
-                root.classList.add('show');
-                root.setAttribute('aria-hidden', 'false');
-                document.addEventListener('keydown', escListener);
-            }
-
-            function hide() {
-                root.classList.remove('show');
-                root.setAttribute('aria-hidden', 'true');
-                document.removeEventListener('keydown', escListener);
-            }
-
-            function escListener(e) {
-                if (e.key === 'Escape') hide();
-            }
-
-            root.addEventListener('click', (e) => {
-                if (e.target?.dataset?.close === '1') {
-                    hide();
-                }
-            });
-
-            return { show, hide };
-        })();
-
-        function verDetallePromo(idx) {
-            const promo = promosActivas[idx];
-            if (!promo) return;
-            PromoDetalleModal.show(promo);
+        function hide() {
+            root.classList.remove('show');
+            root.setAttribute('aria-hidden', 'true');
+            document.removeEventListener('keydown', escListener);
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            cargarPromosActivas();
+        function escListener(e) {
+            if (e.key === 'Escape') hide();
+        }
+
+        root.addEventListener('click', (e) => {
+            if (e.target?.dataset?.close === '1') {
+                hide();
+            }
         });
+
+        return { show, hide };
+    })();
+
+    function verDetallePromo(idx) {
+        const promo = promosActivas[idx];
+        if (!promo) return;
+        PromoDetalleModal.show(promo);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarPromosActivas();
+    });
 </script>
