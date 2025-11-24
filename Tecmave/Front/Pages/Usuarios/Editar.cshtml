@@ -19,10 +19,6 @@
                 <input id="apellidos" class="form-control" />
             </div>
             <div>
-                <label class="form-label">Usuario</label>
-                <input id="UserName" class="form-control" />
-            </div>
-            <div>
                 <label class="form-label">Email</label>
                 <input id="Email" type="email" class="form-control" />
             </div>
@@ -34,7 +30,10 @@
             <div style="grid-column:1/-1">
                 <label class="form-label">Roles asignados</label>
                 <div id="RolesReadOnly"></div>
-                <small class="text-muted">Los roles se administran desde la pantalla de <a href="/Roles/Index">Roles</a> o el listado de usuarios.</small>
+                <small class="text-muted">
+                    Los roles se administran desde la pantalla de
+                    <a href="/Roles/Index">Roles</a> o el listado de usuarios.
+                </small>
             </div>
         </div>
 
@@ -52,8 +51,8 @@
         const USER_ID = @Model.Id;
 
         $(function () {
-          loadUser();
-          $('#frmUser').on('submit', onSave);
+            loadUser();
+            $('#frmUser').on('submit', onSave);
         });
 
         function badge(text){
@@ -62,16 +61,22 @@
           return `<span class="badge" style="background:#eef1f5;color:#333;border:1px solid #d9dee5;margin-right:6px;">${escapeHtml(t)}</span>`;
         }
 
-        function escapeHtml(s){ return String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
+        function escapeHtml(s){
+          return String(s ?? '')
+            .replaceAll('&','&amp;')
+            .replaceAll('<','&lt;')
+            .replaceAll('>','&gt;')
+            .replaceAll('"','&quot;')
+            .replaceAll("'",'&#39;');
+        }
 
         function loadUser() {
           $.getJSON(`${API}/api/usuarios/${USER_ID}`, function (u) {
-            $('#nombre').val(u.nombre ?? '');
-            $('#apellidos').val(u.apellidos ?? '');
-            $('#PhoneNumber').val(u.phoneNumber ?? '');
-            $('#UserName').val(u.userName ?? '');
-            $('#Email').val(u.email ?? '');
-            $('#PhoneNumber').val(u.phoneNumber ?? '');
+            // Soportamos snake_case y Pascal/camel por si cambias el API
+            $('#nombre').val(u.nombre ?? u.Nombre ?? '');
+            $('#apellidos').val(u.apellidos ?? u.Apellidos ?? '');
+            $('#Email').val(u.email ?? u.Email ?? '');
+            $('#PhoneNumber').val(u.phoneNumber ?? u.PhoneNumber ?? u.phone_number ?? '');
           });
 
           $.getJSON(`${API}/api/usuarios/${USER_ID}/roles`, function (roles) {
@@ -86,12 +91,12 @@
           e.preventDefault();
           $('#btnSave').prop('disabled', true);
 
+          // OJO: usamos phone_number para que el backend en snake_case lo mapee bien
           const payload = {
             nombre: $('#nombre').val(),
             apellidos: $('#apellidos').val(),
-            userName: $('#UserName').val(),
             email: $('#Email').val(),
-            phoneNumber: $('#PhoneNumber').val()
+            phone_number: $('#PhoneNumber').val()
           };
 
           try {

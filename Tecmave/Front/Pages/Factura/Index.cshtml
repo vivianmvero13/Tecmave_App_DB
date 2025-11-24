@@ -1,0 +1,930 @@
+@page
+@model Front.Pages.Factura.IndexModel
+@{
+    ViewData["Title"] = "Facturas";
+}
+
+<section class="section">
+    <div class="container grid cols-1">
+        <div class="card">
+            <div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+                <h3 style="margin:0">Listado de Facturas</h3>
+                <div class="fx-actions" style="display:flex;flex-wrap:wrap;gap:.5rem;">
+                    <button id="btnExportMes" class="btn btn-primary">Exportar mes</button>
+                    <button id="btnExportCliente" class="btn btn-primary">Exportar por cliente</button>
+                    <button id="btnExportPendientes" class="btn btn-secondary">Exportar pendientes</button>
+                    <button id="btnEnviarRecordatorios" class="btn">Enviar recordatorios</button>
+                    <button id="btnAbrirModalCrear" class="btn">Generar factura</button>
+                    <button id="btnAbrirModalAuto" class="btn">Generar desde servicio</button>
+                    <button id="btnPdf" class="btn">Exportar PDF</button>
+                </div>
+            </div>
+
+            <!-- FILTROS -->
+            <div class="form-row" style="display:flex;flex-wrap:wrap;gap:1rem;margin-top:1rem;">
+                <div>
+                    <label>Número de factura</label>
+                    <input id="filtroNumero" class="input" placeholder="Ej: 1024" />
+                </div>
+                <div>
+                    <label>Buscar por cliente</label>
+                    <input id="filtroNombre" class="input" placeholder="Ingrese nombre del cliente..." />
+                </div>
+                <div>
+                    <label>Estado</label>
+                    <select id="filtroEstado" class="input">
+                        <option value="">Todos</option>
+                        <option value="Pagada">Pagada</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Anulada">Anulada</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Desde</label>
+                    <input id="filtroDesde" type="date" class="input" />
+                </div>
+                <div>
+                    <label>Hasta</label>
+                    <input id="filtroHasta" type="date" class="input" />
+                </div>
+                <div style="display:flex;align-items:flex-end;">
+                    <button id="btnFiltrar" class="btn btn-primary">Filtrar</button>
+                </div>
+            </div>
+
+            <!-- CONTROLES DE EXPORTACIÓN -->
+            <div class="form-row" style="display:flex;flex-wrap:wrap;gap:1rem;margin-top:1rem;">
+                <div>
+                    <label>Mes a exportar</label>
+                    <input id="filtroMesExport" type="month" class="input" />
+                </div>
+                <div>
+                    <label>Cliente a exportar</label>
+                    <select id="selClienteExport" class="input"></select>
+                </div>
+            </div>
+
+            <!-- Estado de carga -->
+            <div id="estadoCarga" class="muted" style="margin: .75rem 0;">Cargando…</div>
+
+            <!-- TABLA -->
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID Factura</th>
+                            <th>Cliente</th>
+                            <th>Correo</th>
+                            <th>Teléfono</th>
+                            <th>Fecha emisión</th>
+                            <th>Método pago</th>
+                            <th>Estado</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaFacturas"></tbody>
+                </table>
+            </div>
+
+            <div class="subtle">
+                <span id="badge"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Crear Factura Manual -->
+    <div id="modalCrearFactura" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>Generar factura manual</h4>
+                <button class="close" data-close="modalCrearFactura">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row" style="display:flex;flex-wrap:wrap;gap:1rem;">
+                    <div>
+                        <label>Cliente</label>
+                        <select id="crear_cliente" class="input"></select>
+                    </div>
+                    <div>
+                        <label>Método de pago</label>
+                        <select id="crear_metodo" class="input">
+                            <option>Efectivo</option>
+                            <option>Tarjeta</option>
+                            <option>Transferencia</option>
+                            <option>Sin definir</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Fecha</label>
+                        <input id="crear_fecha" type="date" class="input" />
+                    </div>
+                    <div>
+                        <label>Total</label>
+                        <input id="crear_total" type="number" step="0.01" min="0" class="input" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btnCrearFactura" class="btn btn-primary">Crear</button>
+                <button class="btn" data-close="modalCrearFactura">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Crear Factura Automática desde Servicio -->
+    <div id="modalAutoFactura" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>Generar factura desde servicio</h4>
+                <button class="close" data-close="modalAutoFactura">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row" style="display:flex;flex-wrap:wrap;gap:1rem;">
+                    <div>
+                        <label>Cliente</label>
+                        <select id="auto_cliente" class="input"></select>
+                    </div>
+                    <div>
+                        <label>Servicio</label>
+                        <select id="auto_servicio" class="input">
+                            <!-- Puedes llenar este select desde tu API de servicios si lo deseas -->
+                        </select>
+                    </div>
+                    <div>
+                        <label>Método de pago</label>
+                        <select id="auto_metodo" class="input">
+                            <option>Efectivo</option>
+                            <option>Tarjeta</option>
+                            <option>Transferencia</option>
+                            <option>Sin definir</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="subtle">El total se tomará del precio del servicio seleccionado.</p>
+            </div>
+            <div class="modal-footer">
+                <button id="btnCrearAuto" class="btn btn-primary">Generar</button>
+                <button class="btn" data-close="modalAutoFactura">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pequeño para cambiar estado -->
+    <div id="modalEstado" class="modal" aria-hidden="true">
+        <div class="modal__backdrop"></div>
+        <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modalEstadoTitulo">
+            <div class="modal__header">
+                <h4 id="modalEstadoTitulo" style="margin:0">Cambiar estado</h4>
+                <button type="button" class="modal__close" id="btnCloseModal" aria-label="Cerrar">×</button>
+            </div>
+            <div class="modal__body">
+                <div class="form-row" style="display:flex;flex-direction:column;gap:.35rem;">
+                    <label for="ddlEstado">Estado</label>
+                    <select id="ddlEstado" class="input">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Pagada">Pagada</option>
+                        <option value="Anulada">Anulada</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button id="btnGuardarEstado" class="primary">Guardar</button>
+                <button id="btnCancelarEstado" class="secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    body, .table, .table td, .table th, .card, .muted {
+        color: #333;
+    }
+
+    .table-wrapper {
+        overflow: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .table th {
+            background: #f5f5f5;
+        }
+
+        .table th, .table td {
+            padding: 8px 10px;
+            border: 1px solid #e6e6e6;
+        }
+
+    .badge {
+        padding: .15rem .5rem;
+        border-radius: 10px;
+        font-size: .85rem;
+        border: 1px solid #ddd
+    }
+
+        .badge.badge--pendiente {
+            background: #fff6e6;
+            border-color: #ffd699
+        }
+
+        .badge.badge--pagada {
+            background: #eaffea;
+            border-color: #a8f0b0
+        }
+
+        .badge.badge--anulada {
+            background: #ffecec;
+            border-color: #ffb8b8
+        }
+
+    .btn {
+        padding: .35rem .65rem;
+        border: 1px solid #ccc;
+        background: #fafafa;
+        cursor: pointer;
+        border-radius: 6px;
+        font-size: .9rem;
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        border-color: #2f6fda;
+        color: #fff;
+    }
+
+    .btn-secondary {
+        background: #f2f2f2;
+        border-color: #d9d9d9;
+    }
+
+    .btn.danger {
+        color: #fff;
+        background: #d9534f;
+        border-color: #c9302c
+    }
+
+    .btn:disabled {
+        opacity: .6;
+        cursor: not-allowed
+    }
+
+    .secondary {
+        padding: .4rem .7rem;
+        background: #f2f2f2;
+        border: 1px solid #d9d9d9;
+        cursor: pointer
+    }
+
+    .primary {
+        padding: .4rem .7rem;
+        background: #3b82f6;
+        color: #fff;
+        border: 1px solid #2f6fda;
+        cursor: pointer
+    }
+
+    .card {
+        background: #fff;
+        border: 1px solid #e9e9e9;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 1px 2px rgba(0,0,0,.03)
+    }
+
+    .container {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .muted {
+        color: #666;
+        font-size: .9rem
+    }
+
+    .subtle {
+        margin-top: .75rem;
+        font-size: .85rem;
+        color: #666;
+    }
+
+    .input {
+        width: 100%;
+        padding: .45rem .55rem;
+        border: 1px solid #d9d9d9;
+        border-radius: 8px;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    /* Modal genérico */
+    .modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+    }
+
+    .modal-content {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e9e9e9;
+        box-shadow: 0 10px 30px rgba(0,0,0,.2);
+        width: 420px;
+        max-width: 95vw;
+    }
+
+    .modal-header, .modal-footer {
+        padding: 12px 14px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: space-between
+    }
+
+    .modal-footer {
+        border-top: 1px solid #eee;
+        border-bottom: none
+    }
+
+    .modal-body {
+        padding: 12px 14px
+    }
+
+    .close {
+        background: transparent;
+        border: none;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer
+    }
+
+    /* Modal pequeño (cambiar estado) */
+    .modal__backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.35);
+    }
+
+    .modal__dialog {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        width: 360px;
+        max-width: 90vw;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e9e9e9;
+        box-shadow: 0 10px 30px rgba(0,0,0,.2)
+    }
+
+    .modal__header, .modal__footer {
+        padding: 12px 14px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: space-between
+    }
+
+    .modal__footer {
+        border-top: 1px solid #eee;
+        border-bottom: none
+    }
+
+    .modal__body {
+        padding: 12px 14px
+    }
+
+    .modal__close {
+        background: transparent;
+        border: none;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer
+    }
+</style>
+
+@section Scripts {
+    <!-- jQuery -->
+    <script src="http://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <!-- jsPDF + autoTable -->
+    <script src="http://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="http://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        const API_FACTURAS  = "http://localhost:7096/facturas";
+        const API_USUARIOS  = "http://localhost:7096/api/usuarios";
+        const API_SERVICIOS = "http://localhost:7096/servicios"; // si en tu API es /api/servicios, cámbialo aquí
+
+        let FACTURAS = [];
+        let USUARIOS = [];
+        let SERVICIOS = [];
+        let facturaSeleccionada = null;
+
+        // ===== HELPERS =====
+        function badgeEstado(est) {
+            const e = (est || '').toLowerCase();
+            if (e === 'pagada') return '<span class="badge badge--pagada">Pagada</span>';
+            if (e === 'anulada') return '<span class="badge badge--anulada">Anulada</span>';
+            return '<span class="badge badge--pendiente">Pendiente</span>';
+        }
+
+        function nombreClientePorId(id) {
+            if (id == null) return '';
+            const u = USUARIOS.find(x => Number(x.id) === Number(id) || Number(x.Id) === Number(id));
+            if (!u) return id ?? '';
+            const nombre = (u.nombre || u.Nombre || '').toString().trim();
+            const ap = (u.apellidos || u.Apellidos || u.apellido || u.Apellido || '').toString().trim();
+            return (nombre + ' ' + ap).trim() || (u.email || u.Email || id);
+        }
+
+        function correoClientePorId(id) {
+            const u = USUARIOS.find(x => Number(x.id) === Number(id) || Number(x.Id) === Number(id));
+            return (u?.email || u?.Email || u?.user_name || u?.UserName || '') ?? '';
+        }
+
+        function telefonoClientePorId(id) {
+            const u = USUARIOS.find(x => Number(x.id) === Number(id) || Number(x.Id) === Number(id));
+            return (u?.phone_number || u?.PhoneNumber || '') ?? '';
+        }
+
+        function formatCRC(n) {
+            const v = Number(n || 0);
+            return v.toLocaleString('es-CR', { style: 'currency', currency: 'CRC', maximumFractionDigits: 0 });
+        }
+
+        function safeFecha(v) {
+            if (!v) return '';
+            const d = new Date(v);
+            return isNaN(d) ? v : d.toLocaleString();
+        }
+
+        function parseDateOnly(v) {
+            if (!v) return null;
+            const d = new Date(v);
+            if (isNaN(d)) return null;
+            return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        }
+
+        // ===== CARGA INICIAL =====
+        function cargarTodo() {
+            $("#estadoCarga").text("Cargando…");
+            const g1 = $.ajax({ url: API_FACTURAS, method: 'GET', xhrFields: { withCredentials: true } });
+            const g2 = $.ajax({ url: API_USUARIOS, method: 'GET', xhrFields: { withCredentials: true } });
+
+            $.when(g1, g2).done((r1, r2) => {
+                FACTURAS = Array.isArray(r1[0]) ? r1[0] : [];
+                USUARIOS = Array.isArray(r2[0]) ? r2[0] : [];
+
+                console.log("FACTURAS:", FACTURAS);
+                console.log("USUARIOS:", USUARIOS);
+
+                llenarCombosClientes();
+                renderTabla();
+                $("#estadoCarga").text(FACTURAS.length ? "Listo" : "No hay facturas.");
+
+                // cargar servicios después de usuarios (para llenar combo auto_servicio)
+                cargarServicios();
+            }).fail((jq1, jq2) => {
+                console.error("Error al cargar:", jq1?.status, jq1?.responseText);
+                $("#estadoCarga").text("No se pudieron cargar los datos.");
+            });
+        }
+
+        // ===== CARGAR SERVICIOS (para "Generar desde servicio") =====
+        function cargarServicios() {
+            $.ajax({
+                url: API_SERVICIOS,
+                method: 'GET',
+                xhrFields: { withCredentials: true }
+            }).done(function (data) {
+                SERVICIOS = Array.isArray(data) ? data : [];
+                console.log("SERVICIOS:", SERVICIOS);
+
+                const $sel = $("#auto_servicio");
+                $sel.empty();
+
+                if (!SERVICIOS.length) {
+                    $sel.append('<option value="">(No hay servicios)</option>');
+                    return;
+                }
+
+                SERVICIOS.forEach(s => {
+                    const id = s.id_servicio ?? s.id ?? s.Id;
+                    const nombre = (s.nombre || s.Nombre || s.descripcion || s.Descripcion || `Servicio ${id}`).toString();
+                    $sel.append(`<option value="${id}">${nombre}</option>`);
+                });
+            }).fail(function (xhr) {
+                console.error("Error al cargar servicios:", xhr?.status, xhr?.responseText);
+                const $sel = $("#auto_servicio");
+                $sel.empty();
+                $sel.append('<option value="">(Error al cargar servicios)</option>');
+            });
+        }
+
+        // ===== COMBOS CLIENTES =====
+        function llenarCombosClientes() {
+            const $selExport = $("#selClienteExport");
+            const $crear = $("#crear_cliente");
+            const $auto = $("#auto_cliente");
+
+            $selExport.empty();
+            $crear.empty();
+            $auto.empty();
+
+            $selExport.append('<option value="">(Todos)</option>');
+            USUARIOS.forEach(u => {
+                const id = u.id ?? u.Id;
+                const nombre = nombreClientePorId(id);
+                const opt = `<option value="${id}">${nombre}</option>`;
+                $selExport.append(opt);
+                $crear.append(opt);
+                $auto.append(opt);
+            });
+        }
+
+        // ===== FILTROS =====
+        function pasaFiltros(f) {
+            const num = ($("#filtroNumero").val() || "").trim();
+            const nombreFiltro = ($("#filtroNombre").val() || "").toLowerCase().trim();
+            const estadoFiltro = $("#filtroEstado").val();
+            const desde = $("#filtroDesde").val();
+            const hasta = $("#filtroHasta").val();
+
+            const id = f.id_factura ?? f.id ?? f.Id;
+            const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
+            const nombreCliente = nombreClientePorId(clienteId).toLowerCase();
+
+            if (num && String(id) !== num) return false;
+            if (nombreFiltro && !nombreCliente.includes(nombreFiltro)) return false;
+
+            const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? '').toString();
+            if (estadoFiltro && estado !== estadoFiltro) return false;
+
+            if (desde || hasta) {
+                const fechaVal = f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision;
+                const fecha = parseDateOnly(fechaVal);
+                if (!fecha) return false;
+
+                if (desde) {
+                    const d = parseDateOnly(desde);
+                    if (fecha < d) return false;
+                }
+                if (hasta) {
+                    const h = parseDateOnly(hasta);
+                    if (fecha > h) return false;
+                }
+            }
+
+            return true;
+        }
+
+        // ===== RENDER TABLA =====
+        function renderTabla() {
+            const $tb = $("#tablaFacturas");
+            $tb.empty();
+
+            const lista = FACTURAS.filter(pasaFiltros);
+
+            lista.forEach(f => {
+                const id = f.id_factura ?? f.id ?? f.Id;
+                const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
+                const cliente = nombreClientePorId(clienteId);
+                const correo = correoClientePorId(clienteId);
+                const tel = telefonoClientePorId(clienteId);
+                const fecha = safeFecha(f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision);
+                const metodo = f.metodo_pago ?? f.metodoPago ?? f.MetodoPago ?? '';
+                const estado = f.estado_pago ?? f.estado ?? f.Estado ?? 'Pendiente';
+                const total = f.total ?? f.Total ?? 0;
+
+                const fila = `
+                    <tr>
+                        <td>${id ?? ''}</td>
+                        <td>${cliente ?? ''}</td>
+                        <td>${correo ?? ''}</td>
+                        <td>${tel ?? ''}</td>
+                        <td>${fecha}</td>
+                        <td>${metodo}</td>
+                        <td>${badgeEstado(estado)}</td>
+                        <td>${formatCRC(total)}</td>
+                        <td>
+                            <button class="btn danger btn-estado" data-id="${id}" data-estado="${estado}">Estado</button>
+                            <button class="btn btn-secondary btn-enviar" data-id="${id}">Enviar</button>
+                        </td>
+                    </tr>`;
+                $tb.append(fila);
+            });
+
+            $("#badge").text(`${lista.length} factura(s) mostradas`);
+        }
+
+        // ===== MODALES GENÉRICOS =====
+        function abrirModal(id) {
+            const $m = $("#" + id);
+            $m.removeClass("hidden").css("display", "flex");
+        }
+
+        function cerrarModalId(id) {
+            const $m = $("#" + id);
+            $m.addClass("hidden").hide();
+        }
+
+        // ===== MODAL ESTADO =====
+        function abrirModalEstado(idFactura, estadoActual) {
+            facturaSeleccionada = { id: idFactura };
+            $("#ddlEstado").val(estadoActual || "Pendiente");
+            $("#modalEstado").css("display", "block").attr("aria-hidden", "false");
+        }
+
+        function cerrarModalEstado() {
+            facturaSeleccionada = null;
+            $("#modalEstado").css("display", "none").attr("aria-hidden", "true");
+        }
+
+        function guardarEstado() {
+            if (!facturaSeleccionada?.id) return;
+            const nuevo = $("#ddlEstado").val();
+            const url = `${API_FACTURAS}/${facturaSeleccionada.id}/estado`;
+
+            $.ajax({
+                url: url,
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ estado: nuevo }),
+                xhrFields: { withCredentials: true },
+                success: function () {
+                    FACTURAS = FACTURAS.map(x => {
+                        const xid = x.id_factura ?? x.id ?? x.Id;
+                        if (Number(xid) === Number(facturaSeleccionada.id)) {
+                            return { ...x, estado_pago: nuevo };
+                        }
+                        return x;
+                    });
+                    renderTabla();
+                    cerrarModalEstado();
+                },
+                error: function (xhr) {
+                    console.error("Error al actualizar estado", xhr?.status, xhr?.responseText);
+                    alert("No se pudo actualizar el estado.");
+                }
+            });
+        }
+
+        // ===== ENVIAR FACTURA POR EMAIL (botón "Enviar") =====
+        function enviarFacturaEmail(idFactura) {
+            const url = `${API_FACTURAS}/${idFactura}/enviar-email`;
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({}), // body vacío => el API busca el email del cliente en la BD
+                xhrFields: { withCredentials: true },
+                success: function (res) {
+                    console.log("Correo enviado:", res);
+                    alert(`Factura enviada al correo del cliente.`);
+                },
+                error: function (xhr) {
+                    console.error("Error al enviar factura por correo", xhr?.status, xhr?.responseText);
+                    alert("No se pudo enviar la factura por correo.");
+                }
+            });
+        }
+
+        // ===== CREAR FACTURA MANUAL =====
+        function crearFacturaManual() {
+            const clienteId = Number($("#crear_cliente").val());
+            const metodo = $("#crear_metodo").val();
+            const fecha = $("#crear_fecha").val();
+            const total = Number($("#crear_total").val());
+
+            if (!clienteId || total <= 0) {
+                alert("Debe seleccionar un cliente y un total mayor a 0.");
+                return;
+            }
+
+            const body = {
+                cliente_id: clienteId,
+                fecha_emision: fecha ? new Date(fecha).toISOString() : null,
+                total: total,
+                metodo_pago: metodo,
+                estado_pago: "Pendiente"
+            };
+
+            $.ajax({
+                url: API_FACTURAS,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(body),
+                xhrFields: { withCredentials: true },
+                success: function (created) {
+                    FACTURAS.push(created);
+                    renderTabla();
+                    cerrarModalId("modalCrearFactura");
+                    $("#crear_total").val("");
+                    $("#crear_fecha").val("");
+                    alert("Factura creada correctamente.");
+                },
+                error: function (xhr) {
+                    console.error("Error al crear factura", xhr?.status, xhr?.responseText);
+                    alert("No se pudo crear la factura. Verifique los datos.");
+                }
+            });
+        }
+
+        // ===== CREAR FACTURA AUTOMÁTICA DESDE SERVICIO =====
+        function crearFacturaAuto() {
+            const clienteId = Number($("#auto_cliente").val());
+            const servicioId = Number($("#auto_servicio").val());
+            const metodo = $("#auto_metodo").val();
+
+            if (!clienteId || !servicioId) {
+                alert("Debe seleccionar un cliente y un servicio.");
+                return;
+            }
+
+            const body = {
+                cliente_id: clienteId,
+                servicio_id: servicioId,
+                metodo_pago: metodo
+            };
+
+            $.ajax({
+                url: `${API_FACTURAS}/generar-automatico`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(body),
+                xhrFields: { withCredentials: true },
+                success: function (created) {
+                    FACTURAS.push(created);
+                    renderTabla();
+                    cerrarModalId("modalAutoFactura");
+                    alert("Factura generada desde servicio correctamente.");
+                },
+                error: function (xhr) {
+                    console.error("Error al generar factura automática", xhr?.status, xhr?.responseText);
+                    alert("No se pudo generar la factura desde servicio.");
+                }
+            });
+        }
+
+        // ===== ENVIAR RECORDATORIOS PENDIENTES =====
+        function enviarRecordatorios() {
+            $.ajax({
+                url: `${API_FACTURAS}/recordatorios/pendientes`,
+                method: 'POST',
+                contentType: 'application/json',
+                xhrFields: { withCredentials: true },
+                success: function (res) {
+                    console.log("Recordatorios:", res);
+                    alert(`Recordatorios enviados: ${res.enviados}\nSin correo: ${res.sin_email}\nErrores: ${res.errores}`);
+                },
+                error: function (xhr) {
+                    console.error("Error al enviar recordatorios", xhr?.status, xhr?.responseText);
+                    alert("No se pudieron enviar los recordatorios.");
+                }
+            });
+        }
+
+        // ===== EXPORTAR PDF (general & variantes) =====
+        function exportarPdf(facturas) {
+            try {
+                const { jsPDF } = window.jspdf || {};
+                if (!jsPDF || !window.jspdf?.jsPDF) { alert('Falta jsPDF'); return; }
+
+                const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+                doc.setFontSize(14);
+                doc.text('Listado de Facturas', 40, 40);
+
+                const body = facturas.map(f => {
+                    const id = f.id_factura ?? f.id ?? f.Id;
+                    const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
+                    const cliente = nombreClientePorId(clienteId);
+                    const fecha = safeFecha(f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision);
+                    const total = formatCRC(f.total ?? f.Total ?? 0);
+                    const estado = f.estado_pago ?? f.estado ?? f.Estado ?? '';
+                    const metodo = f.metodo_pago ?? f.metodoPago ?? f.MetodoPago ?? '';
+                    return [id, fecha, cliente, total, metodo, estado];
+                });
+
+                if (!doc.autoTable) { alert('Falta autoTable'); return; }
+                doc.autoTable({
+                    head: [['Id', 'Fecha', 'Cliente', 'Total', 'Método', 'Estado']],
+                    body,
+                    startY: 70,
+                    styles: { fontSize: 9 }
+                });
+
+                const name = `facturas_${new Date().toISOString().replace(/[:.]/g, '-')}.pdf`;
+                doc.save(name);
+            } catch (e) {
+                console.error(e);
+                alert("No se pudo generar el PDF.");
+            }
+        }
+
+        function exportarMes() {
+            const mes = $("#filtroMesExport").val(); // yyyy-MM
+            if (!mes) {
+                alert("Seleccione un mes.");
+                return;
+            }
+            const [year, month] = mes.split("-").map(Number);
+
+            const lista = FACTURAS.filter(f => {
+                const fv = f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision;
+                const d = new Date(fv);
+                if (isNaN(d)) return false;
+                return d.getFullYear() === year && (d.getMonth() + 1) === month;
+            });
+
+            if (!lista.length) {
+                alert("No hay facturas en ese mes.");
+                return;
+            }
+            exportarPdf(lista);
+        }
+
+        function exportarPorCliente() {
+            const idSel = $("#selClienteExport").val();
+            if (!idSel) {
+                alert("Seleccione un cliente.");
+                return;
+            }
+            const lista = FACTURAS.filter(f => {
+                const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
+                return Number(clienteId) === Number(idSel);
+            });
+            if (!lista.length) {
+                alert("Ese cliente no tiene facturas.");
+                return;
+            }
+            exportarPdf(lista);
+        }
+
+        function exportarPendientes() {
+            const lista = FACTURAS.filter(f => {
+                const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? '').toLowerCase();
+                return estado === 'pendiente';
+            });
+            if (!lista.length) {
+                alert("No hay facturas pendientes.");
+                return;
+            }
+            exportarPdf(lista);
+        }
+
+        // ===== EVENTOS =====
+        $(document).on("click", ".btn-estado", function () {
+            const id = $(this).data("id");
+            const est = $(this).data("estado");
+            abrirModalEstado(id, est);
+        });
+
+        $(document).on("click", ".btn-enviar", function () {
+            const id = $(this).data("id");
+            enviarFacturaEmail(id);
+        });
+
+        $("#btnGuardarEstado").on("click", guardarEstado);
+        $("#btnCancelarEstado, #btnCloseModal, .modal__backdrop").on("click", cerrarModalEstado);
+
+        $("#btnAbrirModalCrear").on("click", function () { abrirModal("modalCrearFactura"); });
+        $("#btnAbrirModalAuto").on("click", function () { abrirModal("modalAutoFactura"); });
+
+        $("[data-close]").on("click", function () {
+            const id = $(this).data("close");
+            cerrarModalId(id);
+        });
+
+        $("#btnCrearFactura").on("click", crearFacturaManual);
+        $("#btnCrearAuto").on("click", crearFacturaAuto);
+        $("#btnEnviarRecordatorios").on("click", enviarRecordatorios);
+
+        $("#btnFiltrar").on("click", function () {
+            renderTabla();
+        });
+
+        $("#btnPdf").on("click", function () {
+            exportarPdf(FACTURAS);
+        });
+
+        $("#btnExportMes").on("click", exportarMes);
+        $("#btnExportCliente").on("click", exportarPorCliente);
+        $("#btnExportPendientes").on("click", exportarPendientes);
+
+        // Inicio
+        $(document).ready(function () {
+            cargarTodo();
+        });
+    </script>
+}
+

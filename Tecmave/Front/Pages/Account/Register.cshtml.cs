@@ -39,10 +39,10 @@ namespace Front.Pages.Account
             user.UserName = Register.Email;
             user.Cedula = Register.Cedula;
             user.Nombre = Register.Nombre;
-            user.Apellidos = Register.Apellidos;
+            user.Apellido = Register.Apellido;
             user.Direccion = Register.Direccion;
             user.PhoneNumber = Register.PhoneNumber;
-
+            user.NotificacionesActivadas = Register.NotificacionesActivadas;
 
             var res = await _userManager
                 .CreateAsync(user, Register.Password);

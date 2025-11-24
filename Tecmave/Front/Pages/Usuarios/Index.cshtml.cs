@@ -15,7 +15,7 @@ namespace Front.Pages.Usuarios
 
         public void OnGet()
         {
-            ApiBase = _cfg.GetSection("Api")["BaseUrl"] ?? "https://localhost:7096";
+            ApiBase = _cfg.GetSection("Api")["BaseUrl"] ?? "http://localhost:7096";
         }
     }
 }

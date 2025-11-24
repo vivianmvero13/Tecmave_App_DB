@@ -39,13 +39,27 @@ namespace Tecmave.Api.Controllers
             if (dto.Anno < 1950 || dto.Anno > DateTime.UtcNow.Year + 1)
                 return BadRequest(new { message = "Año fuera de rango." });
 
+            // Normalizar placa
+            var placaNormalizada = (dto.Placa ?? string.Empty)
+                .ToUpperInvariant()
+                .Trim();
+
+            //Validar que NO exista ya la placa
+            var existePlaca = await _db.Vehiculos
+                .AnyAsync(v => v.Placa == placaNormalizada);
+
+            if (existePlaca)
+            {
+                return Conflict(new { message = "Ya existe un vehículo registrado con esa placa." });
+            }
+
             var v = new Vehiculo
             {
                 ClienteId = dto.ClienteId,
                 IdMarca = dto.IdMarca,
                 Anno = dto.Anno,
-                Modelo = dto.Modelo,
-                Placa = (dto.Placa ?? string.Empty).ToUpperInvariant()
+                Placa = placaNormalizada,
+                Modelo = (dto.Modelo ?? string.Empty).Trim()
             };
 
             _db.Vehiculos.Add(v);
@@ -61,6 +75,7 @@ namespace Tecmave.Api.Controllers
 
             return CreatedAtAction(nameof(GetById), new { id = v.IdVehiculo }, v);
         }
+
 
         [HttpPut]
         [ProducesResponseType(204)]
@@ -78,11 +93,24 @@ namespace Tecmave.Api.Controllers
             if (dto.Anno < 1950 || dto.Anno > DateTime.UtcNow.Year + 1)
                 return BadRequest(new { message = "Año fuera de rango." });
 
+            var placaNormalizada = (dto.Placa ?? string.Empty)
+                .ToUpperInvariant()
+                .Trim();
+
+            //Validar que no exista la misma placa en OTRO vehículo
+            var existePlacaEnOtro = await _db.Vehiculos
+                .AnyAsync(x => x.Placa == placaNormalizada && x.IdVehiculo != dto.IdVehiculo);
+
+            if (existePlacaEnOtro)
+            {
+                return Conflict(new { message = "Ya existe otro vehículo registrado con esa placa." });
+            }
+
             v.ClienteId = dto.ClienteId;
             v.IdMarca = dto.IdMarca;
             v.Anno = dto.Anno;
-            v.Modelo = dto.Modelo;
-            v.Placa = (dto.Placa ?? string.Empty).ToUpperInvariant();
+            v.Placa = placaNormalizada;
+            v.Modelo = (dto.Modelo ?? string.Empty).Trim();
 
             try
             {
@@ -96,6 +124,7 @@ namespace Tecmave.Api.Controllers
 
             return NoContent();
         }
+
 
         [HttpDelete("{id:int}")]
         [ProducesResponseType(204)]
