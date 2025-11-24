@@ -8,80 +8,84 @@ namespace Tecmave.Api.Controllers
     [Route("[controller]")]
     public class ResenasController : Controller
     {
-        private readonly ResenasService _ResenasService;
+        private readonly ResenasService _resenasService;
 
-        public ResenasController(ResenasService ResenasService)
+        public ResenasController(ResenasService resenasService)
         {
-            _ResenasService = ResenasService;
+            _resenasService = resenasService;
         }
 
-        //Apis GET, POST, PUT   y DELETE
+        // ============================================
+        // GET CRUD BASICO
+        // ============================================
         [HttpGet]
         public ActionResult<IEnumerable<ResenasModel>> GetResenasModel()
         {
-            return _ResenasService.GetResenasModel();
+            return Ok(_resenasService.GetResenasModel());
         }
 
         [HttpGet("{id}")]
         public ActionResult<ResenasModel> GetById(int id)
         {
-            return _ResenasService.GetByid_resena(id);
+            var r = _resenasService.GetByid_resena(id);
+
+            if (r == null)
+                return NotFound("No se encontró la reseña.");
+
+            return Ok(r);
         }
 
-        //Apis POST
+
+        // ============================================
+        // GET RESEÑAS PÚBLICAS (JOIN COMPLETO)
+        // ============================================
+        [HttpGet("Publicas")]
+        public ActionResult GetPublicas()
+        {
+            return Ok(_resenasService.GetResenasPublicas());
+        }
+
+
+        // ============================================
+        // POST — AGREGAR RESEÑA CON VALIDACIONES
+        // ============================================
         [HttpPost]
-        public ActionResult<ResenasModel> AddResenas(ResenasModel ResenasModel)
+        public ActionResult AddResenas([FromBody] ResenasModel model)
         {
+            var result = _resenasService.AgregarConValidacion(model);
 
-            var newResenasModel = _ResenasService.AddResenas(ResenasModel);
+            if (!result.ok)
+                return BadRequest(result.error);
 
-            return
-                CreatedAtAction(
-                        nameof(GetResenasModel), new
-                        {
-                            id = newResenasModel.id_resena,
-                        },
-                        newResenasModel);
-
+            return CreatedAtAction(nameof(GetById),
+                new { id = result.nueva!.id_resena },
+                result.nueva);
         }
 
-        //APIS PUT
-        [HttpPut]
-        public IActionResult UpdateResenas(ResenasModel ResenasModel)
-        {
 
-            if (!_ResenasService.UpdateResenas(ResenasModel))
-            {
-                return NotFound(
-                        new
-                        {
-                            elmsneaje = "La  resena no fue encontrado"
-                        }
-                    );
-            }
+        // ============================================
+        // PUT — EDITAR RESEÑA
+        // ============================================
+        [HttpPut]
+        public IActionResult UpdateResenas([FromBody] ResenasModel model)
+        {
+            if (!_resenasService.UpdateResenas(model))
+                return NotFound("La reseña no fue encontrada.");
 
             return NoContent();
-
         }
 
-        //APIS DELETE
-        [HttpDelete]
+
+        // ============================================
+        // DELETE — ELIMINAR RESEÑA
+        // ============================================
+        [HttpDelete("{id}")]
         public IActionResult DeleteResenasModel(int id)
         {
-
-            if (!_ResenasService.DeleteResenas(id))
-            {
-                return NotFound(
-                        new
-                        {
-                            elmsneaje = "La  resena no fue encontrado"
-                        }
-                    );
-            }
+            if (!_resenasService.DeleteResenas(id))
+                return NotFound("La reseña no fue encontrada.");
 
             return NoContent();
-
         }
-
     }
 }

@@ -7,7 +7,7 @@ namespace Tecmave.Api.Models
         [Key]
         public int id_resena { get; set; } // [pk, increment]
         public int cliente_id { get; set; }
-        public int servicio_id { get; set; }
+        public int revision_id { get; set; }
         public string comentario { get; set; }
         public float calificacion { get; set; }
     }

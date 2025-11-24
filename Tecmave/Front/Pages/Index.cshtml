@@ -64,119 +64,197 @@
 
 <script>
 
+    
 
-    const API_RESENA = "http://localhost:7096/Resenas";
-        const API_SERVICIO = "http://localhost:7096/Servicios";
+     const API_RESENA = "http://localhost:7096/Resenas";
+     const API_RESENA_PUBLICAS = "http://localhost:7096/Resenas/Publicas";
+     const API_REVISION_COMPLETADAS = "http://localhost:7096/Revision/Completadas";
 
-        const username = "@User.Identity.Name";
-        const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
+     const username = "@User.Identity.Name";
+     const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
 
-        $(document).ready(function () {
-            $("#client-review-name").val(username);
-            cargarServicios();
-            cargarResenas();
-        });
+     $(document).ready(function () {
+         $("#client-review-name").val(username);
+         cargarRevisionesCompletadas();
+         cargarResenasPublicas();
+     });
 
-        function cargarServicios() {
-            $.ajax({
-                url: API_SERVICIO,
-                method: 'GET',
-                success: function(data) {
-                    const select = $("#client-review-service");
-                    select.empty();
-                    select.append('<option value="">Seleccione un servicio</option>');
-                    data.forEach(servicio => {
-                        select.append(`<option value="${servicio.id_servicio}">${servicio.nombre}</option>`);
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error al cargar servicios:", error);
-                }
-            });
-        }
+     // ============================================================
+     // 1. CARGAR REVISIONES COMPLETADAS DEL USUARIO
+     // ============================================================
+     function cargarRevisionesCompletadas() {
 
-        function addClientReview() {
-            const servicioId = $("#client-review-service").val();
-            const calificacion = parseFloat($("#client-review-rating").val());
-            const comentario = $("#client-review-comment").val();
+         $.ajax({
+             url: `${API_REVISION_COMPLETADAS}/${userId}`,
+             method: "GET",
+             success: function (data) {
 
-            if (!servicioId || !comentario.trim()) {
-                alert("Por favor selecciona un servicio y escribe un comentario.");
-                return;
-            }
+                 const select = $("#client-review-service");
+                 select.empty();
 
-            const nuevaResena = {
-                cliente_id: userId,
-                servicio_id: parseInt(servicioId),
-                comentario: comentario,
-                calificacion: calificacion
-            };
+                 if (data.length === 0) {
+                     select.append(`<option value="">No tienes revisiones completadas</option>`);
+                     $("#client-review-comment").prop("disabled", true);
+                     $("#client-review-rating").prop("disabled", true);
+                     $("button").prop("disabled", true);
+                     return;
+                 }
 
-            $.ajax({
-                url: API_RESENA,
-                method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(nuevaResena),
-                success: function() {
-                    alert("¡Gracias por tu reseña!");
-                    $("#client-review-service").val("");
-                    $("#client-review-rating").val("5.0");
-                    $("#client-review-comment").val("");
-                    cargarResenas();
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error al enviar reseña:", error);
-                }
-            });
-        }
+                 $("#client-review-comment").prop("disabled", false);
+                 $("#client-review-rating").prop("disabled", false);
+                 $("button").prop("disabled", false);
 
-        function cargarResenas() {
-            $.ajax({
-                url: API_RESENA,
-                method: 'GET',
-                success: function(data) {
-                    const reviewsList = document.getElementById('client-reviews-list');
-                    if (!reviewsList) return;
+                 select.append(`<option value="">Seleccione un servicio</option>`);
 
-                    reviewsList.innerHTML = '';
+                 data.forEach(r => {
+                     select.append(`
+                         <option value="${r.revision_id}">
+                             ${r.servicio_nombre}
+                         </option>
+                     `);
+                 });
 
-                    if (data.length === 0) {
-                        reviewsList.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">Aún no hay reseñas. ¡Sé el primero en dejar una!</p>';
-                        return;
-                    }
+             },
+             error: function () {
+                 console.error("Error al cargar revisiones completadas");
+             }
+         });
+     }
 
-                    data.forEach(review => {
-                        const card = document.createElement('div');
-                        card.className = 'card';
-                        card.innerHTML = `
-                            <strong>${review.nombre_usuario || 'Usuario'}</strong>
-                            <p>${'★'.repeat(Math.round(review.calificacion))}${'☆'.repeat(5 - Math.round(review.calificacion))}</p>
-                            <p style="margin-top:.5rem">${review.comentario}</p>
-                            
-                        `;
-                        reviewsList.appendChild(card);
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error al cargar reseñas:", error);
-                }
-            });
-        }
+     // ============================================================
+     // 2. VALIDAR SI LA REVISION ES COMPLETADA Y ES DEL USUARIO
+     // ============================================================
+     function validarRevisionCompletada(revisionId, callback) {
 
+         $.ajax({
+             url: `${API_REVISION_COMPLETADAS}/${userId}`,
+             method: "GET",
+             success: function (data) {
+                 const valida = data.some(r => r.revision_id == revisionId);
+                 callback(valida);
+             },
+             error: function () {
+                 callback(false);
+             }
+         });
+     }
 
-    $(document).ready(function () {
-        
-        $("#client-review-name").val(username);
+     // ============================================================
+     // 3. VALIDAR SI YA EXISTE UNA RESEÑA PARA ESTA REVISION
+     // ============================================================
+     function validarResenaDuplicada(revisionId, callback) {
 
-        
-        cargarServicios();
+         $.ajax({
+             url: API_RESENA,
+             method: "GET",
+             success: function (data) {
+                 const duplicada = data.some(r => r.revision_id == revisionId);
+                 callback(!duplicada);
+             },
+             error: function () {
+                 callback(false);
+             }
+         });
+     }
 
-        
-        cargarResenas();
-    });
+     // ============================================================
+     // 4. ENVIAR RESEÑA
+     // ============================================================
+     function addClientReview() {
 
+         const revisionId = $("#client-review-service").val();
+         const calificacion = parseFloat($("#client-review-rating").val());
+         const comentario = $("#client-review-comment").val();
+
+         if (!revisionId || !comentario.trim()) {
+             alert("Por favor selecciona un servicio y escribe un comentario.");
+             return;
+         }
+
+         validarRevisionCompletada(revisionId, function (revisionValida) {
+
+             if (!revisionValida) {
+                 alert("No puede reseñar esta revisión. No está completada o no le pertenece.");
+                 return;
+             }
+
+             validarResenaDuplicada(revisionId, function (sinDuplicado) {
+
+                 if (!sinDuplicado) {
+                     alert("Esta revisión ya tiene una reseña.");
+                     return;
+                 }
+
+                 const nuevaResena = {
+                     cliente_id: parseInt(userId),
+                     revision_id: parseInt(revisionId),
+                     comentario: comentario,
+                     calificacion: calificacion
+                 };
+
+                 $.ajax({
+                     url: API_RESENA,
+                     method: "POST",
+                     contentType: "application/json",
+                     data: JSON.stringify(nuevaResena),
+                     success: function () {
+                         alert("¡Gracias por tu reseña!");
+                         $("#client-review-service").val("");
+                         $("#client-review-rating").val("5");
+                         $("#client-review-comment").val("");
+                         cargarResenasPublicas();
+                     },
+                     error: function (xhr) {
+                         alert(xhr.responseText || "Error al enviar reseña");
+                     }
+                 });
+
+             });
+         });
+     }
+
+     // ============================================================
+     // 5. CARGAR RESEÑAS PÚBLICAS ENRIQUECIDAS
+     // ============================================================
+     function cargarResenasPublicas() {
+
+         $.ajax({
+             url: API_RESENA_PUBLICAS,
+             method: "GET",
+             success: function (data) {
+
+                 const reviewsList = $('#client-reviews-list');
+                 reviewsList.empty();
+
+                 if (data.length === 0) {
+                     reviewsList.html(`
+                         <p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">
+                             Aún no hay reseñas. ¡Sé el primero en dejar una!
+                         </p>
+                     `);
+                     return;
+                 }
+
+                 data.forEach(review => {
+
+                     reviewsList.append(`
+                         <div class="card">
+                             <strong>${review.usuario}</strong>
+                             <p>${'★'.repeat(Math.round(review.calificacion))}${'☆'.repeat(5 - Math.round(review.calificacion))}</p>
+                             <p style="margin-top:.5rem">${review.comentario}</p>
+                             <p style="color:var(--primary);font-weight:bold">${review.servicio}</p>
+                         </div>
+                     `);
+                 });
+             }
+         });
+     }
 
 </script>
+
+
+
+
 
 
 

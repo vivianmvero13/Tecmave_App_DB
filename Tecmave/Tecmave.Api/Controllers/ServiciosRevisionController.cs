@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 using Tecmave.Api.Services;
 
@@ -9,10 +11,10 @@ namespace Tecmave.Api.Controllers
     public class ServiciosRevisionController : Controller
     {
         private readonly ServiciosRevisionService _ServiciosRevisionService;
-
+       
         public ServiciosRevisionController(ServiciosRevisionService ServiciosRevisionService)
         {
-            _ServiciosRevisionService = ServiciosRevisionService;
+            _ServiciosRevisionService = ServiciosRevisionService;         
         }
 
         //Apis GET, POST, PUT   y DELETE
@@ -82,6 +84,15 @@ namespace Tecmave.Api.Controllers
             return NoContent();
 
         }
+
+        [HttpGet("ByRevision/{revisionId}")]
+        public ActionResult<ServiciosRevisionModel> GetByRevision(int revisionId)
+        {
+            var result = _ServiciosRevisionService.GetByRevisionId(revisionId);
+            if (result == null) return NotFound();
+            return result;
+        }
+
 
     }
 }

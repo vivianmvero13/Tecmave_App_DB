@@ -11,7 +11,7 @@ namespace Tecmave.Api.Models
 
         public DateTime fecha_ingreso { get; set; }
 
-        public int id_servicio { get; set; }
+        
 
         public int id_estado { get; set; }
 
