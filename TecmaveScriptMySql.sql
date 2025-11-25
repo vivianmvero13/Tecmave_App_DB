@@ -61,7 +61,7 @@ INSERT INTO estados (id_estado, nombre) VALUES
 CREATE TABLE aspnetusers (
   Id INT NOT NULL AUTO_INCREMENT,
   Nombre VARCHAR(150) NOT NULL,
-  Apellidos VARCHAR(150) NOT NULL,
+  Apellido VARCHAR(150) NOT NULL,
   Cedula VARCHAR(50) NOT NULL,
   Direccion VARCHAR(250) NOT NULL,
   UserName VARCHAR(256) DEFAULT NULL,
