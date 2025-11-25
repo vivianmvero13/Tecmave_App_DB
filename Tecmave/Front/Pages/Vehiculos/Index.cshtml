@@ -5,7 +5,6 @@
     ViewData["Title"] = "Vehículos Registrados";
 }
 
-if 
 <h1>Vehículos Registrados</h1>
 
 <div class="row g-3 align-items-end mt-3">
@@ -49,6 +48,20 @@ if
     </table>
 </div>
 
+<!-- Modal reutilizable (igual estilo que en Crear) -->
+<div id="appModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-dialog" role="document">
+        <button class="modal-close" type="button" aria-label="Cerrar" data-close="1">×</button>
+        <div class="modal-icon" id="modalIcon">✓</div>
+        <h3 id="modalTitle">Título</h3>
+        <p id="modalBody">Mensaje…</p>
+        <div class="modal-actions">
+            <button id="modalPrimary" class="btn btn-orange" type="button" data-close="1">Aceptar</button>
+        </div>
+    </div>
+</div>
+
 <style>
     .btn-orange {
         background: #9FAA13 !important;
@@ -59,6 +72,76 @@ if
         .btn-orange:hover {
             background: #8f9a11 !important;
         }
+
+    /* Acciones en línea (Ver / Eliminar uno al lado del otro) */
+    .actions-group {
+        display: flex;
+        gap: 0.35rem;
+        flex-wrap: nowrap;
+    }
+
+        .actions-group .btn {
+            white-space: nowrap;
+        }
+
+    /* Modal (mismo estilo que Crear) */
+    .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+    }
+
+        .modal.show {
+            display: block;
+        }
+
+    .modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,.45);
+    }
+
+    .modal-dialog {
+        position: relative;
+        max-width: 480px;
+        margin: 8vh auto 0;
+        background: #fff;
+        border-radius: .75rem;
+        padding: 1.25rem;
+        box-shadow: 0 10px 35px rgba(0,0,0,.25);
+    }
+
+    .modal-close {
+        position: absolute;
+        right: .5rem;
+        top: .5rem;
+        border: 0;
+        background: transparent;
+        font-size: 1.5rem;
+        line-height: 1;
+        cursor: pointer;
+        color: #888;
+    }
+
+    .modal-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        margin: .25rem 0 .5rem;
+        display: grid;
+        place-content: center;
+        background: #e7f6ec;
+        color: #2e7d32;
+        font-weight: 700;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: .5rem;
+        margin-top: 1rem;
+    }
 </style>
 
 <script>
@@ -90,11 +173,13 @@ if
         }
         return def;
     }
+
     function escapeHtml(s) {
         return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
             '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;','=':'&#61;','/':'&#47;'
         }[c]));
     }
+
     function nombreCompleto(u){
         const n = (u.nombre ?? u.Nombre ?? '').trim();
         const a = (u.apellidos ?? u.Apellidos ?? '').trim();
@@ -102,6 +187,61 @@ if
         const full = [n,a].filter(Boolean).join(' ').trim();
         return full || user || 'Usuario';
     }
+
+    /* =================== Modal helpers (igual patrón que en Crear) =================== */
+    const Modal = (() => {
+        const root   = document.getElementById('appModal');
+        const title  = document.getElementById('modalTitle');
+        const body   = document.getElementById('modalBody');
+        const icon   = document.getElementById('modalIcon');
+        let onClose  = null;
+
+        function setKind(kind){
+            // kind: 'ok' | 'warn' | 'error' | 'info'
+            const map = {
+                ok:   { bg:'#e7f6ec', color:'#2e7d32', text:'✓' },
+                warn: { bg:'#fff4e5', color:'#a15c00', text:'!' },
+                error:{ bg:'#fdecea', color:'#b3261e', text:'!' },
+                info: { bg:'#e7f1ff', color:'#0b57d0', text:'ℹ' }
+            };
+            const k = map[kind] || map.info;
+            icon.style.background = k.bg;
+            icon.style.color = k.color;
+            icon.textContent = k.text;
+        }
+
+        function show({ titleText = 'Información', bodyText = '', autoFocus = true, onCloseCb = null, kind = 'ok' }) {
+            setKind(kind);
+            title.textContent = titleText;
+            body.textContent  = bodyText;
+            onClose = typeof onCloseCb === 'function' ? onCloseCb : null;
+            root.classList.add('show');
+            root.style.display = 'block';
+            root.setAttribute('aria-hidden', 'false');
+            if (autoFocus) {
+                const primary = document.getElementById('modalPrimary');
+                setTimeout(() => primary?.focus(), 0);
+            }
+            document.addEventListener('keydown', escListener);
+        }
+
+        function hide() {
+            root.classList.remove('show');
+            root.style.display = 'none';
+            root.setAttribute('aria-hidden', 'true');
+            document.removeEventListener('keydown', escListener);
+            if (onClose) {
+                const cb = onClose;
+                onClose = null;
+                try { cb(); } catch {}
+            }
+        }
+
+        function escListener(e) { if (e.key === 'Escape') hide(); }
+        root.addEventListener('click', (e) => { if (e.target?.dataset?.close === '1') hide(); });
+
+        return { show, hide };
+    })();
 
     // ===== Cargas base =====
     async function loadUsuarios() {
@@ -168,11 +308,16 @@ if
                 <td>${escapeHtml(r.cliente)}</td>
                 <td>${escapeHtml(r.email)}</td>
                 <td>
-                    <div class="btn-group btn-group-sm" role="group">
+                    <div class="actions-group">
                         <a class="btn btn-outline-primary"
                            href="/Vehiculos/Crear?id=${encodeURIComponent(r.id)}">
                             Ver
                         </a>
+                        <button type="button"
+                                class="btn btn-outline-danger"
+                                onclick="confirmarEliminar(${r.id})">
+                            Eliminar
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -217,6 +362,77 @@ if
         a.href = url; a.download = `vehiculos_${ts}.csv`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    }
+
+    // ===== Eliminar vehículo (llamado solo desde el modal) =====
+    async function deleteVehiculo(id) {
+        try {
+            const res = await fetch(`${VEHICULOS_URL}/${id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if (!res.ok) {
+                let msg = 'Error eliminando el vehículo.';
+                try {
+                    const payload = await res.json();
+                    if (payload?.message) msg = payload.message;
+                } catch { }
+                Modal.show({
+                    titleText: 'Error',
+                    bodyText: msg,
+                    kind: 'error'
+                });
+                return;
+            }
+
+            await loadVehiculos();
+            Modal.show({
+                titleText: 'Eliminado',
+                bodyText: 'Vehículo eliminado correctamente.',
+                kind: 'ok'
+            });
+        } catch (err) {
+            console.error(err);
+            Modal.show({
+                titleText: 'Error',
+                bodyText: 'Error de conexión al eliminar el vehículo.',
+                kind: 'error'
+            });
+        }
+    }
+
+    // ===== Confirmar eliminación (abre modal como en Crear) =====
+    function confirmarEliminar(id) {
+        const btn = document.getElementById('modalPrimary');
+        const prevText = btn.textContent;
+        const prevClose = btn.getAttribute('data-close');
+
+        btn.textContent = 'Eliminar';
+        btn.removeAttribute('data-close');
+
+        const handler = async () => {
+            btn.removeEventListener('click', handler);
+            try {
+                await deleteVehiculo(id);
+            } finally {
+                btn.textContent = prevText;
+                if (prevClose) btn.setAttribute('data-close', prevClose);
+            }
+        };
+
+        btn.addEventListener('click', handler, { once: true });
+
+        Modal.show({
+            titleText: 'Confirmar eliminación',
+            bodyText: '¿Estás seguro que deseas eliminar este vehículo?',
+            kind: 'warn',
+            onCloseCb: () => {
+                btn.removeEventListener('click', handler);
+                btn.textContent = prevText;
+                if (prevClose) btn.setAttribute('data-close', prevClose);
+            }
+        });
     }
 
     // ===== Carga principal =====

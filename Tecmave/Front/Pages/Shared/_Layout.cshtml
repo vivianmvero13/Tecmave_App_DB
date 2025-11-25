@@ -1,4 +1,4 @@
-﻿﻿@using Microsoft.AspNetCore.Identity
+﻿@using Microsoft.AspNetCore.Identity
 @using Tecmave.Front.Models
 @inject SignInManager<Usuario> SignInManager
 @inject UserManager<Usuario> UserManager
@@ -16,7 +16,9 @@
         }
     }
 
-    bool isAdmin = roles.Contains("Administrador");
+    // Usar "Admin" como nombre de rol de administrador
+    bool isAdmin = roles.Contains("Admin");
+    bool isCliente = roles.Contains("Cliente");
 }
 <!DOCTYPE html>
 <html lang="es">
@@ -41,10 +43,10 @@
     <script src="http://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body data-user-id="@(currentUser?.Id)"
-
       data-user-name="@(currentUser?.UserName ?? "Usuario")"
-      data-is-admin="@(isAdmin.ToString().ToLower())">
-   
+      data-is-admin="@(isAdmin.ToString().ToLower())"
+      data-is-cliente="@(isCliente.ToString().ToLower())">
+
     <div class="app">
         <aside class="sidebar">
             <div class="brand">
@@ -56,29 +58,31 @@
                 <a asp-page="/Servicios/Index"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
                 <a asp-page="/Agendamiento/Index"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
                 <a asp-page="/Vehiculos/Crear"><i class="fa-solid fa-car"></i>Mis Vehículos</a>
+                <a asp-page="/Promociones/NuestrasPromociones"><i class="fa-solid fa-car"></i>Promociones</a>
 
-                @if (User.IsInRole("Admin"))
+                @* Bloque de gestión solo visible para Admin *@
+                @if (isAdmin)
                 {
                     <div class="subtle">Gestión</div>
                     <nav class="nav">
-                    <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
-                    <a asp-page="/Usuarios/Index"><i class="fa-solid fa-user-group"></i> Usuarios</a>
-                    <a asp-page="/Vehiculos/Index"><i class="fa-solid fa-car"></i> Vehículos</a>
-                    <a asp-page="/Promociones/Index"><i class="fa-solid fa-user-group"></i> Promociones</a>
+                        <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
+                        <a asp-page="/Usuarios/Index"><i class="fa-solid fa-user-group"></i> Usuarios</a>
+                        <a asp-page="/Vehiculos/Index"><i class="fa-solid fa-car"></i> Vehículos</a>
+                        <a asp-page="/Promociones/Index"><i class="fa-solid fa-user-group"></i> Promociones</a>
                         <a asp-page="/Mantenimientos/Index"><i class="fa-solid fa-user-group"></i> Mantenimientos</a>
-                    <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
-                    <a asp-page="/Factura/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Factura</a>
-                    <a asp-page="/Planillas/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Planillas</a>
-                    <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
+                        <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
+                        <a asp-page="/Factura/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Factura</a>
+                        <a asp-page="/Planillas/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Planillas</a>
+                        <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
                     </nav>
                 }
-
             </nav>
+
             <div class="subtle">Cuenta</div>
-            <!--       <nav class="nav">
-                        <a id="login-link" asp-page="/Login"><i class="fa-regular fa-circle-user"></i> Iniciar sesión</a>
-                        <a id="logout-btn" asp-page="#"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
-                            </nav>-->
+            <nav class="nav">
+                <a id="login-link" asp-page="/Login"><i class="fa-regular fa-circle-user"></i> Iniciar sesión</a>
+                <a id="logout-btn" asp-page="#"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
+            </nav>
         </aside>
 
         <header class="topbar">

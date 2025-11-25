@@ -28,5 +28,8 @@ namespace Tecmave.Api.Models
 
         [Column("recordatorio_enviado")]
         public bool recordatorio_enviado { get; set; } = false;
+
+        [Column("imagen_url")]
+        public string? imagen_url { get; set; }
     }
 }
