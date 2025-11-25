@@ -130,15 +130,13 @@ namespace Tecmave.Api.Data
                 e.Property(x => x.FechaMantenimiento).HasColumnName("FechaMantenimiento");
                 e.Property(x => x.ProximoMantenimiento).HasColumnName("ProximoMantenimiento");
                 e.Property(x => x.RecordatorioEnviado).HasColumnName("RecordatorioEnviado");
-                e.Property(x => x.IdEstado).HasColumnName("IdEstado");  // 🔹 Mapeo explícito
+                e.Property(x => x.IdEstado).HasColumnName("IdEstado");
 
-                // 🔹 Relación: Mantenimientos → Vehículos
                 e.HasOne(x => x.Vehiculo)
                  .WithMany()
                  .HasForeignKey(x => x.IdVehiculo)
                  .HasConstraintName("FK_Mantenimientos_vehiculos_IdVehiculo");
 
-                // 🔹 Relación: Mantenimientos → Estados
                 e.HasOne(x => x.Estado)
                  .WithMany()
                  .HasForeignKey(x => x.IdEstado)
