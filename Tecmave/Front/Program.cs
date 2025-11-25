@@ -66,6 +66,4 @@ app.UseAuthorization();
 app.UseCors("AllowLocalhost");
 app.MapRazorPages();
 
-app.MapFallbackToPage("/Index");
-
 app.Run();
