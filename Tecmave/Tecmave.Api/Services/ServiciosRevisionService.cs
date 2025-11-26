@@ -72,6 +72,12 @@ namespace Tecmave.Api.Services
 
         }
 
+        public ServiciosRevisionModel? GetByRevisionId(int revisionId)
+        {
+            return _context.servicios_revision
+                .FirstOrDefault(x => x.revision_id == revisionId);
+        }
+
 
     }
 }

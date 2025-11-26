@@ -79,7 +79,7 @@ CREATE TABLE aspnetusers (
   LockoutEnabled TINYINT(1) NOT NULL DEFAULT 0,
   AccessFailedCount INT NOT NULL DEFAULT 0,
   NotificacionesActivadas TINYINT(1) NOT NULL DEFAULT 0,
-  Estado INT,
+  Estado INT DEFAULT 1,
   PRIMARY KEY (Id),
   UNIQUE KEY UserNameIndex (NormalizedUserName),
   KEY EmailIndex (NormalizedEmail),
@@ -241,15 +241,15 @@ CREATE TABLE detalle_factura (
 CREATE TABLE resenas (
   id_resena INT NOT NULL AUTO_INCREMENT,
   cliente_id INT DEFAULT NULL,
-  servicio_id INT NOT NULL,
   comentario TEXT NOT NULL,
   calificacion FLOAT NOT NULL,
   fecha DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  revision_id INT NOT NULL,
   PRIMARY KEY (id_resena),
   KEY FK_Resenas_Servicio (servicio_id),
   KEY FK_Resenas_Cliente (cliente_id),
   CONSTRAINT FK_Resenas_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers (Id),
-  CONSTRAINT FK_Resenas_Servicio FOREIGN KEY (servicio_id) REFERENCES servicios (id_servicio)
+  CONSTRAINT FK_Resenas_Revision FOREIGN KEY (revision_id) REFERENCES revision (id_revision)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ============================================
@@ -290,7 +290,6 @@ CREATE TABLE revision (
   id_revision INT NOT NULL AUTO_INCREMENT,
   vehiculo_id INT NOT NULL,
   fecha_ingreso DATETIME NOT NULL,
-  id_servicio INT NOT NULL,
   id_estado INT NOT NULL,
   fecha_estimada_entrega DATETIME NOT NULL,
   fecha_entrega_final DATETIME NOT NULL,
@@ -299,7 +298,6 @@ CREATE TABLE revision (
   KEY FK_Revision_Servicio (id_servicio),
   KEY FK_Revision_Estado (id_estado),
   CONSTRAINT FK_Revision_Vehiculo FOREIGN KEY (vehiculo_id) REFERENCES vehiculos (id_vehiculo),
-  CONSTRAINT FK_Revision_Servicio FOREIGN KEY (id_servicio) REFERENCES servicios (id_servicio),
   CONSTRAINT FK_Revision_Estado FOREIGN KEY (id_estado) REFERENCES estados (id_estado)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -540,3 +538,5 @@ INSERT INTO servicios (nombre, descripcion, tipo, precio, tipo_servicio_id)
 VALUES
 ('Cambio de frenos', 'Reemplazo de pastillas y discos de freno', 'Mantenimiento correctivo', 200.00, 2),
 ('Reparación de motor', 'Corrección de fallas graves en el motor', 'Mantenimiento correctivo', 500.00, 2);
+
+

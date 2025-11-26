@@ -1,876 +1,792 @@
 ﻿@page
 @model Front.Pages.Servicios.IndexModel
 @{
+    ViewData["Title"] = "Agendar Revisión";
 }
+
 <style>
-    /* Hace que el contenido colapsable realmente se oculte cuando no tiene la clase .show */
-    .collapse:not(.show) {
-        display: none;
+    /* ========================
+           ESTILOS MEJORADOS
+           ======================== */
+
+    /* Tarjetas */
+    .card {
+        background: #1a1a1a;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        color: #ddd;
     }
 
-    /* Para que el botón del acordeón se vea clickeable */
-    .accordion-button {
-        cursor: pointer;
+    h3 {
+        margin-bottom: 1rem;
+        color: #fff;
     }
 
-        /* Opcional: un poquito de estilo para que se note el estado abierto/cerrado */
-        .accordion-button:not(.collapsed) {
-            background-color: rgba(255, 255, 255, 0.03);
+    /* Inputs */
+    .input, select {
+        width: 100%;
+        padding: .7rem;
+        background: #111;
+        border: 1px solid #333;
+        color: #eee;
+        border-radius: 8px;
+        margin-top: .3rem;
+    }
+
+        .input:focus {
+            border-color: #5a9cff;
         }
 
-
-    .toggle-group {
-        display: flex;
-        flex-wrap: wrap;
-        gap: .35rem;
-        margin-top: .35rem;
+    /* Tabla */
+    .table {
+        width: 100%;
+        margin-top: 1rem;
+        color: #ccc;
     }
 
-    .toggle-btn {
-        padding: .35rem .7rem;
-        border-radius: 20px;
-        border: 1px solid var(--muted);
-        cursor: pointer;
-        font-size: .85rem;
-        user-select: none;
-        transition: all .15s ease-in-out;
-        color: var(--muted);
-    }
-
-        .toggle-btn.active {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
+        .table th {
+            background: #222;
+            padding: .5rem;
         }
 
-    /* Ocultar el checkbox original */
-    .toggle-hidden {
-        display: none;
-    }
+        .table td {
+            padding: .5rem;
+            border-bottom: 1px solid #333;
+        }
 
-    #proformaModal .modal-content {
-        background-color: #1e1e1e;
+    /* Botón */
+    #btnAgendar, .btn-proforma {
+        background: #5a9cff;
+        padding: .7rem 1rem;
+        border: none;
+        border-radius: 8px;
+        margin-top: 1rem;
         color: white;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        #btnAgendar:hover, .btn-proforma:hover {
+            background: #7ab3ff;
+        }
+
+    /* ================
+           MODAL MEJORADO
+           ================ */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+        z-index: 9999;
+        animation: fadeIn .2s ease-in-out;
+    }
+
+    .modal-content {
+        background: rgba(30,30,30,0.85);
+        padding: 2rem;
+        border-radius: 15px;
+        width: 45%;
+        max-height: 80vh;
+        overflow-y: auto;
+        color: #fff;
         border: 1px solid #444;
+        animation: slideUp .25s ease;
     }
 
-    #proformaModal .modal-header,
-    #proformaModal .modal-footer {
-        border-color: #444;
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
     }
 
-    #proformaModal .btn-close {
-        filter: invert(1);
+    @@keyframes slideUp {
+        from {
+            transform: translateY(20px);
+        }
+
+        to {
+            transform: translateY(0);
+        }
     }
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 1.6rem;
+        cursor: pointer;
+        color: #bbb;
+    }
+
+        .close-btn:hover {
+            color: #fff;
+        }
+
+    .btn-pdf {
+        background: #28a745;
+        padding: .6rem 1rem;
+        color: #fff;
+        border: none;
+        margin-top: .8rem;
+        border-radius: 8px;
+        cursor: pointer;
+        float: right;
+    }
+
+    /* ============= ACCORDION PERMISIONS ============= */
+
+    .accordion-item {
+        border: 1px solid #333;
+        border-radius: 8px;
+        margin-top: 1rem;
+        overflow: hidden;
+    }
+
+    .accordion-header {
+        background: #111;
+        padding: .7rem 1rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        font-weight: bold;
+        color: #ddd;
+        border-bottom: 1px solid #333;
+    }
+
+        .accordion-header:hover {
+            background: #1a1a1a;
+        }
+
+    .accordion-body {
+        display: none;
+        background: #151515;
+        padding: 1rem;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+        .accordion-body label {
+            margin-bottom: .4rem;
+            display: block;
+        }
+
 </style>
 
 <section class="section">
     <div class="container grid cols-2">
+
         <!-- Formulario -->
         <div class="card">
-            <h3>Agendar cita y registrar servicio</h3>
-            <p class="muted">
-                Selecciona el vehículo, el tipo de servicio y los detalles de la revisión.
-                Luego podrás ver una proforma y confirmar el agendamiento.
-            </p>
+            <h3>Agendar Revisión</h3>
 
-            <!-- Vehículo -->
-            <div class="form-row">
+            <div>
                 <label>Vehículo</label>
-                <select id="vehiculoInput" class="input">
-                    <option value="">Seleccione vehículo</option>
-                </select>
+                <select class="input" id="vehiculo_id"></select>
             </div>
 
-            <!-- Tipo de servicio -->
-            <div class="form-row">
-                <label>Tipo de servicio</label>
-                <select id="tipoServicioInput" class="input">
-                    <option value="">Seleccione tipo</option>
-                </select>
+            <div>
+                <label>Tipo de Servicio</label>
+                <select class="input" id="tipo_servicio_id"></select>
             </div>
 
-            <!-- Preventivo -->
-            <div id="preventivoSection" style="display:none; margin-top:.5rem;">
-                <h4>Mantenimiento Preventivo</h4>
-                <div class="form-row">
-                    <div>
-                        <label>Marca</label>
-                        <select id="marcaInput" class="input">
-                            <option value="">Seleccione una marca</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Rango de kilometraje</label>
-                        <select id="kmRangoInput" class="input">
-                            <option value="">Seleccione rango</option>
-                            <option value="0-10k">0 - 10 000 km</option>
-                            <option value="10k-30k">10 000 - 30 000 km</option>
-                            <option value="30k-60k">30 000 - 60 000 km</option>
-                        </select>
-                    </div>
+            <div>
+                <label>Servicio</label>
+                <select class="input" id="servicio_id"></select>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="togglePertenencias()">
+                    <span>Pertenencias</span>
+                    <span id="arrow-pertenencias">▼</span>
                 </div>
-                <label>Precio sugerido</label>
-                <input id="precioInput" class="input" readonly placeholder="$ -" />
-            </div>
-
-            <!-- Correctivo -->
-            <div id="correctivoSection" style="display:none; margin-top:.5rem;">
-                <h4>Mantenimiento Correctivo</h4>
-                <p class="muted">Selecciona los trabajos necesarios más abajo en la sección de "Trabajos y diagnósticos".</p>
-            </div>
-
-            <!-- Fallas específicas -->
-            <div id="fallasSection" style="display:none; margin-top:.5rem;">
-                <h4>Falla específica</h4>
-                <div class="form-row">
-                    <label>Falla</label>
-                    <select id="fallaInput" class="input">
-                        <option value="">Seleccione una falla</option>
-                    </select>
+                <div id="pertenencias-container" class="accordion-body">
+                    <div id="pertenencias" class="grid cols-2"></div>
                 </div>
             </div>
 
-            <!-- Kilometraje general -->
-            <div class="form-row" style="margin-top:.5rem;">
-                <label>Kilometraje actual</label>
-                <input id="kilometrajeInput" type="number" min="0" class="input" placeholder="Ej: 78500" />
-            </div>
-
-            <!-- Estado del vehículo -->
-            <hr />
-            <h4>Estado del Vehículo</h4>
-
-            <label>Combustible</label>
-            <select id="combustibleInput" class="input">
-                <option value="">Seleccione</option>
-                <option value="F">F</option>
-                <option value="3/4">3/4</option>
-                <option value="1/2">1/2</option>
-                <option value="1/4">1/4</option>
-                <option value="E">E</option>
-            </select>
-
-            <div style="margin-top:.5rem;">
-                <p>Golpes:</p>
-                <div class="toggle-group">
-                    <label class="toggle-btn" data-target="golpeDelantera">Delantera</label>
-                    <input type="checkbox" id="golpeDelantera" class="toggle-hidden">
-
-                    <label class="toggle-btn" data-target="golpeTrasera">Trasera</label>
-                    <input type="checkbox" id="golpeTrasera" class="toggle-hidden">
-
-                    <label class="toggle-btn" data-target="golpeIzquierda">Izquierda</label>
-                    <input type="checkbox" id="golpeIzquierda" class="toggle-hidden">
-
-                    <label class="toggle-btn" data-target="golpeDerecha">Derecha</label>
-                    <input type="checkbox" id="golpeDerecha" class="toggle-hidden">
-
-                    <label class="toggle-btn" data-target="golpeArriba">Arriba</label>
-                    <input type="checkbox" id="golpeArriba" class="toggle-hidden">
-                </div>
-            </div>
-
-
-            <div style="margin-top:.5rem;">
-                <p>Condición:</p>
-                <div class="toggle-group">
-                    <label class="toggle-btn" data-target="vehiculoSucio">Sucio</label>
-                    <input type="checkbox" id="vehiculoSucio" class="toggle-hidden">
-
-                    <label class="toggle-btn" data-target="vehiculoMojado">Mojado</label>
-                    <input type="checkbox" id="vehiculoMojado" class="toggle-hidden">
-                </div>
-            </div>
-
-            <!-- Acordeón: Pertenencias + Trabajos -->
-            <div class="accordion" id="accordionRevision" style="margin-top:1rem;">
-
-                <!-- Pertenencias -->
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingPertenencias">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePertenencias">
-                            Pertenencias del vehículo
-                        </button>
-                    </h2>
-                    <div id="collapsePertenencias" class="accordion-collapse collapse" data-bs-parent="#accordionRevision">
-                        <div class="accordion-body">
-                            <div class="grid cols-3">
-                                <label><input type="checkbox" id="encendedor"> Encendedor</label>
-                                <label><input type="checkbox" id="radio"> Radio</label>
-                                <label><input type="checkbox" id="garCelular"> Gar. Celular</label>
-                                <label><input type="checkbox" id="antena"> Antena</label>
-                                <label><input type="checkbox" id="espejo"> Espejo</label>
-                                <label><input type="checkbox" id="alfombras"> Alfombras</label>
-                                <label><input type="checkbox" id="halogenos"> Halógenos</label>
-                                <label><input type="checkbox" id="llaveRana"> Llave Rana</label>
-                                <label><input type="checkbox" id="gataMec"> Gata Mec/HD</label>
-                                <label><input type="checkbox" id="herramienta"> Herramienta</label>
-                                <label><input type="checkbox" id="chaleco"> Chaleco</label>
-                                <label><input type="checkbox" id="booster"> Booster</label>
-                                <label><input type="checkbox" id="triangulos"> Triángulos</label>
-                                <label><input type="checkbox" id="linga"> Linga</label>
-                                <label><input type="checkbox" id="extintor"> Extintor</label>
-                                <label><input type="checkbox" id="llantaRepuesto"> Llanta de repuesto</label>
-                                <label><input type="checkbox" id="copas"> Copas</label>
-                                <label><input type="checkbox" id="botiquin"> Botiquín</label>
-                            </div>
-                            <label style="margin-top:.5rem;">Otros:</label>
-                            <input id="otrosPertenencias" class="input" placeholder="Ej: Paraguas, soportes, etc." />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Trabajos y Diagnósticos -->
-                <div class="accordion-item" style="margin-top:.5rem;">
-                    <h2 class="accordion-header" id="headingTrabajos">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#trabajosCollapse">
-                            Trabajos y diagnósticos
-                        </button>
-                    </h2>
-                    <div id="trabajosCollapse" class="accordion-collapse collapse" data-bs-parent="#accordionRevision">
-                        <div class="accordion-body">
-                            <h5>Diagnósticos</h5>
-                            <label><input type="checkbox" id="diag0m"> Diagnóstico 0 M.</label>
-                            <label><input type="checkbox" id="diag3000m"> Diagnóstico 3000 M.</label>
-                            <label><input type="checkbox" id="diag6000m"> Diagnóstico 6000 M.</label>
-                            <label><input type="checkbox" id="diag9000m"> Diagnóstico 9000 M.</label>
-                            <label><input type="checkbox" id="diag12000m"> Diagnóstico 12000 M.</label>
-                            <label><input type="checkbox" id="diag15000m"> Diagnóstico 15000 M.</label>
-                            <label><input type="checkbox" id="diagInyeccion"> Diagnóstico Inyección</label>
-                            <label><input type="checkbox" id="diagFrenos"> Diagnóstico Sist. Frenos</label>
-                            <label><input type="checkbox" id="diagDireccion"> Diagnóstico Sist. Dirección</label>
-                            <label><input type="checkbox" id="diagSuspension"> Diagnóstico Sist. Suspensión</label>
-                            <label><input type="checkbox" id="diagEnfriamiento"> Diagnóstico Sist. Enfriamiento</label>
-                            <label><input type="checkbox" id="diagElectrico"> Revisión Sist. Eléctrico</label>
-                            <label><input type="checkbox" id="diagTransmision"> Revisión de Transmisión</label>
-
-                            <hr />
-                            <h5>Mantenimientos / Trabajos</h5>
-                            <label><input type="checkbox" id="trabAfinamiento"> Afinamiento</label>
-                            <label><input type="checkbox" id="trabTuneup"> Tuneup</label>
-                            <label><input type="checkbox" id="trabAceiteFiltro"> Cambio de aceite y filtro</label>
-                            <label><input type="checkbox" id="trabAceiteTransmision"> Cambio de aceite de transmisión</label>
-                            <label><input type="checkbox" id="trabAceiteDiferencia"> Cambio de aceite de diferencia</label>
-                            <label><input type="checkbox" id="trabRevisionNiveles"> Revisión de niveles</label>
-                            <label><input type="checkbox" id="trabEngrase"> Engrase</label>
-                            <label><input type="checkbox" id="trabInyectores"> Limpieza de inyectores</label>
-                            <label><input type="checkbox" id="trabAlineado"> Alineado de dirección</label>
-                            <label><input type="checkbox" id="trabBalanceo"> Balanceo</label>
-                            <label><input type="checkbox" id="trabRotacion"> Rotación de llantas</label>
-                            <label><input type="checkbox" id="trabTapiceria"> Reparación de tapicería</label>
-                            <label><input type="checkbox" id="trabAC"> Reparación de A/C</label>
-                            <label><input type="checkbox" id="trabCarroceria"> Reparación de carrocería</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Observaciones del cliente -->
-            <div class="form-row" style="margin-top:1rem;">
-                <label>Observaciones del cliente</label>
-                <textarea id="observacionesClienteInput" class="input" rows="3" placeholder="Ej: ruidos al frenar, vibraciones, recalienta, etc."></textarea>
-            </div>
-
-            <!-- Fecha y hora -->
-            <div class="form-row" style="margin-top:1rem;">
+            <div>
                 <label>Fecha</label>
-                <input id="fecha" type="date" class="input" />
-                <label>Hora</label>
-                <select id="hora" class="input">
-                    <option value="">Selecciona</option>
-                </select>
+                <input class="input" id="fecha" type="date" />
             </div>
 
-            <!-- Botones -->
-            <button id="btnPreview" class="btn btn-secondary" style="margin-top:1rem;" data-bs-toggle="modal" data-bs-target="#proformaModal">Ver Proforma</button>
-            <button id="btnAgendar" class="btn btn-primary" style="margin-top:1rem;">Agendar y crear revisión</button>
+            <div>
+                <label>Hora</label>
+                <select class="input" id="hora"></select>
+            </div>
+
+            <button id="btnAgendar" type="button">Agendar Revisión</button>
         </div>
 
-        <!-- Tabla revisiones -->
+        <!-- Listado -->
         <div class="card">
-            <h3>Revisiones asociadas</h3>
+            <h3>Mis Revisiones</h3>
+
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Placa</th>
-                        <th>Marca</th>
-                        <th>Modelo</th>
-                        <th>Año</th>
-                        <th>Tipo Servicio</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
+                        <th>ID</th>
+                        <th>Vehículo</th>
+                        <th>Servicio</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Acción</th>
                     </tr>
                 </thead>
-                <tbody id="tablaRevisiones"></tbody>
+                <tbody></tbody>
             </table>
+
         </div>
+
     </div>
 </section>
 
-<!-- Modal Proforma -->
-<div class="modal fade" id="proformaModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+<!-- Modal -->
+<div id="modalProforma" style="display:none;">
+    <div class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Proforma</h5>
-            </div>
-            <div class="modal-body" id="proformaPreview">
-                <!-- Se llena con JS -->
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-success" onclick="descargarProforma()">Descargar PDF</button>
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            </div>
+            <span class="close" onclick="cerrarModal()">&times;</span>
+            <button class="btn-pdf" onclick="descargarPDF()">
+                Descargar PDF
+            </button>
+            <div id="proformaContent"></div>
         </div>
     </div>
 </div>
 
-<!-- Librería html2pdf -->
-<script src="http://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<!-- Librería Bootstrap JS necesaria para accordion y modals -->
-<script src="http://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-    const API_AGENDAMIENTO = "http://localhost:7096/Agendamiento";
-    const API_REVISION = "http://localhost:7096/Revision";
-    const API_REVISION_PERTENENCIA = "http://localhost:7096/api/RevisionPertenencias";
-    const API_REVISION_TRABAJOS = "http://localhost:7096/api/RevisionTrabajos";
-    const API_VEHICULO = "http://localhost:7096/Vehiculos";
-    const API_SERVICIOS = "http://localhost:7096/Servicios";
-    const API_TIPO_SERVICIO = "http://localhost:7096/TipoServicios";
-    const API_ESTADO = "http://localhost:7096/Estados";
-    const API_MARCA = "http://localhost:7096/Marcas";
+    /* =================================================================================
+       CONFIG
+       ================================================================================= */
+    const API = {
+        AGENDAMIENTO: "http://localhost:7096/Agendamiento",
+        REVISION: "http://localhost:7096/Revision",
+        REV_PERT: "http://localhost:7096/api/RevisionPertenencias",
+        SERV_REV: "http://localhost:7096/ServiciosRevision",
+        VEHICULO: "http://localhost:7096/Vehiculos",
+        SERV: "http://localhost:7096/Servicios",
+        TIPO_SERV: "http://localhost:7096/TipoServicios"
+    };
 
     const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
 
-    let marcas = [], vehiculos = [], tipoServicios = [], servicios = [], estados = [];
-    const horasDisponibles = ["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00"];
+    let cacheVehiculos = {}, cacheServicios = {}, cacheTipos = {};
+    let cacheAgendamientos = [], cacheRevisiones = [];
 
-    $(document).ready(function () {
-        const hoy = new Date().toISOString().split('T')[0];
-        $("#fecha").attr("min", hoy);
 
-        cargarMarcas();
-        cargarTipoServicios();
-        cargarVehiculos();
-        cargarFallasEspecificas();
-        cargarHoras();
-        cargarDatosIniciales();
-
-        $("#tipoServicioInput").change(function () {
-            const tipoId = parseInt($(this).val());
-            $("#preventivoSection, #correctivoSection, #fallasSection").hide();
-
-            if (tipoId === 1) $("#preventivoSection").show();
-            else if (tipoId === 2) $("#correctivoSection").show();
-            else if (tipoId === 3) $("#fallasSection").show();
-        });
-
-        $("#marcaInput, #kmRangoInput").change(calcPreventivo);
-
-        $("#btnPreview").on("click", function () {
-            generarPreviewProforma();
-        });
-
-        $("#btnAgendar").on("click", function () {
-            agendarConRevision();
-        });
-
-             $(document).on("click", ".toggle-btn", function () {
-        const targetId = $(this).data("target");
-        const checkbox = $("#" + targetId);
-
-        const esCondicion =
-            targetId === "vehiculoSucio" ||
-            targetId === "vehiculoMojado";
-
-        if (esCondicion) {
-            // Desmarcar ambos primero
-            $("#vehiculoSucio").prop("checked", false);
-            $("#vehiculoMojado").prop("checked", false);
-
-            $(".toggle-btn[data-target='vehiculoSucio']").removeClass("active");
-            $(".toggle-btn[data-target='vehiculoMojado']").removeClass("active");
-
-            // Activar SOLO el seleccionado (si estaba apagado)
-            const nuevoEstado = !checkbox.prop("checked");
-            if (nuevoEstado) {
-                checkbox.prop("checked", true);
-                $(this).addClass("active");
-            }
-
-        } else {
-            // --- Modo normal para golpes ---
-            checkbox.prop("checked", !checkbox.prop("checked"));
-            $(this).toggleClass("active");
-        }
-    });
+    let ultimaProforma = null;
+    /* =================================================================================
+       INIT
+       ================================================================================= */
+    $(document).ready(async () => {
+        await cargarVehiculos();
+        await cargarTipos();
+        await cargarServicios();
+        await cargarAgendamientos();
+        await cargarRevisiones();
+        renderPertenencias();
     });
 
-    function cargarMarcas() {
-        $.get(API_MARCA, function (data) {
-            marcas = data;
-            const select = $("#marcaInput");
-            select.empty().append('<option value="">Seleccione una marca</option>');
-            marcas.forEach(m => select.append(`<option value="${m.id_marca}">${m.nombre}</option>`));
-        });
-    }
 
-    function cargarTipoServicios() {
-        $.get(API_TIPO_SERVICIO, function (data) {
-            tipoServicios = data;
-            const select = $("#tipoServicioInput");
-            select.empty().append('<option value="">Seleccione tipo</option>');
-            data.forEach(tipo => select.append(`<option value="${tipo.id_tipo_servicio}">${tipo.nombre}</option>`));
-        });
-    }
-
+    /* =================================================================================
+       CARGA DE DATOS
+       ================================================================================= */
     function cargarVehiculos() {
-        $.get(API_VEHICULO, function (data) {
-            vehiculos = data.filter(v => v.cliente_id.toString() === userId);
-            const select = $("#vehiculoInput");
-            select.empty().append('<option value="">Seleccione vehículo</option>');
-            vehiculos.forEach(v => select.append(`<option value="${v.id_vehiculo}">${v.placa} - ${v.modelo} (${v.anno})</option>`));
-        });
-    }
+        return $.get(API.VEHICULO, v => {
+            const propios = v.filter(x => x.cliente_id == userId);
+            $("#vehiculo_id").html(`<option value="">Seleccione</option>`);
 
-    function cargarFallasEspecificas() {
-        $.get(API_SERVICIOS, function (data) {
-            servicios = data;
-            const fallas = data.filter(s => s.tipo_servicio_id === 3);
-            const select = $("#fallaInput");
-            select.empty().append('<option value="">Seleccione una falla</option>');
-            fallas.forEach(f => select.append(`<option value="${f.id_servicio}">${f.nombre}</option>`));
-        });
-    }
-
-    function cargarHoras() {
-        $("#hora").empty().append('<option value="">Selecciona</option>');
-        horasDisponibles.forEach(h => $("#hora").append(`<option value="${h}">${h}</option>`));
-    }
-
-    function cargarDatosIniciales() {
-        $.get(API_VEHICULO, function (dataVeh) {
-            vehiculos = dataVeh;
-            $.get(API_SERVICIOS, function (dataServ) {
-                servicios = dataServ;
-                $.get(API_ESTADO, function (dataEst) {
-                    estados = dataEst;
-                    cargarRevisiones();
-                });
+            propios.forEach(x => {
+                cacheVehiculos[x.id_vehiculo] = x;
+                $("#vehiculo_id").append(`<option value="${x.id_vehiculo}">${x.placa} - ${x.modelo}</option>`);
             });
         });
     }
 
-    function calcPreventivo() {
-        const marca = $("#marcaInput").val();
-        const kmRango = $("#kmRangoInput").val();
-        let precio = 0;
-
-        if (marca && kmRango) {
-            if (kmRango === "0-10k") precio = 50;
-            else if (kmRango === "10k-30k") precio = 100;
-            else if (kmRango === "30k-60k") precio = 150;
-            $("#precioInput").val(`$ ${precio.toFixed(2)}`);
-        } else {
-            $("#precioInput").val("$ -");
-        }
+    function cargarTipos() {
+        return $.get(API.TIPO_SERV, ts => {
+            $("#tipo_servicio_id").html(`<option value="">Seleccione</option>`);
+            ts.forEach(x => {
+                cacheTipos[x.id_tipo_servicio] = x;
+                $("#tipo_servicio_id").append(`<option value="${x.id_tipo_servicio}">${x.nombre}</option>`);
+            });
+        });
     }
 
-    function agendarConRevision() {
-        const tipoId = parseInt($("#tipoServicioInput").val());
-        const vehiculoId = parseInt($("#vehiculoInput").val());
+    function cargarServicios() {
+        return $.get(API.SERV, s => {
+            s.forEach(x => cacheServicios[x.id_servicio] = x);
+
+            $("#tipo_servicio_id").on("change", function () {
+                const tipo = $(this).val();
+                $("#servicio_id").html(`<option value="">Seleccione</option>`);
+
+                Object.values(cacheServicios)
+                    .filter(s => s.tipo_servicio_id == tipo)
+                    .forEach(s => $("#servicio_id").append(`<option value="${s.id_servicio}">${s.nombre}</option>`));
+            });
+        });
+    }
+
+    function cargarAgendamientos() {
+        return $.get(API.AGENDAMIENTO, a => cacheAgendamientos = a);
+    }
+
+
+    /* =================================================================================
+       PERTENENCIAS
+       ================================================================================= */
+    function renderPertenencias() {
+        const list = ["Radio","Encendedor","Gar Celular","Antena","Espejo","Alfombras","Halogeno","Llave Rana"
+        ,"Gata Mec/HD","Herramienta","Triangulos","Lagartos","Llanta de repuesto","Copas","Paraguas","Botiquin"
+        ,"Chaleco","Booster","Linga","Extintor"];
+        list.forEach(p => {
+            $("#pertenencias").append(`
+                <label><input type="checkbox" value="${p}"> ${p}</label>
+            `);
+        });
+    }
+
+
+    /* =================================================================================
+       VALIDACIÓN FECHA-HORA
+       ================================================================================= */
+    $("#fecha").on("change", function () {
+        const f = $(this).val();
+        if (!f) return;
+
+        const hoy = new Date();
+        if (new Date(f) <= hoy) {
+            alert("Debe seleccionar una fecha futura.");
+            $(this).val("");
+            return;
+        }
+
+        cargarHorasDisponibles(f);
+    });
+
+    function cargarHorasDisponibles(fecha) {
+        const horas = generarHoras();
+
+        const ocupadas = cacheAgendamientos
+            .filter(a => a.fecha_estimada === fecha)
+            .map(a => a.hora_llegada.substring(0, 5));
+
+        const disponibles = horas.filter(h => !ocupadas.includes(h));
+
+        $("#hora").html("");
+
+        if (disponibles.length === 0) {
+            $("#hora").append(`<option value="">No hay campos este día</option>`);
+            return;
+        }
+
+        disponibles.forEach(h => {
+            $("#hora").append(`<option value="${h}">${h}</option>`);
+        });
+    }
+
+    function generarHoras() {
+        const lista = [];
+        let h = new Date();
+        h.setHours(7, 30, 0);
+
+        let fin = new Date();
+        fin.setHours(18, 0, 0);
+
+        while (h <= fin) {
+            lista.push(h.toTimeString().substring(0, 5));
+            h.setMinutes(h.getMinutes() + 30);
+        }
+
+        return lista;
+    }
+
+
+    /* =================================================================================
+       CREAR REVISIÓN COMPLETA
+       ================================================================================= */
+    $("#btnAgendar").on("click", async function () {
+        const vehId = $("#vehiculo_id").val();
+        const servId = $("#servicio_id").val();
         const fecha = $("#fecha").val();
         const hora = $("#hora").val();
-        let servicioId = null;
 
-        if (tipoId === 1) {
-            // Preventivo: buscas el servicio preventivo genérico
-            const srv = servicios.find(s => s.tipo_servicio_id === 1);
-            servicioId = srv ? srv.id_servicio : null;
-        } else if (tipoId === 2) {
-            const srv = servicios.find(s => s.tipo_servicio_id === 2);
-            servicioId = srv ? srv.id_servicio : null;
-        } else if (tipoId === 3) {
-            
-            servicioId = parseInt($("#fallaInput").val());
-        }
+        const pertenencias = $("#pertenencias input:checked")
+            .map((_, el) => $(el).val()).get();
 
-        if (!vehiculoId || !servicioId || !fecha || !hora) {
-            alert("Completa todos los campos obligatorios (vehículo, tipo servicio, fecha, hora)");
+        if (!vehId || !servId || !fecha || !hora) {
+            alert("Complete todos los campos.");
             return;
         }
 
-        const hoy = new Date().toISOString().split('T')[0];
-        if (fecha < hoy) {
-            alert("No puedes seleccionar una fecha anterior a hoy.");
-            return;
-        }
-
-        const nuevoAgendamiento = {
-            cliente_id: parseInt(userId),
-            vehiculo_id: vehiculoId,
-            // si tu API lo soporta:
-            id_servicio: servicioId,
-            fecha_agregada: hoy,
-            fecha_estimada: fecha,
-            hora_llegada: hora,
-            id_estado: 2
-        };
-
-        $.ajax({
-            url: API_AGENDAMIENTO,
+        /* 1️⃣ Agendamiento */
+        const ag = await $.ajax({
+            url: API.AGENDAMIENTO,
             method: "POST",
             contentType: "application/json",
-            data: JSON.stringify(nuevoAgendamiento),
-            success: function (agendamiento) {
-                crearRevision(agendamiento.id_agendamiento, vehiculoId, servicioId, fecha, hora);
-            },
-            error: function (xhr, status, error) {
-                console.error("Error al agendar:", error);
-                alert("Ocurrió un error al agendar la cita.");
-            }
+            data: JSON.stringify({
+                cliente_id: parseInt(userId),
+                vehiculo_id: parseInt(vehId),
+                fecha_agregada: fecha,
+                fecha_estimada: fecha,
+                hora_llegada: hora,
+                id_estado: 12
+            })
         });
-    }
 
-    function crearRevision(id_agendamiento, vehiculo_id, id_servicio, fecha, hora) {
-        let combustible = $("#combustibleInput").val();
-        if (!combustible) combustible = null;
-
-        const kilometraje = $("#kilometrajeInput").val();
-        const kmParsed = kilometraje ? parseInt(kilometraje) : null;
-
-        const revision = {
-            vehiculo_id: vehiculo_id,
-            id_servicio: id_servicio,
-            id_estado: 2,
-            fecha_ingreso: new Date().toISOString(),
-            fecha_estimada_entrega: `${fecha}T${hora}:00`,
-            fecha_entrega_final: `${fecha}T${hora}:00`,
-            id_agendamiento: id_agendamiento,
-            kilometraje: kmParsed,
-            observaciones_cliente: $("#observacionesClienteInput").val() || "",
-            notas_taller: "", // el taller la puede llenar después
-            nivel_combustible: combustible,
-            golpes_delantera: $("#golpeDelantera").is(":checked"),
-            golpes_trasera: $("#golpeTrasera").is(":checked"),
-            golpes_izquierda: $("#golpeIzquierda").is(":checked"),
-            golpes_derecha: $("#golpeDerecha").is(":checked"),
-            golpes_arriba: $("#golpeArriba").is(":checked"),
-            vehiculo_sucio: $("#vehiculoSucio").is(":checked"),
-            vehiculo_mojado: $("#vehiculoMojado").is(":checked")
-        };
-
-        $.ajax({
-            url: API_REVISION,
+        /* 2️⃣ Revisión */
+        const rev = await $.ajax({
+            url: API.REVISION,
             method: "POST",
             contentType: "application/json",
-            data: JSON.stringify(revision),
-            success: function (rev) {
-                 guardarPertenencias(rev.id_revision);
-                 guardarTrabajos(rev.id_revision);
-                 alert("Cita y revisión creadas correctamente");
+            data: JSON.stringify({
+                vehiculo_id: parseInt(vehId),
+                fecha_ingreso: new Date().toISOString(),
+                id_estado: 4,
+                id_agendamiento: ag.id_agendamiento
+            })
+        });
 
-                // Se recarga después de 1 segundo para asegurarse de que termine de guardar
-                    setTimeout(() => location.reload(), 1000);
-            },
-            error: function (xhr, status, error) {
-                console.error("Error al crear revisión:", error);
-                alert("Ocurrió un error al crear la revisión.");
+        /* 3️⃣ Servicio */
+        await $.ajax({
+            url: API.SERV_REV,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                revision_id: rev.id_revision,
+                servicio_id: parseInt(servId)
+            })
+        });
+
+        /* 4️⃣ Pertenencias */
+        for (let p of pertenencias) {
+            await $.ajax({
+                url: API.REV_PERT,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    revision_id: rev.id_revision,
+                    nombre: p,
+                    presente: true
+                })
+            });
+        }
+
+        alert("Revisión agendada correctamente.");
+
+        await cargarAgendamientos();
+        await cargarRevisiones();
+    });
+
+
+    /* =================================================================================
+       LISTADO
+       ================================================================================= */
+    async function cargarRevisiones() {
+        const data = await $.get(API.REVISION);
+
+        const propias = data.filter(r => cacheVehiculos[r.vehiculo_id]?.cliente_id == userId);
+        cacheRevisiones = propias;
+
+        $("table tbody").html("");
+
+        for (const r of propias) {
+            let servRev;
+            try {
+                servRev = await $.get(`${API.SERV_REV}/ByRevision/${r.id_revision}`);
+            } catch {
+                servRev = null;
             }
-        });
-    }
 
-    function guardarPertenencias(revision_id) {
-        const pertenencias = [
-            { nombre: "Encendedor", presente: $("#encendedor").is(":checked"), revision_id },
-            { nombre: "Radio", presente: $("#radio").is(":checked"), revision_id },
-            { nombre: "Gar. Celular", presente: $("#garCelular").is(":checked"), revision_id },
-            { nombre: "Antena", presente: $("#antena").is(":checked"), revision_id },
-            { nombre: "Espejo", presente: $("#espejo").is(":checked"), revision_id },
-            { nombre: "Alfombras", presente: $("#alfombras").is(":checked"), revision_id },
-            { nombre: "Halógenos", presente: $("#halogenos").is(":checked"), revision_id },
-            { nombre: "Llave Rana", presente: $("#llaveRana").is(":checked"), revision_id },
-            { nombre: "Gata Mec/HD", presente: $("#gataMec").is(":checked"), revision_id },
-            { nombre: "Herramienta", presente: $("#herramienta").is(":checked"), revision_id },
-            { nombre: "Chaleco", presente: $("#chaleco").is(":checked"), revision_id },
-            { nombre: "Booster", presente: $("#booster").is(":checked"), revision_id },
-            { nombre: "Triángulos", presente: $("#triangulos").is(":checked"), revision_id },
-            { nombre: "Linga", presente: $("#linga").is(":checked"), revision_id },
-            { nombre: "Extintor", presente: $("#extintor").is(":checked"), revision_id },
-            { nombre: "Llanta de repuesto", presente: $("#llantaRepuesto").is(":checked"), revision_id },
-            { nombre: "Copas", presente: $("#copas").is(":checked"), revision_id },
-            { nombre: "Botiquín", presente: $("#botiquin").is(":checked"), revision_id }
-        ];
+            const serv = servRev ? cacheServicios[servRev.servicio_id] : null;
 
-             const otros = $("#otrosPertenencias").val()?.trim();
-        if (otros) {
-            pertenencias.push({ nombre: otros, presente: true, revision_id });
+            const ag = cacheAgendamientos.find(a => a.id_agendamiento === r.id_agendamiento);
+            const veh = cacheVehiculos[r.vehiculo_id];
+
+            $("table tbody").append(`
+                <tr>
+                    <td>${r.id_revision}</td>
+                    <td>${veh?.placa || "-"}</td>
+                    <td>${serv?.nombre || "Desconocido"}</td>
+                    <td>${ag?.fecha_estimada || "-"}</td>
+                    <td>${ag?.hora_llegada || "-"}</td>
+                    <td>
+                        <button class="btn-proforma" onclick="verProforma(${r.id_revision})">
+                            Ver Proforma
+                        </button>
+                    </td>
+                </tr>
+            `);
         }
-
-          pertenencias.forEach(p => {
-        if (p.presente === true) {
-            $.ajax({
-                url: API_REVISION_PERTENENCIA,
-                method: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(p),
-                success: () => console.log("Pertenencia guardada:", p.nombre),
-                error: (xhr) => console.error("ERROR pertenencia:", xhr.responseText)
-            });
-        }
-    });
     }
 
-        function guardarTrabajos(revision_id) {
 
-        const trabajos = [
-            { nombre: "Diagnóstico 0 M.", realizado: $("#diag0m").is(":checked"), revision_id },
-            { nombre: "Diagnóstico 3000 M.", realizado: $("#diag3000m").is(":checked"), revision_id },
-            { nombre: "Diagnóstico 6000 M.", realizado: $("#diag6000m").is(":checked"), revision_id },
-            { nombre: "Diagnóstico 9000 M.", realizado: $("#diag9000m").is(":checked"), revision_id },
-            { nombre: "Diagnóstico 12000 M.", realizado: $("#diag12000m").is(":checked"), revision_id },
-            { nombre: "Diagnóstico 15000 M.", realizado: $("#diag15000m").is(":checked"), revision_id },
-            { nombre: "Diagnóstico Inyección", realizado: $("#diagInyeccion").is(":checked"), revision_id },
-            { nombre: "Diagnóstico Sist. Frenos", realizado: $("#diagFrenos").is(":checked"), revision_id },
-            { nombre: "Diagnóstico Sist. Dirección", realizado: $("#diagDireccion").is(":checked"), revision_id },
-            { nombre: "Diagnóstico Sist. Suspensión", realizado: $("#diagSuspension").is(":checked"), revision_id },
-            { nombre: "Diagnóstico Sist. Enfriamiento", realizado: $("#diagEnfriamiento").is(":checked"), revision_id },
-            { nombre: "Revisión Sist. Eléctrico", realizado: $("#diagElectrico").is(":checked"), revision_id },
-            { nombre: "Revisión de Transmisión", realizado: $("#diagTransmision").is(":checked"), revision_id },
-            { nombre: "Afinamiento", realizado: $("#trabAfinamiento").is(":checked"), revision_id },
-            { nombre: "Tuneup", realizado: $("#trabTuneup").is(":checked"), revision_id },
-            { nombre: "Cambio de aceite y filtro", realizado: $("#trabAceiteFiltro").is(":checked"), revision_id },
-            { nombre: "Cambio de aceite de transmisión", realizado: $("#trabAceiteTransmision").is(":checked"), revision_id },
-            { nombre: "Cambio de aceite de diferencia", realizado: $("#trabAceiteDiferencia").is(":checked"), revision_id },
-            { nombre: "Revisión de niveles", realizado: $("#trabRevisionNiveles").is(":checked"), revision_id },
-            { nombre: "Engrase", realizado: $("#trabEngrase").is(":checked"), revision_id },
-            { nombre: "Limpieza de inyectores", realizado: $("#trabInyectores").is(":checked"), revision_id },
-            { nombre: "Alineado de dirección", realizado: $("#trabAlineado").is(":checked"), revision_id },
-            { nombre: "Balanceo", realizado: $("#trabBalanceo").is(":checked"), revision_id },
-            { nombre: "Rotación de llantas", realizado: $("#trabRotacion").is(":checked"), revision_id },
-            { nombre: "Reparación de tapicería", realizado: $("#trabTapiceria").is(":checked"), revision_id },
-            { nombre: "Reparación de A/C", realizado: $("#trabAC").is(":checked"), revision_id },
-            { nombre: "Reparación de carrocería", realizado: $("#trabCarroceria").is(":checked"), revision_id }
-        ];
+    /* =================================================================================
+       PROFORMA
+       ================================================================================= */
+    function verProforma(id) {
+        $.get(`${API.REVISION}/Detalle/${id}`, function (d) {
 
-         trabajos.forEach(t => {
-        if (t.realizado === true) {
-            $.ajax({
-                url: API_REVISION_TRABAJOS,
-                method: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(t),
-                success: () => console.log("Trabajo guardado:", t.nombre),
-                error: (xhr) => console.error("ERROR trabajo:", xhr.responseText)
-            });
-        }
-    });
-    }
-
-    function generarPreviewProforma() {
-        const vehiculoId = parseInt($("#vehiculoInput").val());
-        const vehiculo = vehiculos.find(v => v.id_vehiculo === vehiculoId);
-        const clienteNombre = "@User.Identity.Name";
-        const tipoServicioId = parseInt($("#tipoServicioInput").val());
-        const tipoServicio = tipoServicios.find(t => t.id_tipo_servicio === tipoServicioId);
-        const combustible = $("#combustibleInput").val() || "No indicado";
-        const fecha = $("#fecha").val() || "-";
-        const hora = $("#hora").val() || "-";
-        const kmActual = $("#kilometrajeInput").val() || "-";
-        const observaciones = $("#observacionesClienteInput").val() || "Ninguna";
-
-        const golpes = obtenerGolpes();
-        const condicion = obtenerCondicion();
-        const pertenencias = obtenerPertenencias();
-        const trabajosPorCategoria = obtenerTrabajosPorCategoria();
-
-        let html = `
-            <div id="proformaContenido" style="font-size:0.9rem;">
-                <h3 style="text-align:center; margin-bottom:1rem;">Proforma de Servicio</h3>
-
-                <table class="table table-bordered" style="width:100%; margin-bottom:0.5rem;">
-                    <tr>
-                        <th style="width:25%;">Cliente</th>
-                        <td>${clienteNombre}</td>
-                    </tr>
-                    <tr>
-                        <th>Fecha / Hora</th>
-                        <td>${fecha} - ${hora}</td>
-                    </tr>
-                </table>
-
-                <table class="table table-bordered" style="width:100%; margin-bottom:0.5rem;">
-                    <tr><th colspan="2">Datos del vehículo</th></tr>
-                    <tr>
-                        <th style="width:25%;">Vehículo</th>
-                        <td>${vehiculo ? vehiculo.placa + " - " + vehiculo.modelo + " (" + vehiculo.anno + ")" : "-"}</td>
-                    </tr>
-                    <tr>
-                        <th>Kilometraje</th>
-                        <td>${kmActual}</td>
-                    </tr>
-                    <tr>
-                        <th>Tipo de servicio</th>
-                        <td>${tipoServicio ? tipoServicio.nombre : "-"}</td>
-                    </tr>
-                </table>
-
-                <table class="table table-bordered" style="width:100%; margin-bottom:0.5rem;">
-                    <tr><th colspan="2">Estado exterior</th></tr>
-                    <tr>
-                        <th style="width:25%;">Combustible</th>
-                        <td>${combustible}</td>
-                    </tr>
-                    <tr>
-                        <th>Golpes</th>
-                        <td>${golpes}</td>
-                    </tr>
-                    <tr>
-                        <th>Condición</th>
-                        <td>${condicion}</td>
-                    </tr>
-                </table>
-
-                <table class="table table-bordered" style="width:100%; margin-bottom:0.5rem;">
-                    <tr><th>Pertenencias dentro del vehículo</th></tr>
-                    <tr><td>${pertenencias}</td></tr>
-                </table>
-
-                <table class="table table-bordered" style="width:100%; margin-bottom:0.5rem;">
-                    <tr><th colspan="2">Trabajos y diagnósticos solicitados</th></tr>
-                    <tr>
-                        <th style="width:25%;">Diagnósticos</th>
-                        <td>${trabajosPorCategoria.diagnosticos || "Ninguno"}</td>
-                    </tr>
-                    <tr>
-                        <th>Mantenimientos / Trabajos</th>
-                        <td>${trabajosPorCategoria.trabajos || "Ninguno"}</td>
-                    </tr>
-                </table>
-
-                <table class="table table-bordered" style="width:100%; margin-bottom:0.5rem;">
-                    <tr><th>Observaciones del cliente</th></tr>
-                    <tr><td>${observaciones}</td></tr>
-                </table>
-            </div>
-        `;
-        $("#proformaPreview").html(html);
-    }
-
-    function obtenerGolpes() {
-        let golpes = [];
-        if ($("#golpeDelantera").is(":checked")) golpes.push("Delantera");
-        if ($("#golpeTrasera").is(":checked")) golpes.push("Trasera");
-        if ($("#golpeIzquierda").is(":checked")) golpes.push("Izquierda");
-        if ($("#golpeDerecha").is(":checked")) golpes.push("Derecha");
-        if ($("#golpeArriba").is(":checked")) golpes.push("Arriba");
-        return golpes.length ? golpes.join(", ") : "Ninguno";
-    }
-
-    function obtenerCondicion() {
-        let cond = [];
-        if ($("#vehiculoSucio").is(":checked")) cond.push("Sucio");
-        if ($("#vehiculoMojado").is(":checked")) cond.push("Mojado");
-        return cond.length ? cond.join(", ") : "Normal";
-    }
-
-    function obtenerPertenencias() {
-        let items = [];
-        $("#collapsePertenencias input[type=checkbox]").each(function () {
-            if ($(this).is(":checked")) items.push($(this).parent().text().trim());
-        });
-        if ($("#otrosPertenencias").val()) items.push($("#otrosPertenencias").val().trim());
-        return items.length ? items.join(", ") : "Ninguna";
-    }
-
-    function obtenerTrabajosPorCategoria() {
-        let diag = [];
-        let trab = [];
-
-        // Diagnósticos
-        if ($("#diag0m").is(":checked")) diag.push("Diagnóstico 0 M.");
-        if ($("#diag3000m").is(":checked")) diag.push("Diagnóstico 3000 M.");
-        if ($("#diag6000m").is(":checked")) diag.push("Diagnóstico 6000 M.");
-        if ($("#diag9000m").is(":checked")) diag.push("Diagnóstico 9000 M.");
-        if ($("#diag12000m").is(":checked")) diag.push("Diagnóstico 12000 M.");
-        if ($("#diag15000m").is(":checked")) diag.push("Diagnóstico 15000 M.");
-        if ($("#diagInyeccion").is(":checked")) diag.push("Diagnóstico Inyección");
-        if ($("#diagFrenos").is(":checked")) diag.push("Diagnóstico Sist. Frenos");
-        if ($("#diagDireccion").is(":checked")) diag.push("Diagnóstico Sist. Dirección");
-        if ($("#diagSuspension").is(":checked")) diag.push("Diagnóstico Sist. Suspensión");
-        if ($("#diagEnfriamiento").is(":checked")) diag.push("Diagnóstico Sist. Enfriamiento");
-        if ($("#diagElectrico").is(":checked")) diag.push("Revisión Sist. Eléctrico");
-        if ($("#diagTransmision").is(":checked")) diag.push("Revisión de Transmisión");
-
-        // Trabajos / Mantenimientos
-        if ($("#trabAfinamiento").is(":checked")) trab.push("Afinamiento");
-        if ($("#trabTuneup").is(":checked")) trab.push("Tuneup");
-        if ($("#trabAceiteFiltro").is(":checked")) trab.push("Cambio de aceite y filtro");
-        if ($("#trabAceiteTransmision").is(":checked")) trab.push("Cambio de aceite de transmisión");
-        if ($("#trabAceiteDiferencia").is(":checked")) trab.push("Cambio de aceite de diferencia");
-        if ($("#trabRevisionNiveles").is(":checked")) trab.push("Revisión de niveles");
-        if ($("#trabEngrase").is(":checked")) trab.push("Engrase");
-        if ($("#trabInyectores").is(":checked")) trab.push("Limpieza de inyectores");
-        if ($("#trabAlineado").is(":checked")) trab.push("Alineado de dirección");
-        if ($("#trabBalanceo").is(":checked")) trab.push("Balanceo");
-        if ($("#trabRotacion").is(":checked")) trab.push("Rotación de llantas");
-        if ($("#trabTapiceria").is(":checked")) trab.push("Reparación de tapicería");
-        if ($("#trabAC").is(":checked")) trab.push("Reparación de A/C");
-        if ($("#trabCarroceria").is(":checked")) trab.push("Reparación de carrocería");
-
-        return {
-            diagnosticos: diag.join(", "),
-            trabajos: trab.join(", ")
+              ultimaProforma = {
+            idRevision: id,
+            vehiculo: d.vehiculo,
+            servicio: d.servicio,
+            tipoServicio: d.tipo_servicio,
+            agendamiento: d.agendamiento,
+            pertenencias: d.pertenencias || [],
+            trabajos: d.trabajos || []
         };
+
+
+            const veh = d.vehiculo;
+            const s = d.servicio;
+            const t = d.tipo_servicio;
+            const ag = d.agendamiento;
+
+            let html = `
+                <h2>Proforma Detallada</h2>
+
+                <h3>Vehículo</h3>
+                <p>${veh.placa} - ${veh.modelo} (${veh.id_marca})</p>
+
+                <h3>Servicio</h3>
+                <p>${s?.nombre || "No registrado"}</p>
+                <small>${t?.nombre || "-"}</small>
+
+                <h3>Fecha y Hora</h3>
+                <p>${ag.fecha_estimada} ${ag.hora_llegada}</p>
+
+                <h3>Pertenencias</h3>
+            `;
+
+            if (d.pertenencias.length === 0) {
+                html += `<p>No registradas.</p>`;
+            } else {
+                html += `<ul>`;
+                d.pertenencias.forEach(p => html += `<li>${p.nombre} — ${p.presente ? "Sí" : "No"}</li>`);
+                html += `</ul>`;
+            }
+
+            html += `<h3>Trabajos</h3>`;
+
+            if (d.trabajos.length === 0) {
+                html += `<p>No se han registrado trabajos.</p>`;
+            } else {
+                html += `<ul>`;
+                d.trabajos.forEach(t => html += `<li>${t.nombre}</li>`);
+                html += `</ul>`;
+            }
+
+            $("#proformaContent").html(html);
+            $("#modalProforma").show();
+        });
     }
 
-    function descargarProforma() {
-        const element = document.getElementById('proformaContenido');
-        if (!element) {
-            alert("Primero genera la proforma.");
+    function cerrarModal() {
+        document.getElementById("modalProforma").style.display = "none";
+    }
+
+           async function descargarPDF() {
+
+        if (!ultimaProforma) {
+            alert("No hay datos cargados para exportar.");
             return;
         }
-        html2pdf().from(element).save('Proforma.pdf');
-    }
 
-    // Aquí iría tu función cargarRevisiones() que ya tengas definida
-        function cargarRevisiones() {
-        $.get(API_REVISION, function (revisiones) {
+        const { jsPDF } = window.jspdf;
 
-            // Filtrar revisiones del usuario logueado
-            const revisionesUsuario = revisiones.filter(r => {
-                const veh = vehiculos.find(v => v.id_vehiculo === r.vehiculo_id);
-                return veh && veh.cliente_id.toString() === userId;
-            });
-
-            const tbody = $("#tablaRevisiones");
-            tbody.empty();
-
-            revisionesUsuario.forEach(r => {
-                const veh = vehiculos.find(v => v.id_vehiculo === r.vehiculo_id);
-                const servicio = servicios.find(s => s.id_servicio === r.id_servicio);
-                const estado = estados.find(e => e.id_estado === r.id_estado);
-
-                const fila = `
-                    <tr>
-                        <td>${veh?.placa || "-"}</td>
-                        <td>${veh?.marca || "-"}</td>
-                        <td>${veh?.modelo || "-"}</td>
-                        <td>${veh?.anno || "-"}</td>
-                        <td>${servicio?.nombre || "-"}</td>
-                        <td>${estado?.nombre || "-"}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary" onclick="verRevision(${r.id_revision})">
-                                Ver
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                tbody.append(fila);
-            });
+        const doc = new jsPDF({
+            unit: "mm",
+            format: "a4"
         });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        let y = 12;
+
+        const v = ultimaProforma.vehiculo || {};
+        const s = ultimaProforma.servicio || {};
+        const ts = ultimaProforma.tipoServicio || {};
+        const ag = ultimaProforma.agendamiento || {};
+        const pertenencias = ultimaProforma.pertenencias || [];
+        const trabajos = ultimaProforma.trabajos || [];
+
+        /* ========================================================
+           ENCABEZADO
+           ======================================================== */
+        doc.setFillColor(26, 26, 26);
+        doc.rect(0, 0, pageWidth, 20, "F");
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.setTextColor(255, 255, 255);
+        doc.text("Innovación Tecmave — Proforma de Servicio", 10, 12);
+
+        doc.setFontSize(10);
+        doc.text(`N.º ${ultimaProforma.idRevision}`, pageWidth - 10, 12, { align: "right" });
+        doc.text(`Fecha: ${new Date().toLocaleDateString()}`, pageWidth - 10, 17, { align: "right" });
+
+        // Reset texto
+        doc.setTextColor(0, 0, 0);
+
+        y = 30;
+
+        /* ========================================================
+           DATOS DEL VEHÍCULO
+           ======================================================== */
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Datos del vehículo", 10, y);
+        y += 6;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(`Placa: ${v.placa || "-"}`, 10, y);
+        doc.text(`Modelo: ${v.modelo || "-"}`, 80, y);
+        y += 5;
+
+        doc.text(`Marca ID: ${v.id_marca || "-"}`, 10, y);
+        y += 10;
+
+        /* ========================================================
+           DETALLE DEL SERVICIO
+           ======================================================== */
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Detalle del servicio", 10, y);
+        y += 6;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(`Tipo de servicio: ${ts?.nombre || "-"}`, 10, y);
+        y += 5;
+
+        doc.text(`Servicio seleccionado: ${s?.nombre || "-"}`, 10, y);
+        y += 10;
+
+        /* ========================================================
+           FECHA Y HORA
+           ======================================================== */
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Fecha y hora de revisión", 10, y);
+        y += 6;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(`Fecha: ${ag?.fecha_estimada || "-"}`, 10, y);
+        doc.text(`Hora: ${ag?.hora_llegada || "-"}`, 80, y);
+        y += 10;
+
+        /* ========================================================
+           PERTENENCIAS
+           ======================================================== */
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Pertenencias registradas", 10, y);
+        y += 7;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+
+        if (pertenencias.length === 0) {
+            doc.text("No registradas.", 10, y);
+            y += 10;
+        } else {
+
+            // Encabezado tabla
+            doc.setFillColor(230, 230, 230);
+            doc.rect(10, y, 80, 6, "F");
+            doc.rect(90, y, 30, 6, "F");
+            doc.setFont("helvetica", "bold");
+            doc.text("Pertenencia", 12, y + 4);
+            doc.text("Presente", 92, y + 4);
+            y += 8;
+
+            doc.setFont("helvetica", "normal");
+
+            pertenencias.forEach(p => {
+                if (y > 265) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.text(p.nombre || "-", 12, y);
+                doc.text(p.presente ? "Sí" : "No", 92, y);
+                y += 6;
+            });
+
+            y += 10;
+        }
+
+        /* ========================================================
+           TRABAJOS
+           ======================================================== */
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Trabajos registrados", 10, y);
+        y += 7;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+
+        if (trabajos.length === 0) {
+            doc.text("No se han registrado trabajos.", 10, y);
+            y += 10;
+        } else {
+            trabajos.forEach(t => {
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.text(`• ${t.nombre}`, 12, y);
+                y += 5;
+            });
+            y += 10;
+        }
+
+        /* ========================================================
+           FIRMA
+           ======================================================== */
+        if (y > 260) {
+            doc.addPage();
+            y = 40;
+        }
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text("__________________________________", 10, y);
+        y += 5;
+        doc.text("Firma del cliente", 10, y);
+
+        /* ========================================================
+           EXPORTAR
+           ======================================================== */
+        doc.save(`Proforma_${ultimaProforma.idRevision}.pdf`);
     }
+
+        function togglePertenencias() {
+        const body = document.getElementById("pertenencias-container");
+        const arrow = document.getElementById("arrow-pertenencias");
+
+        if (body.style.display === "block") {
+            body.style.display = "none";
+            arrow.textContent = "▼";
+        } else {
+            body.style.display = "block";
+            arrow.textContent = "▲";
+        }
+    }
+
 
 </script>

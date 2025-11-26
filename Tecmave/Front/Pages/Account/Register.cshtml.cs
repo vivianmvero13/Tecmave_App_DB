@@ -34,6 +34,14 @@ namespace Front.Pages.Account
                 throw new Exception("Passwords no coinciden");
             }
 
+            var existingUser = await _userManager.FindByEmailAsync(Register.Email);
+            if (existingUser != null)
+            {
+                ModelState.AddModelError("Register.Email",
+                    "Este correo ya está registrado. Intenta iniciar sesión o usar otro correo.");
+                return Page();
+            }
+
             var user = new Usuario();
             user.Email = Register.Email;
             user.UserName = Register.Email;
@@ -48,37 +56,32 @@ namespace Front.Pages.Account
                 .CreateAsync(user, Register.Password);
 
 
-            if (res.Succeeded)
+            if (!res.Succeeded)
             {
-                
-                var roleExists = await _roleManager.RoleExistsAsync("Cliente");
-                if (!roleExists)
+                // Agregar errores de Identity al ModelState (password débil, etc.)
+                foreach (var error in res.Errors)
                 {
-                    var clienteRole = new IdentityRole<int>
-                    {
-                        Name = "Cliente",
-                        NormalizedName = "CLIENTE"
-                    };
-
-                    await _roleManager.CreateAsync(clienteRole);
+                    ModelState.AddModelError(string.Empty, error.Description);
                 }
 
-                
-                await _userManager.AddToRoleAsync(user, "Cliente");
+                return Page();
             }
-            else
+
+            // Verificar/crear rol Cliente
+            if (!await _roleManager.RoleExistsAsync("Cliente"))
             {
-                // Manejo de errores si la creación falla
-                throw new Exception("Error al crear el usuario: " + string.Join(", ", res.Errors.Select(e => e.Description)));
+                await _roleManager.CreateAsync(new IdentityRole<int>
+                {
+                    Name = "Cliente",
+                    NormalizedName = "CLIENTE"
+                });
             }
 
+            await _userManager.AddToRoleAsync(user, "Cliente");
 
-            if (ReturnUrl == null)
-            {
-                ReturnUrl = "/";
-            }
 
-            return LocalRedirect(ReturnUrl);
+
+            return LocalRedirect(ReturnUrl ?? "/");
         }
     }
 }

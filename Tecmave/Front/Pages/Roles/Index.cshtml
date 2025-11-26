@@ -165,10 +165,34 @@
 
         let body = { roleName: sel.value, forceReplace: false };
 
+<<<<<<< HEAD
+                    <dt class="col-sm-3">Permisos</dt>
+                    <dd class="col-sm-9" id="detPermisos"></dd>
+                </dl>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script src="~/lib/jquery/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API = 'http://localhost:7096';
+        const ROLES_URL = `${API}/api/roles`;
+        const USERS_URL = `${API}/api/usuarios`;
+
+        $(function () {
+            cargarRoles();
+            cargarUsuariosConRol();
+=======
         let res = await fetch(`${USERS_URL}/${userId}/role`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
+>>>>>>> main
         });
 
         if (res.ok) {
