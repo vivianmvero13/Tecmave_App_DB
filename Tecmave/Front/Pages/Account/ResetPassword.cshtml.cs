@@ -43,7 +43,7 @@ namespace Front.Pages.Account
         {
             if (string.IsNullOrEmpty(NewPassword))
             {
-                ModelState.AddModelError(string.Empty, "Debe ingresar una nueva contraseña.");
+                ModelState.AddModelError(string.Empty, "Debe ingresar una nueva contraseï¿½a.");
                 return Page();
             }
 

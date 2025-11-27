@@ -36,7 +36,7 @@ namespace Front.Pages.Account
             var user = await _userManager.FindByEmailAsync(Login.Email);
             if (user == null)
             {
-                ErrorMessage = "Error al iniciar sesión: correo o contraseña inválidos.";
+                ErrorMessage = "Error al iniciar sesiï¿½n: correo o contraseï¿½a invï¿½lidos.";
                 return Page();
             }
 
@@ -49,16 +49,16 @@ namespace Front.Pages.Account
 
             if (!result.Succeeded)
             {
-                ErrorMessage = "Error al iniciar sesión: correo o contraseña inválidos.";
+                ErrorMessage = "Error al iniciar sesiï¿½n: correo o contraseï¿½a invï¿½lidos.";
                 return Page();
             }
 
             var roles = await _userManager.GetRolesAsync(user);
 
             if (roles.Contains("Administrador"))
-                return RedirectToPage("/Vehiculos/Index");
+                return RedirectToPage("/Index");
 
-            return RedirectToPage("/Vehiculos/Index");
+            return RedirectToPage("/Index");
         }
 
     }

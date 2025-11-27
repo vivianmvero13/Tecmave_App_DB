@@ -1,7 +1,7 @@
-﻿@page
+@page "/Panel"
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Panel";
 }
 
 @using Microsoft.AspNetCore.Identity
@@ -10,13 +10,95 @@
 @inject UserManager<Usuario> UserManager
 
 @{
-    if (!SignInManager.IsSignedIn(User))
+    if (!User.Identity.IsAuthenticated)
     {
         Response.Redirect("/Account/Login");
     }
+    else if (!User.IsInRole("Cliente"))
+    {
+        // Si NO es cliente (por ejemplo Admin), redirigir al panel/admin
+        Response.Redirect("/Estadistica/Index");
+    }
+}
 
-   }
 
+
+
+<section class="section">
+    <h2>Tu taller hoy</h2>
+
+    <div class="container grid cols-3 client-kpi-row">
+        <div class="card kpi-card">
+            <div class="kpi-label">Próxima cita</div>
+            <div class="kpi-main">
+                <div id="kpi-proxima-dia" class="kpi-main-large">Sin citas</div>
+                <div id="kpi-proxima-hora" class="kpi-main-sub">--:--</div>
+            </div>
+            <div id="kpi-proxima-estado" class="kpi-pill pill-neutral">Sin citas programadas</div>
+        </div>
+
+        <div class="card kpi-card">
+            <div class="kpi-label">Mis vehículos</div>
+            <div class="kpi-main">
+                <div id="kpi-vehiculos-total" class="kpi-main-large">0</div>
+                <div class="kpi-main-sub">registrados</div>
+            </div>
+            <div class="kpi-pill pill-neutral">
+                <span id="kpi-vehiculos-taller">0</span> citas futuras
+            </div>
+        </div>
+
+        <div class="card kpi-card">
+            <div class="kpi-label">Balance del mes</div>
+            <div class="kpi-main">
+                <div id="kpi-balance-monto" class="kpi-main-large">₡0</div>
+                <div id="kpi-balance-periodo" class="kpi-main-sub">Mes actual</div>
+            </div>
+            <div id="kpi-balance-estado" class="kpi-pill pill-neutral">Sin pagos registrados</div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="card hero-card">
+            <h2 class="mb-2">TECMAVE</h2>
+            <p class="mb-3">
+                Soluciones para la Logística y Mantenimiento de tu flota.
+            </p>
+            <div class="hero-actions">
+                <button type="button" class="btn" id="btnIrServicios">Nuestros servicios</button>
+                <button type="button" class="btn secondary" id="btnIrContacto">Contacto</button>
+            </div>
+        </div>
+
+        <div class="grid cols-3 client-services-row" style="margin-top:1.5rem;">
+            <div class="card service-card">
+                <h3>Servicios Profesionales</h3>
+                <p>Mantenimiento preventivo y correctivo de la más alta calidad.</p>
+            </div>
+            <div class="card service-card">
+                <h3>Asistencia 24/7</h3>
+                <p>Asistencia en carretera disponible las 24 horas del día.</p>
+            </div>
+            <div class="card service-card">
+                <h3>Expertos Certificados</h3>
+                <p>Técnicos con certificación internacional.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <h2>Promociones destacadas</h2>
+        <p class="subtle">Aprovechá las últimas promociones activas para tus vehículos.</p>
+
+        <div id="promos-destacadas" class="grid cols-3 promo-grid">
+            <!-- Se cargan por JavaScript -->
+        </div>
+    </div>
+</section>
 
 <section class="section client-only">
     <h2>Escribe tu Reseña</h2>
@@ -41,7 +123,7 @@
         <label>Comentario</label>
         <textarea class="input" id="client-review-comment" rows="4" placeholder="Comparte tu experiencia..."></textarea>
 
-        <button onclick="addClientReview()" style="margin-top:.8rem">Enviar Reseña</button>
+        <button id="btnEnviarResena" onclick="addClientReview()" style="margin-top:.8rem">Enviar Reseña</button>
     </div>
 </section>
 
@@ -63,6 +145,219 @@
 </div>
 
 <script>
+    // ============================
+    // Panel de cliente (resumen)
+    // ============================
+    const API_BASE_PANEL        = "http://localhost:7096";
+    const URL_AGENDAMIENTOS_P   = API_BASE_PANEL + "/Agendamiento";
+    const URL_VEHICULOS_P       = API_BASE_PANEL + "/vehiculos";
+    const URL_PROMOCIONES_P     = API_BASE_PANEL + "/promociones";
+    const URL_FACTURAS_P        = API_BASE_PANEL + "/facturas";
+
+    function formatCRCP(n) {
+        const v = Number(n || 0);
+        return v.toLocaleString("es-CR", {
+            style: "currency",
+            currency: "CRC",
+            maximumFractionDigits: 0
+        });
+    }
+
+    function parseDateOnlyPanel(v) {
+        if (!v) return null;
+        const d = new Date(v);
+        if (isNaN(d)) return null;
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    function cargarResumenClientePanel() {
+        cargarProximaCitaPanel();
+        cargarVehiculosPanel();
+        cargarBalanceMesPanel();
+        cargarPromosDestacadasPanel();
+    }
+
+    function cargarProximaCitaPanel() {
+        const hoyISO = new Date().toISOString().split("T")[0];
+
+        $.get(URL_AGENDAMIENTOS_P, function (lista) {
+            const ags = Array.isArray(lista) ? lista : [];
+            const delUsuario = ags.filter(a => String(a.cliente_id) === String(userId));
+
+            if (!delUsuario.length) {
+                $("#kpi-proxima-dia").text("Sin citas");
+                $("#kpi-proxima-hora").text("--:--");
+                $("#kpi-proxima-estado")
+                    .text("Sin citas programadas")
+                    .removeClass("pill-success")
+                    .addClass("pill-neutral");
+                return;
+            }
+
+            const futuros = delUsuario.filter(a => a.fecha_estimada >= hoyISO);
+            if (!futuros.length) {
+                $("#kpi-proxima-dia").text("Sin citas");
+                $("#kpi-proxima-hora").text("--:--");
+                $("#kpi-proxima-estado")
+                    .text("Sin citas futuras")
+                    .removeClass("pill-success")
+                    .addClass("pill-neutral");
+                return;
+            }
+
+            futuros.sort((a, b) => {
+                const da = new Date(a.fecha_estimada + "T" + (a.hora_llegada || "00:00"));
+                const db = new Date(b.fecha_estimada + "T" + (b.hora_llegada || "00:00"));
+                return da - db;
+            });
+
+            const prox = futuros[0];
+
+            const fecha = parseDateOnlyPanel(prox.fecha_estimada);
+            if (fecha) {
+                const opts = { weekday: "short", day: "2-digit", month: "2-digit" };
+                $("#kpi-proxima-dia").text(fecha.toLocaleDateString("es-CR", opts));
+            } else {
+                $("#kpi-proxima-dia").text(prox.fecha_estimada || "Próxima cita");
+            }
+
+            if (prox.hora_llegada) {
+                $("#kpi-proxima-hora").text(prox.hora_llegada.substring(0,5));
+            } else {
+                $("#kpi-proxima-hora").text("--:--");
+            }
+
+            $("#kpi-proxima-estado")
+                .text("Programada")
+                .removeClass("pill-neutral")
+                .addClass("pill-success");
+        });
+    }
+
+    function cargarVehiculosPanel() {
+        $.ajax({
+            url: URL_VEHICULOS_P,
+            method: "GET",
+            xhrFields: { withCredentials: true },
+            success: function (data) {
+                const lista = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+                const propios = lista.filter(v => {
+                    const cid = v.cliente_id ?? v.clienteId ?? v.cliente?.id ?? v.ClienteId ?? 0;
+                    return String(cid) === String(userId);
+                });
+
+                $("#kpi-vehiculos-total").text(propios.length);
+
+                // contar citas futuras asociadas al cliente
+                $.get(URL_AGENDAMIENTOS_P, function (listaAg) {
+                    const ags = Array.isArray(listaAg) ? listaAg : [];
+                    const delUsuario = ags.filter(a => String(a.cliente_id) === String(userId));
+                    const hoyISO = new Date().toISOString().split("T")[0];
+                    const futuros = delUsuario.filter(a => a.fecha_estimada >= hoyISO);
+                    $("#kpi-vehiculos-taller").text(futuros.length);
+                });
+            },
+            error: function () {
+                $("#kpi-vehiculos-total").text("0");
+                $("#kpi-vehiculos-taller").text("0");
+            }
+        });
+    }
+
+    function cargarBalanceMesPanel() {
+        const hoy = new Date();
+        const mesActual = hoy.getMonth();
+        const annoActual = hoy.getFullYear();
+
+        $("#kpi-balance-periodo").text(
+            hoy.toLocaleDateString("es-CR", { month: "long", year: "numeric" })
+        );
+
+        $.ajax({
+            url: URL_FACTURAS_P,
+            method: "GET",
+            xhrFields: { withCredentials: true },
+            success: function (data) {
+                const lista = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+                const propias = lista.filter(f => {
+                    const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
+                    if (String(clienteId) !== String(userId)) return false;
+
+                    const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? "").toString().toLowerCase();
+                    if (estado !== "pagada" && estado !== "pagado") return false;
+
+                    const fechaVal = f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision;
+                    const d = parseDateOnlyPanel(fechaVal);
+                    if (!d) return false;
+                    return d.getMonth() === mesActual && d.getFullYear() === annoActual;
+                });
+
+                const total = propias.reduce((acc, f) => acc + Number(f.total ?? f.Total ?? f.monto_total ?? 0), 0);
+
+                $("#kpi-balance-monto").text(formatCRCP(total));
+                $("#kpi-balance-estado")
+                    .text(total > 0 ? "Pagado" : "Sin pagos registrados")
+                    .toggleClass("pill-success", total > 0)
+                    .toggleClass("pill-neutral", total <= 0);
+            },
+            error: function () {
+                $("#kpi-balance-monto").text("₡0");
+                $("#kpi-balance-estado")
+                    .text("No se pudo cargar")
+                    .removeClass("pill-success")
+                    .addClass("pill-neutral");
+            }
+        });
+    }
+
+    function cargarPromosDestacadasPanel() {
+        $.ajax({
+            url: URL_PROMOCIONES_P,
+            method: "GET",
+            xhrFields: { withCredentials: true },
+            success: function (data) {
+                const cont = $("#promos-destacadas");
+                cont.empty();
+
+                const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+                const activas = list.filter(p => {
+                    const estado = Number(p.id_estado ?? p.idEstado ?? p.IdEstado ?? 0);
+                    return estado === 1;
+                });
+
+                const promos = activas
+                    .sort((a, b) => {
+                        const da = parseDateOnlyPanel(a.fecha_inicio ?? a.fechaInicio ?? a.FechaInicio);
+                        const db = parseDateOnlyPanel(b.fecha_inicio ?? b.fechaInicio ?? b.FechaInicio);
+                        if (!da || !db) return 0;
+                        return db - da; // más recientes primero
+                    })
+                    .slice(0, 3);
+
+                if (!promos.length) {
+                    cont.append('<p class="subtle">No hay promociones activas en este momento.</p>');
+                    return;
+                }
+
+                promos.forEach(promo => {
+                    const titulo = promo.titulo ?? promo.nombre ?? "Promoción";
+                    const descripcion = promo.descripcion ?? "";
+                    cont.append(`
+                        <div class="card promo-card">
+                            <h3>${titulo}</h3>
+                            <p>${descripcion}</p>
+                            <button type="button" class="btn secondary btn-ver-promo-panel">Ver promoción</button>
+                        </div>
+                    `);
+                });
+            },
+            error: function () {
+                $("#promos-destacadas").html('<p class="subtle">No se pudieron cargar las promociones.</p>');
+            }
+        });
+    }
+
+
 
     
 
@@ -75,6 +370,22 @@
 
      $(document).ready(function () {
          $("#client-review-name").val(username);
+
+         // Panel cliente
+         cargarResumenClientePanel();
+
+         // Hooks de navegación
+         $("#btnIrServicios").on("click", function () {
+             window.location.href = "/Servicios/Index";
+         });
+         $("#btnIrContacto").on("click", function () {
+             window.location.href = "/Contacto";
+         });
+         $(document).on("click", ".btn-ver-promo-panel", function () {
+             window.location.href = "/Promociones/NuestrasPromociones";
+         });
+
+         // Reseñas
          cargarRevisionesCompletadas();
          cargarResenasPublicas();
      });
@@ -96,13 +407,13 @@
                      select.append(`<option value="">No tienes revisiones completadas</option>`);
                      $("#client-review-comment").prop("disabled", true);
                      $("#client-review-rating").prop("disabled", true);
-                     $("button").prop("disabled", true);
+                     $("#btnEnviarResena").prop("disabled", true);
                      return;
                  }
 
                  $("#client-review-comment").prop("disabled", false);
                  $("#client-review-rating").prop("disabled", false);
-                 $("button").prop("disabled", false);
+                 $("#btnEnviarResena").prop("disabled", false);
 
                  select.append(`<option value="">Seleccione un servicio</option>`);
 
@@ -251,7 +562,6 @@
      }
 
 </script>
-
 
 
 

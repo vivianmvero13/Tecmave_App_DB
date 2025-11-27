@@ -1,0 +1,75 @@
+@page
+@model Front.Pages.Contacto.IndexModel
+@{
+    ViewData["Title"] = "Contacto";
+}
+
+<section class="section">
+    <div class="container grid cols-2">
+        <div class="card">
+            <h3>Escríbenos</h3>
+            <div class="form-row">
+                <div>
+                    <label>Nombre</label>
+                    <input class="input" id="contacto-nombre" placeholder="Tu nombre" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label>Email</label>
+                    <input class="input" id="contacto-email" type="email" placeholder="correo@dominio.com" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label>Mensaje</label>
+                    <textarea class="input" id="contacto-mensaje" rows="4" placeholder="¿Cómo podemos ayudarte?"></textarea>
+                </div>
+            </div>
+            <button type="button" class="btn" id="btnEnviarContacto">ENVIAR</button>
+            <div id="contacto-msg" class="subtle" style="margin-top:.5rem;display:none;"></div>
+        </div>
+
+        <div class="card">
+            <h3>Ubicación</h3>
+            <div class="map-wrapper">
+                <iframe
+                    title="Mapa Tecmave"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3930.0!2d-84.0!3d9.9"
+                    width="100%" height="320" style="border:0;" allowfullscreen loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const nombre = document.getElementById('contacto-nombre');
+            const email = document.getElementById('contacto-email');
+            const mensaje = document.getElementById('contacto-mensaje');
+            const msg = document.getElementById('contacto-msg');
+            const btn = document.getElementById('btnEnviarContacto');
+
+            if (!btn) return;
+
+            btn.addEventListener('click', function () {
+                if (!nombre.value || !email.value || !mensaje.value) {
+                    msg.textContent = "Completa todos los campos para enviar tu mensaje.";
+                    msg.style.color = "#c0392b";
+                    msg.style.display = "block";
+                    return;
+                }
+
+                msg.textContent = "Mensaje enviado. Te contactaremos pronto.";
+                msg.style.color = "#27ae60";
+                msg.style.display = "block";
+
+                nombre.value = "";
+                email.value = "";
+                mensaje.value = "";
+            });
+        });
+    </script>
+}
