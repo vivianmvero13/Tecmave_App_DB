@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewBag.Title</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/auth-pro.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/theme-lighten.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/brand-red-hard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/auth-pro.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/disney-style.css" />
+    <link rel="stylesheet" href="~/assets/css/dark-theme.css" />
+    <link rel="stylesheet" href="~/assets/css/theme-lighten.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/brand-red-hard.css" asp-append-version="true" />
     <link rel="preconnect" href="http://fonts.googleapis.com">
     <link rel="preconnect" href="http://fonts.gstatic.com" crossorigin>
     <link href="http://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -107,57 +109,7 @@
     </div>
 
            
-    <footer class="footer-v2" id="site-footer">
-        <div class="footer-v2-main">
-            <div class="container">
-                <div class="footer-grid">
-                    <div class="footer-col">
-                        <img src="assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave Logo" class="footer-logo">
-                        <p class="footer-slogan">Taller de servicio automotriz y asistencia en carretera. Más de 15 años de experiencia en Costa Rica.</p>
-                        <div class="footer-v2-socials">
-                            <a href="#"><i class="fab fa-facebook-f"></i></a>
-                            <a href="#"><i class="fab fa-twitter"></i></a>
-                            <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                            <a href="#"><i class="fab fa-instagram"></i></a>
-                            <a href="#"><i class="fab fa-pinterest"></i></a>
-                            <a href="#"><i class="fab fa-youtube"></i></a>
-                            <a href="#"><i class="fas fa-rss"></i></a>
-                        </div>
-                    </div>
-                    <div class="footer-col">
-                        <h4>Links rapidos</h4>
-                        <ul class="footer-list">
-                            <li><a href="index.html">Home</a></li>
-                            <li><a href="#">List Layout</a></li>
-                            <li><a href="informacion.html">Blog</a></li>
-                            <li><a href="contacto.html">Contact</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-col">
-                        <h4>Contactenos</h4>
-                        <ul class="footer-list contact-info">
-                            <li><i class="fas fa-map-marker-alt"></i> <span>Curridabat, 100 m este de La Galera</span></li>
-                            <li><i class="fas fa-phone-alt"></i> <span>+506 2285-6409</span></li>
-                            <li><i class="fas fa-envelope"></i> <span>info@tecmave.cr</span></li>
-                        </ul>
-                    </div>
-                    <div class="footer-col">
-                        <h4>Vuelva otra vez</h4>
-                        <form class="subscribe-form">
-                            <input type="email" placeholder="su correo electronico">
-                            <button type="submit">Inicie sesion</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="footer-v2-bottom">
-            <div class="container">
-                <p>© 2025 All rights reserved.</p>
-                <p>todos los derechos a TECMAVE CR</p>
-            </div>
-        </div>
-    </footer>
+    
 
 
 
@@ -165,5 +117,6 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     
     @await RenderSectionAsync("Scripts", required: false)
+    <script src="~/assets/js/global-features.js"></script>
 </body>
 </html>

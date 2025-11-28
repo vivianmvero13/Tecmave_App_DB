@@ -1,0 +1,459 @@
+
+.admin-dashboard{margin-bottom:20px;}
+.admin-cards{display:flex;gap:20px;}
+.admin-card{
+  flex:1;
+  cursor:pointer;
+  transition:transform .25s ease, box-shadow .25s ease;
+
+  background:linear-gradient(135deg,#ffffff, #fff5f5);
+  padding:20px 22px;
+  border-radius:18px;
+  border:1px solid #ffd1d1;
+  box-shadow:0 10px 30px rgba(230,0,35,.06);
+  position:relative;
+  overflow:hidden;
+}
+
+.admin-card h4{
+  margin:0;
+  color:#888;
+  font-weight:600;
+  font-size:0.9rem;
+}
+.admin-card h2{
+  margin:4px 0 2px;
+  color:#e60023;
+  font-size:1.8rem;
+  font-weight:700;
+}
+
+.admin-dashboard-chart{
+  margin-top:20px;
+  background:#fff;
+  border-radius:12px;
+  padding:20px;
+  border:1px solid #ffd1d1;
+  box-shadow:0 3px 10px rgba(255,0,0,0.04);
+  height:320px;
+}
+.admin-dashboard-chart h3{
+  margin-top:0;
+  margin-bottom:10px;
+  color:#444;
+  font-weight:600;
+}
+.admin-dashboard-chart canvas{
+  width:100%;
+  height:200px;
+}
+
+.admin-dashboard-row{
+  margin-top:20px;
+  display:flex;
+  gap:20px;
+}
+.admin-dashboard-half{
+  flex:1;
+  background:#fff;
+  border-radius:12px;
+  padding:20px;
+  border:1px solid #ffd1d1;
+  box-shadow:0 3px 10px rgba(255,0,0,0.04);
+  height:260px;
+  display:flex;
+  flex-direction:column;
+}
+.admin-dashboard-half h3{
+  margin-top:0;
+  margin-bottom:10px;
+  color:#444;
+  font-weight:600;
+}
+.admin-dashboard-half canvas{
+  width:100%;
+  flex:1;
+}
+.top-clientes-list{
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+.top-clientes-list li{
+  display:flex;
+  justify-content:space-between;
+  padding:6px 0;
+  border-bottom:1px solid #f5d6d6;
+  font-size:14px;
+}
+.top-clientes-list li:last-child{
+  border-bottom:none;
+}
+.top-cliente-nombre{
+  font-weight:600;
+}
+.top-cliente-monto{
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.admin-dashboard-activity{
+  margin-top:20px;
+  background:#fff;
+  border-radius:12px;
+  padding:20px;
+  border:1px solid #ffd1d1;
+  box-shadow:0 3px 10px rgba(255,0,0,0.04);
+}
+.admin-dashboard-activity h3{
+  margin-top:0;
+  margin-bottom:10px;
+  color:#444;
+  font-weight:600;
+}
+.activity-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+.activity-table thead tr{
+  background:linear-gradient(90deg,#ffe6e6,#ffeef0);
+}
+.activity-table th,
+.activity-table td{
+  padding:8px 10px;
+  text-align:left;
+}
+.activity-table tbody tr:nth-child(even){
+  background:#fdf7f7;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(8px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.admin-dashboard-chart,
+.admin-dashboard-activity,
+.top-clientes-list li,
+.activity-table tbody tr,
+.admin-cards .admin-card{
+  flex:1;
+  cursor:pointer;
+  transition:transform .25s ease, box-shadow .25s ease;
+
+  background:linear-gradient(135deg,#ffffff, #fff5f5);
+  padding:20px 22px;
+  border-radius:18px;
+  border:1px solid #ffd1d1;
+  box-shadow:0 10px 30px rgba(230,0,35,.06);
+  position:relative;
+  overflow:hidden;
+}
+
+
+.admin-cards .admin-card{
+  flex:1;
+  cursor:pointer;
+  transition:transform .25s ease, box-shadow .25s ease;
+
+  background:linear-gradient(135deg,#ffffff, #fff5f5);
+  padding:20px 22px;
+  border-radius:18px;
+  border:1px solid #ffd1d1;
+  box-shadow:0 10px 30px rgba(230,0,35,.06);
+  position:relative;
+  overflow:hidden;
+}
+
+ .admin-card:hover{
+  background:linear-gradient(135deg,#fff0f3,#ffe6ea);
+  transform:translateY(-16px) scale(1.01);
+  box-shadow:0 22px 55px rgba(0,0,0,.25);
+}
+.footer-edit-btn{
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.footer-edit-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 20px rgba(0,0,0,.2);
+}
+
+
+.admin-card.card-hover{
+  background:linear-gradient(135deg,#fff0f3,#ffe6ea);
+  transform:translateY(-16px) scale(1.01);
+  box-shadow:0 22px 55px rgba(0,0,0,.25);
+}
+
+
+/* Estadísticas avanzadas */
+.stats-page{
+  padding:10px 0 30px 0;
+}
+
+.stats-filters{
+  margin-bottom:18px;
+}
+
+.stats-filter-label{
+  display:block;
+  font-size:0.8rem;
+  font-weight:600;
+  color:#777;
+  margin-bottom:4px;
+}
+
+.stats-filter-button{
+  display:flex;
+  align-items:flex-end;
+}
+
+.stats-kpis{
+  margin-top:12px;
+}
+
+
+/* === Estadísticas: KPIs compactos con iconos === */
+.stats-page .stats-kpis{
+  margin-top:14px;
+}
+
+.stats-page .stats-kpis .admin-cards{
+  display:flex;
+  gap:16px;
+}
+
+.stats-page .stats-kpi-card{
+  flex:1 1 0;
+  min-height:auto;
+  padding:16px 18px;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+}
+
+.stats-page .stats-kpi-header{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:6px;
+}
+
+.stats-page .stats-kpi-icon{
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(230,0,35,0.06);
+  color:#e60023;
+  font-size:16px;
+}
+
+.stats-page .stats-kpi-label{
+  font-size:0.85rem;
+  font-weight:600;
+  color:#666;
+}
+
+.stats-page .stats-kpi-card h2{
+  margin:2px 0 0 0;
+  font-size:1.6rem;
+}
+
+.stats-page .stats-kpi-sub{
+  display:block;
+  margin-top:4px;
+  font-size:0.75rem;
+  color:#28a745;
+}
+
+/* que las cards de KPIs no se estiren exageradamente */
+.stats-page .admin-dashboard.stats-kpis{
+  margin-bottom:8px;
+}
+
+
+/* Estadísticas – barra superior solo con botón */
+.stats-page .stats-filters{
+  display:flex;
+  justify-content:flex-end;
+  margin-bottom:10px;
+}
+
+.stats-page .stats-filter-button-right{
+  display:flex;
+  justify-content:flex-end;
+}
+
+/* Contenedor de gráficos con header y acciones */
+.stats-page .admin-dashboard-chart{
+  padding:10px 12px 14px 12px;
+}
+
+.chart-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:6px;
+}
+
+.chart-actions{
+  display:flex;
+  gap:8px;
+}
+
+.chart-action-btn{
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  border:none;
+  background:rgba(230,0,35,0.06);
+  color:#e60023;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
+}
+
+.chart-action-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 4px 10px rgba(0,0,0,0.08);
+  background:#e60023;
+  color:#fff;
+}
+
+.chart-body{
+  height:360px;
+}
+
+/* Modal para expandir gráficos */
+.chart-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:2000;
+}
+
+.chart-modal.show{
+  display:flex;
+}
+
+.chart-modal-content{
+  background:#ffffff;
+  border-radius:18px;
+  padding:18px;
+  width:80%;
+  max-width:900px;
+  height:70vh;
+  box-shadow:0 20px 60px rgba(0,0,0,0.35);
+  position:relative;
+}
+
+.chart-modal-content canvas{
+  width:100% !important;
+  height:100% !important;
+}
+
+.chart-modal-close{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  border:none;
+  background:#f5f5f5;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.chart-modal-close:hover{
+  background:#e60023;
+  color:#fff;
+}
+
+
+/* Imagen dentro de modal de gráficos */
+.chart-modal-image{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+
+
+/* === Overrides específicos para la página de Estadísticas (Estadisticas/Index) === */
+.stats-page .admin-dashboard-half{
+  /* En estadísticas, dejamos que la card crezca según el contenido */
+  height:auto;
+}
+
+.stats-page .admin-dashboard-chart{
+  /* Sin altura fija; el alto lo manda chart-body */
+  height:auto;
+}
+
+.stats-page .chart-body{
+  /* Alto fijo solo para la zona del canvas */
+  height:260px;
+}
+
+.stats-page .admin-dashboard-chart canvas{
+  /* El canvas ocupa todo el alto disponible en estadísticas */
+  height:100%;
+}
+
+
+/* === Bloque de datos detallados en Estadísticas === */
+.stats-page .stats-detailed-card{
+  margin-top:20px;
+  background:#fff;
+  border-radius:18px;
+  padding:20px 22px;
+  border:1px solid #ffd1d1;
+  box-shadow:0 10px 30px rgba(230,0,35,.06);
+}
+
+.stats-page .stats-detailed-card h3{
+  margin-top:0;
+  margin-bottom:10px;
+  color:#444;
+  font-weight:600;
+}
+
+.stats-page .stats-detailed-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:6px;
+  font-size:14px;
+}
+
+.stats-page .stats-detailed-table thead tr{
+  background:linear-gradient(90deg,#ffe6e6,#ffeef0);
+}
+
+.stats-page .stats-detailed-table th,
+.stats-page .stats-detailed-table td{
+  padding:8px 10px;
+  text-align:left;
+}
+
+.stats-page .stats-detailed-table tbody tr:nth-child(even){
+  background:#fdf7f7;
+}
+
+.stats-page .estado-pill{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:600;
+  background:#ffe6ea;
+  color:#e60023;
+}
+

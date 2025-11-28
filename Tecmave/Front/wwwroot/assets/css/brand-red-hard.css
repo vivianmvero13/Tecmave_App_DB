@@ -1,0 +1,951 @@
+/* ===== TECMAVE BRAND HARD OVERRIDES (red/black/white) ===== */
+:root{
+  --bg:#ffffff !important; --panel:#f8fafc !important; --panel-2:#f1f5f9 !important; --card-bg:#ffffff !important;
+  --text:#1e293b !important; --muted:#64748b !important;
+  --primary:#dc2626 !important; --primary-2:#b91c1c !important;
+  --success:#16a34a !important; --warn:#d97706 !important; --danger:#dc2626 !important;
+  --ring:0 0 0 4px rgba(220,38,38,.15) !important;
+  --shadow:0 10px 15px -3px rgba(0,0,0,0.1) !important;
+}
+
+/* Reset general para tema claro */
+body {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'Inter', sans-serif;
+}
+
+/* SIDEBAR PROFESIONAL CON ANIMACIONES - BOTONES DEL MISMO TAMAÑO */
+.sidebar {
+  background: linear-gradient(180deg, #ffffff, #f8fafc) !important;
+  border-right: 1px solid rgba(220,38,38,0.1) !important;
+  position: sticky !important;
+  top: 0 !important;
+  height: 100vh !important;
+  padding: 20px 15px !important;
+  backdrop-filter: blur(10px) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  width: 280px !important;
+  box-sizing: border-box !important;
+}
+
+.sidebar .brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 15px 12px !important;
+  margin-bottom: 25px !important;
+  border-radius: 16px !important;
+  background: rgba(255,255,255,0.8) !important;
+  border: 2px solid rgba(220,38,38,0.1) !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+  height: 70px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.sidebar .brand:hover {
+  background: rgba(220,38,38,0.05) !important;
+  transform: translateX(8px) !important;
+  border-color: rgba(220,38,38,0.3) !important;
+}
+
+.sidebar .brand img {
+  width: 35px !important;
+  height: 35px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 25px rgba(220,38,38,0.25) !important;
+  transition: all 0.3s ease !important;
+  border: 2px solid rgba(220,38,38,0.2) !important;
+  flex-shrink: 0 !important;
+}
+
+.sidebar .brand:hover img {
+  transform: scale(1.15) rotate(8deg) !important;
+  box-shadow: 0 12px 30px rgba(220,38,38,0.4) !important;
+}
+
+.sidebar .brand span {
+  font-weight: 800 !important;
+  font-size: 1.3rem !important;
+  background: linear-gradient(135deg, var(--primary), #1e293b) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  letter-spacing: -0.5px !important;
+  white-space: nowrap !important;
+}
+
+.nav {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
+
+/* BOTONES DEL MISMO TAMAÑO - FORZADO */
+.nav a {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  color: var(--text) !important;
+  text-decoration: none !important;
+  padding: 16px 18px !important;
+  border-radius: 14px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  background: rgba(255,255,255,0.7) !important;
+  border: 1px solid rgba(220,38,38,0.1) !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  height: 56px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  flex-shrink: 0 !important;
+}
+
+.nav a::before {
+  content: '' !important;
+  position: absolute !important;
+  left: -100% !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(220,38,38,0.1), transparent) !important;
+  transition: left 0.6s ease !important;
+}
+
+.nav a:hover::before {
+  left: 100% !important;
+}
+
+.nav a:hover {
+  background: rgba(220,38,38,0.08) !important;
+  color: var(--primary) !important;
+  transform: translateX(12px) scale(1.02) !important;
+  box-shadow: 0 8px 25px rgba(220,38,38,0.2) !important;
+  border-color: rgba(220,38,38,0.3) !important;
+}
+
+.nav a.active {
+  background: linear-gradient(135deg, rgba(220,38,38,0.15), rgba(220,38,38,0.05)) !important;
+  color: var(--primary) !important;
+  border: 2px solid rgba(220,38,38,0.4) !important;
+  box-shadow: 0 10px 30px rgba(220,38,38,0.25) !important;
+  transform: translateX(8px) scale(1.03) !important;
+}
+
+.nav a.active::after {
+  content: '' !important;
+  position: absolute !important;
+  right: 15px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 8px !important;
+  height: 8px !important;
+  background: var(--primary) !important;
+  border-radius: 50% !important;
+  animation: pulse 2s infinite !important;
+  box-shadow: 0 0 0 rgba(220,38,38,0.4) !important;
+}
+
+.nav i {
+  width: 22px !important;
+  text-align: center !important;
+  font-size: 1.2rem !important;
+  transition: all 0.3s ease !important;
+  color: var(--text) !important;
+  flex-shrink: 0 !important;
+}
+
+.nav a:hover i {
+  transform: scale(1.3) !important;
+  color: var(--primary) !important;
+}
+
+.nav a.active i {
+  color: var(--primary) !important;
+  transform: scale(1.3) !important;
+}
+
+/* Subtle sections - tamaño consistente */
+.subtle {
+  color: var(--muted) !important;
+  font-size: 0.85rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.15em !important;
+  margin: 25px 0 8px 0 !important;
+  padding: 14px 15px !important;
+  border-radius: 10px !important;
+  background: rgba(220,38,38,0.05) !important;
+  border-left: 4px solid var(--primary) !important;
+  font-weight: 700 !important;
+  height: 48px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+
+@keyframes pulse {
+  0% { transform: translateY(-50%) scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
+  50% { transform: translateY(-50%) scale(1.3); opacity: 0.8; box-shadow: 0 0 0 10px rgba(220,38,38,0); }
+  100% { transform: translateY(-50%) scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(220,38,38,0); }
+}
+
+/* ANIMACIONES PARA CARDS Y ELEMENTOS */
+.card, [class*="card"] {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(15px) !important;
+  border: 1px solid rgba(220, 38, 38, 0.15) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.card::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(220,38,38,0.05), transparent) !important;
+  transition: left 0.7s ease !important;
+}
+
+.card:hover::before {
+  left: 100% !important;
+}
+
+.card:hover {
+  transform: translateY(-8px) scale(1.02) !important;
+  box-shadow: 0 20px 40px rgba(220, 38, 38, 0.15) !important;
+  border-color: rgba(220, 38, 38, 0.3) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Botones con animaciones */
+.btn, button, .button, input[type=submit], input[type=button] {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border-radius: 14px !important;
+  padding: 12px 20px !important;
+  cursor: pointer !important;
+  font-weight: 700 !important;
+  border: 2px solid rgba(220,38,38,0.2) !important;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2)) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 20px rgba(220,38,38,0.25) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.btn::before, button::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: rgba(255,255,255,0.2) !important;
+  border-radius: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  transition: width 0.6s, height 0.6s !important;
+}
+
+.btn:hover::before, button:hover::before {
+  width: 300px !important;
+  height: 300px !important;
+}
+
+.btn:hover, button:hover {
+  transform: translateY(-3px) scale(1.05) !important;
+  box-shadow: 0 15px 30px rgba(220,38,38,0.35) !important;
+  border-color: rgba(220,38,38,0.4) !important;
+}
+
+/* Header profesional */
+.topbar {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid rgba(220,38,38,0.1) !important;
+  padding: 15px 25px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+}
+
+.brand2 {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  font-weight: 700 !important;
+  font-size: 1.4rem !important;
+  background: linear-gradient(135deg, var(--primary), #1e293b) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+.iconbtn {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid rgba(220,38,38,0.15) !important;
+  color: var(--text) !important;
+  border-radius: 14px !important;
+  padding: 12px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+}
+
+.iconbtn:hover {
+  background: var(--primary) !important;
+  color: white !important;
+  transform: translateY(-2px) scale(1.1) !important;
+  box-shadow: 0 8px 20px rgba(220,38,38,0.3) !important;
+  border-color: var(--primary) !important;
+}
+
+/* Inputs mejorados */
+.input, input, select, textarea {
+  background: rgba(255,255,255,0.9) !important;
+  border: 2px solid rgba(220,38,38,0.1) !important;
+  color: var(--text) !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  transition: all 0.3s ease !important;
+}
+
+.input:focus, input:focus, select:focus, textarea:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 4px rgba(220,38,38,0.1) !important;
+  transform: scale(1.02) !important;
+  background: white !important;
+}
+
+/* Footer profesional */
+.footer-v2 {
+  background: linear-gradient(135deg, #ffffff, #f8fafc) !important;
+  color: var(--text) !important;
+  border-top: 1px solid rgba(220,38,38,0.1) !important;
+}
+
+.footer-v2-main {
+  background: transparent !important;
+  border-top: 1px solid rgba(220,38,38,0.1) !important;
+}
+
+.footer-v2 .footer-list a {
+  color: var(--text) !important;
+  transition: all 0.3s ease !important;
+}
+
+.footer-v2 .footer-list a:hover {
+  color: var(--primary) !important;
+  transform: translateX(5px) !important;
+}
+
+.footer-v2-socials a {
+  transition: all 0.3s ease !important;
+}
+
+.footer-v2-socials a:hover {
+  color: var(--primary) !important;
+  transform: translateY(-3px) scale(1.2) !important;
+}
+
+/* Efectos de carga y animaciones generales */
+.fade-in {
+  animation: fadeIn 0.6s ease-out !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.6s ease-out !important;
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+  .sidebar {
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s ease !important;
+    z-index: 1000 !important;
+    box-shadow: 0 0 50px rgba(0,0,0,0.3) !important;
+    width: 280px !important;
+  }
+
+  .sidebar.open {
+    transform: translateX(0) !important;
+  }
+
+  .nav a {
+    padding: 16px 18px !important;
+    font-size: 1rem !important;
+    height: 56px !important;
+  }
+
+  .subtle {
+    padding: 14px 15px !important;
+    margin: 20px 0 10px 0 !important;
+    height: 48px !important;
+  }
+}
+
+/* ===== ANIMACIONES Y ESPACIADO MEJORADO ===== */
+
+/* Mejorar espaciado de TODOS los botones */
+.btn, button, .button, input[type=submit], input[type=button] {
+    margin: 8px 4px !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Efecto de expansión sin choque */
+.btn:hover, button:hover, .button:hover, input[type=submit]:hover, input[type=button]:hover {
+    transform: translateY(-6px) scale(1.08) !important;
+    margin: 12px 8px !important;
+    box-shadow: 0 20px 40px rgba(220,38,38,0.4) !important;
+    z-index: 10 !important;
+}
+
+/* Espaciado para botones en cards */
+.card .btn, .card button, .card .button {
+    margin: 12px 6px !important;
+}
+
+.card .btn:hover, .card button:hover, .card .button:hover {
+    margin: 16px 10px !important;
+    transform: translateY(-8px) scale(1.1) !important;
+}
+
+/* Animaciones para cards del cliente */
+.client-card {
+    animation: cardFloat 3s ease-in-out infinite !important;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    margin: 15px 10px !important;
+}
+
+.client-card:hover {
+    animation: cardFocus 0.5s ease-out forwards !important;
+    transform: translateY(-15px) scale(1.05) !important;
+    margin: 20px 15px !important;
+    z-index: 5 !important;
+}
+
+@keyframes cardFloat {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(0.5deg); }
+}
+
+@keyframes cardFocus {
+    0% { transform: translateY(0px) scale(1); }
+    100% { transform: translateY(-15px) scale(1.05); }
+}
+
+/* Animaciones para promociones */
+.promo-card {
+    animation: promoGlow 4s ease-in-out infinite !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.promo-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(220,38,38,0.1), transparent);
+    transform: rotate(45deg);
+    animation: promoShine 3s ease-in-out infinite;
+}
+
+@keyframes promoGlow {
+    0%, 100% { box-shadow: 0 10px 30px rgba(220,38,38,0.2); }
+    50% { box-shadow: 0 15px 40px rgba(220,38,38,0.4); }
+}
+
+@keyframes promoShine {
+    0% { transform: rotate(45deg) translateX(-100%); }
+    100% { transform: rotate(45deg) translateX(100%); }
+}
+
+/* Mejorar espaciado general entre elementos */
+.grid.cols-3, .grid.cols-2 {
+    gap: 25px !important;
+    padding: 15px 10px !important;
+}
+
+.grid .card {
+    margin: 10px 5px !important;
+    transition: all 0.4s ease !important;
+}
+
+.grid .card:hover {
+    margin: 15px 10px !important;
+}
+
+/* Animaciones para el hero section */
+.hero-v2 {
+    animation: heroEntrance 1.2s ease-out !important;
+}
+
+.hero-v2-content h1 {
+    animation: titleSlideIn 1s ease-out 0.3s both !important;
+}
+
+.hero-v2-content p {
+    animation: subtitleSlideIn 1s ease-out 0.6s both !important;
+}
+
+.hero-v2-buttons {
+    animation: buttonsSlideIn 1s ease-out 0.9s both !important;
+}
+
+@keyframes heroEntrance {
+    from { opacity: 0; transform: scale(1.1); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes titleSlideIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes subtitleSlideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes buttonsSlideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal mejorado */
+.modal {
+    z-index: 10000 !important;
+}
+
+.modal-content {
+    animation: modalSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    margin: 10% auto !important;
+}
+
+.close-button {
+    transition: all 0.3s ease !important;
+    padding: 10px !important;
+    margin: -10px -10px 0 0 !important;
+}
+
+.close-button:hover {
+    transform: scale(1.2) rotate(90deg) !important;
+    background: rgba(220,38,38,0.1) !important;
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(-50px) scale(0.9); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Mejorar espaciado en formularios */
+.form-group {
+    margin-bottom: 20px !important;
+}
+
+.input, input, select, textarea {
+    margin: 5px 0 !important;
+    transition: all 0.3s ease !important;
+}
+
+.input:focus, input:focus, select:focus, textarea:focus {
+    margin: 8px 0 !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Animaciones para las reseñas */
+#client-reviews-list .card {
+    animation: reviewEntrance 0.6s ease-out !important;
+    margin: 12px 8px !important;
+    transition: all 0.4s ease !important;
+}
+
+#client-reviews-list .card:hover {
+    animation: reviewFocus 0.3s ease-out forwards !important;
+    margin: 16px 12px !important;
+    transform: translateY(-8px) scale(1.03) !important;
+}
+
+@keyframes reviewEntrance {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes reviewFocus {
+    to { transform: translateY(-8px) scale(1.03); }
+}
+
+/* Footer animations */
+.footer-v2 {
+    animation: footerSlideUp 1s ease-out !important;
+}
+
+@keyframes footerSlideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .btn, button, .button, input[type=submit], input[type=button] {
+        margin: 10px 5px !important;
+        width: calc(100% - 10px) !important;
+    }
+
+    .grid.cols-3, .grid.cols-2 {
+        gap: 20px !important;
+        padding: 10px 5px !important;
+    }
+
+    .grid .card {
+        margin: 8px 4px !important;
+    }
+
+    .grid .card:hover {
+        margin: 12px 8px !important;
+    }
+}
+/* ===== DASHBOARD CLIENTE PROFESIONAL ===== */
+
+/* Cards profesionales para cliente */
+.client-dashboard .card,
+#panel-cliente .card,
+.client-only .card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,250,252,0.9)) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(220,38,38,0.15) !important;
+    border-radius: 24px !important;
+    padding: 2.5rem !important;
+    box-shadow:
+        0 12px 40px rgba(0,0,0,0.08),
+        inset 0 1px 0 rgba(255,255,255,0.8) !important;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    margin: 12px 8px !important;
+}
+
+/* Efecto de borde luminoso */
+.client-dashboard .card::before,
+#panel-cliente .card::before,
+.client-only .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 24px;
+    padding: 2px;
+    background: linear-gradient(135deg,
+        rgba(220,38,38,0.3),
+        rgba(220,38,38,0.1),
+        rgba(220,38,38,0.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+/* Hover effects profesionales */
+.client-dashboard .card:hover,
+#panel-cliente .card:hover,
+.client-only .card:hover {
+    transform: translateY(-12px) scale(1.02) !important;
+    box-shadow:
+        0 25px 60px rgba(220,38,38,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.9) !important;
+    border-color: rgba(220,38,38,0.3) !important;
+    margin: 16px 12px !important;
+}
+
+.client-dashboard .card:hover::before,
+#panel-cliente .card:hover::before,
+.client-only .card:hover::before {
+    opacity: 1;
+}
+
+/* Animación de entrada escalonada */
+.client-dashboard .card:nth-child(1),
+#panel-cliente .card:nth-child(1),
+.client-only .card:nth-child(1) {
+    animation: cardSlideIn 0.6s ease-out 0.1s both;
+}
+
+.client-dashboard .card:nth-child(2),
+#panel-cliente .card:nth-child(2),
+.client-only .card:nth-child(2) {
+    animation: cardSlideIn 0.6s ease-out 0.2s both;
+}
+
+.client-dashboard .card:nth-child(3),
+#panel-cliente .card:nth-child(3),
+.client-only .card:nth-child(3) {
+    animation: cardSlideIn 0.6s ease-out 0.3s both;
+}
+
+@keyframes cardSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Efecto de partículas flotantes */
+.client-dashboard .card::after,
+#panel-cliente .card::after,
+.client-only .card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(220,38,38,0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    animation: floatParticles 20s linear infinite;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.client-dashboard .card:hover::after,
+#panel-cliente .card:hover::after,
+.client-only .card:hover::after {
+    opacity: 1;
+}
+
+@keyframes floatParticles {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    100% { transform: translate(-50px, -50px) rotate(360deg); }
+}
+
+/* Iconos profesionales en cards */
+.client-dashboard .card .kpi i,
+#panel-cliente .card .kpi i,
+.client-only .card .kpi i {
+    font-size: 2.5rem !important;
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+/* Badges mejorados */
+.client-dashboard .badge,
+#panel-cliente .badge,
+.client-only .badge {
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem !important;
+    border: 2px solid !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.client-dashboard .badge.ok,
+#panel-cliente .badge.ok,
+.client-only .badge.ok {
+    background: rgba(34, 197, 94, 0.15) !important;
+    border-color: rgba(34, 197, 94, 0.3) !important;
+    color: #16a34a !important;
+}
+
+/* Grid mejorado para cliente */
+.client-only .grid.cols-3 {
+    gap: 30px !important;
+    padding: 20px 15px !important;
+}
+
+/* Hero section para cliente */
+.client-only .hero-v2 {
+    background: linear-gradient(135deg,
+        rgba(220,38,38,0.05),
+        rgba(255,255,255,0.8)) !important;
+    border-radius: 24px !important;
+    margin: 20px 15px !important;
+    padding: 3rem 2rem !important;
+    border: 1px solid rgba(220,38,38,0.1) !important;
+    animation: heroGlow 3s ease-in-out infinite alternate !important;
+}
+
+@keyframes heroGlow {
+    from {
+        box-shadow: 0 15px 40px rgba(220,38,38,0.1);
+    }
+    to {
+        box-shadow: 0 20px 50px rgba(220,38,38,0.15);
+    }
+}
+
+/* Botones del dashboard cliente */
+.client-only .btn,
+#panel-cliente .btn {
+    padding: 14px 28px !important;
+    border-radius: 16px !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    margin: 10px 8px !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.client-only .btn:hover,
+#panel-cliente .btn:hover {
+    transform: translateY(-6px) scale(1.08) !important;
+    margin: 14px 12px !important;
+    box-shadow: 0 20px 40px rgba(220,38,38,0.4) !important;
+    z-index: 10 !important;
+}
+
+/* Sección de reseñas mejorada */
+#client-reviews-list .card {
+    animation: reviewFloat 4s ease-in-out infinite !important;
+    transition: all 0.4s ease !important;
+}
+
+#client-reviews-list .card:hover {
+    animation: reviewFocus 0.3s ease-out forwards !important;
+    transform: translateY(-10px) scale(1.03) !important;
+}
+
+@keyframes reviewFloat {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(0.3deg); }
+}
+
+@keyframes reviewFocus {
+    to { transform: translateY(-10px) scale(1.03); }
+}
+
+/* Promociones destacadas */
+.client-only .promo-card {
+    background: linear-gradient(135deg,
+        rgba(220,38,38,0.08),
+        rgba(255,255,255,0.9)) !important;
+    border-left: 6px solid var(--primary) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.client-only .promo-card::before {
+    content: '🔥 OFERTA';
+    position: absolute;
+    top: 15px;
+    right: -30px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    color: white;
+    padding: 5px 40px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    transform: rotate(45deg);
+    box-shadow: 0 4px 15px rgba(220,38,38,0.3);
+}
+
+/* Responsive para cliente */
+@media (max-width: 768px) {
+    .client-dashboard .card,
+    #panel-cliente .card,
+    .client-only .card {
+        padding: 2rem 1.5rem !important;
+        margin: 10px 5px !important;
+    }
+
+    .client-dashboard .card:hover,
+    #panel-cliente .card:hover,
+    .client-only .card:hover {
+        margin: 14px 9px !important;
+        transform: translateY(-8px) scale(1.01) !important;
+    }
+
+    .client-only .grid.cols-3 {
+        gap: 20px !important;
+        padding: 15px 10px !important;
+    }
+
+    .client-only .hero-v2 {
+        margin: 15px 10px !important;
+        padding: 2rem 1.5rem !important;
+    }
+}
+
+/* === Overlay para el sidebar (difuminar fondo cuando está abierto) === */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 20; /* debajo del sidebar, encima del contenido */
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Aseguramos que el sidebar quede por encima del overlay */
+.sidebar {
+  z-index: 30;
+}
+
+/* === Mejor contraste para textos "muted" / grises en fondo claro === */
+.text-muted,
+.muted {
+  color: #111827 !important; /* gris muy oscuro / casi negro */
+}
+
+/* Opcional: área de previsualización de proforma/facturas si se envuelve en esta clase */
+.preforma-preview,
+.preforma-preview * {
+  color: #111827 !important;
+}
+
+/* === Ajuste de selects para que las opciones sean legibles en dropdowns === */
+select,
+select option,
+.form-select,
+.form-select option {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+}

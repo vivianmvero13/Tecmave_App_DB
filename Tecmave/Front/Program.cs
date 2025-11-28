@@ -8,6 +8,8 @@ using Tecmave.Front.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
+builder.Services.AddHttpClient("api", client => { client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]); });
+
 builder.Services.AddHttpClient();
 builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
 

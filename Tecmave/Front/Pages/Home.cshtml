@@ -1,0 +1,403 @@
+@page "/"
+@{ Layout = null; }
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller Tecmave - Servicios Automotrices de Excelencia</title>
+    <meta name="api-base" content="http://localhost:7096" />
+
+    <!-- CSS NUEVO Alpha Style -->
+    <link rel="stylesheet" href="~/assets/css/disney-style.css">
+    <link rel="stylesheet" href="~/assets/css/styles.css">
+    <link rel="stylesheet" href="~/assets/css/dark-theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- AOS Library for Animations -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header estilo Alpha -->
+    <header class="alpha-header">
+        <nav class="alpha-nav">
+            <div class="nav-brand">
+                <div class="logo">
+                    <img src="~/assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave Logo">
+                </div>
+                <h1>TECMAVE</h1>
+            </div>
+
+            <div class="nav-menu">
+                <a href="#inicio" class="nav-link active" data-key="nav_home">Inicio</a>
+                <a href="#servicios" class="nav-link" data-key="nav_services">Servicios</a>
+                <a href="#nosotros" class="nav-link" data-key="nav_about">Nosotros</a>
+                <a href="#testimonios" class="nav-link" data-key="nav_testimonials">Testimonios</a>
+                <a href="#contacto" class="nav-link" data-key="nav_contact">Contacto</a>
+            </div>
+
+            <div class="nav-actions">
+                <div class="language-selector">
+                    <select id="language-select" class="btn-primary" style="padding: 0.8rem 1rem; font-size: 1rem;">
+                        <option value="es">ES</option>
+                        <option value="en">EN</option>
+                    </select>
+                </div>
+                <button id="theme-toggle-btn" class="btn-primary" style="padding: 0.8rem 1rem; font-size: 1.2rem;">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <a href="tel:+50622223333" class="nav-phone" data-key="nav_phone">
+                    <i class="fas fa-phone"></i>
+                    +506 2222-3333
+                </a>
+                <a href="/Account/Login" class="btn-primary" data-key="nav_login">Acceder</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section estilo Alpha -->
+    <section id="inicio" class="alpha-hero">
+        <div class="hero-container">
+            <div class="hero-content" data-aos="fade-right" data-aos-duration="1000">
+                <div class="hero-badge" data-aos="fade-up" data-aos-delay="200">
+                    <span data-key="hero_badge">★ TALLER CERTIFICADO</span>
+                </div>
+
+                <h1 class="hero-title" data-aos="fade-up" data-aos-delay="300" data-key="hero_title">
+                    Expertos en <span class="text-highlight">Servicios Automotrices</span>
+                </h1>
+
+                <p class="hero-description" data-aos="fade-up" data-aos-delay="400" data-key="hero_subtitle">
+                    Más de 15 años brindando soluciones confiables para tu vehículo.
+                    Tecnología de vanguardia y atención personalizada.
+                </p>
+
+                <div class="hero-stats" data-aos="fade-up" data-aos-delay="500">
+                    <div class="stat">
+                        <div class="stat-number">15+</div>
+                        <div class="stat-label" data-key="stat_experience">Años Experiencia</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">5000+</div>
+                        <div class="stat-label" data-key="stat_repaired">Vehículos Reparados</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label" data-key="stat_crane">Servicio de Grúa</div>
+                    </div>
+                </div>
+
+                <div class="hero-actions" data-aos="fade-up" data-aos-delay="600">
+                    <button class="btn-hero-primary" data-key="hero_button_schedule">
+                        <i class="fas fa-calendar-check"></i>
+                        AGENDAR CITA
+                    </button>
+                    <button class="btn-hero-secondary" data-key="hero_button_call">
+                        <i class="fas fa-phone"></i>
+                        LLAMAR AHORA
+                    </button>
+                </div>
+            </div>
+
+            <div class="hero-visual" data-aos="fade-left" data-aos-duration="1000">
+                <div class="hero-image">
+                    <img src="~/assets/img/tecmave_exterior_1.jpg" alt="Taller Tecmave">
+                    <div class="image-overlay"></div>
+                </div>
+                <!-- CORREGIDO: Card con enlace a login -->
+                <a href="/Account/Login" class="floating-card" data-aos="zoom-in" data-aos-delay="800">
+                    <div class="card-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <h4 data-key="free_diagnostic">Diagnóstico Gratis</h4>
+                    <p data-key="free_diagnostic_desc">Evaluación completa sin costo</p>
+                    <div class="card-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Servicios Destacados -->
+    <section id="servicios" class="services-alpha">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title" data-key="services_title">Nuestros Servicios</h2>
+                <p class="section-subtitle" data-key="services_subtitle">Soluciones integrales para el cuidado de tu vehículo</p>
+            </div>
+
+            <div class="services-grid-alpha">
+                <div class="service-card-alpha" data-aos="fade-up" data-aos-delay="200">
+                    <div class="service-icon">
+                        <i class="fas fa-car-battery"></i>
+                    </div>
+                    <h3 data-key="service_1_title">Mecánica General</h3>
+                    <p data-key="service_1_desc">Reparación y mantenimiento completo del motor y sistemas mecánicos</p>
+                    <ul class="service-features">
+                        <li><i class="fas fa-check"></i> <span data-key="service_1_feature_1">Cambio de aceite</span></li>
+                        <li><i class="fas fa-check"></i> <span data-key="service_1_feature_2">Reparación de motor</span></li>
+                        <li><i class="fas fa-check"></i> <span data-key="service_1_feature_3">Sistema de frenos</span></li>
+                        <li><i class="fas fa-check"></i> <span data-key="service_1_feature_4">Suspensión</span></li>
+                    </ul>
+                    <button class="btn-service-alpha" data-key="know_more">
+                        Saber Más <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <div class="service-card-alpha" data-aos="fade-up" data-aos-delay="400">
+                    <div class="service-icon">
+                        <i class="fas fa-laptop-code"></i>
+                    </div>
+                    <h3 data-key="service_2_title">Diagnóstico Computarizado</h3>
+                    <p data-key="service_2_desc">Tecnología avanzada para identificar problemas electrónicos</p>
+                    <ul class="service-features">
+                        <li><i class="fas fa-check"></i> <span data-key="service_2_feature_1">Escaneo computarizado</span></li>
+                        <li><i class="fas fa-check"></i> <span data-key="service_2_feature_2">Programación de módulos</span></li>
+                        <li><i class="fas fa-check"></i> <span data-key="service_2_feature_3">Reparación eléctrica</span></li>
+                        <li><i class="fas fa-check"></i> <span data-key="service_2_feature_4">Actualizaciones</span></li>
+                    </ul>
+                    <button class="btn-service-alpha" data-key="know_more">
+                        Saber Más <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <div class="service-card-alpha" data-aos="fade-up" data-aos-delay="600">
+                    <div class="service-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 data-key="service_3_title">Electricidad Automotriz</h3>
+                    <p data-key="service_3_desc">Especialistas en sistemas eléctricos y electrónicos</p>
+                    <ul class="service-features">
+                        <li><i class="fas fa-check"></i> <span data-key="service_3_feature_1">Sistema de carga</span></li>
+                        <li><i class="fas fa-check"></i> <span data-key="service_3_feature_2">Iluminación y luces</span></li>
+                        <li><i class="fas fa-check"></i> <span data-key="service_3_feature_3">Centrales y módulos</span></li>
+                        <li><i class="fas fa-check"></i> <span data-key="service_3_feature_4">Instalación</span></li>
+                    </ul>
+                    <button class="btn-service-alpha" data-key="know_more">
+                        Saber Más <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Nosotros -->
+    <section id="nosotros" class="about-section">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text" data-aos="fade-right">
+                    <h2 data-key="about_title">Sobre Nosotros</h2>
+                    <p data-key="about_p1">En Tecmave nos dedicamos a brindar servicios automotrices de la más alta calidad. Con más de 15 años de experiencia, hemos establecido un estándar de excelencia en el cuidado y mantenimiento de vehículos.</p>
+                    <p data-key="about_p2">Nuestro equipo de técnicos certificados está comprometido con ofrecer soluciones confiables y eficientes para todas las marcas y modelos de vehículos.</p>
+                    <div class="about-features">
+                        <div class="about-feature">
+                            <i class="fas fa-award"></i>
+                            <span data-key="about_feature_1">Certificación internacional</span>
+                        </div>
+                        <div class="about-feature">
+                            <i class="fas fa-users"></i>
+                            <span data-key="about_feature_2">Equipo especializado</span>
+                        </div>
+                        <div class="about-feature">
+                            <i class="fas fa-shield-alt"></i>
+                            <span data-key="about_feature_3">Garantía en todos los servicios</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image" data-aos="fade-left">
+                    <img src="~/assets/img/tecmave_exterior_2.jpg" alt="Nuestro Taller">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Testimonios -->
+    <section id="testimonios" class="testimonials-section">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2 class="section-title" data-key="testimonials_title">Lo que dicen nuestros clientes</h2>
+                <p class="section-subtitle" data-key="testimonials_subtitle">Experiencias reales de clientes satisfechos</p>
+            </div>
+            <div class="testimonials-grid" id="testimonials-container">
+                <!-- Testimonials will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Section -->
+    <section class="video-section">
+        <div class="container">
+            <div class="video-content">
+                <div class="video-text" data-aos="fade-right">
+                    <h2>Tecnología de Vanguardia</h2>
+                    <p>Contamos con equipos de última generación para garantizar el mejor servicio para tu vehículo. Nuestro taller está equipado con tecnología moderna y personal capacitado.</p>
+                    <div class="video-features">
+                        <div class="video-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Equipos de diagnóstico avanzado</span>
+                        </div>
+                        <div class="video-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Técnicos certificados</span>
+                        </div>
+                        <div class="video-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Repuestos de calidad</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="video-container" data-aos="fade-left">
+                    <div class="video-wrapper">
+                        <iframe
+                            width="100%"
+                            height="315"
+                            src="https://www.youtube.com/embed/zpOULjyy-n8"
+                            title="Taller Mecánico Moderno"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Características -->
+    <section class="features-alpha">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-item-alpha" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4>Garantía en Servicios</h4>
+                    <p>Todos nuestros trabajos incluyen garantía escrita</p>
+                </div>
+
+                <div class="feature-item-alpha" data-aos="zoom-in" data-aos-delay="300">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h4>Servicio Rápido</h4>
+                    <p>Diagnóstico rápido y tiempos de entrega optimizados</p>
+                </div>
+
+                <div class="feature-item-alpha" data-aos="zoom-in" data-aos-delay="400">
+                    <div class="feature-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <h4>Equipo Moderno</h4>
+                    <p>Tecnología de punta para mejores resultados</p>
+                </div>
+
+                <div class="feature-item-alpha" data-aos="zoom-in" data-aos-delay="500">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <h4>Expertos Certificados</h4>
+                    <p>Personal capacitado y con experiencia</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="contacto" class="cta-alpha">
+        <div class="container">
+            <div class="cta-content-alpha" data-aos="zoom-in">
+                <h2 data-key="cta_title">¿Necesitas ayuda con tu vehículo?</h2>
+                <p data-key="cta_subtitle">Contáctanos hoy mismo y recibe una cotización gratuita</p>
+                <div class="cta-actions-alpha">
+                    <button class="btn-cta-primary">
+                        <i class="fab fa-whatsapp"></i>
+                        WhatsApp
+                    </button>
+                    <button class="btn-cta-secondary">
+                        <i class="fas fa-phone"></i>
+                        Llamar Ahora
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-v2" id="site-footer"></footer>
+
+    <!-- AOS Library -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="~/assets/js/disney-script.js"></script>
+    <script defer src="~/assets/js/footer-config.js"></script>
+    <script src="~/assets/js/global-features.js"></script>
+  <script>
+    
+document.addEventListener('DOMContentLoaded', () => {
+        const testimonialsContainer = document.getElementById('testimonials-container');
+
+        const metaApi = document.querySelector('meta[name="api-base"]');
+        const apiBase = metaApi?.content || (window.location.origin.replace(":7190", ":7096"));
+
+        // Fallback estático por si la API falla
+        const fallbackReviews = [
+            { nombre: 'María Rodríguez', comentario: 'Excelente servicio, entregaron mi vehículo antes de lo previsto y con una calidad impresionante. Definitivamente mi taller de confianza.', servicio: 'Mantenimiento general' },
+            { nombre: 'Carlos Méndez', comentario: 'El diagnóstico fue muy rápido y claro. Me explicaron todo lo que se debía hacer y el costo fue justo.', servicio: 'Sistema de frenos' },
+            { nombre: 'Ana Fernández', comentario: 'Muy satisfecho con la atención y el seguimiento. Me mantuvieron informado en todo momento.', servicio: 'Reparación de motor' }
+        ];
+
+        function buildCard(review) {
+            const testimonialEl = document.createElement('div');
+            testimonialEl.className = 'testimonial-card';
+            testimonialEl.innerHTML = `
+                <div class="testimonial-content">
+                    <i class="fas fa-quote-left"></i>
+                    <p>${review.comentario}</p>
+                </div>
+                <div class="testimonial-author">
+                    <div class="author-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="author-info">
+                        <h4>${review.usuario || review.nombre}</h4>
+                        <span>${review.servicio || 'Cliente Tecmave'}</span>
+                    </div>
+                </div>
+            `;
+            testimonialsContainer.appendChild(testimonialEl);
+        }
+
+        function renderFromList(list) {
+            testimonialsContainer.innerHTML = '';
+            const latest = list.slice(-3).reverse(); // últimas 3 reseñas
+            latest.forEach(buildCard);
+        }
+
+        async function loadTestimonials() {
+            try {
+                const resp = await fetch(`${apiBase}/Resenas/Publicas`);
+                if (!resp.ok) {
+                    console.warn('No se pudieron obtener reseñas públicas, usando fallback.');
+                    renderFromList(fallbackReviews);
+                    return;
+                }
+                const data = await resp.json();
+                if (!Array.isArray(data) || data.length === 0) {
+                    renderFromList(fallbackReviews);
+                    return;
+                }
+                renderFromList(data);
+            } catch (err) {
+                console.error('Error cargando reseñas públicas', err);
+                renderFromList(fallbackReviews);
+            }
+        }
+
+        loadTestimonials();
+    });
+</script>
+</body>
+</html>
