@@ -42,7 +42,7 @@
     .table {
         width: 100%;
         margin-top: 1rem;
-        color: #ccc;
+        color: #111111 !important;
     }
 
         .table th {
@@ -171,16 +171,48 @@
 
     .accordion-body {
         display: none;
-        background: #151515;
+        background: #f9fafb;
         padding: 1rem;
         max-height: 300px;
         overflow-y: auto;
+        color: #111111 !important;
     }
 
-        .accordion-body label {
-            margin-bottom: .4rem;
-            display: block;
+        .accordion-body label,
+        #pertenencias *,
+        #pertenencias-container * {
+            margin-bottom: .25rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            color: #111111 !important;
         }
+
+    #pertenencias-container {
+        display: block;
+    }
+
+    #pertenencias {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: .35rem 1rem;
+    }
+
+
+
+    /* === Correcciones visuales específicas de esta página (Servicios) === */
+    /* Dropdowns: asegurar que las opciones sean visibles */
+    select,
+    select option {
+        color: #ffffff !important;
+        background-color: #111111 !important;
+    }
+
+    /* Texto dentro de la proforma (modal) más legible sobre fondo oscuro */
+    #proformaContent,
+    #proformaContent * {
+        color: #111111 !important;
+    }
 
 </style>
 

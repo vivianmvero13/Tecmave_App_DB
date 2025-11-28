@@ -2,22 +2,20 @@ using Front.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Tecmave.Api.Services;
 using Tecmave.Front.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
+builder.Services.AddHttpClient("api", client => { client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]); });
+
+builder.Services.AddHttpClient();
+builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
 
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<MyIdentityDBContext>(opt =>
-    opt.UseMySql(cs, ServerVersion.AutoDetect(cs),
-        b => b.MigrationsHistoryTable("__EFMigrationsHistory_Identity"))
-);
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("ClienteOnly", p => p.RequireRole("Cliente"));
-});
+    opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
 
 builder.Services.AddIdentity<Usuario, IdentityRole<int>>(
     options =>
@@ -41,6 +39,15 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost",
+        policy => policy
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -56,5 +63,11 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+
+
+
+app.UseCors("AllowLocalhost");
 app.MapRazorPages();
+
 app.Run();

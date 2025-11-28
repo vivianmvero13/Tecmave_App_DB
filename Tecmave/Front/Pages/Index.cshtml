@@ -1,7 +1,7 @@
-﻿@page
+@page "/Panel"
 @model IndexModel
 @{
-    ViewData["Title"] = "Inicio";
+    ViewData["Title"] = "Panel";
 }
 
 @using Microsoft.AspNetCore.Identity
@@ -10,347 +10,561 @@
 @inject UserManager<Usuario> UserManager
 
 @{
-    // === Contexto de autenticación/roles (en la propia página) ===
-    var roles = new List<string>();
-    Usuario? currentUser = null;
-    var isAuthenticated = SignInManager.IsSignedIn(User);
-
-    if (isAuthenticated)
+    if (!User.Identity.IsAuthenticated)
     {
-        currentUser = await UserManager.GetUserAsync(User);
-        if (currentUser != null)
-        {
-            roles = (await UserManager.GetRolesAsync(currentUser)).ToList();
-        }
+        Response.Redirect("/Account/Login");
+    }
+    else if (!User.IsInRole("Cliente"))
+    {
+        // Si NO es cliente (por ejemplo Admin), redirigir al panel/admin
+        Response.Redirect("/Estadistica/Index");
+    }
+}
+
+
+
+
+<section class="section">
+    <h2>Tu taller hoy</h2>
+
+    <div class="container grid cols-3 client-kpi-row">
+        <div class="card kpi-card">
+            <div class="kpi-label">Próxima cita</div>
+            <div class="kpi-main">
+                <div id="kpi-proxima-dia" class="kpi-main-large">Sin citas</div>
+                <div id="kpi-proxima-hora" class="kpi-main-sub">--:--</div>
+            </div>
+            <div id="kpi-proxima-estado" class="kpi-pill pill-neutral">Sin citas programadas</div>
+        </div>
+
+        <div class="card kpi-card">
+            <div class="kpi-label">Mis vehículos</div>
+            <div class="kpi-main">
+                <div id="kpi-vehiculos-total" class="kpi-main-large">0</div>
+                <div class="kpi-main-sub">registrados</div>
+            </div>
+            <div class="kpi-pill pill-neutral">
+                <span id="kpi-vehiculos-taller">0</span> citas futuras
+            </div>
+        </div>
+
+        <div class="card kpi-card">
+            <div class="kpi-label">Balance del mes</div>
+            <div class="kpi-main">
+                <div id="kpi-balance-monto" class="kpi-main-large">₡0</div>
+                <div id="kpi-balance-periodo" class="kpi-main-sub">Mes actual</div>
+            </div>
+            <div id="kpi-balance-estado" class="kpi-pill pill-neutral">Sin pagos registrados</div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="card hero-card">
+            <h2 class="mb-2">TECMAVE</h2>
+            <p class="mb-3">
+                Soluciones para la Logística y Mantenimiento de tu flota.
+            </p>
+            <div class="hero-actions">
+                <button type="button" class="btn" id="btnIrServicios">Nuestros servicios</button>
+                <button type="button" class="btn secondary" id="btnIrContacto">Contacto</button>
+            </div>
+        </div>
+
+        <div class="grid cols-3 client-services-row" style="margin-top:1.5rem;">
+            <div class="card service-card">
+                <h3>Servicios Profesionales</h3>
+                <p>Mantenimiento preventivo y correctivo de la más alta calidad.</p>
+            </div>
+            <div class="card service-card">
+                <h3>Asistencia 24/7</h3>
+                <p>Asistencia en carretera disponible las 24 horas del día.</p>
+            </div>
+            <div class="card service-card">
+                <h3>Expertos Certificados</h3>
+                <p>Técnicos con certificación internacional.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <h2>Promociones destacadas</h2>
+        <p class="subtle">Aprovechá las últimas promociones activas para tus vehículos.</p>
+
+        <div id="promos-destacadas" class="grid cols-3 promo-grid">
+            <!-- Se cargan por JavaScript -->
+        </div>
+    </div>
+</section>
+
+<section class="section client-only">
+    <h2>Escribe tu Reseña</h2>
+    <div class="card">
+        <label>Nombre</label>
+        <input class="input" id="client-review-name" placeholder="Tu nombre" readonly />
+
+        <label>Servicio</label>
+        <select class="input" id="client-review-service">
+            <option value="">Seleccione un servicio</option>
+        </select>
+
+        <label>Calificación</label>
+        <select class="input" id="client-review-rating">
+            <option value="5.0">★★★★★</option>
+            <option value="4.0">★★★★☆</option>
+            <option value="3.0">★★★☆☆</option>
+            <option value="2.0">★★☆☆☆</option>
+            <option value="1.0">★☆☆☆☆</option>
+        </select>
+
+        <label>Comentario</label>
+        <textarea class="input" id="client-review-comment" rows="4" placeholder="Comparte tu experiencia..."></textarea>
+
+        <button id="btnEnviarResena" onclick="addClientReview()" style="margin-top:.8rem">Enviar Reseña</button>
+    </div>
+</section>
+
+
+
+<section class="section client-only">
+    <h2>Reseñas Públicas</h2>
+    <div class="grid cols-2" id="client-reviews-list">
+        <!-- Reviews will be loaded here by JavaScript -->
+    </div>
+</section>
+
+
+
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="http://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+
+<script>
+    // ============================
+    // Panel de cliente (resumen)
+    // ============================
+    const API_BASE_PANEL        = "http://localhost:7096";
+    const URL_AGENDAMIENTOS_P   = API_BASE_PANEL + "/Agendamiento";
+    const URL_VEHICULOS_P       = API_BASE_PANEL + "/vehiculos";
+    const URL_PROMOCIONES_P     = API_BASE_PANEL + "/promociones";
+    const URL_FACTURAS_P        = API_BASE_PANEL + "/facturas";
+
+    function formatCRCP(n) {
+        const v = Number(n || 0);
+        return v.toLocaleString("es-CR", {
+            style: "currency",
+            currency: "CRC",
+            maximumFractionDigits: 0
+        });
     }
 
-    bool isAdmin = roles.Contains("Administrador") || User.IsInRole("Admin");
-    bool isCliente = roles.Contains("CLIENTE") || User.IsInRole("CLIENTE");
-    bool isColaborador = roles.Contains("Colaborador") || User.IsInRole("Colaborador");
-}
+    function parseDateOnlyPanel(v) {
+        if (!v) return null;
+        const d = new Date(v);
+        if (isNaN(d)) return null;
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
 
-@section Styles {
-    <style>
-        .hide-admin-options {
-            display: none !important;
-        }
+    function cargarResumenClientePanel() {
+        cargarProximaCitaPanel();
+        cargarVehiculosPanel();
+        cargarBalanceMesPanel();
+        cargarPromosDestacadasPanel();
+    }
 
-        .hide-carrusel {
-            display: none !important;
-        }
+    function cargarProximaCitaPanel() {
+        const hoyISO = new Date().toISOString().split("T")[0];
 
-        .hero-v2 {
-            padding: 48px 0;
-            background: var(--surface-2);
-            border-radius: 16px;
-        }
+        $.get(URL_AGENDAMIENTOS_P, function (lista) {
+            const ags = Array.isArray(lista) ? lista : [];
+            const delUsuario = ags.filter(a => String(a.cliente_id) === String(userId));
 
-        .hero-v2-content {
-            max-width: 900px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .hero-v2 .btn {
-            margin: 0 .4rem;
-        }
-
-        .promo-card h3 {
-            margin-bottom: .25rem;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.45);
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-        }
-
-            .modal.open {
-                display: flex;
+            if (!delUsuario.length) {
+                $("#kpi-proxima-dia").text("Sin citas");
+                $("#kpi-proxima-hora").text("--:--");
+                $("#kpi-proxima-estado")
+                    .text("Sin citas programadas")
+                    .removeClass("pill-success")
+                    .addClass("pill-neutral");
+                return;
             }
 
-        .modal-content {
-            background: var(--surface);
-            border-radius: 12px;
-            padding: 24px;
-            max-width: 560px;
-            width: 100%;
-            box-shadow: var(--shadow-3);
-        }
+            const futuros = delUsuario.filter(a => a.fecha_estimada >= hoyISO);
+            if (!futuros.length) {
+                $("#kpi-proxima-dia").text("Sin citas");
+                $("#kpi-proxima-hora").text("--:--");
+                $("#kpi-proxima-estado")
+                    .text("Sin citas futuras")
+                    .removeClass("pill-success")
+                    .addClass("pill-neutral");
+                return;
+            }
 
-        .modal .close-button {
-            float: right;
-            cursor: pointer;
-            font-size: 20px;
-        }
-    </style>
-}
-
-<main class="container" data-user-id="@(currentUser?.Id)"
-      data-user-name="@(currentUser?.UserName ?? "Usuario")"
-      data-is-auth="@(isAuthenticated.ToString().ToLower())"
-      data-is-cliente="@(isCliente.ToString().ToLower())">
-    <!-- Hero (solo estética) -->
-    <section class="section client-only">
-        <section class="hero-v2">
-            <div class="hero-v2-content">
-                <h1>TECMAVE</h1>
-                <p>Soluciones para la Logística y Mantenimiento de su flota.</p>
-                <div class="hero-v2-buttons">
-                    <a asp-page="/Servicios/Index" class="btn btn-primary">Nuestros Servicios</a>
-                    <a asp-page="/Contacto" class="btn btn-secondary">Contacto</a>
-                </div>
-            </div>
-        </section>
-    </section>
-
-    <!-- Cards informativas (UI) -->
-    <section class="section client-only">
-        <div class="grid cols-3">
-            <div class="card fade-in-up"><h2>Servicios Profesionales</h2><p>Mantenimiento preventivo y correctivo de la más alta calidad</p></div>
-            <div class="card fade-in-up"><h2>Asistencia 24/7</h2><p>Asistencia en carretera disponible las 24 horas</p></div>
-            <div class="card fade-in-up"><h2>Expertos Certificados</h2><p>Técnicos con certificación internacional</p></div>
-        </div>
-    </section>
-
-    <!-- Promos (UI puro; no toca backend) -->
-    <section class="section client-only">
-        <h2>Promociones Destacadas</h2>
-        <div class="grid cols-3">
-            <div class="card promo-card">
-                <h3>Cambio de Aceite</h3>
-                <p>30% de descuento en cambio de aceite sintético</p>
-                <button class="btn btn-secondary" data-modal="promo-aceite">Ver Promoción</button>
-            </div>
-            <div class="card promo-card">
-                <h3>Alineación</h3>
-                <p>Alineación y balanceo con 20% de descuento</p>
-                <button class="btn btn-secondary" data-modal="promo-alineacion">Ver Promoción</button>
-            </div>
-            <div class="card promo-card">
-                <h3>Revisión Completa</h3>
-                <p>Revisión de 50 puntos gratuita</p>
-                <button class="btn btn-secondary" data-modal="promo-revision">Ver Promoción</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Modales (UI) -->
-    <div id="promo-aceite" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Cambio de Aceite</h2>
-            <p>Aprovecha nuestro 30% de descuento en cambio de aceite sintético. Incluye filtro y revisión de niveles.</p>
-        </div>
-    </div>
-    <div id="promo-alineacion" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Alineación y Balanceo</h2>
-            <p>20% de descuento. Mejora la vida de tus llantas y tu seguridad al conducir.</p>
-        </div>
-    </div>
-    <div id="promo-revision" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Revisión Completa</h2>
-            <p>Revisión de 50 puntos completamente gratuita. ¡Agenda tu cita hoy!</p>
-        </div>
-    </div>
-
-    <!-- ======== Reseñas (solo CLIENTE) ======== -->
-    <section class="section client-only">
-        <h2>Escribe tu Reseña</h2>
-
-        @if (isCliente && isAuthenticated)
-        {
-            <div class="card" id="review-form">
-                <label>Nombre</label>
-                <input class="input" id="client-review-name" placeholder="Tu nombre" readonly />
-
-                <label>Servicio</label>
-                <select class="input" id="client-review-service">
-                    <option value="">Seleccione un servicio</option>
-                </select>
-
-                <label>Calificación</label>
-                <select class="input" id="client-review-rating">
-                    <option value="5.0">★★★★★</option>
-                    <option value="4.0">★★★★☆</option>
-                    <option value="3.0">★★★☆☆</option>
-                    <option value="2.0">★★☆☆☆</option>
-                    <option value="1.0">★☆☆☆☆</option>
-                </select>
-
-                <label>Comentario</label>
-                <textarea class="input" id="client-review-comment" rows="4" placeholder="Comparte tu experiencia..."></textarea>
-
-                <button onclick="addClientReview()" class="btn btn-primary" style="margin-top:.8rem">Enviar Reseña</button>
-            </div>
-        }
-        else
-        {
-            <div class="card" id="review-form-blocked">
-                <p style="margin:0 0 .6rem 0;">
-                    Para escribir una reseña debes iniciar sesión con una cuenta de tipo <strong>Cliente</strong>.
-                </p>
-                @if (!isAuthenticated)
-                {
-                    <a class="btn btn-primary" asp-page="/Account/Login">Iniciar sesión</a>
-                }
-                else
-                {
-                    <span class="badge">Tu rol actual no permite escribir reseñas</span>
-                }
-            </div>
-        }
-    </section>
-
-    <section class="section client-only">
-        <h2>Reseñas Públicas</h2>
-        <div class="grid cols-2" id="client-reviews-list">
-            <!-- JS llenará aquí -->
-        </div>
-    </section>
-</main>
-
-@section Scripts {
-    <script>
-        // === Endpoints ===
-        const API_RESENA = "https://localhost:7096/Resenas";
-        const API_SERVICIO = "https://localhost:7096/Servicios";
-
-        // === Contexto del usuario para UI ===
-        const username = "@(User.Identity?.Name ?? "")";
-        const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
-        const IS_AUTH = document.querySelector('main')?.dataset.isAuth === 'true';
-        const IS_CLIENTE = document.querySelector('main')?.dataset.isCliente === 'true';
-
-        // === Estética: abrir/cerrar modales ===
-        (function () {
-            document.querySelectorAll('[data-modal]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const id = btn.getAttribute('data-modal');
-                    const modal = document.getElementById(id);
-                    if (modal) modal.classList.add('open');
-                });
+            futuros.sort((a, b) => {
+                const da = new Date(a.fecha_estimada + "T" + (a.hora_llegada || "00:00"));
+                const db = new Date(b.fecha_estimada + "T" + (b.hora_llegada || "00:00"));
+                return da - db;
             });
-            document.querySelectorAll('.modal .close-button').forEach(x => {
-                x.addEventListener('click', (e) => {
-                    e.target.closest('.modal').classList.remove('open');
-                });
-            });
-            document.querySelectorAll('.modal').forEach(m => {
-                m.addEventListener('click', (e) => {
-                    if (e.target === m) m.classList.remove('open');
-                });
-            });
-        })();
 
-        // === Lógica de reseñas ===
-        document.addEventListener('DOMContentLoaded', function () {
-            const nameInput = document.getElementById('client-review-name');
-            if (nameInput) nameInput.value = username || '';
+            const prox = futuros[0];
 
-            cargarServicios();
-            cargarResenas();
+            const fecha = parseDateOnlyPanel(prox.fecha_estimada);
+            if (fecha) {
+                const opts = { weekday: "short", day: "2-digit", month: "2-digit" };
+                $("#kpi-proxima-dia").text(fecha.toLocaleDateString("es-CR", opts));
+            } else {
+                $("#kpi-proxima-dia").text(prox.fecha_estimada || "Próxima cita");
+            }
+
+            if (prox.hora_llegada) {
+                $("#kpi-proxima-hora").text(prox.hora_llegada.substring(0,5));
+            } else {
+                $("#kpi-proxima-hora").text("--:--");
+            }
+
+            $("#kpi-proxima-estado")
+                .text("Programada")
+                .removeClass("pill-neutral")
+                .addClass("pill-success");
         });
+    }
 
-        function cargarServicios() {
-            $.ajax({
-                url: API_SERVICIO,
-                method: 'GET',
-                success: function (data) {
-                    const select = $("#client-review-service");
-                    select.empty();
-                    select.append('<option value="">Seleccione un servicio</option>');
-                    (data || []).forEach(servicio => {
-                        select.append(`<option value="${servicio.id_servicio}">${servicio.nombre}</option>`);
-                    });
-                },
-                error: function (xhr, status, error) {
-                    console.error("Error al cargar servicios:", error);
-                }
-            });
-        }
+    function cargarVehiculosPanel() {
+        $.ajax({
+            url: URL_VEHICULOS_P,
+            method: "GET",
+            xhrFields: { withCredentials: true },
+            success: function (data) {
+                const lista = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+                const propios = lista.filter(v => {
+                    const cid = v.cliente_id ?? v.clienteId ?? v.cliente?.id ?? v.ClienteId ?? 0;
+                    return String(cid) === String(userId);
+                });
 
-        function addClientReview() {
-            if (!IS_AUTH || !IS_CLIENTE) {
-                alert("Solo los usuarios con rol Cliente pueden publicar reseñas.");
-                return;
+                $("#kpi-vehiculos-total").text(propios.length);
+
+                // contar citas futuras asociadas al cliente
+                $.get(URL_AGENDAMIENTOS_P, function (listaAg) {
+                    const ags = Array.isArray(listaAg) ? listaAg : [];
+                    const delUsuario = ags.filter(a => String(a.cliente_id) === String(userId));
+                    const hoyISO = new Date().toISOString().split("T")[0];
+                    const futuros = delUsuario.filter(a => a.fecha_estimada >= hoyISO);
+                    $("#kpi-vehiculos-taller").text(futuros.length);
+                });
+            },
+            error: function () {
+                $("#kpi-vehiculos-total").text("0");
+                $("#kpi-vehiculos-taller").text("0");
             }
+        });
+    }
 
-            const servicioId = $("#client-review-service").val();
-            const calificacion = parseFloat($("#client-review-rating").val());
-            const comentario = $("#client-review-comment").val();
+    function cargarBalanceMesPanel() {
+        const hoy = new Date();
+        const mesActual = hoy.getMonth();
+        const annoActual = hoy.getFullYear();
 
-            if (!servicioId || !comentario.trim()) {
-                alert("Por favor selecciona un servicio y escribe un comentario.");
-                return;
+        $("#kpi-balance-periodo").text(
+            hoy.toLocaleDateString("es-CR", { month: "long", year: "numeric" })
+        );
+
+        $.ajax({
+            url: URL_FACTURAS_P,
+            method: "GET",
+            xhrFields: { withCredentials: true },
+            success: function (data) {
+                const lista = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+                const propias = lista.filter(f => {
+                    const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
+                    if (String(clienteId) !== String(userId)) return false;
+
+                    const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? "").toString().toLowerCase();
+                    if (estado !== "pagada" && estado !== "pagado") return false;
+
+                    const fechaVal = f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision;
+                    const d = parseDateOnlyPanel(fechaVal);
+                    if (!d) return false;
+                    return d.getMonth() === mesActual && d.getFullYear() === annoActual;
+                });
+
+                const total = propias.reduce((acc, f) => acc + Number(f.total ?? f.Total ?? f.monto_total ?? 0), 0);
+
+                $("#kpi-balance-monto").text(formatCRCP(total));
+                $("#kpi-balance-estado")
+                    .text(total > 0 ? "Pagado" : "Sin pagos registrados")
+                    .toggleClass("pill-success", total > 0)
+                    .toggleClass("pill-neutral", total <= 0);
+            },
+            error: function () {
+                $("#kpi-balance-monto").text("₡0");
+                $("#kpi-balance-estado")
+                    .text("No se pudo cargar")
+                    .removeClass("pill-success")
+                    .addClass("pill-neutral");
             }
+        });
+    }
 
-            // Importante: NO enviar cliente_id. El servidor lo toma del claim.
-            const nuevaResena = {
-                servicio_id: parseInt(servicioId),
-                comentario: comentario,
-                calificacion: calificacion
-            };
+    function cargarPromosDestacadasPanel() {
+        $.ajax({
+            url: URL_PROMOCIONES_P,
+            method: "GET",
+            xhrFields: { withCredentials: true },
+            success: function (data) {
+                const cont = $("#promos-destacadas");
+                cont.empty();
 
-            $.ajax({
-                url: API_RESENA,
-                method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(nuevaResena),
-                success: function () {
-                    alert("¡Gracias por tu reseña!");
-                    $("#client-review-service").val("");
-                    $("#client-review-rating").val("5.0");
-                    $("#client-review-comment").val("");
-                    cargarResenas();
-                },
-                error: function (xhr, status, error) {
-                    console.error("Error al enviar reseña:", xhr?.responseText || error);
-                    alert("No fue posible publicar la reseña.");
-                },
-                xhrFields: { withCredentials: true }
-            });
-        }
+                const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+                const activas = list.filter(p => {
+                    const estado = Number(p.id_estado ?? p.idEstado ?? p.IdEstado ?? 0);
+                    return estado === 1;
+                });
 
-        function cargarResenas() {
-            $.ajax({
-                url: API_RESENA,
-                method: 'GET',
-                success: function (data) {
-                    const reviewsList = document.getElementById('client-reviews-list');
-                    if (!reviewsList) return;
+                const promos = activas
+                    .sort((a, b) => {
+                        const da = parseDateOnlyPanel(a.fecha_inicio ?? a.fechaInicio ?? a.FechaInicio);
+                        const db = parseDateOnlyPanel(b.fecha_inicio ?? b.fechaInicio ?? b.FechaInicio);
+                        if (!da || !db) return 0;
+                        return db - da; // más recientes primero
+                    })
+                    .slice(0, 3);
 
-                    reviewsList.innerHTML = '';
-
-                    if (!data || data.length === 0) {
-                        reviewsList.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">Aún no hay reseñas. ¡Sé el primero en dejar una!</p>';
-                        return;
-                    }
-
-                    data.forEach(review => {
-                        const card = document.createElement('div');
-                        card.className = 'card';
-                        const estrellas = Math.max(1, Math.min(5, Math.round(review.calificacion || 0)));
-                        card.innerHTML = `
-                            <strong>${review.nombre_usuario || 'Usuario'}</strong>
-                            <p>${'★'.repeat(estrellas)}${'☆'.repeat(5 - estrellas)}</p>
-                            <p style="margin-top:.5rem">${review.comentario}</p>
-                        `;
-                        reviewsList.appendChild(card);
-                    });
-                },
-                error: function (xhr, status, error) {
-                    console.error("Error al cargar reseñas:", error);
+                if (!promos.length) {
+                    cont.append('<p class="subtle">No hay promociones activas en este momento.</p>');
+                    return;
                 }
-            });
-        }
-    </script>
-}
+
+                promos.forEach(promo => {
+                    const titulo = promo.titulo ?? promo.nombre ?? "Promoción";
+                    const descripcion = promo.descripcion ?? "";
+                    cont.append(`
+                        <div class="card promo-card">
+                            <h3>${titulo}</h3>
+                            <p>${descripcion}</p>
+                            <button type="button" class="btn secondary btn-ver-promo-panel">Ver promoción</button>
+                        </div>
+                    `);
+                });
+            },
+            error: function () {
+                $("#promos-destacadas").html('<p class="subtle">No se pudieron cargar las promociones.</p>');
+            }
+        });
+    }
+
+
+
+    
+
+     const API_RESENA = "http://localhost:7096/Resenas";
+     const API_RESENA_PUBLICAS = "http://localhost:7096/Resenas/Publicas";
+     const API_REVISION_COMPLETADAS = "http://localhost:7096/Revision/Completadas";
+
+     const username = "@User.Identity.Name";
+     const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
+
+     $(document).ready(function () {
+         $("#client-review-name").val(username);
+
+         // Panel cliente
+         cargarResumenClientePanel();
+
+         // Hooks de navegación
+         $("#btnIrServicios").on("click", function () {
+             window.location.href = "/Servicios/Index";
+         });
+         $("#btnIrContacto").on("click", function () {
+             window.location.href = "/Contacto";
+         });
+         $(document).on("click", ".btn-ver-promo-panel", function () {
+             window.location.href = "/Promociones/NuestrasPromociones";
+         });
+
+         // Reseñas
+         cargarRevisionesCompletadas();
+         cargarResenasPublicas();
+     });
+
+     // ============================================================
+     // 1. CARGAR REVISIONES COMPLETADAS DEL USUARIO
+     // ============================================================
+     function cargarRevisionesCompletadas() {
+
+         $.ajax({
+             url: `${API_REVISION_COMPLETADAS}/${userId}`,
+             method: "GET",
+             success: function (data) {
+
+                 const select = $("#client-review-service");
+                 select.empty();
+
+                 if (data.length === 0) {
+                     select.append(`<option value="">No tienes revisiones completadas</option>`);
+                     $("#client-review-comment").prop("disabled", true);
+                     $("#client-review-rating").prop("disabled", true);
+                     $("#btnEnviarResena").prop("disabled", true);
+                     return;
+                 }
+
+                 $("#client-review-comment").prop("disabled", false);
+                 $("#client-review-rating").prop("disabled", false);
+                 $("#btnEnviarResena").prop("disabled", false);
+
+                 select.append(`<option value="">Seleccione un servicio</option>`);
+
+                 data.forEach(r => {
+                     select.append(`
+                         <option value="${r.revision_id}">
+                             ${r.servicio_nombre}
+                         </option>
+                     `);
+                 });
+
+             },
+             error: function () {
+                 console.error("Error al cargar revisiones completadas");
+             }
+         });
+     }
+
+     // ============================================================
+     // 2. VALIDAR SI LA REVISION ES COMPLETADA Y ES DEL USUARIO
+     // ============================================================
+     function validarRevisionCompletada(revisionId, callback) {
+
+         $.ajax({
+             url: `${API_REVISION_COMPLETADAS}/${userId}`,
+             method: "GET",
+             success: function (data) {
+                 const valida = data.some(r => r.revision_id == revisionId);
+                 callback(valida);
+             },
+             error: function () {
+                 callback(false);
+             }
+         });
+     }
+
+     // ============================================================
+     // 3. VALIDAR SI YA EXISTE UNA RESEÑA PARA ESTA REVISION
+     // ============================================================
+     function validarResenaDuplicada(revisionId, callback) {
+
+         $.ajax({
+             url: API_RESENA,
+             method: "GET",
+             success: function (data) {
+                 const duplicada = data.some(r => r.revision_id == revisionId);
+                 callback(!duplicada);
+             },
+             error: function () {
+                 callback(false);
+             }
+         });
+     }
+
+     // ============================================================
+     // 4. ENVIAR RESEÑA
+     // ============================================================
+     function addClientReview() {
+
+         const revisionId = $("#client-review-service").val();
+         const calificacion = parseFloat($("#client-review-rating").val());
+         const comentario = $("#client-review-comment").val();
+
+         if (!revisionId || !comentario.trim()) {
+             alert("Por favor selecciona un servicio y escribe un comentario.");
+             return;
+         }
+
+         validarRevisionCompletada(revisionId, function (revisionValida) {
+
+             if (!revisionValida) {
+                 alert("No puede reseñar esta revisión. No está completada o no le pertenece.");
+                 return;
+             }
+
+             validarResenaDuplicada(revisionId, function (sinDuplicado) {
+
+                 if (!sinDuplicado) {
+                     alert("Esta revisión ya tiene una reseña.");
+                     return;
+                 }
+
+                 const nuevaResena = {
+                     cliente_id: parseInt(userId),
+                     revision_id: parseInt(revisionId),
+                     comentario: comentario,
+                     calificacion: calificacion
+                 };
+
+                 $.ajax({
+                     url: API_RESENA,
+                     method: "POST",
+                     contentType: "application/json",
+                     data: JSON.stringify(nuevaResena),
+                     success: function () {
+                         alert("¡Gracias por tu reseña!");
+                         $("#client-review-service").val("");
+                         $("#client-review-rating").val("5");
+                         $("#client-review-comment").val("");
+                         cargarResenasPublicas();
+                     },
+                     error: function (xhr) {
+                         alert(xhr.responseText || "Error al enviar reseña");
+                     }
+                 });
+
+             });
+         });
+     }
+
+     // ============================================================
+     // 5. CARGAR RESEÑAS PÚBLICAS ENRIQUECIDAS
+     // ============================================================
+     function cargarResenasPublicas() {
+
+         $.ajax({
+             url: API_RESENA_PUBLICAS,
+             method: "GET",
+             success: function (data) {
+
+                 const reviewsList = $('#client-reviews-list');
+                 reviewsList.empty();
+
+                 if (data.length === 0) {
+                     reviewsList.html(`
+                         <p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">
+                             Aún no hay reseñas. ¡Sé el primero en dejar una!
+                         </p>
+                     `);
+                     return;
+                 }
+
+                 data.forEach(review => {
+
+                     reviewsList.append(`
+                         <div class="card">
+                             <strong>${review.usuario}</strong>
+                             <p>${'★'.repeat(Math.round(review.calificacion))}${'☆'.repeat(5 - Math.round(review.calificacion))}</p>
+                             <p style="margin-top:.5rem">${review.comentario}</p>
+                             <p style="color:var(--primary);font-weight:bold">${review.servicio}</p>
+                         </div>
+                     `);
+                 });
+             }
+         });
+     }
+
+</script>
+
+
+
+
+
+
