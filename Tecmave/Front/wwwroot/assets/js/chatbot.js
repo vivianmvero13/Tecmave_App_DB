@@ -332,7 +332,7 @@ Si deseas, puedes enviarnos tu ubicación y te guiamos o coordinamos una grúa.`
 `📞 **CONTACT**
 
 You can contact us at:
-• Phone / WhatsApp: +506 2222-3333
+• Phone / WhatsApp: +506 2285-9379
 
 We’ll be happy to help you with your vehicle.`,
                         quickReplies: ['📞 Call now', '📲 Write on WhatsApp', '📅 Schedule appointment']
@@ -343,7 +343,7 @@ We’ll be happy to help you with your vehicle.`,
 `📞 **CONTACTO**
 
 Puedes comunicarte con nosotros al:
-• Teléfono / WhatsApp: +506 2222-3333
+• Teléfono / WhatsApp: +506 2285-9379
 
 Con gusto te ayudamos con tu vehículo.`,
                     quickReplies: ['📞 Llamar ahora', '📲 Escribir por WhatsApp', '📅 Agendar cita']
