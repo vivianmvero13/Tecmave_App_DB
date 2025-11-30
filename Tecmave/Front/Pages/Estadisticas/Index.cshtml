@@ -1,0 +1,163 @@
+@page
+@model Front.Pages.Estadisticas.IndexModel
+@{
+}
+
+<div class="stats-page">
+
+        <!-- Filtros superiores -->
+    <div class="stats-filters">
+        <div class="stats-filter-button stats-filter-button-right">
+            <button id="statsBtnActualizar" class="btn btn-primary">
+                ACTUALIZAR
+            </button>
+        </div>
+    </div>
+
+    <!-- KPIs principales -->
+
+    <div class="admin-dashboard stats-kpis">
+        <div class="admin-cards">
+            <div class="admin-card stats-kpi-card">
+                <div class="stats-kpi-header">
+                    <div class="stats-kpi-icon">
+                        <i class="fa-solid fa-sack-dollar"></i>
+                    </div>
+                    <span class="stats-kpi-label">Ingresos Totales</span>
+                </div>
+                <h2 id="statsTotalIngresos">₡0</h2>
+                <span id="statsIngresosVariacion" class="stats-kpi-sub"></span>
+            </div>
+
+            <div class="admin-card stats-kpi-card">
+                <div class="stats-kpi-header">
+                    <div class="stats-kpi-icon">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    <span class="stats-kpi-label">Citas Completadas</span>
+                </div>
+                <h2 id="statsCitasCompletadas">0</h2>
+                <span id="statsCitasVariacion" class="stats-kpi-sub"></span>
+            </div>
+
+            <div class="admin-card stats-kpi-card">
+                <div class="stats-kpi-header">
+                    <div class="stats-kpi-icon">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <span class="stats-kpi-label">Nuevos Clientes</span>
+                </div>
+                <h2 id="statsNuevosClientes">0</h2>
+                <span id="statsClientesVariacion" class="stats-kpi-sub"></span>
+            </div>
+
+            <div class="admin-card stats-kpi-card">
+                <div class="stats-kpi-header">
+                    <div class="stats-kpi-icon">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <span class="stats-kpi-label">Tiempo Promedio</span>
+                </div>
+                <h2 id="statsTiempoPromedio">-</h2>
+                <span class="stats-kpi-sub">Entre ingreso y entrega</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Primera fila de gráficos -->
+    <div class="admin-dashboard-row">
+        <div class="admin-dashboard-half">
+            <div class="admin-dashboard-chart">
+                <div class="chart-header">
+                    <h3>Flujo de servicios</h3>
+                    <div class="chart-actions">
+                        <button class="chart-action-btn chart-btn-download" data-chart="flujo"><i class="fa-solid fa-download"></i></button>
+                        <button class="chart-action-btn chart-btn-expand" data-chart="flujo"><i class="fa-solid fa-expand"></i></button>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <canvas id="statsFlujoServiciosChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="admin-dashboard-half">
+            <div class="admin-dashboard-chart">
+                <div class="chart-header">
+                    <h3>Retención de clientes</h3>
+                    <div class="chart-actions">
+                        <button class="chart-action-btn chart-btn-download" data-chart="retencion"><i class="fa-solid fa-download"></i></button>
+                        <button class="chart-action-btn chart-btn-expand" data-chart="retencion"><i class="fa-solid fa-expand"></i></button>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <canvas id="statsRetencionClientesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Segunda fila de gráficos -->
+    <div class="admin-dashboard-row">
+        <div class="admin-dashboard-half">
+            <div class="admin-dashboard-chart">
+                <div class="chart-header">
+                    <h3>Volumen de transacciones</h3>
+                    <div class="chart-actions">
+                        <button class="chart-action-btn chart-btn-download" data-chart="volumen"><i class="fa-solid fa-download"></i></button>
+                        <button class="chart-action-btn chart-btn-expand" data-chart="volumen"><i class="fa-solid fa-expand"></i></button>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <canvas id="statsVolumenTransaccionesChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="admin-dashboard-half">
+            <div class="admin-dashboard-chart">
+                <div class="chart-header">
+                    <h3>Servicios populares</h3>
+                    <div class="chart-actions">
+                        <button class="chart-action-btn chart-btn-download" data-chart="servicios"><i class="fa-solid fa-download"></i></button>
+                        <button class="chart-action-btn chart-btn-expand" data-chart="servicios"><i class="fa-solid fa-expand"></i></button>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <canvas id="statsServiciosPopularesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+
+    
+    <!-- Datos detallados -->
+    <div class="stats-detailed-card">
+        <h3>Datos Detallados</h3>
+        <table class="activity-table stats-detailed-table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Servicio</th>
+                    <th>Cliente</th>
+                    <th>Vehículo</th>
+                    <th>Ingreso</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="statsDetalleTableBody">
+            </tbody>
+        </table>
+    </div>
+
+<!-- Modal para expandir gráficos -->
+    <div id="chartModal" class="chart-modal">
+        <div class="chart-modal-content">
+            <button id="chartModalClose" class="chart-modal-close"><i class="fa-solid fa-xmark"></i></button>
+            <img id="chartModalImage" class="chart-modal-image" alt="Gráfico ampliado" />
+        </div>
+    </div>
+
+@section Scripts{
+    <script src="~/js/statsDashboard.js"></script>
+}

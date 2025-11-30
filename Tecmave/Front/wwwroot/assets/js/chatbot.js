@@ -1,10 +1,20 @@
 // Chatbot mejorado y unificado
 (function() {
+    const body = document.body || document.getElementsByTagName('body')[0];
+
+    const adminAttr = (body && body.getAttribute('data-is-admin')) || 'false';
+    const clienteAttr = (body && body.getAttribute('data-is-cliente')) || 'false';
+
+    const isAdmin = String(adminAttr).toLowerCase() === 'true';
+    const isCliente = String(clienteAttr).toLowerCase() === 'true';
+
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const lang = localStorage.getItem('language') || 'es';
     if (user.role !== 'cliente') {
         return;
     }
+
+
 
     
     const CHATBOT_API = {

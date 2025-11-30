@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taller Tecmave - Servicios Automotrices de Excelencia</title>
+    <meta name="api-base" content="http://localhost:7096" />
 
     <!-- CSS NUEVO Alpha Style -->
     <link rel="stylesheet" href="~/assets/css/disney-style.css">
@@ -334,7 +335,8 @@
     <script defer src="~/assets/js/footer-config.js"></script>
     <script src="~/assets/js/global-features.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    
+document.addEventListener('DOMContentLoaded', () => {
         const testimonialsContainer = document.getElementById('testimonials-container');
         let reviews = JSON.parse(localStorage.getItem('tecmave.reviews')) || [
             { name: 'María Rodríguez', rating: 5, comment: 'Excelente servicio! Repararon mi vehículo en tiempo récord y con una calidad impresionante. Definitivamente mi taller de confianza.', date: '2020-01-01' },
@@ -346,30 +348,30 @@
             testimonialsContainer.innerHTML = '';
             const latestReviews = reviews.slice(0, 3);
             latestReviews.forEach(review => {
-                const testimonialEl = document.createElement('div');
-                testimonialEl.className = 'testimonial-card';
-                testimonialEl.innerHTML = `
-                    <div class="testimonial-content">
-                        <i class="fas fa-quote-left"></i>
+            const testimonialEl = document.createElement('div');
+            testimonialEl.className = 'testimonial-card';
+            testimonialEl.innerHTML = `
+                <div class="testimonial-content">
+                    <i class="fas fa-quote-left"></i>
                         <p>${review.comment}</p>
+                </div>
+                <div class="testimonial-author">
+                    <div class="author-avatar">
+                        <i class="fas fa-user"></i>
                     </div>
-                    <div class="testimonial-author">
-                        <div class="author-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="author-info">
+                    <div class="author-info">
                             <h4>${review.name}</h4>
                             <span>Cliente desde ${new Date(review.date).getFullYear()}</span>
-                        </div>
                     </div>
-                `;
-                testimonialsContainer.appendChild(testimonialEl);
+                </div>
+            `;
+            testimonialsContainer.appendChild(testimonialEl);
             });
         }
 
         renderTestimonials();
     });
-  </script>
+</script>
 
   <script defer src="~/assets/js/translator.js"></script>
 </body>

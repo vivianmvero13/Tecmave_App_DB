@@ -903,3 +903,117 @@ footer,.footer{position:static!important;background:linear-gradient(180deg, rgba
     flex-direction:column;
     justify-content:space-between;
 }
+
+
+/* --- Tecmave: tarjetas de panel y estadísticas mejoradas --- */
+.admin-card,
+.stats-kpi-card,
+.admin-dashboard-chart,
+.admin-dashboard-activity,
+.recent-activity-card,
+.top-clientes-card {
+  background: var(--card-bg, #ffffff);
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  transition: transform .22s ease, box-shadow .22s ease, background-color .3s ease, border-color .3s ease;
+}
+
+.admin-card:hover,
+.stats-kpi-card:hover,
+.admin-dashboard-chart:hover,
+.admin-dashboard-activity:hover,
+.recent-activity-card:hover,
+.top-clientes-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
+}
+
+/* Estado de hover fuerte usado por JS (card-hover) */
+.card-hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.28);
+}
+
+/* KPI de estadísticas */
+.stats-kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stats-kpi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stats-kpi-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.stats-kpi-icon i {
+  font-size: 0.95rem;
+}
+
+.stats-kpi-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.stats-kpi-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.stats-kpi-card h2 {
+  margin: 2px 0 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+
+/* Tarjetas de gráficos dentro de la página de estadísticas */
+.admin-dashboard-chart .chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.admin-dashboard-chart .chart-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.admin-dashboard-chart .chart-body {
+  position: relative;
+  min-height: 260px;
+}
+
+/* Cursores interactivos sobre los canvas de gráficos */
+.stats-page canvas,
+.admin-dashboard canvas {
+  cursor: crosshair;
+}
+
+/* Ajuste fino del espacio debajo del contenido (reduce espacio blanco antes del footer) */
+.main {
+  padding-bottom: 16px;
+}
+
+.footer-edit-container{
+  margin-top: 8px;
+}
+
+/* Fin de overrides de dashboard/estadísticas */
