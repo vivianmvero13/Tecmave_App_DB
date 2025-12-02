@@ -7,41 +7,146 @@ namespace Tecmave.Api.Services
     public class ResenasService
     {
         private readonly AppDbContext _context;
-        public ResenasService(AppDbContext context) => _context = context;
 
-        public Task<List<ResenasModel>> GetResenasAsync()
-            => _context.resenas
-                .OrderByDescending(r => r.fecha)
-                .ToListAsync();
-
-        public Task<ResenasModel?> GetByIdAsync(int id)
-            => _context.resenas.FirstOrDefaultAsync(p => p.id_resena == id);
-
-        public async Task<ResenasModel> AddAsync(ResenasModel item)
+        public ResenasService(AppDbContext context)
         {
-            _context.resenas.Add(item);
-            await _context.SaveChangesAsync();
-            return item;
+            _context = context;
         }
 
-        public async Task<bool> UpdateComentarioAsync(int id, string comentario)
+        // =====================================================
+        // CRUD BÁSICO
+        // =====================================================
+
+        public List<ResenasModel> GetResenasModel()
         {
-            var entidad = await _context.resenas.FirstOrDefaultAsync(p => p.id_resena == id);
+            return _context.resenas.ToList();
+        }
+
+        public ResenasModel? GetByid_resena(int id)
+        {
+            return _context.resenas.FirstOrDefault(r => r.id_resena == id);
+        }
+
+        public ResenasModel AddResenas(ResenasModel model)
+        {
+            _context.resenas.Add(model);
+            _context.SaveChanges();
+            return model;
+        }
+
+        public bool UpdateResenas(ResenasModel model)
+        {
+            var entidad = _context.resenas.FirstOrDefault(r => r.id_resena == model.id_resena);
             if (entidad == null) return false;
 
-            entidad.comentario = comentario;
-            await _context.SaveChangesAsync();
+            entidad.comentario = model.comentario;
+            entidad.calificacion = model.calificacion;
+
+            _context.SaveChanges();
             return true;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public bool DeleteResenas(int id)
         {
-            var entidad = await _context.resenas.FirstOrDefaultAsync(p => p.id_resena == id);
+            var entidad = _context.resenas.FirstOrDefault(r => r.id_resena == id);
             if (entidad == null) return false;
 
             _context.resenas.Remove(entidad);
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
             return true;
+        }
+
+        // =====================================================
+        // RESEÑAS PÚBLICAS CON JOIN COMPLETO
+        // =====================================================
+
+        public IEnumerable<object> GetResenasPublicas()
+        {
+            var data =
+                from r in _context.resenas
+                join usr in _context.Users
+                    on r.cliente_id equals usr.Id
+                join rev in _context.revision
+                    on r.revision_id equals rev.id_revision
+                join srvRev in _context.servicios_revision
+                    on rev.id_revision equals srvRev.revision_id into srvJoin
+                from srvRev in srvJoin.DefaultIfEmpty()
+                join srv in _context.servicios
+                    on srvRev.servicio_id equals srv.id_servicio into srv2Join
+                from srv in srv2Join.DefaultIfEmpty()
+                select new
+                {
+                    r.id_resena,
+                    r.calificacion,
+                    r.comentario,
+                    usuario = usr.NombreCompleto ?? usr.UserName,
+                    servicio = srv != null ? srv.nombre : "Servicio no registrado"
+                };
+
+            return data.ToList();
+        }
+
+        // =====================================================
+        // VALIDACIONES
+        // =====================================================
+
+        public bool ValidarRevisionExiste(int revisionId)
+        {
+            return _context.revision.Any(r => r.id_revision == revisionId);
+        }
+
+        public bool EsRevisionDelCliente(int revisionId, int clienteId)
+        {
+            var revision = _context.revision
+                .FirstOrDefault(r => r.id_revision == revisionId);
+
+            if (revision == null) return false;
+
+            var veh = _context.Vehiculos
+                .FirstOrDefault(v => v.IdVehiculo == revision.vehiculo_id);
+
+            // VALIDACIÓN REAL (según tu modelo Vehiculo)
+            return veh != null && veh.ClienteId == clienteId;
+        }
+
+        public bool RevisionCompletada(int revisionId)
+        {
+            var revision = _context.revision.FirstOrDefault(r => r.id_revision == revisionId);
+            if (revision == null) return false;
+
+            // Ajustar si cambia, este ID corresponde a "Entregado"
+            const int ESTADO_ENTREGADO = 7;
+
+            return revision.id_estado == ESTADO_ENTREGADO;
+        }
+
+        public bool YaTieneResena(int revisionId)
+        {
+            return _context.resenas.Any(r => r.revision_id == revisionId);
+        }
+
+        // =====================================================
+        // MÉTODO COMPLETO PARA AÑADIR RESEÑA CON VALIDACIONES
+        // =====================================================
+
+        public (bool ok, string? error, ResenasModel? nueva) AgregarConValidacion(ResenasModel model)
+        {
+            if (!ValidarRevisionExiste(model.revision_id))
+                return (false, "La revisión no existe.", null);
+
+            if (!EsRevisionDelCliente(model.revision_id, model.cliente_id))
+                return (false, "No tiene permiso para reseñar esta revisión.", null);
+
+            if (!RevisionCompletada(model.revision_id))
+                return (false, "Solo puede reseñar revisiones completadas.", null);
+
+            if (YaTieneResena(model.revision_id))
+                return (false, "Esta revisión ya tiene una reseña.", null);
+
+            _context.resenas.Add(model);
+            _context.SaveChanges();
+
+            return (true, null, model);
         }
     }
 }

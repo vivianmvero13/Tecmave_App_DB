@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Front.Pages.Vehiculos
 {
+    [Authorize(Roles = "Admin,Colaborador")]
     public class IndexModel : PageModel
     {
         private readonly IConfiguration _cfg;
@@ -15,7 +17,7 @@ namespace Front.Pages.Vehiculos
 
         public void OnGet()
         {
-            ApiBase = _cfg.GetSection("Api")["BaseUrl"] ?? "https://localhost:7096";
+            ApiBase = _cfg.GetSection("Api")["BaseUrl"] ?? "http://localhost:7096";
         }
     }
 }

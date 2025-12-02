@@ -5,7 +5,7 @@ namespace Tecmave.Api.Models
     public class ColaboradoresModel
     {
         [Key]
-        public int id_colaborador { get; set; } // [pk, increment]
+        public int id_colaborador { get; set; }
         public int id_usuario { get; set; }
         public string puesto { get; set; }
         public decimal salario { get; set; }

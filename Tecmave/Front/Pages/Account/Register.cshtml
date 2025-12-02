@@ -1,96 +1,214 @@
 ﻿@page
-@using Front.Pages.Account;
 @model Front.Pages.Account.RegisterModel
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Crear Cuenta";
     Layout = "~/Pages/Shared/_AccountLayout.cshtml";
 }
 
 <div class="login-v2-right">
     <div class="login-v2-form-container">
         <div class="login-v2-form-header">
-            <img src="/img/tecmave_logo_innovacion.jpg" alt="Happy Hive Logo" class="login-v2-form-logo">
+            <img src="/img/tecmave_logo_innovacion.jpg" class="login-v2-form-logo" />
             <h1>Crear Cuenta</h1>
             <p>Regístrate para acceder a todos los servicios</p>
         </div>
-  <form asp-route-returnUrl="@Model.ReturnUrl" method="post" class="login-v2-form">
-            <div class="login-v2-input-group">
-        <label asp-for="Register.Nombre">Nombre</label>
-        <input asp-for="Register.Nombre" type="text" required />
-    </div>
-    <div class="login-v2-input-group">
-        <label asp-for="Register.Apellidos">Apellido</label>
-        <input asp-for="Register.Apellidos" type="text" required />
-    </div>
-    <div class="login-v2-input-group">
-        <label asp-for="Register.Cedula">Cédula</label>
-        <input asp-for="Register.Cedula" type="text" required />
-    </div>
-    <div class="login-v2-input-group">
-        <label asp-for="Register.Direccion">Dirección</label>
-        <input asp-for="Register.Direccion" type="text" required />
-    </div>
-    <div class="login-v2-input-group">
-        <label asp-for="Register.PhoneNumber">Teléfono</label>
-        <input asp-for="Register.PhoneNumber" type="tel" required />
-    </div>
-    <div class="login-v2-input-group">
-        <label asp-for="Register.Email">Correo Electrónico</label>
-        <input asp-for="Register.Email" type="email" required />
-    </div>
-    <div class="login-v2-input-group">
-        <label asp-for="Register.Password">Contraseña</label>
-        <input asp-for="Register.Password" type="password" required minlength="8" id="password" />
-        <small id="passwordHelp" style="color:red;"></small>
-    </div>
-    <div class="login-v2-input-group">
-        <label asp-for="Register.Password2">Confirmar Contraseña</label>
-        <input asp-for="Register.Password2" type="password" required minlength="8" id="password2" />
-        <small id="passwordMatchHelp" style="color:red;"></small>
-    </div>
-    <button type="submit" class="login-v2-button">Crear Cuenta</button>
-    <p>
-        ¿Ya tienes cuenta?
-        <a href="/Account/Login" class="login-v2-create-account"> Inicia sesion</a>
-    </p>
-  </form>
 
+        <form method="post" class="login-v2-form">
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="login-v2-input-group">
+                <label asp-for="Register.Nombre"></label>
+                <input asp-for="Register.Nombre" />
+                <span asp-validation-for="Register.Nombre" class="text-danger"></span>
+            </div>
+
+            <div class="login-v2-input-group">
+                <label asp-for="Register.Apellido"></label>
+                <input asp-for="Register.Apellido" />
+                <span asp-validation-for="Register.Apellido" class="text-danger"></span>
+            </div>
+
+            <div class="login-v2-input-group">
+                <label asp-for="Register.Cedula"></label>
+                <input asp-for="Register.Cedula" id="Register_Cedula" />
+                <span asp-validation-for="Register.Cedula" class="text-danger"></span>
+                <small id="cedulaHelp" style="color:red;"></small>
+            </div>
+
+            <div class="login-v2-input-group">
+                <label asp-for="Register.Direccion"></label>
+                <input asp-for="Register.Direccion" />
+                <span asp-validation-for="Register.Direccion" class="text-danger"></span>
+            </div>
+
+            <div class="login-v2-input-group">
+                <label asp-for="Register.PhoneNumber"></label>
+                <input asp-for="Register.PhoneNumber" id="Register_PhoneNumber" />
+                <span asp-validation-for="Register.PhoneNumber" class="text-danger"></span>
+                <small id="telefonoHelp" style="color:red;"></small>
+            </div>
+
+            <div class="login-v2-input-group">
+                <label asp-for="Register.Email"></label>
+                <input asp-for="Register.Email" />
+                <span asp-validation-for="Register.Email" class="text-danger"></span>
+            </div>
+
+            <div class="login-v2-input-group">
+                <input type="checkbox"
+                       id="notificacionesChk"
+                       asp-for="Register.NotificacionesActivadas"
+                       value="true" />
+                <input name="Register.NotificacionesActivadas" type="hidden" value="false" />
+                <label for="notificacionesChk">Deseo recibir notificaciones y promociones por correo electrónico</label>
+            </div>
+
+            <div class="login-v2-input-group">
+                <label asp-for="Register.Password"></label>
+                <input type="password" asp-for="Register.Password" id="password" />
+                <span asp-validation-for="Register.Password" class="text-danger"></span>
+                <small id="passwordHelp" style="color:red;"></small>
+            </div>
+
+            <div class="login-v2-input-group">
+                <label asp-for="Register.Password2"></label>
+                <input type="password" asp-for="Register.Password2" id="password2" />
+                <span asp-validation-for="Register.Password2" class="text-danger"></span>
+                <small id="passwordMatchHelp" style="color:red;"></small>
+            </div>
+
+            <button type="submit" class="login-v2-button" id="btnSubmit">Crear Cuenta</button>
+
+            <p>
+                ¿Ya tienes cuenta?
+                <a href="/Account/Login" class="login-v2-create-account">Inicia sesión</a>
+            </p>
+        </form>
     </div>
 </div>
 
-<script>
-  
-    const passwordInput = document.getElementById("password");
-    const password2Input = document.getElementById("password2");
-    const passwordHelp = document.getElementById("passwordHelp");
-    const passwordMatchHelp = document.getElementById("passwordMatchHelp");
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 
-    function validatePasswordStrength(password) {
-        const minLength = 8;
-        const hasUppercase = /[A-Z]/.test(password);
-        const hasNumber = /\d/.test(password);
-        const hasSpecial = /[!&#64;#$%^&*(),.?":{}|<>_]/.test(password);
+    <script>
 
-        let message = "";
-        if (password.length < minLength) message += `Debe tener al menos ${minLength} caracteres. `;
-        if (!hasUppercase) message += "Debe tener al menos una mayúscula. ";
-        if (!hasNumber) message += "Debe tener al menos un número. ";
-        if (!hasSpecial) message += "Debe tener al menos un carácter especial. ";
+      
 
-        return message;
-    }
+        const passwordInput = $("#password");
+        const password2Input = $("#password2");
+        const passwordHelp = $("#passwordHelp");
+        const passwordMatchHelp = $("#passwordMatchHelp");
 
-    passwordInput.addEventListener("input", () => {
-        const message = validatePasswordStrength(passwordInput.value);
-        passwordHelp.textContent = message;
-    });
+        function validatePasswordStrength(password) {
+            const minLength = 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasNumber = /\d/.test(password);
+            const hasSpecial = /[!#$%^&*(),.?":{}|<>_]/.test(password);
 
-    password2Input.addEventListener("input", () => {
-        if (passwordInput.value !== password2Input.value) {
-            passwordMatchHelp.textContent = "Las contraseñas no coinciden.";
-        } else {
-            passwordMatchHelp.textContent = "";
+            let message = "";
+            if (password.length < minLength) message += `Debe tener al menos ${minLength} caracteres. `;
+            if (!hasUppercase) message += "Debe tener al menos una mayúscula. ";
+            if (!hasNumber) message += "Debe tener un número. ";
+            if (!hasSpecial) message += "Debe tener un carácter especial. ";
+
+            return message;
         }
-    });
 
-</script>
+        passwordInput.on("input", () => {
+            passwordHelp.text(validatePasswordStrength(passwordInput.val()));
+            validarSubmit();
+        });
+
+        password2Input.on("input", () => {
+            if (passwordInput.val() !== password2Input.val()) {
+                passwordMatchHelp.text("Las contraseñas no coinciden.");
+            } else {
+                passwordMatchHelp.text("");
+            }
+            validarSubmit();
+        });
+
+
+       
+        const telefonoInput = $("#Register_PhoneNumber");
+        const telefonoHelp = $("#telefonoHelp");
+        const phoneRegex = /^[246789]\d{7}$/;
+
+        telefonoInput.on("input", function () {
+            const tel = telefonoInput.val().trim();
+
+            if (!phoneRegex.test(tel)) {
+                telefonoHelp.text("Debe ser un número de 8 dígitos válido de Costa Rica.");
+                telefonoInput.data("valid", false);
+            } else {
+                telefonoHelp.text("");
+                telefonoInput.data("valid", true);
+            }
+            validarSubmit();
+        });
+
+        
+
+        const cedulaInput = $("#Register_Cedula");
+        const cedulaHelp = $("#cedulaHelp");
+        const cedulaRegex = /^[1-9]\d{8}$/;
+
+        cedulaInput.on("input", function () {
+            const cedula = cedulaInput.val().trim();
+
+            
+            if (!cedulaRegex.test(cedula)) {
+                cedulaHelp.text("Formato inválido. Ejemplo válido: 703000893");
+                cedulaInput.data("valid", false);
+                validarSubmit();
+                return;
+            }
+
+            cedulaHelp.text("");
+            cedulaInput.data("valid", true);
+            validarSubmit();
+
+            /*
+            
+
+            cedulaHelp.text("Verificando cédula…");
+
+            $.ajax({
+                url: `http://localhost:7504/cedula=${cedula}`,
+                method: "GET",
+                success: function (data) {
+                    if (data && data.nombre) {
+                        cedulaHelp.text("");
+                        cedulaInput.data("valid", true);
+                    } else {
+                        cedulaHelp.text("La cédula no existe en el registro civil.");
+                        cedulaInput.data("valid", false);
+                    }
+                    validarSubmit();
+                },
+                error: function () {
+                    cedulaHelp.text("No se pudo verificar la cédula (API no responde).");
+                    cedulaInput.data("valid", false);
+                    validarSubmit();
+                }
+            });
+            */
+
+        });
+
+        
+
+        const btnSubmit = $("#btnSubmit");
+
+        function validarSubmit() {
+            const cedulaOk = cedulaInput.data("valid") === true;
+            const telOk = telefonoInput.data("valid") === true;
+            const passOk = passwordHelp.text().length === 0;
+            const pass2Ok = passwordMatchHelp.text().length === 0;
+
+            btnSubmit.prop("disabled", !(cedulaOk && telOk && passOk && pass2Ok));
+        }
+
+    </script>
+}

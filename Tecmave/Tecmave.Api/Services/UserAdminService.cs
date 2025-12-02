@@ -54,15 +54,17 @@ namespace Tecmave.Api.Services
             string userName,
             string email,
             string password,
-            string? phone = null)
+            string? phone = null,
+            string? cedula = null)
         {
             var user = new Usuario
             {
                 Nombre = nombre,
-                Apellidos = apellidos,
+                Apellido = apellidos,
                 UserName = userName,
                 Email = email,
-                PhoneNumber = phone
+                PhoneNumber = phone,
+
             };
 
             var res = await _userManager.CreateAsync(user, password);
@@ -205,9 +207,9 @@ namespace Tecmave.Api.Services
                 user.Nombre = nombre;
                 changedNames = true;
             }
-            if (apellidos != null && apellidos != user.Apellidos)
+            if (apellidos != null && apellidos != user.Apellido)
             {
-                user.Apellidos = apellidos;
+                user.Apellido = apellidos;
                 changedNames = true;
             }
 
@@ -275,10 +277,10 @@ namespace Tecmave.Api.Services
 
             if (!string.IsNullOrWhiteSpace(user.Nombre))
                 await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.GivenName, user.Nombre));
-            if (!string.IsNullOrWhiteSpace(user.Apellidos))
-                await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Surname, user.Apellidos));
+            if (!string.IsNullOrWhiteSpace(user.Apellido))
+                await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Surname, user.Apellido));
 
-            var nombreCompleto = $"{user.Nombre} {user.Apellidos}".Trim();
+            var nombreCompleto = $"{user.Nombre} {user.Apellido}".Trim();
             await _userManager.AddClaimAsync(user, new Claim("full_name", nombreCompleto));
         }
     }

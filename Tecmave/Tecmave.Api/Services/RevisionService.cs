@@ -27,7 +27,7 @@ namespace Tecmave.Api.Services
 
         public RevisionModel GetById(int id)
         {
-            return _context.revision.FirstOrDefault(p => p.id_servicio == id);
+            return _context.revision.FirstOrDefault(p => p.id_revision == id);
         }
 
         public RevisionModel AddRevision(RevisionModel RevisionModel)
@@ -40,7 +40,7 @@ namespace Tecmave.Api.Services
 
         public bool UpdateRevision(RevisionModel RevisionModel)
         {
-            var entidad = _context.revision.FirstOrDefault(p => p.id_servicio == RevisionModel.id_servicio);
+            var entidad = _context.revision.FirstOrDefault(p => p.id_revision == RevisionModel.id_revision);
 
             if (entidad == null)
             {
@@ -56,7 +56,7 @@ namespace Tecmave.Api.Services
 
         public bool DeleteRevision(int id)
         {
-            var entidad = _context.revision.FirstOrDefault(p => p.id_servicio == id);
+            var entidad = _context.revision.FirstOrDefault(p => p.id_revision == id);
 
             if (entidad == null)
             {
@@ -70,5 +70,11 @@ namespace Tecmave.Api.Services
         }
 
 
-    }
+
+
+        }
+
+
+
+    
 }

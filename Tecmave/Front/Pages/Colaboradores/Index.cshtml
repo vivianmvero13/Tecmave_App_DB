@@ -1,0 +1,229 @@
+﻿@page
+@model Front.Pages.Colaboradores.IndexModel
+@{
+    ViewData["Title"] = "Gestión de Colaboradores";
+}
+
+<section class="section">
+    <div class="container grid cols-2">
+
+        <!-- Formulario de nuevo colaborador -->
+        <div class="card">
+            <h3>Nuevo Colaborador</h3>
+
+            <div class="form-row">
+                <div>
+                    <label>Usuario</label>
+                    <select class="input" id="id_usuario"></select>
+                </div>
+                <div>
+                    <label>Puesto</label>
+                    <input class="input" id="puesto" type="text" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label>Salario</label>
+                    <input class="input" id="salario" type="number" step="0.01" />
+                </div>
+                <div>
+                    <label>Fecha Contratación</label>
+                    <input class="input" id="fecha_contratacion" type="date" />
+                </div>
+            </div>
+
+            <button id="btnAgregarColaborador">Agregar</button>
+        </div>
+
+        <!-- Tabla de colaboradores -->
+        <div class="card">
+            <h3>Lista de Colaboradores</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Colaborador</th>
+                        <th>Puesto</th>
+                        <th>Salario</th>
+                        <th>Fecha Contratación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+        </div>
+
+        <div class="card">
+            <h3>Filtros</h3>
+            <div class="form-row">
+                <div>
+                    <label>Nombre</label>
+                    <input class="input" id="filtro_nombre" type="text" />
+                </div>
+                <div>
+                    <label>Estado</label>
+                    <select class="input" id="filtro_estado">
+                        <option value="">Todos</option>
+                        <option value="1">Activo</option>
+                        <option value="0">Inactivo</option>
+                    </select>
+                </div>
+            </div>
+            <button id="btnFilter">Filtrar</button>
+        </div>
+
+    </div>
+</section>
+
+<script>
+const API_COLABORADOR = "http://localhost:7096/Colaboradores";
+const API_USUARIOS    = "http://localhost:7096/api/usuarios";
+
+
+let cacheUsuarios = {};
+
+function cargarUsuarios() {
+    return $.get(API_USUARIOS, function (usuarios) {
+
+        cacheUsuarios = {};
+        usuarios.forEach(u => cacheUsuarios[u.id] = u);
+
+        $("#id_usuario").empty();
+        $("#id_usuario").append(`<option value="">Seleccione un usuario</option>`);
+
+        usuarios.forEach(u => {
+            $("#id_usuario").append(`
+                <option value="${u.id}">${u.nombre} ${u.apellidos}</option>
+            `);
+        });
+
+    }).fail((xhr) => {
+        console.error("Error usuarios:", xhr.responseText);
+    });
+}
+
+    function cargarColaboradores() {
+        $.get(API_COLABORADOR, function (data) {
+
+            $("table tbody").empty();
+
+            data.forEach(c => {
+                const u = cacheUsuarios[c.id_usuario];
+
+                $("table tbody").append(`
+                    <tr>
+                        <td>${u ? `${u.nombre} ${u.apellidos}` : "Desconocido"}</td>
+                        <td>${c.puesto}</td>
+                        <td>${c.salario}</td>
+                        <td>${c.fecha_contratacion}</td>
+                        <td>
+                            <button class="danger" onclick="eliminarColaborador(${c.id_colaborador})">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                `);
+            });
+
+        }).fail((xhr) => {
+            console.error("Error colaboradores:", xhr.responseText);
+        });
+    }
+
+        function eliminarColaborador(id) {
+        if (!confirm("¿Seguro que deseas eliminar este colaborador?")) return;
+
+        $.ajax({
+            url: `${API_COLABORADOR}?id=${id}`,   // ← Importante: querystring
+            method: "DELETE",
+            success: () => {
+                alert("Colaborador eliminado");
+                cargarColaboradores();
+            },
+            error: (xhr) => {
+                console.error("Error eliminando colaborador:", xhr.responseText);
+                alert("No se pudo eliminar el colaborador.");
+            }
+        });
+    }
+
+
+
+function agregarColaborador() {
+
+    const nuevo = {
+        id_usuario: parseInt($("#id_usuario").val()),
+        puesto: $("#puesto").val(),
+        salario: parseFloat($("#salario").val()),
+        fecha_contratacion: $("#fecha_contratacion").val()
+    };
+
+    console.log("Enviando:", nuevo);
+
+    $.ajax({
+        url: API_COLABORADOR,
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(nuevo),
+        success: () => {
+            alert("Colaborador agregado");
+            cargarColaboradores();
+        },
+        error: (xhr) => {
+            console.error("Error guardando:", xhr.responseText);
+        }
+    });
+}
+
+$(document).ready(function () {
+    cargarUsuarios().then(() => cargarColaboradores());
+    $("#btnAgregarColaborador").on("click", agregarColaborador);
+});
+
+function cargarColaboradores(nombre = "", estado = ""){
+    let url = `${API_COLABORADOR}/buscar?nombre=${nombre}&estado=${estado}`;
+
+    $.get(url, function (data) {
+        $("table tbody").empty();
+        data.forEach(c => {
+            $("table tbody").append(`
+                <tr>
+                    <td>${c.Nombre}</td>
+                    <td>${c.puesto}</td>
+                    <td>${c.salario}</td>
+                    <td>${c.fecha_contratacion}</td>
+                    <td>${c.Estado === 1 ? "Activo" : "Inactivo"}</td>
+                    <td>
+                        <button class="danger" onclick="eliminarColaborador(${c.id_colaborador})">Eliminar</button>
+                    </td>
+                </tr>
+            `);
+        });
+    });
+}
+
+function eliminarColaborador(id) {
+    if(!confirm("¿Está seguro de querer eliminar a este colaborador?")) return;
+
+    $.ajax({
+        url: `${API_COLABORADOR}?id=${id}`,
+        method: "DELETE",
+        success: () => {
+            alert("El colaborador fue eliminado correctamente");
+            cargarColaboradores();
+        }
+    });
+}
+
+$(document).ready(function () {
+    cargarUsuarios().then(() => cargarColaboradores());
+
+    $("#btnFiltrar").on("click", () => {
+        const nombre = $("#filtro_nombre").val();
+        const estado = $("#filtro_estado").val();
+        cargarColaboradores(nombre, estado);
+    });
+});
+
+</script>

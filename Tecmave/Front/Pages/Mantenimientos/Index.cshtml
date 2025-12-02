@@ -1,0 +1,252 @@
+﻿@page
+@model Front.Pages.Mantenimientos.IndexModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Mantenimientos";
+}
+
+<h1 class="mb-3">Mantenimientos</h1>
+
+<div class="row g-3 align-items-end mt-3">
+    <div class="col col-md-8">
+        <label for="localSearch" class="form-label">Buscar</label>
+        <div class="input-group">
+            <input id="localSearch" class="form-control" placeholder="Buscar por placa, cliente o fecha…" />
+            <button id="clearSearch" class="btn btn-outline-secondary" type="button">Limpiar</button>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive mt-4">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Vehículo</th>
+                <th>Cliente</th>
+                <th>Fecha Mantenimiento</th>
+                <th>Próximo</th>
+                <th>Estado</th>
+                <th>Recordatorio</th>
+                <th style="width: 260px;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="mantenimientosTabla">
+            <tr><td colspan="7">Cargando mantenimientos...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .btn-orange {
+        background: #9FAA13 !important;
+        border: 1px solid #9FAA13 !important;
+        color: #fff !important;
+    }
+
+        .btn-orange:hover {
+            background: #8f9a11 !important;
+        }
+</style>
+
+<script>
+    const API_BASE = 'http://localhost:7096';
+    const MANTENIMIENTOS_URL = `${API_BASE}/Mantenimientos`;
+    const ESTADOS_URL = `${API_BASE}/Estados/mantenimientos`; // ajusta si tu endpoint se llama distinto
+
+    const $tableBody = document.getElementById('mantenimientosTabla');
+    const $search = document.getElementById('localSearch');
+    const $clear = document.getElementById('clearSearch');
+
+    let allRows = [];
+    let filteredRows = [];
+    let estados = []; // catálogo de estados para el dropdown
+
+    function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;', '=': '&#61;', '/': '&#47;'
+        }[c]));
+    }
+
+    function estadosOptionsHtml(selectedId) {
+        if (!estados.length) {
+            return '<option value="">Sin estados</option>';
+        }
+
+        return estados.map(e => `
+            <option value="${e.id_estado}" ${String(e.id_estado) === String(selectedId) ? 'selected' : ''}>
+                ${escapeHtml(e.nombre)}
+            </option>
+        `).join('');
+    }
+
+    function renderRows(rows) {
+        if (!rows.length) {
+            $tableBody.innerHTML = `<tr><td colspan="7">Sin resultados</td></tr>`;
+            return;
+        }
+
+        const html = rows.map(r => `
+            <tr>
+                <td>${escapeHtml(r.vehiculo)}</td>
+                <td>${escapeHtml(r.clienteNombre)}<br><small>${escapeHtml(r.clienteEmail)}</small></td>
+                <td>${escapeHtml(r.fechaMantenimiento)}</td>
+                <td>${escapeHtml(r.proximoMantenimiento)}</td>
+                <td>
+                    <select class="form-select form-select-sm estado-select" data-id="${r.id}">
+                        ${estadosOptionsHtml(r.estadoId)}
+                    </select>
+                </td>
+                <td>${r.recordatorio ? 'Sí' : 'No'}</td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-outline-primary btn-sm" href="/Mantenimientos/Detalle?id=${encodeURIComponent(r.id)}">Ver</a>
+                        <button class="btn btn-orange btn-sm" onclick="enviarRecordatorio(${r.id})">
+                            <i class="fa-solid fa-envelope"></i> Recordatorio
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="guardarEstado(${r.id})">
+                            Guardar estado
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        $tableBody.innerHTML = html;
+    }
+
+    function applyFilter() {
+        const q = $search.value.trim().toLowerCase();
+        if (!q) {
+            filteredRows = [...allRows];
+            return renderRows(filteredRows);
+        }
+
+        filteredRows = allRows.filter(r =>
+            r.vehiculo.toLowerCase().includes(q) ||
+            r.clienteNombre.toLowerCase().includes(q) ||
+            r.fechaMantenimiento.toLowerCase().includes(q)
+        );
+
+        renderRows(filteredRows);
+    }
+
+    async function loadEstados() {
+        try {
+            const res = await fetch(ESTADOS_URL);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            estados = await res.json();
+
+            // estados esperados: [{ id_estado: 4, nombre: "Ingresado" }, ...]
+        } catch (err) {
+            console.error('Error cargando estados', err);
+            estados = [];
+        }
+    }
+
+    async function loadMantenimientos() {
+        try {
+            const res = await fetch(MANTENIMIENTOS_URL);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+
+            allRows = (Array.isArray(data) ? data : data?.data ?? []).map(m => ({
+                id: m.id_mantenimiento ?? m.idMantenimiento ?? m.id ?? 0,
+                vehiculo: m.vehiculo?.placa ?? `#${m.id_vehiculo ?? m.idVehiculo}`,
+                clienteNombre: m.vehiculo?.cliente?.nombre ?? '—',
+                clienteEmail: m.vehiculo?.cliente?.email ?? '—',
+                fechaMantenimiento: m.fecha_mantenimiento ?? m.fechaMantenimiento ?? '—',
+                proximoMantenimiento: m.proximo_mantenimiento ?? m.proximoMantenimiento ?? '—',
+                recordatorio: m.recordatorio_enviado ?? m.recordatorioEnviado ?? false,
+                estadoId: m.idEstado ?? m.id_estado ?? 0
+            }));
+
+            filteredRows = [...allRows];
+            renderRows(filteredRows);
+
+        } catch (err) {
+            console.error(err);
+            $tableBody.innerHTML = `<tr><td colspan="7">Error cargando datos.</td></tr>`;
+        }
+    }
+
+    async function enviarRecordatorio(id) {
+        if (!confirm(`¿Enviar recordatorio para el mantenimiento #${id}?`)) return;
+
+        try {
+            const res = await fetch(`${MANTENIMIENTOS_URL}/${id}/enviar-recordatorio`, {
+                method: 'POST',
+                headers: { 'Accept': '*/*' }
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (res.ok) {
+                alert(data.mensaje || "Recordatorio enviado correctamente.");
+            } else {
+                alert(data.mensaje || "Ocurrió un error enviando el recordatorio.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error de conexión al enviar el recordatorio.");
+        }
+    }
+
+    async function guardarEstado(id) {
+        const select = document.querySelector(`select.estado-select[data-id="${id}"]`);
+        if (!select) {
+            alert("No se encontró el selector de estado.");
+            return;
+        }
+
+        const nuevoEstado = parseInt(select.value, 10);
+        if (!nuevoEstado) {
+            alert("Debe seleccionar un estado válido.");
+            return;
+        }
+
+        if (!confirm(`¿Actualizar el estado del mantenimiento #${id}?`)) return;
+
+        try {
+            const res = await fetch(`${MANTENIMIENTOS_URL}/${id}/estado`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ idEstado: nuevoEstado })
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (res.ok) {
+                alert(data.mensaje || "Estado actualizado correctamente.");
+
+                // actualizar en memoria
+                const row = allRows.find(r => r.id === id);
+                if (row) {
+                    row.estadoId = nuevoEstado;
+                }
+                applyFilter();
+            } else {
+                // historia de usuario: mensaje de error
+                alert(data.mensaje || "Error al actualizar estado del servicio");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error al actualizar estado del servicio");
+        }
+    }
+
+    // Exponer funciones para los onclick del HTML
+    window.enviarRecordatorio = enviarRecordatorio;
+    window.guardarEstado = guardarEstado;
+
+    $search.addEventListener('input', applyFilter);
+    $clear.addEventListener('click', () => { $search.value = ''; applyFilter(); });
+
+    // Inicialización: primero estados, luego mantenimientos
+    (async function init() {
+        await loadEstados();
+        await loadMantenimientos();
+    })();
+</script>

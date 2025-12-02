@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Tecmave.Api.Models;
+using Tecmave.Api.Models.Dto;
 using Tecmave.Api.Services;
 
 namespace Tecmave.Api.Controllers
@@ -9,10 +10,58 @@ namespace Tecmave.Api.Controllers
     public class ColaboradoresController : Controller
     {
         private readonly ColaboradoresService _ColaboradoresService;
-
-        public ColaboradoresController(ColaboradoresService ColaboradoresService)
+        private readonly UserAdminService _userService;
+        public ColaboradoresController(ColaboradoresService ColaboradoresService, UserAdminService userService)
         {
             _ColaboradoresService = ColaboradoresService;
+            _userService = userService;
+        }
+
+        [HttpGet("buscar")]
+        public ActionResult<IEnumerable<object>> BuscarColaboradores([FromQuery] string? nombre, [FromQuery] int? estado)
+        {
+            var colaboradores = _ColaboradoresService.GetColaboradoresModel();
+
+            if(!string.IsNullOrEmpty(nombre))
+            {
+                colaboradores = colaboradores
+                    .Where(c =>
+                    {
+                        var usuario = _userService.GetByIdAsync(c.id_usuario).Result;
+                        return usuario != null && !string.IsNullOrEmpty(usuario.Nombre) &&
+                       usuario.Nombre.Contains(nombre, StringComparison.OrdinalIgnoreCase);
+                    })
+                    .ToList();
+            }
+
+            if (estado.HasValue)
+            {
+                colaboradores = colaboradores
+                    .Where(c =>
+                    {
+                        var usuario = _userService.GetByIdAsync(c.id_usuario).Result;
+                        return usuario != null && usuario.Estado == estado.Value;
+                    })
+                    .ToList();
+            }
+
+            var resultado = colaboradores.Select(c =>
+            {
+                var u = _userService.GetByIdAsync(c.id_usuario).Result;
+                return new
+                {
+                    c.id_colaborador,
+                    Nombre = u != null ? $"{u.Nombre} {u.Apellido}" : "Desconocido",
+                    c.puesto,
+                    c.salario,
+                    c.fecha_contratacion,
+                    Estado = u?.Estado,
+                    Rol = u != null ? string.Join(", ", _userService.GetRolesAsync(u.Id).Result) : "Sin rol"
+
+                };
+            });
+
+            return Ok(resultado);
         }
 
         //Apis GET, POST, PUT   y DELETE
@@ -30,34 +79,30 @@ namespace Tecmave.Api.Controllers
 
         //Apis POST
         [HttpPost]
-        public ActionResult<ColaboradoresModel> AddColaboradores(ColaboradoresModel ColaboradoresModel)
+        public async Task<ActionResult<ColaboradoresModel>> AddColaboradores([FromBody] Colaborador dto)
         {
 
-            var newColaboradoresModel = _ColaboradoresService.AddColaboradores(ColaboradoresModel);
+            var newColaboradoresModel = await _ColaboradoresService.AddColaboradoresAsync(dto);
 
             return
                 CreatedAtAction(
-                        nameof(GetColaboradoresModel), new
-                        {
-                            id = newColaboradoresModel.id_colaborador,
-                        },
-                        newColaboradoresModel);
-
+                    nameof(GetById),
+                    new { id = newColaboradoresModel.id_colaborador},
+                    newColaboradoresModel
+                );
+            
         }
 
         //APIS PUT
         [HttpPut]
-        public IActionResult UpdateColaboradores(ColaboradoresModel ColaboradoresModel)
+        public async Task<IActionResult> UpdateColaboradores([FromBody] ColaboradoresModel ColaboradoresModel, [FromQuery] string rol)
         {
 
-            if (!_ColaboradoresService.UpdateColaboradores(ColaboradoresModel))
+            bool actualizado = await _ColaboradoresService.UpdateColaboradoresAsync(ColaboradoresModel, rol);
+
+            if (!actualizado)
             {
-                return NotFound(
-                        new
-                        {
-                            elmsneaje = "La  colaborador no fue encontrado"
-                        }
-                    );
+                return NotFound(new { mensaje = "El colaborador no se encontró en el sistema" });
             }
 
             return NoContent();
@@ -65,18 +110,15 @@ namespace Tecmave.Api.Controllers
         }
 
         //APIS DELETE
-        [HttpDelete]
-        public IActionResult DeleteColaboradoresModel(int id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteColaboradoresModel(int id)
         {
 
-            if (!_ColaboradoresService.DeleteColaboradores(id))
+            bool eliminado = await _ColaboradoresService.DeleteColaboradoresAsync(id);
+
+            if (!eliminado)
             {
-                return NotFound(
-                        new
-                        {
-                            elmsneaje = "La  colaborador no fue encontrado"
-                        }
-                    );
+                return NotFound(new { mensaje = "El colaborador no fue encontrado en el sistema " });
             }
 
             return NoContent();

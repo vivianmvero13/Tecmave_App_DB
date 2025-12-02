@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 using Tecmave.Api.Services;
 
@@ -9,10 +12,16 @@ namespace Tecmave.Api.Controllers
     public class AgendamientoController : Controller
     {
         private readonly AgendamientoService _agendamientoService;
-
-        public AgendamientoController(AgendamientoService agendamientoService)
+        private readonly AppDbContext _context;
+        private readonly IEmailSender _emailSender;
+        private readonly UserManager<Usuario> _userManager;
+        public AgendamientoController(AgendamientoService agendamientoService,
+    IEmailSender emailSender,
+    UserManager<Usuario> userManager)
         {
             _agendamientoService = agendamientoService;
+            _emailSender = emailSender;
+            _userManager = userManager;
         }
 
         //Apis GET, POST, PUT   y DELETE
@@ -30,19 +39,38 @@ namespace Tecmave.Api.Controllers
 
         //Apis POST
         [HttpPost]
-        public ActionResult<AgendamientoModel> AddAgendamiento(AgendamientoModel agendamientoModel)
+        public async Task<ActionResult<AgendamientoModel>> AddAgendamiento(AgendamientoModel agendamientoModel)
         {
+            var newAg = _agendamientoService.AddAgendamiento(agendamientoModel);
 
-            var newAgendamientoModel = _agendamientoService.AddAgendamiento(agendamientoModel);
+            // ========== OBTENER EMAIL DESDE ASPNETUSERS ==========
+            var user = await _userManager.FindByIdAsync(newAg.cliente_id.ToString());
 
-            return
-                CreatedAtAction(
-                        nameof(GetAgendamientoModel), new
-                        {
-                            id = newAgendamientoModel.id_agendamiento,
-                        },
-                        newAgendamientoModel);
+            if (user != null && !string.IsNullOrWhiteSpace(user.Email))
+            {
+                string subject = "Confirmación de Agendamiento - Tecmave";
 
+                string bodyHtml = $@"
+            <h2 style='color:#0053ff'>Tu revisión ha sido agendada</h2>
+            <p>Hola <strong>{user.UserName}</strong>,</p>
+            <p>Tu cita ha sido registrada con éxito.</p>
+
+            <h3>Detalles del Agendamiento:</h3>
+            <ul>
+                <li><strong>Fecha:</strong> {newAg.fecha_estimada}</li>
+                <li><strong>Hora:</strong> {newAg.hora_llegada}</li>
+            </ul>
+
+            <p>Gracias por confiar en Tecmave.</p>
+            <p><em>Este es un mensaje automático, por favor no responder.</em></p>
+        ";
+
+                await _emailSender.SendAsync(user.Email, subject, bodyHtml);
+            }
+
+            return CreatedAtAction(nameof(GetAgendamientoModel),
+                new { id = newAg.id_agendamiento },
+                newAg);
         }
 
         //APIS PUT
@@ -82,6 +110,8 @@ namespace Tecmave.Api.Controllers
             return NoContent();
 
         }
+
+       
 
     }
 }

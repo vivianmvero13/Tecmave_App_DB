@@ -38,24 +38,134 @@
     </table>
 </div>
 
-<div class="modal fade" id="roleDetailsModal" tabindex="-1" aria-labelledby="roleDetailsLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="roleDetailsLabel">Detalles del rol</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+<script src="~/lib/jquery/jquery.min.js"></script>
+<script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const API = 'http://localhost:7096';
+    const ROLES_URL = `${API}/api/roles`;
+    const USERS_URL = `${API}/api/usuarios`;
+
+    $(function () {
+        cargarRoles();
+        cargarUsuariosConRol();
+    });
+
+    function safe(v) { return v === null || v === undefined ? '' : escapeHtml(String(v)); }
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, m => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[m]));
+    }
+    function escapeAttr(s) {
+        return String(s).replace(/"/g, '&quot;');
+    }
+
+    // ================== ROLES ==================
+    function cargarRoles() {
+        $.getJSON(ROLES_URL, function (roles) {
+            const $tbody = $('#rolTable').empty();
+
+            roles.forEach(r => {
+                const name = r.name ?? r.Name ?? '';
+                const desc = r.description ?? r.Description ?? '';
+                const isActive = (r.is_active ?? r.isActive ?? r.IsActive) === true;
+
+                const tr = `
+                    <tr>
+                      <td>${safe(name)}</td>
+                      <td>${desc ? safe(desc) : '<span class="text-muted">—</span>'}</td>
+                      <td>${isActive
+                        ? '<span class="badge bg-success">Sí</span>'
+                        : '<span class="badge bg-secondary">No</span>'}</td>
+                    </tr>`;
+                $tbody.append(tr);
+            });
+
+            // Guardar roles activos para selects
+            window.__rolesActivos = roles
+                .filter(r => (r.is_active ?? r.isActive ?? r.IsActive) === true)
+                .map(r => ({
+                    name: r.name ?? r.Name ?? ''
+                }));
+        }).fail(err => {
+            console.error('Error cargando roles', err);
+            alert('No se pudieron cargar los roles.');
+        });
+    }
+
+    // ================== USUARIOS + ROLES ==================
+    async function cargarUsuariosConRol() {
+        try {
+            const uRes = await fetch(USERS_URL);
+            const usuarios = await uRes.json();
+
+            const $tbody = $('#usuariosRolesTable').empty();
+
+            for (const u of usuarios) {
+                const userId = u.id ?? u.Id;
+                const userName = u.userName ?? u.UserName ?? u.user_name ?? '(sin username)';
+
+                let currentRole = null;
+                try {
+                    const rRes = await fetch(`${USERS_URL}/${userId}/roles`);
+                    if (rRes.ok) {
+                        const arr = await rRes.json();
+                        if (Array.isArray(arr) && arr.length > 0)
+                            currentRole = arr[0];
+                    }
+                } catch { }
+
+                const selectHtml = buildRolesSelect(userId);
+
+                const tr = `
+                    <tr>
+                      <td>${safe(userName)}</td>
+                      <td>${currentRole ? safe(currentRole) : '<i class="text-muted">Sin rol</i>'}</td>
+                      <td>${selectHtml}</td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="quitarRol(${userId})">Quitar rol</button>
+                      </td>
+                    </tr>`;
+                $tbody.append(tr);
+            }
+        } catch (err) {
+            console.error('Error cargando usuarios/roles', err);
+            alert('No se pudieron cargar los usuarios y sus roles.');
+        }
+    }
+
+    function buildRolesSelect(userId) {
+        const roles = window.__rolesActivos || [];
+        const options = roles
+            .map(r => `<option value="${escapeAttr(r.name)}">${escapeHtml(r.name)}</option>`)
+            .join('');
+
+        return `
+            <div class="input-group">
+                <select class="form-select" id="sel_${userId}">
+                    <option value="" selected disabled>Selecciona rol…</option>
+                    ${options}
+                </select>
+                <button class="btn btn-outline-success" type="button" onclick="asignarRol(${userId})">Asignar</button>
             </div>
-            <div class="modal-body">
-                <dl class="row">
-                    <dt class="col-sm-3">Nombre</dt>
-                    <dd class="col-sm-9" id="detNombre"></dd>
+        `;
+    }
 
-                    <dt class="col-sm-3">Descripción</dt>
-                    <dd class="col-sm-9" id="detDescripcion"></dd>
+    async function asignarRol(userId) {
+        const sel = document.getElementById(`sel_${userId}`);
+        if (!sel || !sel.value) {
+            alert('Selecciona un rol.');
+            return;
+        }
 
-                    <dt class="col-sm-3">Activo</dt>
-                    <dd class="col-sm-9" id="detActivo"></dd>
+        let body = { roleName: sel.value, forceReplace: false };
 
+<<<<<<< HEAD
                     <dt class="col-sm-3">Permisos</dt>
                     <dd class="col-sm-9" id="detPermisos"></dd>
                 </dl>
@@ -70,166 +180,74 @@
     <script src="~/lib/jquery/jquery.min.js"></script>
     <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script>
-        const API = 'https://localhost:7096';
+        const API = 'http://localhost:7096';
         const ROLES_URL = `${API}/api/roles`;
         const USERS_URL = `${API}/api/usuarios`;
 
         $(function () {
             cargarRoles();
             cargarUsuariosConRol();
+=======
+        let res = await fetch(`${USERS_URL}/${userId}/role`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+>>>>>>> main
         });
 
-        function cargarRoles() {
-            $.getJSON(ROLES_URL, function (roles) {
-                const $tbody = $('#rolTable').empty();
-                roles.forEach(r => {
-                    const tr = `
-                        <tr>
-                          <td>${safe(r.name)}</td>
-                          <td>${safe(r.description) || '<span class="text-muted">—</span>'}</td>
-                          <td>${r.isActive ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>'}</td>
-                        </tr>`;
-                    $tbody.append(tr);
+        if (res.ok) {
+            await recargarUsuarios();
+            alert('Rol asignado correctamente.');
+            return;
+        }
+
+        if (res.status === 409) {
+            const data = await res.json();
+            const msg = data.message ?? data.Message ?? 'Conflicto de rol';
+            const previous = data.previous ?? data.Previous ?? '(desconocido)';
+            const ok = confirm(`${msg}\n\n¿Deseas reemplazar el rol '${previous}' por '${body.roleName}'?`);
+            if (ok) {
+                body.forceReplace = true;
+                res = await fetch(`${USERS_URL}/${userId}/role`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
                 });
-                window.__rolesActivos = roles.filter(r => r.isActive);
-            }).fail(err => {
-                console.error('Error cargando roles', err);
-                alert('No se pudieron cargar los roles.');
-            });
-        }
-
-        function verDetallesRol(roleId) {
-            $.getJSON(`${ROLES_URL}/${roleId}/details`, function (det) {
-                $('#detNombre').text(det.name ?? '');
-                $('#detDescripcion').text(det.description ?? '—');
-                $('#detActivo').html(det.isActive ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>');
-                const perms = (det.permissions || []);
-                $('#detPermisos').html(perms.length
-                    ? '<ul>' + perms.map(p => `<li>${escapeHtml(p)}</li>`).join('') + '</ul>'
-                    : '<span class="text-muted">Sin permisos definidos</span>');
-                const modal = new bootstrap.Modal(document.getElementById('roleDetailsModal'));
-                modal.show();
-            }).fail(err => {
-                console.error('Error obteniendo detalles del rol', err);
-                alert('No se pudieron obtener los detalles del rol.');
-            });
-        }
-
-        async function cargarUsuariosConRol() {
-            try {
-                const uRes = await fetch(USERS_URL);
-                const usuarios = await uRes.json();
-
-                const $tbody = $('#usuariosRolesTable').empty();
-
-                for (const u of usuarios) {
-                    const rRes = await fetch(`${USERS_URL}/${u.id}/role`);
-                    const rJson = await rRes.json();
-                    const currentRole = rJson.role || null;
-
-                    const selectHtml = buildRolesSelect(u.id);
-                    const tr = `
-                        <tr>
-                          <td>${safe(u.userName)}</td>
-                          <td>${currentRole ? safe(currentRole) : '<i class="text-muted">Sin rol</i>'}</td>
-                          <td>${selectHtml}</td>
-                          <td>
-                            <button class="btn btn-sm btn-outline-danger" onclick="quitarRol(${u.id})">Quitar rol</button>
-                          </td>
-                        </tr>`;
-                    $tbody.append(tr);
-                }
-            } catch (err) {
-                console.error('Error cargando usuarios/roles', err);
-                alert('No se pudieron cargar los usuarios y sus roles.');
-            }
-        }
-
-        function buildRolesSelect(userId) {
-            const roles = window.__rolesActivos || [];
-            const options = roles.map(r => `<option value="${escapeAttr(r.name)}">${escapeHtml(r.name)}</option>`).join('');
-            return `
-                <div class="input-group">
-                    <select class="form-select" id="sel_${userId}">
-                        <option value="" selected disabled>Selecciona rol…</option>
-                        ${options}
-                    </select>
-                    <button class="btn btn-outline-success" type="button" onclick="asignarRol(${userId})">Asignar</button>
-                </div>
-            `;
-        }
-
-        async function asignarRol(userId) {
-            const sel = document.getElementById(`sel_${userId}`);
-            if (!sel || !sel.value) {
-                alert('Selecciona un rol.');
-                return;
-            }
-            const roleName = sel.value;
-            let body = { roleName, forceReplace: false };
-
-            let res = await fetch(`${USERS_URL}/${userId}/role`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-
-            if (res.status === 200) {
-                await recargarUsuarios();
-                alert('Rol asignado correctamente.');
-                return;
-            }
-
-            if (res.status === 409) {
-                const data = await res.json();
-                const ok = confirm(`${data.Message}\n\n¿Deseas reemplazar el rol '${data.Previous}' por '${roleName}'?`);
-                if (ok) {
-                    body.forceReplace = true;
-                    res = await fetch(`${USERS_URL}/${userId}/role`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(body)
-                    });
-                    if (res.ok) {
-                        await recargarUsuarios();
-                        alert('Rol reemplazado correctamente.');
-                        return;
-                    }
+                if (res.ok) {
+                    await recargarUsuarios();
+                    alert('Rol reemplazado correctamente.');
+                    return;
                 }
             }
+        }
+
+        try {
+            const err = await res.json();
+            alert(`Error: ${err.message || err.Message || 'No se pudo asignar el rol.'}`);
+        } catch {
+            alert('No se pudo asignar el rol.');
+        }
+    }
+
+    async function quitarRol(userId) {
+        if (!confirm('¿Seguro que deseas dejar a este usuario SIN rol?')) return;
+
+        const res = await fetch(`${USERS_URL}/${userId}/role`, { method: 'DELETE' });
+
+        if (res.ok) {
+            await recargarUsuarios();
+            alert('Usuario quedó sin rol.');
+        } else {
             try {
                 const err = await res.json();
-                alert(`Error: ${err.Message || 'No se pudo asignar el rol.'}`);
+                alert(`Error: ${err.message || err.Message || 'No se pudo remover el rol.'}`);
             } catch {
-                alert('No se pudo asignar el rol.');
+                alert('No se pudo remover el rol.');
             }
         }
+    }
 
-        async function quitarRol(userId) {
-            if (!confirm('¿Seguro que deseas dejar a este usuario SIN rol?')) return;
-            const res = await fetch(`${USERS_URL}/${userId}/role`, { method: 'DELETE' });
-            if (res.ok) {
-                await recargarUsuarios();
-                alert('Usuario quedó sin rol.');
-            } else {
-                try {
-                    const err = await res.json();
-                    alert(`Error: ${err.Message || 'No se pudo remover el rol.'}`);
-                } catch {
-                    alert('No se pudo remover el rol.');
-                }
-            }
-        }
-
-        async function recargarUsuarios() {
-            await cargarUsuariosConRol();
-        }
-
-        function safe(v) { return v === null || v === undefined ? '' : escapeHtml(String(v)); }
-        function escapeHtml(s) {
-            return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-        }
-        function escapeAttr(s) {
-            return s.replace(/"/g, '&quot;');
-        }
-    </script>
+    async function recargarUsuarios() {
+        await cargarUsuariosConRol();
+    }
+</script>

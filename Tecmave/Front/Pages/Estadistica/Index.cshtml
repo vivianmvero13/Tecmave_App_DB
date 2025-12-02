@@ -4,137 +4,74 @@
 }
 
 
-<section class="section">
 
-    <div class="card" style="margin-bottom: 1rem;">
-        <h3>Agregar Promoción</h3>
-        <div class="form-row">
-            <div>
-                <label>Título</label>
-                <input class="input" id="promo-title" placeholder="Título de la promoción" />
-            </div>
-            <div>
-                <label>Descripción</label>
-                <input class="input" id="promo-description" placeholder="Descripción" />
-            </div>
-        </div>
-        <div class="form-row">
-            <div>
-                <label>Fecha inicio</label>
-                <input class="input" type="date" id="promo-start" min="" />
-            </div>
-            <div>
-                <label>Fecha fin</label>
-                <input class="input" type="date" id="promo-end" min="" />
-            </div>
-        </div>
-        <button onclick="crearPromocion()" style="margin-top: .8rem;">Guardar Promoción</button>
+<div class="admin-dashboard">
+  <div class="admin-cards">
+    <div class="admin-card">
+      <h4>Ingresos Totales</h4>
+      <h2 id="totalIngresos">₡0</h2>
+      <span id="ingresosVariacion"></span>
     </div>
+    <div class="admin-card">
+      <h4>Citas Pendientes</h4>
+      <h2 id="citasPendientes">0</h2>
+      <span id="citasNuevas"></span>
+    </div>
+    <div class="admin-card">
+      <h4>Nuevos Clientes</h4>
+      <h2 id="nuevosClientes">0</h2>
+      <span id="clientesVariacion"></span>
+    </div>
+  </div>
+</div>
+<div class="admin-dashboard-row">
+  <div class="admin-dashboard-half">
+    <div class="admin-dashboard-chart">
+        <h3>Resumen de ingresos por estado de factura</h3>
+        <canvas id="ingresosEstadoChart"></canvas>
+    </div>
+  </div>
+  <div class="admin-dashboard-half">
+    <div class="admin-dashboard-chart">
+        <h3>Ingresos por día (últimos 7 días)</h3>
+        <canvas id="ingresosDiaChart"></canvas>
+    </div>
+  </div>
+</div>
 
-            <table class="table" style="margin-top:1rem">
-                <thead><tr><th>Promoción</th><th>Inicio</th><th>Fin</th><th>Redenciones</th><th>Relevancia</th></tr></thead>
-                <tbody><tr><td>Cambio de aceite 30% OFF</td><td>2025-07-01</td><td>2025-08-31</td><td>120</td><td>95</td></tr></tbody>
-            </table>
-      
-</section>
+<div class="admin-dashboard-row">
+    <div class="admin-dashboard-half">
+        <h3>Top clientes que más pagan</h3>
+        <ul id="topClientesLista" class="top-clientes-list"></ul>
+    </div>
+    <div class="admin-dashboard-half">
+        <h3>Citas por estado</h3>
+        <canvas id="citasEstadoChart"></canvas>
+    </div>
+</div>
 
-<script>
+<div class="admin-dashboard-activity">
+    <h3>Actividad Reciente</h3>
+    <table class="activity-table">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Acción</th>
+                <th>Usuario</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+        <tbody id="actividadRecienteBody">
+        </tbody>
+    </table>
 
+</div>
 
-    const API_PROMOCIONES = "https://localhost:7096/Promociones";
+<div class="footer-edit-container">
+    <button id="btn-edit-footer" class="btn footer-edit-btn">Editar footer</button>
+</div>
 
-       // Establecer fecha mínima en los inputs
-       const hoy = new Date().toISOString().split("T")[0];
-       document.getElementById("promo-start").min = hoy;
-       document.getElementById("promo-end").min = hoy;
-
-       function crearPromocion() {
-           const titulo = $("#promo-title").val();
-           const descripcion = $("#promo-description").val();
-           const fecha_inicio = $("#promo-start").val();
-           const fecha_fin = $("#promo-end").val();
-
-           if (!titulo || !descripcion || !fecha_inicio || !fecha_fin) {
-               alert("Todos los campos son obligatorios.");
-               return;
-           }
-
-           if (fecha_inicio < hoy || fecha_fin < hoy || fecha_fin < fecha_inicio) {
-               alert("Las fechas deben ser válidas y no anteriores a hoy.");
-               return;
-           }
-
-           const nuevaPromocion = {
-               titulo: titulo,
-               descripcion: descripcion,
-               fecha_inicio: fecha_inicio,
-               fecha_fin: fecha_fin,
-               id_estado: 2 // Activo por defecto
-           };
-
-           $.ajax({
-               url: API_PROMOCIONES,
-               method: 'POST',
-               contentType: 'application/json',
-               data: JSON.stringify(nuevaPromocion),
-               success: function () {
-                   alert("Promoción creada correctamente.");
-                   limpiarFormularioPromocion();
-                   cargarPromociones();
-               },
-               error: function (xhr, status, error) {
-                   console.error("Error al crear promoción:", error);
-               }
-           });
-       }
-
-       function limpiarFormularioPromocion() {
-           $("#promo-title").val("");
-           $("#promo-description").val("");
-           $("#promo-start").val("");
-           $("#promo-end").val("");
-       }
-
-       function cargarPromociones() {
-           $.ajax({
-               url: API_PROMOCIONES,
-               method: 'GET',
-               success: function (data) {
-                   const tbody = $("table.table tbody");
-                   tbody.empty();
-
-                   if (data.length === 0) {
-                       tbody.append("<tr><td colspan='5'>No hay promociones registradas.</td></tr>");
-                       return;
-                   }
-
-                   data.forEach(promo => {
-                       const estadoTexto = promo.id_estado === 1 ? "Activo" :
-                                           promo.id_estado === 2 ? "Pendiente" :
-                                           promo.id_estado === 3 ? "Inactivo" : "Desconocido";
-
-                       tbody.append(`
-                           <tr>
-                               <td>${promo.titulo}</td>
-                               <td>${promo.fecha_inicio}</td>
-                               <td>${promo.fecha_fin}</td>
-                               <td>${promo.redenciones || 0}</td>
-                               <td>${estadoTexto}</td>
-                           </tr>
-                       `);
-                   });
-               },
-               error: function (xhr, status, error) {
-                   console.error("Error al cargar promociones:", error);
-               }
-           });
-       }
-
-       $(document).ready(function () {
-           cargarPromociones();
-       });
+<script src="~/js/adminDashboard.js"></script>
 
 
 
-
-</script>

@@ -36,7 +36,7 @@ namespace Front.Pages.Account
             var user = await _userManager.FindByEmailAsync(Login.Email);
             if (user == null)
             {
-                ErrorMessage = "Usuario y/o contraseña son incorrectos";
+                ErrorMessage = "Error al iniciar sesiï¿½n: correo o contraseï¿½a invï¿½lidos.";
                 return Page();
             }
 
@@ -46,9 +46,10 @@ namespace Front.Pages.Account
                 isPersistent: true,
                 lockoutOnFailure: false
             );
+
             if (!result.Succeeded)
             {
-                ErrorMessage = "Usuario y/o contraseña son inválidos";
+                ErrorMessage = "Error al iniciar sesiï¿½n: correo o contraseï¿½a invï¿½lidos.";
                 return Page();
             }
 
@@ -56,9 +57,10 @@ namespace Front.Pages.Account
 
             if (roles.Contains("Administrador"))
                 return RedirectToPage("/Index");
-            else
-                return RedirectToPage("/Index");
+
+            return RedirectToPage("/Index");
         }
+
     }
 
 }

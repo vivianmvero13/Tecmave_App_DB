@@ -1,10 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Models\Dto\Colaborador.cs~RF1acc6ba3.TMP" />
+    <None Remove="Models\PromocionEnvio.cs~RF6ce6364.TMP" />
+    <None Remove="Services\MantenimientoService.cs~RF1c04e54a.TMP" />
+    <None Remove="Services\RecordatorioService.cs~RFf9078e7.TMP" />
+  </ItemGroup>
 
   <ItemGroup>
 	<PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />

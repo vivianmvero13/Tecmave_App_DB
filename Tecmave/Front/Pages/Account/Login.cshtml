@@ -5,10 +5,15 @@
     Layout = "~/Pages/Shared/_AccountLayout.cshtml";
 }
 
+@if (Request.Query["msg"] == "ok")
+{
+    <p class="text-success">Contraseña restablecida correctamente. Inicie sesión.</p>
+}
+
 <div class="login-v2-form-header">
-    <img src="~/img/tecmave_logo_innovacion.jpg" alt="Tecmave Logo" class="login-v2-form-logo">
+    <img src="~/assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave Logo" class="login-v2-form-logo">
     <h1>Login</h1>
-    <p>¡Bienvenido!</p>
+    <p>SEA BIENVENIDO DE VUELTA AMIGO.</p>
 </div>
 
 <form method="post" class="login-v2-form">
@@ -26,9 +31,13 @@
         <span asp-validation-for="Login.Password" class="text-danger"></span>
     </div>
 
+
     <div class="login-v2-input-group">
-        <a asp-controller="Account" asp-action="VerifyEmail">¿Olvidaste la contraseña?</a>
+        <a asp-page="/Account/ForgotPassword" class="login-v2-create-account">
+            ¿Olvidaste la contraseña?
+        </a>
     </div>
+
 
     <button type="submit" class="login-v2-button">Login</button>
 
@@ -37,5 +46,10 @@
         <a href="/Account/Register"  class="login-v2-create-account">Crear cuenta</a>
     </p>
 </form>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <p class="text-danger text-center">@Model.ErrorMessage</p>
+}
 
 <p class="login-v2-demo-text">Demo admin: admin@tecmave.com / Admin1234</p>

@@ -1,380 +1,196 @@
 /* ===== TECMAVE BRAND HARD OVERRIDES (red/black/white) ===== */
 :root{
-  --bg:#ffffff !important; --panel:#f8fafc !important; --panel-2:#f1f5f9 !important;
-  --text:#1e293b !important; --muted:#64748b !important;
+  --bg:#0b0c0f !important; --panel:#101217 !important; --panel-2:#131723 !important;
+  --text:#f5f7fb !important; --muted:#c9cfdb !important;
   --primary:#dc2626 !important; --primary-2:#b91c1c !important;
-  --success:#16a34a !important; --warn:#d97706 !important; --danger:#dc2626 !important;
-  --ring:0 0 0 4px rgba(220,38,38,.15) !important;
-  --shadow:0 10px 15px -3px rgba(0,0,0,0.1) !important;
+  --success:#22c55e !important; --warn:#f59e0b !important; --danger:#ef4444 !important;
+  --ring:0 0 0 4px rgba(220,38,38,.28) !important;
 }
+/* Kill any old blues */
+a, .link, .nav a:hover, .nav a.active{ color:#fff !important }
+.topbar, .sidebar, .card, .input, input, select, textarea, .search input {
+  background-color: var(--panel) !important; color: var(--text) !important;
+  border-color: rgba(255,255,255,.12) !important;
+}
+.btn, button, .button, input[type=submit], input[type=button], input[type=reset]{
+  display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:10px 16px;cursor:pointer;font-weight:700;
+  border:1px solid rgba(255,255,255,.12) !important;
+  background:linear-gradient(180deg,var(--primary),var(--primary-2)) !important;color:#fff !important;
+  box-shadow:0 10px 24px rgba(220,38,38,.28) !important;
+}
+.btn.secondary, .btn-outline, input[type=reset]{
+  background:transparent !important; color:var(--text) !important; border:1px solid rgba(255,255,255,.24) !important; box-shadow:none !important;
+}
+input:focus, select:focus, textarea:focus{ border-color:var(--primary) !important; box-shadow: var(--ring) !important }
+.badge, .pill{ border-color:rgba(255,255,255,.24) !important; color:var(--muted) !important; background:rgba(255,255,255,.05) !important }
 
-/* Reset general para tema claro */
-body {
-  background: var(--bg) !important;
-  color: var(--text) !important;
+/* Sidebar active */
+.sidebar .nav a.active{ background: linear-gradient(180deg, rgba(220,38,38,.18), rgba(220,38,38,.06)) !important; border:1px solid rgba(220,38,38,.35) !important }
+
+/* Carousel cleanup */
+.carousel, .banner, .slider{ border-radius:18px !important; overflow:hidden !important; border:1px solid rgba(255,255,255,.08) !important }
+.carousel img, .banner img, .slider img{ width:100% !important; height:360px !important; object-fit:cover !important; display:block !important }
+.carousel .controls, .slider .controls, [data-carousel-prev], [data-carousel-next], .carousel-prev, .carousel-next{ display:none !important }
+.carousel::-webkit-scrollbar{ display:none !important }
+.carousel{ -ms-overflow-style:none; scrollbar-width:none }
+
+/* Footer styling */
+#site-footer{ margin-top: 24px !important }
+footer, .footer{ position: static !important; padding: 20px 0 !important; border-top:1px solid rgba(255,255,255,.08) !important }
+
+/* Kill any stray hero/banner images injected above app */
+body > img:first-child{ display:none !important }
+
+/* ===== Footer Theme Integration (Colores oscuros/rojos para coincidir con el tema principal) ===== */
+/* Aplicado globalmente a .footer-v2 para index.html y otras páginas (renderizado por footer-config.js) */
+.footer-v2 {
+  background-color: var(--bg) !important; /* #0b0c0f - Fondo oscuro */
+  color: var(--text) !important; /* #f5f7fb - Texto claro */
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
   font-family: 'Inter', sans-serif;
 }
 
-/* SIDEBAR PROFESIONAL CON ANIMACIONES */
-.sidebar {
-  background: linear-gradient(180deg, #ffffff, #f8fafc) !important;
-  border-right: 1px solid rgba(220,38,38,0.1) !important;
-  position: sticky !important;
-  top: 0 !important;
-  height: 100vh !important;
-  padding: 20px 15px !important;
-  backdrop-filter: blur(10px) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+.footer-v2-main {
+  padding: 60px 0 !important;
+  background-color: var(--panel) !important; /* #101217 - Panel oscuro */
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-.sidebar .brand {
+.footer-v2 .footer-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+  gap: 40px !important;
+}
+
+.footer-v2 .footer-col {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.footer-v2 .footer-logo {
+  width: 150px !important;
+  margin-bottom: 15px !important;
+}
+
+.footer-v2 .footer-slogan {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 20px !important;
+  color: var(--text) !important; /* Texto claro */
+}
+
+.footer-v2-socials {
+  display: flex !important;
+  gap: 10px !important;
+}
+
+.footer-v2-socials a {
+  color: var(--muted) !important; /* #c9cfdb - Muted */
+  font-size: 1rem !important;
+  transition: color 0.3s !important;
+}
+
+.footer-v2-socials a:hover {
+  color: var(--primary) !important; /* #dc2626 - Rojo en hover */
+}
+
+.footer-v2 h4 {
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: var(--text) !important; /* Texto claro */
+  margin-bottom: 20px !important;
+  text-transform: uppercase !important;
+}
+
+.footer-v2 .footer-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.footer-v2 .footer-list li {
+  margin-bottom: 10px !important;
+}
+
+.footer-v2 .footer-list a {
+  color: var(--muted) !important; /* #c9cfdb - Muted */
+  text-decoration: none !important;
+  transition: color 0.3s !important;
+}
+
+.footer-v2 .footer-list a:hover {
+  color: var(--primary) !important; /* #dc2626 - Rojo en hover */
+}
+
+.footer-v2 .contact-info li {
   display: flex !important;
   align-items: center !important;
-  gap: 12px !important;
-  padding: 15px 12px !important;
-  margin-bottom: 25px !important;
-  border-radius: 16px !important;
-  background: rgba(255,255,255,0.8) !important;
-  border: 2px solid rgba(220,38,38,0.1) !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+  gap: 10px !important;
 }
 
-.sidebar .brand:hover {
-  background: rgba(220,38,38,0.05) !important;
-  transform: translateX(8px) !important;
-  border-color: rgba(220,38,38,0.3) !important;
+.footer-v2 .contact-info i {
+  font-size: 1rem !important;
+  color: var(--text) !important; /* Texto claro para iconos */
 }
 
-.sidebar .brand img {
-  width: 35px !important;
-  height: 35px !important;
-  border-radius: 10px !important;
-  box-shadow: 0 8px 25px rgba(220,38,38,0.25) !important;
-  transition: all 0.3s ease !important;
-  border: 2px solid rgba(220,38,38,0.2) !important;
-}
-
-.sidebar .brand:hover img {
-  transform: scale(1.15) rotate(8deg) !important;
-  box-shadow: 0 12px 30px rgba(220,38,38,0.4) !important;
-}
-
-.sidebar .brand span {
-  font-weight: 800 !important;
-  font-size: 1.3rem !important;
-  background: linear-gradient(135deg, var(--primary), #1e293b) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  color: transparent !important;
-  letter-spacing: -0.5px !important;
-}
-
-.nav {
+.footer-v2 .subscribe-form {
   display: flex !important;
   flex-direction: column !important;
   gap: 10px !important;
 }
 
-.nav a {
-  display: flex !important;
-  align-items: center !important;
-  gap: 14px !important;
-  color: var(--text) !important;
-  text-decoration: none !important;
-  padding: 14px 18px !important;
-  border-radius: 14px !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  position: relative !important;
-  overflow: hidden !important;
-  background: rgba(255,255,255,0.7) !important;
-  border: 1px solid rgba(220,38,38,0.1) !important;
-  font-weight: 600 !important;
-}
-
-.nav a::before {
-  content: '' !important;
-  position: absolute !important;
-  left: -100% !important;
-  top: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  background: linear-gradient(90deg, transparent, rgba(220,38,38,0.1), transparent) !important;
-  transition: left 0.6s ease !important;
-}
-
-.nav a:hover::before {
-  left: 100% !important;
-}
-
-.nav a:hover {
-  background: rgba(220,38,38,0.08) !important;
-  color: var(--primary) !important;
-  transform: translateX(12px) scale(1.02) !important;
-  box-shadow: 0 8px 25px rgba(220,38,38,0.2) !important;
-  border-color: rgba(220,38,38,0.3) !important;
-}
-
-.nav a.active {
-  background: linear-gradient(135deg, rgba(220,38,38,0.15), rgba(220,38,38,0.05)) !important;
-  color: var(--primary) !important;
-  border: 2px solid rgba(220,38,38,0.4) !important;
-  box-shadow: 0 10px 30px rgba(220,38,38,0.25) !important;
-  transform: translateX(8px) scale(1.03) !important;
-}
-
-.nav a.active::after {
-  content: '' !important;
-  position: absolute !important;
-  right: 15px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  width: 8px !important;
-  height: 8px !important;
-  background: var(--primary) !important;
-  border-radius: 50% !important;
-  animation: pulse 2s infinite !important;
-  box-shadow: 0 0 0 rgba(220,38,38,0.4) !important;
-}
-
-.nav i {
-  width: 22px !important;
-  text-align: center !important;
-  font-size: 1.2rem !important;
-  transition: all 0.3s ease !important;
-  color: var(--text) !important;
-}
-
-.nav a:hover i {
-  transform: scale(1.3) !important;
-  color: var(--primary) !important;
-}
-
-.nav a.active i {
-  color: var(--primary) !important;
-  transform: scale(1.3) !important;
-}
-
-@keyframes pulse {
-  0% { transform: translateY(-50%) scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
-  50% { transform: translateY(-50%) scale(1.3); opacity: 0.8; box-shadow: 0 0 0 10px rgba(220,38,38,0); }
-  100% { transform: translateY(-50%) scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(220,38,38,0); }
-}
-
-.subtle {
-  color: var(--muted) !important;
-  font-size: 0.85rem !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.15em !important;
-  margin: 25px 12px 12px !important;
-  padding: 10px 15px !important;
-  border-radius: 10px !important;
-  background: rgba(220,38,38,0.05) !important;
-  border-left: 4px solid var(--primary) !important;
-  font-weight: 700 !important;
-}
-
-/* ANIMACIONES PARA CARDS Y ELEMENTOS */
-.card, [class*="card"] {
-  background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(15px) !important;
-  border: 1px solid rgba(220, 38, 38, 0.15) !important;
-  border-radius: 20px !important;
-  padding: 2rem !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-  position: relative !important;
-  overflow: hidden !important;
-}
-
-.card::before {
-  content: '' !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: -100% !important;
-  width: 100% !important;
-  height: 100% !important;
-  background: linear-gradient(90deg, transparent, rgba(220,38,38,0.05), transparent) !important;
-  transition: left 0.7s ease !important;
-}
-
-.card:hover::before {
-  left: 100% !important;
-}
-
-.card:hover {
-  transform: translateY(-8px) scale(1.02) !important;
-  box-shadow: 0 20px 40px rgba(220, 38, 38, 0.15) !important;
-  border-color: rgba(220, 38, 38, 0.3) !important;
-  background: rgba(255, 255, 255, 0.95) !important;
-}
-
-/* Botones con animaciones */
-.btn, button, .button, input[type=submit], input[type=button] {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  border-radius: 14px !important;
-  padding: 12px 20px !important;
-  cursor: pointer !important;
-  font-weight: 700 !important;
-  border: 2px solid rgba(220,38,38,0.2) !important;
-  background: linear-gradient(135deg, var(--primary), var(--primary-2)) !important;
-  color: #fff !important;
-  box-shadow: 0 8px 20px rgba(220,38,38,0.25) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  position: relative !important;
-  overflow: hidden !important;
-}
-
-.btn::before, button::before {
-  content: '' !important;
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: rgba(255,255,255,0.2) !important;
-  border-radius: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  transition: width 0.6s, height 0.6s !important;
-}
-
-.btn:hover::before, button:hover::before {
-  width: 300px !important;
-  height: 300px !important;
-}
-
-.btn:hover, button:hover {
-  transform: translateY(-3px) scale(1.05) !important;
-  box-shadow: 0 15px 30px rgba(220,38,38,0.35) !important;
-  border-color: rgba(220,38,38,0.4) !important;
-}
-
-/* Header profesional */
-.topbar {
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(20px) !important;
-  border-bottom: 1px solid rgba(220,38,38,0.1) !important;
-  padding: 15px 25px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 100 !important;
-}
-
-.brand2 {
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  font-weight: 700 !important;
-  font-size: 1.4rem !important;
-  background: linear-gradient(135deg, var(--primary), #1e293b) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  color: transparent !important;
-}
-
-.iconbtn {
-  background: rgba(255, 255, 255, 0.9) !important;
-  border: 2px solid rgba(220,38,38,0.15) !important;
-  color: var(--text) !important;
-  border-radius: 14px !important;
+.footer-v2 .subscribe-form input {
   padding: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important; /* Borde sutil */
+  background-color: var(--panel-2) !important; /* #131723 - Fondo input oscuro */
+  color: var(--text) !important; /* Texto claro */
+  border-radius: 4px !important;
+}
+
+.footer-v2 .subscribe-form button {
+  padding: 12px !important;
+  background: linear-gradient(180deg, var(--primary), var(--primary-2)) !important; /* Rojo primary */
+  color: #fff !important;
+  border: none !important;
+  border-radius: 4px !important;
   cursor: pointer !important;
-  transition: all 0.3s ease !important;
+  font-weight: 600 !important;
+  transition: background-color 0.3s !important;
 }
 
-.iconbtn:hover {
-  background: var(--primary) !important;
-  color: white !important;
-  transform: translateY(-2px) scale(1.1) !important;
-  box-shadow: 0 8px 20px rgba(220,38,38,0.3) !important;
-  border-color: var(--primary) !important;
+.footer-v2 .subscribe-form button:hover {
+  background: linear-gradient(180deg, var(--primary-2), #991b1b) !important; /* Rojo más oscuro en hover */
 }
 
-/* Inputs mejorados */
-.input, input, select, textarea {
-  background: rgba(255,255,255,0.9) !important;
-  border: 2px solid rgba(220,38,38,0.1) !important;
-  color: var(--text) !important;
-  border-radius: 12px !important;
-  padding: 12px 16px !important;
-  transition: all 0.3s ease !important;
+.footer-v2-bottom {
+  background-color: var(--bg) !important; /* #0b0c0f - Fondo oscuro */
+  padding: 20px 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-.input:focus, input:focus, select:focus, textarea:focus {
-  border-color: var(--primary) !important;
-  box-shadow: 0 0 0 4px rgba(220,38,38,0.1) !important;
-  transform: scale(1.02) !important;
-  background: white !important;
+.footer-v2-bottom .container {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  font-size: 0.9rem !important;
 }
 
-/* Footer profesional */
-.footer-v2 {
-  background: linear-gradient(135deg, #ffffff, #f8fafc) !important;
-  color: var(--text) !important;
-  border-top: 1px solid rgba(220,38,38,0.1) !important;
+.footer-v2-bottom p {
+  color: var(--muted) !important; /* #c9cfdb - Muted para copyright */
+  margin: 0 !important;
 }
 
-.footer-v2-main {
-  background: transparent !important;
-  border-top: 1px solid rgba(220,38,38,0.1) !important;
+/* === Ajustes globales de legibilidad (texto muted más contrastado) === */
+.text-muted,
+.muted {
+  color: #f5f5f5 !important;
 }
 
-.footer-v2 .footer-list a {
-  color: var(--text) !important;
-  transition: all 0.3s ease !important;
-}
-
-.footer-v2 .footer-list a:hover {
-  color: var(--primary) !important;
-  transform: translateX(5px) !important;
-}
-
-.footer-v2-socials a {
-  transition: all 0.3s ease !important;
-}
-
-.footer-v2-socials a:hover {
-  color: var(--primary) !important;
-  transform: translateY(-3px) scale(1.2) !important;
-}
-
-/* Efectos de carga y animaciones generales */
-.fade-in {
-  animation: fadeIn 0.6s ease-out !important;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.slide-in-left {
-  animation: slideInLeft 0.6s ease-out !important;
-}
-
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-30px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-/* Responsive */
-@media (max-width: 980px) {
-  .sidebar {
-    transform: translateX(-100%) !important;
-    transition: transform 0.3s ease !important;
-    z-index: 1000 !important;
-    box-shadow: 0 0 50px rgba(0,0,0,0.3) !important;
-  }
-
-  .sidebar.open {
-    transform: translateX(0) !important;
-  }
-
-  .nav a {
-    padding: 16px 20px !important;
-    font-size: 1.1rem !important;
-  }
+/* Selects legibles en temas oscuros (por si alguna vista usa estos estilos) */
+select,
+select option,
+.form-select,
+.form-select option {
+  color: #ffffff !important;
+  background-color: #111111 !important;
 }

@@ -1,0 +1,573 @@
+﻿@page
+@model Front.Pages.Promociones.CrearModel
+@{
+    ViewData["Title"] = "Registrar promoción";
+}
+
+<section class="section">
+    <div class="container grid cols-2">
+        <div class="card">
+            <h3 id="formTitle">Registrar promoción</h3>
+
+            <div class="form-row">
+                <div>
+                    <label for="tituloInput">Título</label>
+                    <input id="tituloInput" class="input" maxlength="120" />
+                </div>
+                <div>
+                    <label for="estadoInput">Estado</label>
+                    <select id="estadoInput" class="input">
+                        <option value="1">Activa</option>
+                        <option value="3">Inactiva</option>
+                        <option value="2">Pendiente</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="inicioInput">Fecha inicio</label>
+                    <input id="inicioInput" class="input" type="date" />
+                </div>
+                <div>
+                    <label for="finInput">Fecha fin</label>
+                    <input id="finInput" class="input" type="date" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div style="grid-column: 1 / span 2;">
+                    <label for="descripcionInput">Descripción</label>
+                    <textarea id="descripcionInput" class="input" rows="4" maxlength="1000"></textarea>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div style="grid-column: 1 / span 2;">
+                    <label for="imagenFileInput">Imagen de la promoción (archivo)</label>
+                    <input id="imagenFileInput" class="input" type="file" accept="image/*" />
+                    <small>Seleccioná una imagen JPG/PNG/GIF/WEBP.</small>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div style="grid-column: 1 / span 2;">
+                    <label for="imagenUrlInput">URL de la imagen</label>
+                    <input id="imagenUrlInput" class="input" maxlength="500" readonly />
+                    <small>Se llena automáticamente al subir la imagen.</small>
+                </div>
+            </div>
+
+            <div id="formMsg" class="text-danger mt-2" style="display:none;"></div>
+        </div>
+
+        <div class="card">
+            <h3>Promociones</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Vigencia</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="listaDatos">
+                    <tr><td colspan="4">Sin datos…</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button id="guardarBtn" class="btn btn-orange" type="button">Guardar</button>
+            <a class="btn btn-secondary" asp-page="/Promociones/Index">Volver</a>
+        </div>
+    </div>
+</section>
+
+<!-- Modal reutilizable -->
+<div id="appModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
+    <div class="modal-backdrop" data-close="1"></div>
+    <div class="modal-dialog" role="document">
+        <button class="modal-close" type="button" aria-label="Cerrar" data-close="1">×</button>
+        <div class="modal-icon" id="modalIcon">✓</div>
+        <h3 id="modalTitle">Título</h3>
+        <p id="modalBody">Mensaje…</p>
+        <div class="modal-actions">
+            <button id="modalPrimary" class="btn btn-orange" type="button" data-close="1">Aceptar</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-orange {
+        background: #ff8c00 !important;
+        border: 1px solid #ff8c00 !important;
+        color: #fff !important;
+        padding: .5rem 1rem;
+        border-radius: .25rem
+    }
+
+        .btn-orange:hover {
+            background: #e67e00 !important
+        }
+
+    .btn-red {
+        background: #dc3545 !important;
+        border: 1px solid #dc3545 !important;
+        color: #fff !important;
+        padding: .3rem .8rem;
+        border-radius: .25rem
+    }
+
+        .btn-red:hover {
+            background: #b92b3a !important
+        }
+
+    .btn-outline-primary.btn-sm {
+        padding: .3rem .6rem;
+        border-radius: .25rem
+    }
+
+    .text-danger {
+        color: #dc3545
+    }
+
+    .grid.cols-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: .75rem
+    }
+
+    .input {
+        width: 100%;
+        padding: .5rem
+    }
+
+    .card {
+        border: 1px solid #e5e5e5;
+        border-radius: .5rem;
+        padding: 1rem
+    }
+
+    .gap-2 {
+        gap: .5rem
+    }
+
+    .table {
+        width: 100%
+    }
+
+        .table th, .table td {
+            padding: .5rem;
+            border-bottom: 1px solid #eee
+        }
+
+    /* Modal */
+    .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none
+    }
+
+        .modal.show {
+            display: block
+        }
+
+    .modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,.45)
+    }
+
+    .modal-dialog {
+        position: relative;
+        max-width: 480px;
+        margin: 8vh auto 0;
+        background: #fff;
+        border-radius: .75rem;
+        padding: 1.25rem;
+        box-shadow: 0 10px 35px rgba(0,0,0,.25)
+    }
+
+    .modal-close {
+        position: absolute;
+        right: .5rem;
+        top: .5rem;
+        border: 0;
+        background: transparent;
+        font-size: 1.5rem;
+        line-height: 1;
+        cursor: pointer;
+        color: #888
+    }
+
+    .modal-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        margin: .25rem 0 .5rem;
+        display: grid;
+        place-content: center;
+        background: #e7f6ec;
+        color: #2e7d32;
+        font-weight: 700
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: .5rem;
+        margin-top: 1rem
+    }
+</style>
+
+<script>
+    const API_BASE = "http://localhost:7096";
+    const URL_PROMOCIONES = `${API_BASE}/promociones`;
+    const URL_UPLOAD_PROMO = `${API_BASE}/uploads/promo`;
+
+    let currentPromoId = null; // null = crear, número = editar
+
+    function showMsg(text){
+      const el = document.getElementById('formMsg');
+      el.textContent = text || '';
+      el.style.display = text ? 'block' : 'none';
+    }
+
+    function esc(s){
+      return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;','=':'&#61;','/':'&#47;'
+      }[c]));
+    }
+
+    function fmtDateToInput(v){
+      if (!v) return '';
+      try {
+        const d = new Date(v);
+        if (Number.isNaN(d.getTime())) return String(v);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth()+1).padStart(2,'0');
+        const dd = String(d.getDate()).padStart(2,'0');
+        return `${yyyy}-${mm}-${dd}`;
+      } catch { return ''; }
+    }
+
+    function parseInputDate(id){
+      const val = (document.getElementById(id).value || '').trim();
+      return val; // API espera 'yyyy-MM-dd' (DateOnly)
+    }
+
+    // Traducción de estado
+    function estadoLabel(cod){
+      const n = Number(cod);
+      if (n === 1) return "Activa";
+      if (n === 3) return "Inactiva";
+      return `Estado ${cod ?? "—"}`;
+    }
+
+    // Modal utilitario
+    const Modal = (() => {
+      const root = document.getElementById('appModal');
+      const title = document.getElementById('modalTitle');
+      const body = document.getElementById('modalBody');
+      const icon = document.getElementById('modalIcon');
+      let onClose = null;
+
+      function setKind(kind){
+        const map = {
+          ok:   {bg:'#e7f6ec', color:'#2e7d32', text:'✓'},
+          warn: {bg:'#fff4e5', color:'#a15c00', text:'!'},
+          error:{bg:'#fdecea', color:'#b3261e', text:'!'},
+          info: {bg:'#e7f1ff', color:'#0b57d0', text:'ℹ'}
+        };
+        const k = map[kind] || map.info;
+        icon.style.background = k.bg; icon.style.color = k.color; icon.textContent = k.text;
+      }
+
+      function show({ titleText='Información', bodyText='', onCloseCb=null, kind='ok' }){
+        setKind(kind); title.textContent = titleText; body.textContent = bodyText;
+        onClose = typeof onCloseCb === 'function' ? onCloseCb : null;
+        root.classList.add('show'); root.style.display = 'block'; root.setAttribute('aria-hidden','false');
+        document.addEventListener('keydown', escListener);
+      }
+      function hide(){
+        root.classList.remove('show'); root.style.display = 'none'; root.setAttribute('aria-hidden','true');
+        document.removeEventListener('keydown', escListener);
+        if (onClose) { const cb = onClose; onClose = null; try { cb(); } catch {} }
+      }
+      function escListener(e){ if (e.key === 'Escape') hide(); }
+      root.addEventListener('click', (e) => { if (e.target?.dataset?.close === '1') hide(); });
+      return { show, hide };
+    })();
+
+    // Listado
+    function cargarListado(){
+      const tb = document.getElementById('listaDatos');
+      fetch(URL_PROMOCIONES, { credentials: 'include' })
+        .then(r => { if(!r.ok) throw r; return r.json(); })
+        .then(data => {
+          const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+          if (!list.length) { tb.innerHTML = '<tr><td colspan="4">Sin datos…</td></tr>'; return; }
+          tb.innerHTML = list.map(p => {
+            const id    = p.id_promocion ?? p.id ?? p.Id;
+            const tit   = p.titulo ?? p.Titulo ?? '';
+            const desc  = p.descripcion ?? p.Descripcion ?? '';
+            const fi    = p.fecha_inicio ?? p.FechaInicio ?? p.fechaInicio ?? '';
+            const ff    = p.fecha_fin ?? p.FechaFin ?? p.fechaFin ?? '';
+            const est   = p.id_estado ?? p.idEstado ?? p.IdEstado ?? '—';
+            const selfUrl = `${location.pathname}?id=${encodeURIComponent(id)}`;
+            const rango = `${esc(fmtDateToInput(fi))} → ${esc(fmtDateToInput(ff))}`;
+            const estTxt = estadoLabel(est);
+
+            return `
+              <tr>
+                <td title="${esc(desc)}">${esc(tit)}</td>
+                <td>${rango}</td>
+                <td>${esc(estTxt)}</td>
+                <td>
+                  <a class="btn btn-outline-primary btn-sm" href="${selfUrl}">Editar</a>
+                  <button class="btn btn-red btn-sm" onclick="confirmarEliminar(${id})">Eliminar</button>
+                </td>
+              </tr>`;
+          }).join('');
+        })
+        .catch(async err => {
+          let msg='Error cargando promociones.'; try { msg = (await err.json())?.message || msg; } catch{}
+          tb.innerHTML = `<tr><td colspan="4">${esc(msg)}</td></tr>`;
+        });
+    }
+
+    // Form helpers
+    function getFormData(){
+      const titulo = (document.getElementById('tituloInput').value || '').trim();
+      const descripcion = (document.getElementById('descripcionInput').value || '').trim();
+      const fecha_inicio = parseInputDate('inicioInput');
+      const fecha_fin    = parseInputDate('finInput');
+      const id_estado    = parseInt(document.getElementById('estadoInput').value || '0', 10);
+      const imagen_url   = (document.getElementById('imagenUrlInput').value || '').trim();
+
+      if(!titulo) return { ok:false, msg:'El título es requerido.' };
+      if(!fecha_inicio) return { ok:false, msg:'La fecha de inicio es requerida.' };
+      if(!fecha_fin) return { ok:false, msg:'La fecha de fin es requerida.' };
+
+      if (fecha_inicio > fecha_fin) return { ok:false, msg:'La fecha de inicio no puede ser mayor a la fecha fin.' };
+
+      return {
+        ok:true,
+        payload: {
+          titulo,
+          descripcion,
+          fecha_inicio,
+          fecha_fin,
+          id_estado,
+          imagen_url
+        }
+      };
+    }
+
+    async function crearPromocion(){
+      const { ok, msg, payload } = getFormData();
+      if(!ok){ showMsg(msg); return; }
+      showMsg('');
+
+      const body = { id_promocion: 0, ...payload };
+
+      const r = await fetch(URL_PROMOCIONES, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body)
+      });
+
+      if(!r.ok){
+        let m='Error al registrar.'; try { m=(await r.json())?.message || m; } catch {}
+        return showMsg(m);
+      }
+
+      limpiarFormulario();
+      cargarListado();
+      Modal.show({ titleText:'Éxito', bodyText:'Promoción registrada correctamente.', kind:'ok' });
+    }
+
+    async function actualizarPromocion(){
+      if(!currentPromoId) return showMsg('No hay promoción cargada para editar.');
+
+      const { ok, msg, payload } = getFormData();
+      if(!ok){ showMsg(msg); return; }
+      showMsg('');
+
+      const body = { id_promocion: Number(currentPromoId), ...payload };
+
+      const r = await fetch(URL_PROMOCIONES, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body)
+      });
+
+      if(!r.ok){
+        let m='Error al actualizar.'; try { m=(await r.json())?.message || m; } catch {}
+        return showMsg(m);
+      }
+
+      Modal.show({ titleText:'Éxito', bodyText:'Promoción actualizada correctamente.', kind:'ok' });
+      salirModoEdicion();
+      cargarListado();
+    }
+
+    async function eliminarPromocion(id){
+      const r = await fetch(`${URL_PROMOCIONES}/${id}`, { method:'DELETE', credentials:'include' });
+      if(r.ok){
+        if(currentPromoId && Number(currentPromoId) === Number(id)) salirModoEdicion();
+        Modal.show({ titleText:'Eliminado', bodyText:'Promoción eliminada correctamente.', kind:'ok', onCloseCb: () => cargarListado() });
+      }else{
+        let m='Error al eliminar.'; try { m=(await r.json())?.message || m; } catch {}
+        Modal.show({ titleText:'Error', bodyText:m, kind:'error' });
+      }
+    }
+
+    function confirmarEliminar(id){
+      const btn = document.getElementById('modalPrimary');
+      const prevText = btn.textContent;
+      const prevClose = btn.getAttribute('data-close');
+      btn.textContent = 'Eliminar';
+      btn.removeAttribute('data-close');
+
+      const handler = async () => {
+        btn.removeEventListener('click', handler);
+        try { await eliminarPromocion(id); } finally {
+          btn.textContent = prevText;
+          if(prevClose) btn.setAttribute('data-close', prevClose);
+          Modal.hide();
+        }
+      };
+
+      btn.addEventListener('click', handler, { once:true });
+      Modal.show({
+        titleText: 'Confirmar eliminación',
+        bodyText: '¿Desea eliminar esta promoción?',
+        kind: 'warn',
+        onCloseCb: () => {
+          btn.removeEventListener('click', handler);
+          btn.textContent = prevText;
+          if(prevClose) btn.setAttribute('data-close', prevClose);
+        }
+      });
+    }
+
+    function setModoCrear(){
+      currentPromoId = null;
+      document.getElementById('formTitle').textContent = 'Registrar promoción';
+      const btn = document.getElementById('guardarBtn');
+      btn.textContent = 'Guardar';
+      btn.onclick = crearPromocion;
+    }
+
+    function setModoEditar(id){
+      currentPromoId = id;
+      document.getElementById('formTitle').textContent = 'Editar promoción';
+      const btn = document.getElementById('guardarBtn');
+      btn.textContent = 'Actualizar';
+      btn.onclick = actualizarPromocion;
+    }
+
+    function limpiarFormulario(){
+      document.getElementById('tituloInput').value = '';
+      document.getElementById('descripcionInput').value = '';
+      document.getElementById('inicioInput').value = '';
+      document.getElementById('finInput').value = '';
+      document.getElementById('estadoInput').value = '1';
+      const imgUrl = document.getElementById('imagenUrlInput');
+      const imgFile = document.getElementById('imagenFileInput');
+      if (imgUrl) imgUrl.value = '';
+      if (imgFile) imgFile.value = '';
+      showMsg('');
+    }
+
+    function salirModoEdicion(){
+      const url = new URL(window.location.href);
+      url.searchParams.delete('id');
+      window.history.replaceState({}, '', url.toString());
+      setModoCrear();
+      limpiarFormulario();
+    }
+
+    async function cargarPromocionPorId(id){
+      const r = await fetch(`${URL_PROMOCIONES}/${encodeURIComponent(id)}`, { credentials:'include' });
+      if(!r.ok){
+        let m='No se pudo cargar la promoción.'; try { m=(await r.json())?.message || m; } catch {}
+        showMsg(m); return;
+      }
+      const p = await r.json();
+
+      document.getElementById('tituloInput').value = p.titulo ?? p.Titulo ?? '';
+      document.getElementById('descripcionInput').value = p.descripcion ?? p.Descripcion ?? '';
+      document.getElementById('inicioInput').value = fmtDateToInput(p.fecha_inicio ?? p.FechaInicio ?? p.fechaInicio ?? '');
+      document.getElementById('finInput').value    = fmtDateToInput(p.fecha_fin ?? p.FechaFin ?? p.fechaFin ?? '');
+      document.getElementById('estadoInput').value = p.id_estado ?? p.idEstado ?? p.IdEstado ?? '1';
+      document.getElementById('imagenUrlInput').value = p.imagen_url ?? p.imagenUrl ?? '';
+
+      setModoEditar(Number(p.id_promocion ?? p.id ?? p.Id ?? id));
+    }
+
+    function getQS(name){
+      const p = new URLSearchParams(window.location.search);
+      return p.get(name);
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      setModoCrear();
+      cargarListado();
+
+      const qsId = getQS('id');
+      if (qsId) {
+        try { await cargarPromocionPorId(qsId); }
+        catch (e) { console.error(e); showMsg('Error al cargar la promoción.'); setModoCrear(); }
+      }
+
+      // Manejo de subida de archivo de imagen
+      const fileInput = document.getElementById('imagenFileInput');
+      if (fileInput) {
+        fileInput.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const formData = new FormData();
+          formData.append('archivo', file);
+
+          showMsg('Subiendo imagen...');
+
+          try {
+            const resp = await fetch(URL_UPLOAD_PROMO, {
+              method: 'POST',
+              body: formData,
+              credentials: 'include'
+            });
+
+            if (!resp.ok) {
+              let m = 'Error al subir la imagen.';
+              try { m = (await resp.json())?.mensaje || m; } catch {}
+              showMsg(m);
+              return;
+            }
+
+            const data = await resp.json();
+            document.getElementById('imagenUrlInput').value = data.url || '';
+            showMsg('Imagen subida correctamente.');
+          } catch (err) {
+            console.error(err);
+            showMsg('Error inesperado al subir la imagen.');
+          }
+        });
+      }
+    });
+</script>

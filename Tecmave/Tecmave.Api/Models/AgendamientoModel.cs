@@ -10,7 +10,7 @@ namespace Tecmave.Api.Models
         public int vehiculo_id { get; set; } // [fk, not null]
         public DateOnly fecha_agregada { get; set; }
         public int id_estado { get; set; }
-        public DateOnly fecha_estimada { get; set; }
-        public TimeOnly hora_llegada { get; set; }
+        public DateOnly? fecha_estimada { get; set; }
+        public TimeOnly? hora_llegada { get; set; }
     }
 }

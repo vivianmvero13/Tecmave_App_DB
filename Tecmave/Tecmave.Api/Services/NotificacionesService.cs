@@ -1,4 +1,5 @@
-﻿using Tecmave.Api.Data;
+﻿using System.Runtime.CompilerServices;
+using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 
 namespace Tecmave.Api.Services
@@ -70,6 +71,21 @@ namespace Tecmave.Api.Services
             _context.SaveChanges();
             return true;
 
+        }
+
+        public async Task CrearNotificacionAsync(int usuarioId, string mensaje, string tipo)
+        {
+            var notificacion = new NotificacionesModel
+            {
+                usuario_id = usuarioId,
+                mensaje = mensaje,
+                tipo = tipo,
+                fecha_envio = DateOnly.FromDateTime(DateTime.Now),
+                id_estado = 1
+            };
+
+            _context.notificaciones.Add(notificacion);
+            await _context.SaveChangesAsync();
         }
 
 

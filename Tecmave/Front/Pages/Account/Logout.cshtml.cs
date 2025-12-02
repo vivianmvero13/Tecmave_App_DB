@@ -8,26 +8,22 @@ namespace Front.Pages.Account
     public class LogoutModel : PageModel
     {
         private readonly SignInManager<Usuario> _signInManager;
+
         public LogoutModel(SignInManager<Usuario> signInManager)
-        => _signInManager = signInManager;
-
-
-        public void OnGet()
         {
+            _signInManager = signInManager;
         }
 
         public async Task<IActionResult> OnPost(string returnUrl = null)
         {
             await _signInManager.SignOutAsync();
 
-            if (returnUrl != null)
+            if (!string.IsNullOrEmpty(returnUrl))
             {
                 return LocalRedirect(returnUrl);
             }
-            else
-            {
-                return Page();
-            }
+
+            return Redirect("/Account/Login");   // fallback
         }
     }
 }

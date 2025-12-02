@@ -1,294 +1,824 @@
 ﻿@page
 @model Front.Pages.Servicios.IndexModel
 @{
+    ViewData["Title"] = "Agendar Revisión";
 }
 
+<style>
+    /* ========================
+           ESTILOS MEJORADOS
+           ======================== */
 
+    /* Tarjetas */
+    .card {
+        background: #1a1a1a;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        color: #ddd;
+    }
+
+    h3 {
+        margin-bottom: 1rem;
+        color: #fff;
+    }
+
+    /* Inputs */
+    .input, select {
+        width: 100%;
+        padding: .7rem;
+        background: #111;
+        border: 1px solid #333;
+        color: #eee;
+        border-radius: 8px;
+        margin-top: .3rem;
+    }
+
+        .input:focus {
+            border-color: #5a9cff;
+        }
+
+    /* Tabla */
+    .table {
+        width: 100%;
+        margin-top: 1rem;
+        color: #111111 !important;
+    }
+
+        .table th {
+            background: #222;
+            padding: .5rem;
+        }
+
+        .table td {
+            padding: .5rem;
+            border-bottom: 1px solid #333;
+        }
+
+    /* Botón */
+    #btnAgendar, .btn-proforma {
+        background: #5a9cff;
+        padding: .7rem 1rem;
+        border: none;
+        border-radius: 8px;
+        margin-top: 1rem;
+        color: white;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        #btnAgendar:hover, .btn-proforma:hover {
+            background: #7ab3ff;
+        }
+
+    /* ================
+           MODAL MEJORADO
+           ================ */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+        z-index: 9999;
+        animation: fadeIn .2s ease-in-out;
+    }
+
+    .modal-content {
+        background: rgba(30,30,30,0.85);
+        padding: 2rem;
+        border-radius: 15px;
+        width: 45%;
+        max-height: 80vh;
+        overflow-y: auto;
+        color: #fff;
+        border: 1px solid #444;
+        animation: slideUp .25s ease;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @@keyframes slideUp {
+        from {
+            transform: translateY(20px);
+        }
+
+        to {
+            transform: translateY(0);
+        }
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 1.6rem;
+        cursor: pointer;
+        color: #bbb;
+    }
+
+        .close-btn:hover {
+            color: #fff;
+        }
+
+    .btn-pdf {
+        background: #28a745;
+        padding: .6rem 1rem;
+        color: #fff;
+        border: none;
+        margin-top: .8rem;
+        border-radius: 8px;
+        cursor: pointer;
+        float: right;
+    }
+
+    /* ============= ACCORDION PERMISIONS ============= */
+
+    .accordion-item {
+        border: 1px solid #333;
+        border-radius: 8px;
+        margin-top: 1rem;
+        overflow: hidden;
+    }
+
+    .accordion-header {
+        background: #111;
+        padding: .7rem 1rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        font-weight: bold;
+        color: #ddd;
+        border-bottom: 1px solid #333;
+    }
+
+        .accordion-header:hover {
+            background: #1a1a1a;
+        }
+
+    .accordion-body {
+        display: none;
+        background: #f9fafb;
+        padding: 1rem;
+        max-height: 300px;
+        overflow-y: auto;
+        color: #111111 !important;
+    }
+
+        .accordion-body label,
+        #pertenencias *,
+        #pertenencias-container * {
+            margin-bottom: .25rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            color: #111111 !important;
+        }
+
+    #pertenencias-container {
+        display: block;
+    }
+
+    #pertenencias {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: .35rem 1rem;
+    }
+
+
+
+    /* === Correcciones visuales específicas de esta página (Servicios) === */
+    /* Dropdowns: asegurar que las opciones sean visibles */
+    select,
+    select option {
+        color: #ffffff !important;
+        background-color: #111111 !important;
+    }
+
+    /* Texto dentro de la proforma (modal) más legible sobre fondo oscuro */
+    #proformaContent,
+    #proformaContent * {
+        color: #111111 !important;
+    }
+
+</style>
+
+<section class="section">
     <div class="container grid cols-2">
+
+        <!-- Formulario -->
         <div class="card">
-            <h3>Registrar servicio</h3>
+            <h3>Agendar Revisión</h3>
 
-            <div class="form-row">
-                <div>
-                    <label>Tipo de servicio</label>
-                    <select id="tipoServicioInput" class="input">
-                        <option value="">Seleccione tipo</option>
-                    </select>
+            <div>
+                <label>Vehículo</label>
+                <select class="input" id="vehiculo_id"></select>
+            </div>
+
+            <div>
+                <label>Tipo de Servicio</label>
+                <select class="input" id="tipo_servicio_id"></select>
+            </div>
+
+            <div>
+                <label>Servicio</label>
+                <select class="input" id="servicio_id"></select>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="togglePertenencias()">
+                    <span>Pertenencias</span>
+                    <span id="arrow-pertenencias">▼</span>
                 </div>
-                <div>
-                    <label>Vehículo</label>
-                    <select id="vehiculoInput" class="input">
-                        <option value="">Seleccione vehículo</option>
-                    </select>
+                <div id="pertenencias-container" class="accordion-body">
+                    <div id="pertenencias" class="grid cols-2"></div>
                 </div>
             </div>
 
-            <div id="preventivoSection" style="display:none;">
-                <h4>Preventivo</h4>
-                <div class="form-row">
-                    <div>
-                        <label>Marca</label>
-                        <select id="marcaInput" class="input">
-                            <option value="">Seleccione una marca</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Kilometraje</label>
-                        <select id="kmInput" class="input">
-                            <option value="">Seleccione rango</option>
-                            <option value="0-10k">0-10k</option>
-                            <option value="10k-30k">10k-30k</option>
-                            <option value="30k-60k">30k-60k</option>
-                        </select>
-                    </div>
-                </div>
-                <label>Precio sugerido</label>
-                <input id="precioInput" class="input" readonly placeholder="$ -" />
-                <p class="help">Valores ilustrativos.</p>
+            <div>
+                <label>Fecha</label>
+                <input class="input" id="fecha" type="date" />
             </div>
 
-            <div id="correctivoSection" style="display:none;">
-                <h4>Correctivo</h4>
-                <label>Descripción</label>
-                <textarea id="descripcionCorrectivo" class="input" rows="4" placeholder="Detalle del mantenimiento correctivo..."></textarea>
+            <div>
+                <label>Hora</label>
+                <select class="input" id="hora"></select>
             </div>
 
-            <div id="fallasSection" style="display:none;">
-                <h4>Fallas específicas</h4>
-                <label>Seleccione falla</label>
-                <select id="fallaInput" class="input">
-                    <option value="">Seleccione una falla</option>
-                </select>
-            </div>
-
-            <button onclick="registrarRevision()" style="margin-top:1rem;">Registrar servicio</button>
+            <button id="btnAgendar" type="button">Agendar Revisión</button>
         </div>
-    <div class="card">
-        <h3>Revisiones asociadas</h3>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Placa</th>
-                    <th>Marca</th>
-                    <th>Modelo</th>
-                    <th>Año</th>
-                    <th>Servicio</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody id="tablaRevisiones">
-            </tbody>
-        </table>
+
+        <!-- Listado -->
+        <div class="card">
+            <h3>Mis Revisiones</h3>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Vehículo</th>
+                        <th>Servicio</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+        </div>
+
     </div>
+</section>
+
+<!-- Modal -->
+<div id="modalProforma" style="display:none;">
+    <div class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModal()">&times;</span>
+            <button class="btn-pdf" onclick="descargarPDF()">
+                Descargar PDF
+            </button>
+            <div id="proformaContent"></div>
+        </div>
     </div>
-
-
-
-
-
+</div>
 
 <script>
-    const API_SERVICIOS = "https://localhost:7096/Servicios";
-    const API_TIPO_SERVICIO = "https://localhost:7096/TipoServicios";
-    const API_ESTADO = "https://localhost:7096/Estados";
-    const API_REVISION = "https://localhost:7096/Revision";
-    const API_VEHICULO = "https://localhost:7096/Vehiculos";
-    const API_MARCA = "https://localhost:7096/Marcas";
+    /* =================================================================================
+       CONFIG
+       ================================================================================= */
+    const API = {
+        AGENDAMIENTO: "http://localhost:7096/Agendamiento",
+        REVISION: "http://localhost:7096/Revision",
+        REV_PERT: "http://localhost:7096/api/RevisionPertenencias",
+        SERV_REV: "http://localhost:7096/ServiciosRevision",
+        VEHICULO: "http://localhost:7096/Vehiculos",
+        SERV: "http://localhost:7096/Servicios",
+        TIPO_SERV: "http://localhost:7096/TipoServicios"
+    };
 
-    
     const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
 
-    let marcas = [];
-    let vehiculos = [];
-    let tipoServicios = [];
-    let servicios = [];
-    let estados = [];
+    let cacheVehiculos = {}, cacheServicios = {}, cacheTipos = {};
+    let cacheAgendamientos = [], cacheRevisiones = [];
 
-    function cargarDatosIniciales() {
-        $.get(API_VEHICULO, function (data) {
-            vehiculos = data;
-            $.get(API_SERVICIOS, function (data) {
-                servicios = data;
-                $.get(API_ESTADO, function (data) {
-                    estados = data;
-                    cargarRevisiones();
-                });
-            });
-        });
-    }
 
-    function cargarRevisiones() {
-        $.get(API_REVISION, function (data) {
-            $("#tablaRevisiones").empty();
-            data.forEach(rev => {
-                const vehiculo = vehiculos.find(v => v.id_vehiculo === rev.vehiculo_id && v.cliente_id.toString() === userId);
-                if (vehiculo) {
-                    const servicio = servicios.find(s => s.id_servicio === rev.id_servicio);
-                    const estado = estados.find(e => e.id_estado === rev.id_estado);
-                    const marca = marcas.find(m => m.id_marca === vehiculo.id_marca);
+    let ultimaProforma = null;
+    /* =================================================================================
+       INIT
+       ================================================================================= */
+    $(document).ready(async () => {
+        await cargarVehiculos();
+        await cargarTipos();
+        await cargarServicios();
+        await cargarAgendamientos();
+        await cargarRevisiones();
+        renderPertenencias();
+    });
 
-                    $("#tablaRevisiones").append(`
-                        <tr>
-                            <td>${vehiculo.placa}</td>
-                            <td>${marca ? marca.nombre : "Desconocida"}</td>
-                            <td>${vehiculo.modelo}</td>
-                            <td>${vehiculo.anno}</td>
-                            <td>${servicio ? servicio.nombre : "Desconocido"}</td>
-                            <td>${estado ? estado.nombre : "Desconocido"}</td>
-                        </tr>
-                    `);
-                }
-            });
-        });
-    }
 
-    function cargarTipoServicios() {
-        $.get(API_TIPO_SERVICIO, function (data) {
-            tipoServicios = data;
-            const select = $("#tipoServicioInput");
-            select.empty().append('<option value="">Seleccione tipo</option>');
-            data.forEach(tipo => {
-                select.append(`<option value="${tipo.id_tipo_servicio}">${tipo.nombre}</option>`);
-            });
-        });
-    }
-
+    /* =================================================================================
+       CARGA DE DATOS
+       ================================================================================= */
     function cargarVehiculos() {
-        $.get(API_VEHICULO, function (data) {
-            vehiculos = data.filter(v => v.cliente_id.toString() === userId);
-            const select = $("#vehiculoInput");
-            select.empty().append('<option value="">Seleccione vehículo</option>');
-            vehiculos.forEach(v => {
-                select.append(`<option value="${v.id_vehiculo}">${v.placa} - ${v.modelo}</option>`);
+        return $.get(API.VEHICULO, v => {
+            const propios = v.filter(x => x.cliente_id == userId);
+            $("#vehiculo_id").html(`<option value="">Seleccione</option>`);
+
+            propios.forEach(x => {
+                cacheVehiculos[x.id_vehiculo] = x;
+                $("#vehiculo_id").append(`<option value="${x.id_vehiculo}">${x.placa} - ${x.modelo}</option>`);
             });
         });
     }
 
-    function cargarMarcas() {
-        $.get(API_MARCA, function (data) {
-            marcas = data;
-        });
-    }
-
-    function cargarFallasEspecificas() {
-        $.get(API_SERVICIOS, function (data) {
-            const fallas = data.filter(s => s.tipo_servicio_id === 3);
-            const select = $("#fallaInput");
-            select.empty().append('<option value="">Seleccione una falla</option>');
-            fallas.forEach(f => {
-                select.append(`<option value="${f.id_servicio}">${f.nombre}</option>`);
+    function cargarTipos() {
+        return $.get(API.TIPO_SERV, ts => {
+            $("#tipo_servicio_id").html(`<option value="">Seleccione</option>`);
+            ts.forEach(x => {
+                cacheTipos[x.id_tipo_servicio] = x;
+                $("#tipo_servicio_id").append(`<option value="${x.id_tipo_servicio}">${x.nombre}</option>`);
             });
         });
     }
 
-    function calcPreventivo() {
-        const marca = $("#marcaInput").val();
-        const km = $("#kmInput").val();
-        let precio = 0;
+    function cargarServicios() {
+        return $.get(API.SERV, s => {
+            s.forEach(x => cacheServicios[x.id_servicio] = x);
 
-        if (marca && km) {
-            if (km === "0-10k") precio = 50;
-            else if (km === "10k-30k") precio = 100;
-            else if (km === "30k-60k") precio = 150;
+            $("#tipo_servicio_id").on("change", function () {
+                const tipo = $(this).val();
+                $("#servicio_id").html(`<option value="">Seleccione</option>`);
 
-            $("#precioInput").val(`$ ${precio.toFixed(2)}`);
-        } else {
-            $("#precioInput").val("$ -");
-        }
+                Object.values(cacheServicios)
+                    .filter(s => s.tipo_servicio_id == tipo)
+                    .forEach(s => $("#servicio_id").append(`<option value="${s.id_servicio}">${s.nombre}</option>`));
+            });
+        });
     }
 
-    function registrarRevision() {
-        const tipoId = parseInt($("#tipoServicioInput").val());
-        const vehiculoId = parseInt($("#vehiculoInput").val());
-        let servicioId = null;
+    function cargarAgendamientos() {
+        return $.get(API.AGENDAMIENTO, a => cacheAgendamientos = a);
+    }
 
-        if (tipoId === 1) {
-            const servicio = servicios.find(s => s.tipo_servicio_id === 1);
-            servicioId = servicio ? servicio.id_servicio : null;
-        } else if (tipoId === 2) {
-            const servicio = servicios.find(s => s.tipo_servicio_id === 2);
-            servicioId = servicio ? servicio.id_servicio : null;
-        } else if (tipoId === 3) {
-            servicioId = parseInt($("#fallaInput").val());
-        }
 
-        const estadoPendiente = estados.find(e => e.nombre.toLowerCase() === "pendiente");
-        const estadoId = estadoPendiente ? estadoPendiente.id_estado : null;
+    /* =================================================================================
+       PERTENENCIAS
+       ================================================================================= */
+    function renderPertenencias() {
+        const list = ["Radio","Encendedor","Gar Celular","Antena","Espejo","Alfombras","Halogeno","Llave Rana"
+        ,"Gata Mec/HD","Herramienta","Triangulos","Lagartos","Llanta de repuesto","Copas","Paraguas","Botiquin"
+        ,"Chaleco","Booster","Linga","Extintor"];
+        list.forEach(p => {
+            $("#pertenencias").append(`
+                <label><input type="checkbox" value="${p}"> ${p}</label>
+            `);
+        });
+    }
 
-        if (!vehiculoId || !servicioId || !estadoId) {
-            alert("Faltan datos para registrar la revisión.");
+
+    /* =================================================================================
+       VALIDACIÓN FECHA-HORA
+       ================================================================================= */
+    $("#fecha").on("change", function () {
+        const f = $(this).val();
+        if (!f) return;
+
+        const hoy = new Date();
+        if (new Date(f) <= hoy) {
+            alert("Debe seleccionar una fecha futura.");
+            $(this).val("");
             return;
         }
 
-        const revision = {
-            id_revision: 0,
-            vehiculo_id: vehiculoId,
-            id_servicio: servicioId,
-            id_estado: estadoId,
-            fecha_ingreso: new Date().toISOString(),
-            fecha_estimada_entrega: new Date().toISOString(),
-            fecha_entrega_final: new Date().toISOString()
-        };
+        cargarHorasDisponibles(f);
+    });
 
-        console.log("Revisión a registrar:", revision);
+    function cargarHorasDisponibles(fecha) {
+        const horas = generarHoras();
 
-        $.ajax({
-            url: API_REVISION,
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(revision),
-            success: function () {
-                alert("Revisión registrada correctamente.");
-                cargarRevisiones();
-            },
-            error: function (xhr, status, error) {
-                console.error("Error al registrar revisión:", error);
-                alert("Error al registrar revisión.");
-            }
+        const ocupadas = cacheAgendamientos
+            .filter(a => a.fecha_estimada === fecha)
+            .map(a => a.hora_llegada.substring(0, 5));
+
+        const disponibles = horas.filter(h => !ocupadas.includes(h));
+
+        $("#hora").html("");
+
+        if (disponibles.length === 0) {
+            $("#hora").append(`<option value="">No hay campos este día</option>`);
+            return;
+        }
+
+        disponibles.forEach(h => {
+            $("#hora").append(`<option value="${h}">${h}</option>`);
         });
     }
 
-    $(document).ready(function () {
-        console.log("User ID:", userId);
+    function generarHoras() {
+        const lista = [];
+        let h = new Date();
+        h.setHours(7, 30, 0);
 
-        cargarMarcas(); 
-        cargarTipoServicios();
-        cargarVehiculos();
-        cargarFallasEspecificas();
-        cargarDatosIniciales();
+        let fin = new Date();
+        fin.setHours(18, 0, 0);
 
-        $("#tipoServicioInput").change(function () {
-            const tipoId = parseInt($(this).val());
-            $("#preventivoSection, #correctivoSection, #fallasSection").hide();
+        while (h <= fin) {
+            lista.push(h.toTimeString().substring(0, 5));
+            h.setMinutes(h.getMinutes() + 30);
+        }
 
-            if (tipoId === 1) {
-                $("#preventivoSection").show();
-            } else if (tipoId === 2) {
-                $("#correctivoSection").show();
-            } else if (tipoId === 3) {
-                $("#fallasSection").show();
-            }
+        return lista;
+    }
+
+
+    /* =================================================================================
+       CREAR REVISIÓN COMPLETA
+       ================================================================================= */
+    $("#btnAgendar").on("click", async function () {
+        const vehId = $("#vehiculo_id").val();
+        const servId = $("#servicio_id").val();
+        const fecha = $("#fecha").val();
+        const hora = $("#hora").val();
+
+        const pertenencias = $("#pertenencias input:checked")
+            .map((_, el) => $(el).val()).get();
+
+        if (!vehId || !servId || !fecha || !hora) {
+            alert("Complete todos los campos.");
+            return;
+        }
+
+        /* 1️⃣ Agendamiento */
+        const ag = await $.ajax({
+            url: API.AGENDAMIENTO,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                cliente_id: parseInt(userId),
+                vehiculo_id: parseInt(vehId),
+                fecha_agregada: fecha,
+                fecha_estimada: fecha,
+                hora_llegada: hora,
+                id_estado: 12
+            })
         });
 
-        $("#vehiculoInput").change(function () {
-            const vehiculoId = parseInt($(this).val());
-            const vehiculo = vehiculos.find(v => v.id_vehiculo === vehiculoId);
-
-            if (vehiculo) {
-                const marca = marcas.find(m => m.id_marca === vehiculo.id_marca);
-                const selectMarca = $("#marcaInput");
-                selectMarca.empty();
-
-                if (marca) {
-                    selectMarca.append(`<option value="${marca.nombre}">${marca.nombre}</option>`);
-                } else {
-                    selectMarca.append('<option value="">Marca no encontrada</option>');
-                }
-
-                $("#precioInput").val("$ -");
-            }
+        /* 2️⃣ Revisión */
+        const rev = await $.ajax({
+            url: API.REVISION,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                vehiculo_id: parseInt(vehId),
+                fecha_ingreso: new Date().toISOString(),
+                id_estado: 4,
+                id_agendamiento: ag.id_agendamiento
+            })
         });
 
-        $("#marcaInput, #kmInput").change(calcPreventivo);
+        /* 3️⃣ Servicio */
+        await $.ajax({
+            url: API.SERV_REV,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                revision_id: rev.id_revision,
+                servicio_id: parseInt(servId)
+            })
+        });
+
+        /* 4️⃣ Pertenencias */
+        for (let p of pertenencias) {
+            await $.ajax({
+                url: API.REV_PERT,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    revision_id: rev.id_revision,
+                    nombre: p,
+                    presente: true
+                })
+            });
+        }
+
+        alert("Revisión agendada correctamente.");
+
+        await cargarAgendamientos();
+        await cargarRevisiones();
     });
+
+
+    /* =================================================================================
+       LISTADO
+       ================================================================================= */
+    async function cargarRevisiones() {
+        const data = await $.get(API.REVISION);
+
+        const propias = data.filter(r => cacheVehiculos[r.vehiculo_id]?.cliente_id == userId);
+        cacheRevisiones = propias;
+
+        $("table tbody").html("");
+
+        for (const r of propias) {
+            let servRev;
+            try {
+                servRev = await $.get(`${API.SERV_REV}/ByRevision/${r.id_revision}`);
+            } catch {
+                servRev = null;
+            }
+
+            const serv = servRev ? cacheServicios[servRev.servicio_id] : null;
+
+            const ag = cacheAgendamientos.find(a => a.id_agendamiento === r.id_agendamiento);
+            const veh = cacheVehiculos[r.vehiculo_id];
+
+            $("table tbody").append(`
+                <tr>
+                    <td>${r.id_revision}</td>
+                    <td>${veh?.placa || "-"}</td>
+                    <td>${serv?.nombre || "Desconocido"}</td>
+                    <td>${ag?.fecha_estimada || "-"}</td>
+                    <td>${ag?.hora_llegada || "-"}</td>
+                    <td>
+                        <button class="btn-proforma" onclick="verProforma(${r.id_revision})">
+                            Ver Proforma
+                        </button>
+                    </td>
+                </tr>
+            `);
+        }
+    }
+
+
+    /* =================================================================================
+       PROFORMA
+       ================================================================================= */
+    function verProforma(id) {
+        $.get(`${API.REVISION}/Detalle/${id}`, function (d) {
+
+              ultimaProforma = {
+            idRevision: id,
+            vehiculo: d.vehiculo,
+            servicio: d.servicio,
+            tipoServicio: d.tipo_servicio,
+            agendamiento: d.agendamiento,
+            pertenencias: d.pertenencias || [],
+            trabajos: d.trabajos || []
+        };
+
+
+            const veh = d.vehiculo;
+            const s = d.servicio;
+            const t = d.tipo_servicio;
+            const ag = d.agendamiento;
+
+            let html = `
+                <h2>Proforma Detallada</h2>
+
+                <h3>Vehículo</h3>
+                <p>${veh.placa} - ${veh.modelo} (${veh.id_marca})</p>
+
+                <h3>Servicio</h3>
+                <p>${s?.nombre || "No registrado"}</p>
+                <small>${t?.nombre || "-"}</small>
+
+                <h3>Fecha y Hora</h3>
+                <p>${ag.fecha_estimada} ${ag.hora_llegada}</p>
+
+                <h3>Pertenencias</h3>
+            `;
+
+            if (d.pertenencias.length === 0) {
+                html += `<p>No registradas.</p>`;
+            } else {
+                html += `<ul>`;
+                d.pertenencias.forEach(p => html += `<li>${p.nombre} — ${p.presente ? "Sí" : "No"}</li>`);
+                html += `</ul>`;
+            }
+
+            html += `<h3>Trabajos</h3>`;
+
+            if (d.trabajos.length === 0) {
+                html += `<p>No se han registrado trabajos.</p>`;
+            } else {
+                html += `<ul>`;
+                d.trabajos.forEach(t => html += `<li>${t.nombre}</li>`);
+                html += `</ul>`;
+            }
+
+            $("#proformaContent").html(html);
+            $("#modalProforma").show();
+        });
+    }
+
+    function cerrarModal() {
+        document.getElementById("modalProforma").style.display = "none";
+    }
+
+           async function descargarPDF() {
+
+        if (!ultimaProforma) {
+            alert("No hay datos cargados para exportar.");
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+
+        const doc = new jsPDF({
+            unit: "mm",
+            format: "a4"
+        });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        let y = 12;
+
+        const v = ultimaProforma.vehiculo || {};
+        const s = ultimaProforma.servicio || {};
+        const ts = ultimaProforma.tipoServicio || {};
+        const ag = ultimaProforma.agendamiento || {};
+        const pertenencias = ultimaProforma.pertenencias || [];
+        const trabajos = ultimaProforma.trabajos || [];
+
+        /* ========================================================
+           ENCABEZADO
+           ======================================================== */
+        doc.setFillColor(26, 26, 26);
+        doc.rect(0, 0, pageWidth, 20, "F");
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.setTextColor(255, 255, 255);
+        doc.text("Innovación Tecmave — Proforma de Servicio", 10, 12);
+
+        doc.setFontSize(10);
+        doc.text(`N.º ${ultimaProforma.idRevision}`, pageWidth - 10, 12, { align: "right" });
+        doc.text(`Fecha: ${new Date().toLocaleDateString()}`, pageWidth - 10, 17, { align: "right" });
+
+        // Reset texto
+        doc.setTextColor(0, 0, 0);
+
+        y = 30;
+
+        /* ========================================================
+           DATOS DEL VEHÍCULO
+           ======================================================== */
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Datos del vehículo", 10, y);
+        y += 6;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(`Placa: ${v.placa || "-"}`, 10, y);
+        doc.text(`Modelo: ${v.modelo || "-"}`, 80, y);
+        y += 5;
+
+        doc.text(`Marca ID: ${v.id_marca || "-"}`, 10, y);
+        y += 10;
+
+        /* ========================================================
+           DETALLE DEL SERVICIO
+           ======================================================== */
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Detalle del servicio", 10, y);
+        y += 6;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(`Tipo de servicio: ${ts?.nombre || "-"}`, 10, y);
+        y += 5;
+
+        doc.text(`Servicio seleccionado: ${s?.nombre || "-"}`, 10, y);
+        y += 10;
+
+        /* ========================================================
+           FECHA Y HORA
+           ======================================================== */
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Fecha y hora de revisión", 10, y);
+        y += 6;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(`Fecha: ${ag?.fecha_estimada || "-"}`, 10, y);
+        doc.text(`Hora: ${ag?.hora_llegada || "-"}`, 80, y);
+        y += 10;
+
+        /* ========================================================
+           PERTENENCIAS
+           ======================================================== */
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Pertenencias registradas", 10, y);
+        y += 7;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+
+        if (pertenencias.length === 0) {
+            doc.text("No registradas.", 10, y);
+            y += 10;
+        } else {
+
+            // Encabezado tabla
+            doc.setFillColor(230, 230, 230);
+            doc.rect(10, y, 80, 6, "F");
+            doc.rect(90, y, 30, 6, "F");
+            doc.setFont("helvetica", "bold");
+            doc.text("Pertenencia", 12, y + 4);
+            doc.text("Presente", 92, y + 4);
+            y += 8;
+
+            doc.setFont("helvetica", "normal");
+
+            pertenencias.forEach(p => {
+                if (y > 265) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.text(p.nombre || "-", 12, y);
+                doc.text(p.presente ? "Sí" : "No", 92, y);
+                y += 6;
+            });
+
+            y += 10;
+        }
+
+        /* ========================================================
+           TRABAJOS
+           ======================================================== */
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Trabajos registrados", 10, y);
+        y += 7;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+
+        if (trabajos.length === 0) {
+            doc.text("No se han registrado trabajos.", 10, y);
+            y += 10;
+        } else {
+            trabajos.forEach(t => {
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+                doc.text(`• ${t.nombre}`, 12, y);
+                y += 5;
+            });
+            y += 10;
+        }
+
+        /* ========================================================
+           FIRMA
+           ======================================================== */
+        if (y > 260) {
+            doc.addPage();
+            y = 40;
+        }
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text("__________________________________", 10, y);
+        y += 5;
+        doc.text("Firma del cliente", 10, y);
+
+        /* ========================================================
+           EXPORTAR
+           ======================================================== */
+        doc.save(`Proforma_${ultimaProforma.idRevision}.pdf`);
+    }
+
+        function togglePertenencias() {
+        const body = document.getElementById("pertenencias-container");
+        const arrow = document.getElementById("arrow-pertenencias");
+
+        if (body.style.display === "block") {
+            body.style.display = "none";
+            arrow.textContent = "▼";
+        } else {
+            body.style.display = "block";
+            arrow.textContent = "▲";
+        }
+    }
+
+
 </script>
