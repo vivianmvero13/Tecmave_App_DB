@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Models\Dto\Colaborador.cs~RF1acc6ba3.TMP" />
     <None Remove="Models\PromocionEnvio.cs~RF6ce6364.TMP" />
     <None Remove="Services\MantenimientoService.cs~RF1c04e54a.TMP" />
     <None Remove="Services\RecordatorioService.cs~RFf9078e7.TMP" />
