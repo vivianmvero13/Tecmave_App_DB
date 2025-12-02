@@ -193,6 +193,82 @@
   transform:translateY(-6px);
   box-shadow:0 10px 24px rgba(0,0,0,.12);
   border-radius:999px;
+  border:none;
+  background:#f5f5f5;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.chart-modal-close:hover{
+  background:#e60023;
+  color:#fff;
+}
+
+
+/* Imagen dentro de modal de gráficos */
+.chart-modal-image{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+
+
+/* === Overrides específicos para la página de Estadísticas (Estadisticas/Index) === */
+.stats-page .admin-dashboard-half{
+  /* En estadísticas, dejamos que la card crezca según el contenido */
+  height:auto;
+}
+
+.stats-page .admin-dashboard-chart{
+  /* Sin altura fija; el alto lo manda chart-body */
+  height:auto;
+}
+
+.stats-page .chart-body{
+  /* Alto fijo solo para la zona del canvas */
+  height:260px;
+}
+
+.stats-page .admin-dashboard-chart canvas{
+  /* El canvas ocupa todo el alto disponible en estadísticas */
+  height:100%;
+}
+
+
+/* === Bloque de datos detallados en Estadísticas === */
+.stats-page .stats-detailed-card{
+  margin-top:20px;
+  background:#fff;
+  border-radius:18px;
+  padding:20px 22px;
+  border:1px solid #ffd1d1;
+  box-shadow:0 10px 30px rgba(230,0,35,.06);
+}
+
+.stats-page .stats-detailed-card h3{
+  margin-top:0;
+  margin-bottom:10px;
+  color:#444;
+  font-weight:600;
+}
+
+.stats-page .stats-detailed-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:6px;
+  font-size:14px;
+}
+
+.stats-page .stats-detailed-table thead tr{
+  background:linear-gradient(90deg,#ffe6e6,#ffeef0);
+}
+
+.stats-page .stats-detailed-table th,
+.stats-page .stats-detailed-table td{
+  padding:8px 10px;
+  text-align:left;
 }
 
 .admin-dashboard-chart,
@@ -205,3 +281,4 @@
   transform:translateY(-8px);
   box-shadow:0 16px 40px rgba(0,0,0,.12);
 }
+

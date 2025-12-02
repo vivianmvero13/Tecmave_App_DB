@@ -363,3 +363,97 @@ body.dark-mode #panel-cliente .card {
     background: rgba(15, 23, 42, 0.98) !important;
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.95) !important;
 }
+
+
+/* === Tecmave: modo oscuro para panel y estadísticas === */
+body.dark-mode .admin-card,
+body.dark-mode .stats-kpi-card,
+body.dark-mode .admin-dashboard-chart,
+body.dark-mode .admin-dashboard-activity,
+body.dark-mode .recent-activity-card,
+body.dark-mode .top-clientes-card {
+    background: var(--panel) !important;
+    border-color: var(--border-dark) !important;
+    color: var(--text) !important;
+}
+
+body.dark-mode .admin-dashboard-chart .chart-header h3,
+body.dark-mode .stats-kpi-label,
+body.dark-mode .stats-kpi-sub {
+    color: var(--text-light) !important;
+}
+
+/* Auth (Login / Registro) - modo oscuro */
+body.dark-mode .login-v2-body {
+    background: radial-gradient(circle at top, #020617 0, #020617 40%, #020617 100%) !important;
+}
+
+body.dark-mode .login-v2-container {
+    background: rgba(15, 23, 42, 0.98) !important;
+    border-color: var(--border) !important;
+    box-shadow: var(--shadow-lg) !important;
+}
+
+body.dark-mode .login-v2-right,
+body.dark-mode .login-v2-form-container,
+body.dark-mode .login-v2-form-header,
+body.dark-mode .login-v2-form {
+    background: transparent !important;
+    color: var(--text) !important;
+}
+
+body.dark-mode .login-v2-form-header h1,
+body.dark-mode .login-v2-form-header p,
+body.dark-mode .login-v2-form label {
+    color: var(--text) !important;
+}
+
+body.dark-mode .login-v2-input-group small {
+    color: var(--text-light) !important;
+}
+
+/* Botones de auth se mantienen con rojo brand */
+body.dark-mode .login-v2-button {
+    background: #dc2626 !important;
+    color: #ffffff !important;
+}
+
+/* Fin de overrides específicos de modo oscuro para auth/panel */
+
+
+/* Tecmave: listas y tablas del panel en modo oscuro */
+body.dark-mode .top-clientes-list li {
+    background: transparent !important;
+    border-bottom-color: var(--border) !important;
+    color: var(--text) !important;
+}
+
+body.dark-mode .top-cliente-nombre,
+body.dark-mode .top-cliente-monto {
+    color: var(--text) !important;
+}
+
+body.dark-mode .activity-table thead th {
+    background: rgba(255, 255, 255, 0.04) !important;
+    color: var(--text-light) !important;
+}
+
+body.dark-mode .activity-table tbody tr {
+    background: transparent !important;
+    border-bottom-color: var(--border) !important;
+    color: var(--text) !important;
+}
+
+
+/* Forzar fondo oscuro para contenedores de dashboard/estadísticas */
+body.dark-mode .stats-page,
+body.dark-mode .admin-dashboard,
+body.dark-mode .admin-dashboard-row,
+body.dark-mode .admin-dashboard-half {
+    background: #020617 !important;
+}
+
+/* Asegurar que las tarjetas de gráficos nunca usen blanco en dark */
+body.dark-mode .admin-dashboard-chart {
+    background: #020617 !important;
+}

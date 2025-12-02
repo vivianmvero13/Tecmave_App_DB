@@ -40,10 +40,14 @@
                     referrerpolicy="no-referrer-when-downgrade"></iframe>
             </div>
         </div>
+        </div>
     </div>
 </section>
 
+
+
 @section Scripts {
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const nombre = document.getElementById('contacto-nombre');
@@ -54,6 +58,8 @@
 
             if (!btn) return;
 
+            const EMAILJS_PUBLIC_KEY = "DvkQr9T-CzO1LF4kv";
+
             btn.addEventListener('click', function () {
                 if (!nombre.value || !email.value || !mensaje.value) {
                     msg.textContent = "Completa todos los campos para enviar tu mensaje.";
@@ -63,12 +69,18 @@
                 }
 
                 msg.textContent = "Mensaje enviado. Te contactaremos pronto.";
-                msg.style.color = "#27ae60";
-                msg.style.display = "block";
+                    msg.style.color = "#27ae60";
+                    msg.style.display = "block";
 
-                nombre.value = "";
-                email.value = "";
-                mensaje.value = "";
+                    nombre.value = "";
+                    email.value = "";
+                    mensaje.value = "";
+                }).catch(function (error) {
+                    console.error("Error al enviar el mensaje:", error);
+                    msg.textContent = "Ocurrió un error al enviar el mensaje. Revisa la configuración de EmailJS.";
+                    msg.style.color = "#c0392b";
+                    msg.style.display = "block";
+                });
             });
         });
     </script>

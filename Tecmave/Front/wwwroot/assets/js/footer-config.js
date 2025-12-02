@@ -59,10 +59,10 @@
                   </div>
                   <div class="footer-col">
                       <h4>Newsletter</h4>
-                      <form class="subscribe-form">
-                          <input type="email" placeholder="Tu correo electrónico">
-                          <button type="submit">Suscribirse</button>
-                      </form>
+                      <form id="newsletter-form" class="subscribe-form">
+    <input id="newsletter-email" type="email" placeholder="Tu correo electrónico" required>
+    <button type="submit">Suscribirse</button>
+</form>
                   </div>
               </div>
           </div>
