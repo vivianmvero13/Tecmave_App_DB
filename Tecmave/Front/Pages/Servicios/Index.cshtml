@@ -198,6 +198,10 @@
         gap: .35rem 1rem;
     }
 
+    h3 {
+        margin-bottom: 1rem;
+        color: #000 !important;
+    }
 
 
     /* === Correcciones visuales específicas de esta página (Servicios) === */
@@ -273,14 +277,13 @@
                         <th>Servicio</th>
                         <th>Fecha</th>
                         <th>Hora</th>
+                        <th>Estado</th>
                         <th>Acción</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             </table>
-
         </div>
-
     </div>
 </section>
 
@@ -308,7 +311,8 @@
         SERV_REV: "https://tecmave-api.azurewebsites.net/ServiciosRevision",
         VEHICULO: "https://tecmave-api.azurewebsites.net/Vehiculos",
         SERV: "https://tecmave-api.azurewebsites.net/Servicios",
-        TIPO_SERV: "https://tecmave-api.azurewebsites.net/TipoServicios"
+        TIPO_SERV: "https://tecmave-api.azurewebsites.net/TipoServicios",
+        API_ESTADO = "https://tecmave-api.azurewebsites.net/Estados";
     };
 
     const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
@@ -554,6 +558,7 @@
                     <td>${serv?.nombre || "Desconocido"}</td>
                     <td>${ag?.fecha_estimada || "-"}</td>
                     <td>${ag?.hora_llegada || "-"}</td>
+                    <td>${estado.nombre}</td>
                     <td>
                         <button class="btn-proforma" onclick="verProforma(${r.id_revision})">
                             Ver Proforma
