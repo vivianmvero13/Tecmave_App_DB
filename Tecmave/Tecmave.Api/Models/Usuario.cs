@@ -16,5 +16,11 @@ namespace Tecmave.Api.Models
         public bool NotificacionesActivadas { get; set; } = false;
         public int Estado { get; set; } = 1;
 
+        public string Cedula { get; set; }
+
+        public string Direccion { get; set; }
+
+       
+
     }
 }

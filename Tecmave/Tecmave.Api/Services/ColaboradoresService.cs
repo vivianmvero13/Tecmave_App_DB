@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Tecmave.Api.Data;
 using Tecmave.Api.Models;
@@ -37,14 +38,18 @@ namespace Tecmave.Api.Services
 
         public async Task<ColaboradoresModel> AddColaboradoresAsync(Colaborador dto)
         {
-            
+
             var usuario = new Usuario
             {
+                Direccion = dto.Direccion,
+                Cedula = dto.Cedula,
                 Nombre = dto.Nombre,
                 Apellido = dto.Apellido,
                 UserName = dto.UserName,
                 Email = dto.Email,
-                Estado = 1
+                Estado = 1,
+                PhoneNumber = dto.Telefono
+
             };
 
             var resultado = await _userManager.CreateAsync(usuario, "123Abc!");
@@ -114,32 +119,43 @@ namespace Tecmave.Api.Services
 
         public async Task<bool> DeleteColaboradoresAsync(int id)
         {
-            var entidad = _context.colaboradores.FirstOrDefault(p => p.id_colaborador == id);
-            if (entidad == null)
-            {
-                return false;
-            }
+            var entidad = await _context.colaboradores
+                .FirstOrDefaultAsync(c => c.id_colaborador == id);
 
+            if (entidad == null)
+                return false;
+
+            // 1. Eliminar colaborador primero
+            _context.colaboradores.Remove(entidad);
+            await _context.SaveChangesAsync();
+
+            // 2. Luego eliminar usuario Identity
             var usuario = await _userManager.FindByIdAsync(entidad.id_usuario.ToString());
+
             if (usuario != null)
             {
-                usuario.LockoutEnd = DateTimeOffset.MaxValue;
-                await _userManager.UpdateAsync(usuario);
+                var result = await _userManager.DeleteAsync(usuario);
+
+                if (!result.Succeeded)
+                    return false;
+
                 _context.role_change_audit.Add(new RoleChangeAudit
                 {
                     TargetUserId = usuario.Id,
                     TargetUserName = usuario.UserName,
-                    PreviousRole = (await _userManager.GetRolesAsync(usuario)).FirstOrDefault(),
+                    PreviousRole = null,
                     NewRole = null,
                     ChangedByUserName = "Administrador",
                     ChangedAtUtc = DateTime.UtcNow,
-                    Action = "Eliminación por el colaborador"
+                    Action = "Deleteuser"
                 });
+
+                await _context.SaveChangesAsync();
             }
 
-            _context.colaboradores.Remove(entidad);
-            _context.SaveChanges();
             return true;
         }
+
+
     }
 }

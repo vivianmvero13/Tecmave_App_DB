@@ -12,7 +12,7 @@
 
         <!-- Formulario de nuevo colaborador + usuario -->
         <div class="card">
-            <h3>Nuevo Usuario + Colaborador</h3>
+            <h3>Colaboradores</h3>
 
             <div class="form-row">
                 <div>
@@ -24,7 +24,24 @@
                     <input class="input" id="apellido" type="text" />
                 </div>
             </div>
-
+            <div class="form-row">
+    <div>
+        <label>Cédula</label>
+        <input class="input" id="cedula" type="text" />
+    </div>
+</div>
+           <div class="form-row">
+            <div>
+                <label>Dirección</label>
+                <input class="input" id="direccion" type="text" />
+            </div>
+           </div>
+           <div class="form-row">
+            <div>
+                <label>Teléfono</label>
+                <input class="input" id="telefono" type="text" />
+            </div>
+           </div>
             <div class="form-row">
                 <div>
                     <label>Email</label>
@@ -78,6 +95,7 @@
                 <thead>
                     <tr>
                         <th>Usuario</th>
+                        <th>Cedula</th>
                         <th>Puesto</th>
                         <th>Salario</th>
                         <th>Fecha</th>
@@ -96,8 +114,8 @@
 <script src="https://cdn.jsdelivr.net/npm/izitoast/dist/js/iziToast.min.js"></script>
 <script>
 
-    const API_COLABORADOR = "https://tecmave-api.azurewebsites.net/colaboradores";
-    const API_USUARIOS = "https://tecmave-api.azurewebsites.net/api/usuarios";
+    const API_COLABORADOR = "http://localhost:7096/colaboradores";
+    const API_USUARIOS = "http://localhost:7096/api/usuarios";
 
     let cacheUsuarios = {};
 
@@ -116,7 +134,7 @@
     /* ============================
        CARGAR COLABORADORES TABLA
     ==============================*/
-    function cargarColaboradores() {
+        function cargarColaboradores() {
         $.get(API_COLABORADOR, function (data) {
 
             $("table tbody").empty();
@@ -127,6 +145,7 @@
                 $("table tbody").append(`
                     <tr>
                         <td>${u ? `${u.nombre} ${u.apellidos}` : "Desconocido"}</td>
+                        <td>${u ? u.phone_number : "N/A"}</td>
                         <td>${c.puesto}</td>
                         <td>${c.salario}</td>
                         <td>${c.fecha_contratacion}</td>
@@ -162,7 +181,7 @@
             if (!result.isConfirmed) return;
 
             $.ajax({
-                url: `${API_COLABORADOR}?id=${id}`,
+                url: `${API_COLABORADOR}/${id}`,
                 method: "DELETE",
                 success: () => {
 
@@ -187,16 +206,19 @@
     /* ============================
        CREAR USUARIO + COLABORADOR
     ==============================*/
-                function agregarUsuarioColaborador() {
+      function agregarUsuarioColaborador() {
 
         const dto = {
-            Nombre: $("#nombre").val(),
-            Apellido: $("#apellido").val(),
-            UserName: $("#UserName").val(),  // <-- ESTA ES LA CORRECCIÓN
-            Email: $("#email").val(),
-            Rol: $("#rol").val(),
+            nombre: $("#nombre").val(),
+            apellido: $("#apellido").val(),
+            cedula: $("#cedula").val(),
+            direccion: $("#direccion").val(),   // <-- NUEVO
+            telefono: $("#telefono").val(),     // <-- NUEVO
+            user_name: $("#UserName").val(),
+            email: $("#email").val(),
+            rol: $("#rol").val(),
 
-            Colaboradores: {
+            colaboradores: {
                 puesto: $("#puesto").val(),
                 salario: parseFloat($("#salario").val()),
                 fecha_contratacion: $("#fecha_contratacion").val()
@@ -216,6 +238,7 @@
                     message: "Usuario + Colaborador creado correctamente"
                 });
 
+                limpiarFormulario();
                 cargarColaboradores();
             },
             error: (xhr) => {
@@ -228,7 +251,18 @@
         });
     }
 
-
+    function limpiarFormulario() {
+    $("#nombre").val("");
+    $("#apellido").val("");
+    $("#cedula").val("");
+    $("#direccion").val("");
+    $("#telefono").val("");
+    $("#UserName").val("");
+    $("#email").val("");
+    $("#rol").val("");
+    $("#puesto").val("");
+    $("#salario").val("");
+    $("#fecha_contratacion").val("");
 
 
     /* ============================
