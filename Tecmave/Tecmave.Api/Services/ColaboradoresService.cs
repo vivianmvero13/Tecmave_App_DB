@@ -37,33 +37,34 @@ namespace Tecmave.Api.Services
 
         public async Task<ColaboradoresModel> AddColaboradoresAsync(Colaborador dto)
         {
-
-
-            var usuarios = new Usuario
+            
+            var usuario = new Usuario
             {
                 Nombre = dto.Nombre,
                 Apellido = dto.Apellido,
                 UserName = dto.UserName,
                 Email = dto.Email,
                 Estado = 1
-
             };
 
-            var resultado = await _userManager.CreateAsync(usuarios, "123Abc");
+            var resultado = await _userManager.CreateAsync(usuario, "123Abc!");
             if (!resultado.Succeeded)
             {
-                throw new Exception("Se dio un error al crear el usuario: " + string.Join(", ", resultado.Errors.Select(e => e.Description)));
+                throw new Exception("Error al crear el usuario: " +
+                    string.Join(", ", resultado.Errors.Select(e => e.Description)));
             }
 
+            
             if (!string.IsNullOrEmpty(dto.Rol))
             {
-                await _userManager.AddToRoleAsync(usuarios, dto.Rol);
-
-                
-                dto.Colaboradores.id_usuario = usuarios.Id;
-                _context.colaboradores.Add(dto.Colaboradores);
-                await _context.SaveChangesAsync();
+                await _userManager.AddToRoleAsync(usuario, dto.Rol);
             }
+
+            
+            dto.Colaboradores.id_usuario = usuario.Id;
+
+            _context.colaboradores.Add(dto.Colaboradores);
+            await _context.SaveChangesAsync();
 
             return dto.Colaboradores;
         }

@@ -2,8 +2,9 @@ using Front.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using Tecmave.Api.Services;
 using Tecmave.Front.Models;
-using Tecmave.Front.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +37,7 @@ builder.Services.AddHttpClient();
 //     SMTP / EMAIL
 // ======================
 // IEmailSender viene de Microsoft.AspNetCore.Identity.UI.Services
-builder.Services.AddTransient<ITecmaveEmailSender, SmtpEmailSender>();
+builder.Services.AddTransient<Tecmave.Api.Services.IEmailSender, SmtpEmailSender>();
 
 // ======================
 //    CONEXIÓN A MySQL
