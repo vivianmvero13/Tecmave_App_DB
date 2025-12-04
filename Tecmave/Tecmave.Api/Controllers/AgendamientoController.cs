@@ -52,7 +52,7 @@ namespace Tecmave.Api.Controllers
 
                 string bodyHtml = $@"
             <h2 style='color:#0053ff'>Tu revisión ha sido agendada</h2>
-            <p>Hola <strong>{user.UserName}</strong>,</p>
+            <p>Hola <strong>{user.Nombre}</strong>,</p>
             <p>Tu cita ha sido registrada con éxito.</p>
 
             <h3>Detalles del Agendamiento:</h3>
