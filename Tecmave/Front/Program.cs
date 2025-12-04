@@ -20,7 +20,7 @@ builder.Services.AddRazorPages();
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"];
 if (string.IsNullOrWhiteSpace(apiBaseUrl))
 {
-    throw new InvalidOperationException("No se encontr� la configuraci�n 'ApiBaseUrl' en appsettings.");
+    throw new InvalidOperationException("No se encontro la configuracion 'ApiBaseUrl' en appsettings.");
 }
 
 // Cliente tipado para la API
