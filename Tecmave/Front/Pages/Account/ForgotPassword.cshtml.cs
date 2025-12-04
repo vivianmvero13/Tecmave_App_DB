@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Net;
 using System.Text;
-using Tecmave.Api.Services;
 using Tecmave.Front.Models;
+using Tecmave.Front.Services;
 
 namespace Front.Pages.Account
 {
@@ -15,9 +15,9 @@ namespace Front.Pages.Account
     public class ForgotPasswordModel : PageModel
     {
         private readonly UserManager<Usuario> _userManager;
-        private readonly IEmailSender _emailSender;
+        private readonly ITecmaveEmailSender _emailSender;
 
-        public ForgotPasswordModel(UserManager<Usuario> userManager, IEmailSender emailSender)
+        public ForgotPasswordModel(UserManager<Usuario> userManager, ITecmaveEmailSender emailSender)
         {
             _userManager = userManager;
             _emailSender = emailSender;

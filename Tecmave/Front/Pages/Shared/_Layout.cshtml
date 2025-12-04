@@ -23,26 +23,26 @@
 <!DOCTYPE html>
 <html lang="es" class="@(roles.Contains("Admin") ? "role-admin" : "")">
 <head>
-    <meta name="api-base" content="http://localhost:7096">
+    <meta name="api-base" content="https://tecmave-api.azurewebsites.net">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - TECMAVE CR</title>
 
-    <link rel="preconnect" href="http://fonts.googleapis.com" />
-    <link rel="preconnect" href="http://fonts.gstatic.com" crossorigin />
-    <link href="http://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
 
     <link rel="stylesheet" href="~/assets/css/styles.css" />
     <link rel="stylesheet" href="~/assets/css/disney-style.css" />
     <link rel="stylesheet" href="~/assets/css/dark-theme.css" />
     <link rel="stylesheet" href="~/assets/css/dashboard.css" />
     <link rel="stylesheet" href="~/assets/css/theme-lighten.css" />
-    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="~/assets/css/brand-red-hard.css" />
-    <script src="http://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="~/lib/jquery/jquery.min.js"></script>
-    <script src="http://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="~/css/adminDashboard.css" />
 </head>
 <body data-user-id="@(currentUser?.Id)"
@@ -62,6 +62,7 @@
                 <a asp-page="/Servicios/Index"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
                 <a asp-page="/Agendamiento/Index"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
                 <a asp-page="/Vehiculos/Crear"><i class="fa-solid fa-car"></i>Mis Vehículos</a>
+                <a asp-page="/Promociones/NuestrasPromociones"><i class="fa-solid fa-car"></i>Promociones</a>
 
                 
 
@@ -83,6 +84,7 @@
                         <a asp-page="/Estadistica/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
                         <a asp-page="/Usuarios/Index"><i class="fa-solid fa-user-group"></i> Usuarios</a>
                         <a asp-page="/Vehiculos/Index"><i class="fa-solid fa-car"></i> Vehículos</a>
+                        <a asp-page="/Vehiculos/Promociones"><i class="fa-solid fa-car"></i> Promociones</a>
                         <a asp-page="/Mantenimientos/Index"><i class="fa-solid fa-user-group"></i> Mantenimientos</a>
                         <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
                         <a asp-page="/Factura/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Factura</a>

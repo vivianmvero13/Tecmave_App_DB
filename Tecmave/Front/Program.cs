@@ -1,22 +1,51 @@
 using Front.Data;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
-using Tecmave.Api.Services;
 using Tecmave.Front.Models;
+using Tecmave.Front.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ======================
+//       RAZOR PAGES
+// ======================
 builder.Services.AddRazorPages();
-builder.Services.AddHttpClient("api", client => { client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]); });
 
+// ======================
+//     HTTP CLIENT API
+// ======================
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"];
+if (string.IsNullOrWhiteSpace(apiBaseUrl))
+{
+    throw new InvalidOperationException("No se encontró la configuración 'ApiBaseUrl' en appsettings.");
+}
+
+// Cliente tipado para la API
+builder.Services.AddHttpClient("api", client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+});
+
+// Cliente genérico si ocupás otros usos
 builder.Services.AddHttpClient();
-builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
 
+// ======================
+//     SMTP / EMAIL
+// ======================
+// IEmailSender viene de Microsoft.AspNetCore.Identity.UI.Services
+builder.Services.AddTransient<ITecmaveEmailSender, SmtpEmailSender>();
+
+// ======================
+//    CONEXIÓN A MySQL
+// ======================
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<MyIdentityDBContext>(opt =>
     opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
 
+// ======================
+//        IDENTITY
+// ======================
 builder.Services.AddIdentity<Usuario, IdentityRole<int>>(
     options =>
     {
@@ -40,6 +69,10 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
 
+// ======================
+//         CORS
+// (solo afecta si otro origen consume el FRONT directamente)
+// ======================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost",
@@ -48,6 +81,10 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowAnyHeader());
 });
+
+// ======================
+//      PIPELINE APP
+// ======================
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -64,10 +101,8 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-
-
-
 app.UseCors("AllowLocalhost");
+
 app.MapRazorPages();
 
 app.Run();

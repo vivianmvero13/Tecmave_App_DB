@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Tecmave.Front.Models;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Tecmave.Api.Models;
 
 namespace Front.Pages.Promociones
 {
@@ -27,7 +27,7 @@ namespace Front.Pages.Promociones
             var client = _httpClientFactory.CreateClient();
 
             Promociones = await client.GetFromJsonAsync<List<PromocionesModel>>(
-                              "http://localhost:7096/Promociones")
+                              "https://tecmave-api.azurewebsites.net/Promociones")
                           ?? new List<PromocionesModel>();
         }
 
@@ -36,7 +36,7 @@ namespace Front.Pages.Promociones
             var client = _httpClientFactory.CreateClient();
 
             var response = await client.PostAsync(
-                $"http://localhost:7096/Promociones/enviar-promo/{idPromocion}",
+                $"https://tecmave-api.azurewebsites.net/Promociones/enviar-promo/{idPromocion}",
                 null);
 
             string mensaje = "Promoción enviada.";
