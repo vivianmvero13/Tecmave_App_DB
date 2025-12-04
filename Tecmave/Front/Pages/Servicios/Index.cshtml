@@ -94,13 +94,13 @@
     }
 
     .modal-content {
-        background: rgba(30,30,30,0.85);
+        background: #f9fafb;
         padding: 2rem;
         border-radius: 15px;
         width: 45%;
         max-height: 80vh;
         overflow-y: auto;
-        color: #fff;
+        color: #000 !important;
         border: 1px solid #444;
         animation: slideUp .25s ease;
         position: relative;
@@ -132,11 +132,11 @@
         right: 15px;
         font-size: 1.6rem;
         cursor: pointer;
-        color: #bbb;
+        color: #555;
     }
 
         .close:hover {
-            color: #fff;
+            color: #000;
         }
 
     .btn-pdf {
@@ -204,19 +204,23 @@
     }
 
     /* === Correcciones visuales específicas de esta página (Servicios) === */
-    /* Dropdowns: asegurar que las opciones sean visibles */
     select,
     select option {
         color: #ffffff !important;
         background-color: #111111 !important;
     }
 
-    /* Texto dentro de la proforma (modal) más legible sobre fondo oscuro */
+    /* Texto dentro de la proforma (modal) más legible y en negro */
     #proformaContent,
     #proformaContent * {
         color: #111111 !important;
     }
 
+    /* Texto del modal de cancelar en negro */
+    #cancelarContent,
+    #cancelarContent * {
+        color: #111111 !important;
+    }
 </style>
 
 <section class="section">
@@ -613,6 +617,7 @@
             }
 
             const serv = servRev ? cacheServicios[servRev.servicio_id] : null;
+            const servicioId = servRev ? servRev.servicio_id : null; // <<<
 
             const ag = cacheAgendamientos.find(a => a.id_agendamiento === r.id_agendamiento);
             const veh = cacheVehiculos[r.vehiculo_id];
@@ -633,7 +638,7 @@
                         <button class="btn-proforma" onclick="cancelarRevision(${r.id_revision})">
                             Cancelar
                         </button>
-                        <button class="btn-proforma" onclick="reagendarRevision(${r.id_revision})">
+                        <button class="btn-proforma" onclick="reagendarRevision(${r.id_revision}, ${servicioId ?? 'null'})">
                             Reagendar
                         </button>
                     </td>
@@ -946,7 +951,6 @@
 
         const ag = agendamientoACancelar;
 
-        // Construimos payload explícito y cambiamos estado a 11 (Cancelado)
         const payload = {
             id_agendamiento: ag.id_agendamiento,
             cliente_id: ag.cliente_id,
@@ -962,7 +966,7 @@
 
         try {
             await $.ajax({
-                url: `${API.AGENDAMIENTO}/${ag.id_agendamiento}`,
+                url: API.AGENDAMIENTO,
                 method: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(payload)
@@ -982,67 +986,73 @@
         }
     }
 
-    async function reagendarRevision(idRevision) {
+    // <<< NUEVO: Reagendar precargando el formulario de "Agendar Revisión"
+    async function reagendarRevision(idRevision, servicioId) {
         const rev = cacheRevisiones.find(r => r.id_revision === idRevision);
         if (!rev) {
             alert("No se encontró la revisión.");
             return;
         }
 
-        const ag = cacheAgendamientos.find(a => a.id_agendamiento === rev.id_agendamiento);
+        let ag = cacheAgendamientos.find(a => a.id_agendamiento === rev.id_agendamiento);
         if (!ag) {
             alert("No se encontró el agendamiento asociado.");
             return;
         }
 
-        const veh = cacheVehiculos[rev.vehiculo_id];
-
-        const nuevaFecha = prompt(
-            `Ingrese la nueva fecha (YYYY-MM-DD) para la revisión #${idRevision} del vehículo ${veh?.placa || ""}`,
-            ag.fecha_estimada
-        );
-        if (!nuevaFecha) return;
-
-        const hoy = new Date();
-        if (new Date(nuevaFecha) <= hoy) {
-            alert("La nueva fecha debe ser futura.");
-            return;
+        // Si no vino el servicioId en el onclick, lo intentamos obtener desde la API
+        if (!servicioId) {
+            try {
+                const servRev = await $.get(`${API.SERV_REV}/ByRevision/${idRevision}`);
+                servicioId = servRev?.servicio_id || null;
+            } catch {
+                servicioId = null;
+            }
         }
 
-        const horaActual = ag.hora_llegada ? ag.hora_llegada.substring(0, 5) : "";
-        const nuevaHora = prompt("Ingrese la nueva hora (HH:mm):", horaActual);
-        if (!nuevaHora) return;
+        // 1) Vehículo
+        $("#vehiculo_id").val(rev.vehiculo_id);
 
-        // No cambiar el estado al reagendar, solo fecha y hora
-        const payload = {
-            id_agendamiento: ag.id_agendamiento,
-            cliente_id: ag.cliente_id,
-            vehiculo_id: ag.vehiculo_id,
-            fecha_agregada: ag.fecha_agregada,
-            fecha_estimada: nuevaFecha,
-            hora_llegada: nuevaHora,
-            id_estado: ag.id_estado
-        };
+        // 2) Tipo de servicio y servicio
+        if (servicioId && cacheServicios[servicioId]) {
+            const servicio = cacheServicios[servicioId];
+            const tipoId = servicio.tipo_servicio_id;
 
-        mostrarLoading();
+            // Setear tipo de servicio y disparar el cambio para cargar los servicios
+            $("#tipo_servicio_id").val(tipoId);
+            $("#tipo_servicio_id").trigger("change");
 
-        try {
-            await $.ajax({
-                url: `${API.AGENDAMIENTO}/${ag.id_agendamiento}`,
-                method: "PUT",
-                contentType: "application/json",
-                data: JSON.stringify(payload)
-            });
-
-            alert("Revisión reagendada correctamente.");
-
-            await cargarAgendamientos();
-            await cargarRevisiones();
-        } catch (err) {
-            console.error(err);
-            alert("Ocurrió un error al reagendar la revisión.");
-        } finally {
-            ocultarLoading();
+            // Como el cambio rellena #servicio_id en base a cacheServicios, podemos
+            // setear el valor inmediatamente después
+            setTimeout(() => {
+                $("#servicio_id").val(servicioId);
+            }, 0);
+        } else {
+            // Si no conocemos el servicio, limpiamos selects dependientes
+            $("#tipo_servicio_id").val("");
+            $("#servicio_id").html(`<option value="">Seleccione</option>`);
         }
+
+        // 3) Fecha y hora
+        if (ag.fecha_estimada) {
+            $("#fecha").val(ag.fecha_estimada);
+            cargarHorasDisponibles(ag.fecha_estimada);
+
+            const horaStr = ag.hora_llegada ? ag.hora_llegada.substring(0, 5) : "";
+
+            if (horaStr) {
+                // Si la hora actual no está en la lista (por restricciones), la agregamos
+                if ($("#hora option[value='" + horaStr + "']").length === 0) {
+                    $("#hora").append(`<option value="${horaStr}">${horaStr}</option>`);
+                }
+                $("#hora").val(horaStr);
+            }
+        }
+
+        // 4) Limpiar pertenencias (para que el usuario las marque nuevamente si quiere)
+        $("#pertenencias input[type='checkbox']").prop("checked", false);
+
+        // 5) Llevar al usuario al formulario
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }
 </script>
