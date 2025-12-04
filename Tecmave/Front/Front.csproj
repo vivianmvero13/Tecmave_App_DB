@@ -19,8 +19,4 @@
     <Folder Include="wwwroot\promo-images\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Tecmave.Api\Tecmave.Api.csproj" />
-  </ItemGroup>
-
 </Project>

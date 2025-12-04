@@ -1,10 +1,9 @@
-using Front.Data;
+ï»¿using Front.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
-using Tecmave.Api.Services;
 using Tecmave.Front.Models;
-
+using Tecmave.Front.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +20,7 @@ builder.Services.AddRazorPages();
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"];
 if (string.IsNullOrWhiteSpace(apiBaseUrl))
 {
-    throw new InvalidOperationException("No se encontró la configuración 'ApiBaseUrl' en appsettings.");
+    throw new InvalidOperationException("No se encontrï¿½ la configuraciï¿½n 'ApiBaseUrl' en appsettings.");
 }
 
 // Cliente tipado para la API
@@ -30,17 +29,17 @@ builder.Services.AddHttpClient("api", client =>
     client.BaseAddress = new Uri(apiBaseUrl);
 });
 
-// Cliente genérico si ocupás otros usos
+// Cliente genï¿½rico si ocupï¿½s otros usos
 builder.Services.AddHttpClient();
 
 // ======================
 //     SMTP / EMAIL
 // ======================
 // IEmailSender viene de Microsoft.AspNetCore.Identity.UI.Services
-builder.Services.AddTransient<Tecmave.Api.Services.IEmailSender, SmtpEmailSender>();
+builder.Services.AddTransient<ITecmaveEmailSender, SmtpEmailSender>();
 
 // ======================
-//    CONEXIÓN A MySQL
+//    CONEXIï¿½N A MySQL
 // ======================
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<MyIdentityDBContext>(opt =>
