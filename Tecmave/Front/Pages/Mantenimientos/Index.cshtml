@@ -2,36 +2,50 @@
 @model Front.Pages.Mantenimientos.IndexModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Mantenimientos";
+    ViewData["Title"] = "Administrar Agendamientos";
 }
 
-<h1 class="mb-3">Mantenimientos</h1>
+<h1>Administrar Agendamientos</h1>
 
 <div class="row g-3 align-items-end mt-3">
-    <div class="col col-md-8">
-        <label for="localSearch" class="form-label">Buscar</label>
+    <div class="col-12 col-md-4">
+        <label for="estadoFilter" class="form-label">Filtrar por estado</label>
+        <select id="estadoFilter" class="form-select">
+            <option value="">(Todos)</option>
+        </select>
+    </div>
+    <div class="col-12 col-md-8">
+        <label for="searchAg" class="form-label">Buscar</label>
         <div class="input-group">
-            <input id="localSearch" class="form-control" placeholder="Buscar por placa, cliente o fecha…" />
-            <button id="clearSearch" class="btn btn-outline-secondary" type="button">Limpiar</button>
+            <input id="searchAg" class="form-control" placeholder="Buscar por cliente, placa, estado…" />
+            <button id="clearSearchAg" class="btn btn-outline-secondary" type="button">Limpiar</button>
         </div>
     </div>
 </div>
 
-<div class="table-responsive mt-4">
-    <table class="table table-hover align-middle">
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <small id="agResultsBadge" class="text-muted">Mostrando 0 de 0</small>
+    <div class="d-flex gap-2">
+        <button id="exportAgBtn" class="btn btn-orange btn-sm" type="button">
+            <i class="fa-solid fa-file-excel"></i> Exportar
+        </button>
+    </div>
+</div>
+
+<div class="table-responsive mt-2">
+    <table class="table align-middle">
         <thead>
             <tr>
-                <th>Vehículo</th>
+                <th>Fecha</th>
+                <th>Hora</th>
                 <th>Cliente</th>
-                <th>Fecha Mantenimiento</th>
-                <th>Próximo</th>
+                <th>Vehículo</th>
                 <th>Estado</th>
-                <th>Recordatorio</th>
-                <th style="width: 260px;">Acciones</th>
+                <th>Acción</th>
             </tr>
         </thead>
-        <tbody id="mantenimientosTabla">
-            <tr><td colspan="7">Cargando mantenimientos...</td></tr>
+        <tbody id="agTable">
+            <tr><td colspan="6">Cargando agendamientos…</td></tr>
         </tbody>
     </table>
 </div>
@@ -43,210 +57,324 @@
         color: #fff !important;
     }
 
-        .btn-orange:hover {
-            background: #8f9a11 !important;
-        }
+    .btn-orange:hover {
+        background: #9FAA13 !important;
+    }
+
+    .badge-estado {
+        font-size: .75rem;
+        padding: .25rem .5rem;
+        border-radius: .5rem;
+    }
 </style>
 
 <script>
     const API_BASE = 'https://tecmave-api.azurewebsites.net';
-    const MANTENIMIENTOS_URL = `${API_BASE}/Servicios`;
-    const ESTADOS_URL = `${API_BASE}/Estados/mantenimientos`; // ajusta si tu endpoint se llama distinto
+    const AG_URL   = `${API_BASE}/Agendamiento`;
+    const VEH_URL  = `${API_BASE}/Vehiculos`;
+    const USERS_URL= `${API_BASE}/api/usuarios`;
+    const EST_URL  = `${API_BASE}/Estados`;
 
-    const $tableBody = document.getElementById('mantenimientosTabla');
-    const $search = document.getElementById('localSearch');
-    const $clear = document.getElementById('clearSearch');
+    let allAgendamientos = [];
+    let vehById = {};
+    let userById = {};
+    let estados = [];
+    let estadosById = {};
 
-    let allRows = [];
-    let filteredRows = [];
-    let estados = []; // catálogo de estados para el dropdown
+    const U = s => (s ?? '').toString().trim().toUpperCase();
+    const esc = s => String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;')
+                                     .replaceAll('>','&gt;').replaceAll('"','&quot;')
+                                     .replaceAll("'",'&#39;');
+    function debounce(fn, d=250){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), d);} }
 
-    function escapeHtml(s) {
-        return String(s ?? '').replace(/[&<>"'`=\/]/g, c => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;', '=': '&#61;', '/': '&#47;'
-        }[c]));
+    function formatFecha(f){
+        if(!f) return '-';
+        // viene como "2025-12-11" o "2025-12-11T00:00:00"
+        return f.toString().substring(0,10);
+    }
+    function formatHora(h){
+        if(!h) return '-';
+        return h.toString().substring(0,5);
     }
 
-    function estadosOptionsHtml(selectedId) {
-        if (!estados.length) {
-            return '<option value="">Sin estados</option>';
-        }
-
-        return estados.map(e => `
-            <option value="${e.id_estado}" ${String(e.id_estado) === String(selectedId) ? 'selected' : ''}>
-                ${escapeHtml(e.nombre)}
-            </option>
-        `).join('');
+    function buildClienteName(u){
+        if(!u) return '(Sin usuario)';
+        const n = (u.nombre ?? u.Nombre ?? '').trim();
+        const a = (u.apellidos ?? u.Apellidos ?? '').trim();
+        const full = [n,a].filter(Boolean).join(' ').trim();
+        return full || (u.userName ?? u.UserName ?? 'Usuario');
     }
 
-    function renderRows(rows) {
-        if (!rows.length) {
-            $tableBody.innerHTML = `<tr><td colspan="7">Sin resultados</td></tr>`;
+    function loadEstadosFilter(){
+        const $sel = $('#estadoFilter').empty();
+        $sel.append(`<option value="">(Todos)</option>`);
+        estados
+            .slice()
+            .sort((a,b) => a.nombre.localeCompare(b.nombre))
+            .forEach(e => {
+                $sel.append(`<option value="${e.id_estado}">${esc(e.nombre)}</option>`);
+            });
+    }
+
+    function applyAgFilters(){
+        const estadoSel = $('#estadoFilter').val();
+        const q = ($('#searchAg').val() || '').toLowerCase();
+
+        return allAgendamientos.filter(a => {
+            if(estadoSel && String(a.id_estado) !== String(estadoSel)) return false;
+
+            if(!q) return true;
+
+            const u = userById[a.cliente_id];
+            const v = vehById[a.vehiculo_id];
+            const e = estadosById[a.id_estado];
+
+            const nombreCliente = buildClienteName(u);
+            const placa = v?.placa ?? v?.Placa ?? '';
+            const modelo = v?.modelo ?? v?.Modelo ?? '';
+            const estadoNombre = e?.nombre ?? '';
+
+            const haystack = [
+                nombreCliente,
+                placa,
+                modelo,
+                estadoNombre,
+                formatFecha(a.fecha_estimada),
+                formatHora(a.hora_llegada)
+            ].join(' ').toLowerCase();
+
+            return haystack.includes(q);
+        });
+    }
+
+    function renderAgTable(rows){
+        const $tb = $('#agTable').empty();
+        if(!rows.length){
+            $tb.html(`<tr><td colspan="6" class="text-muted">No hay agendamientos.</td></tr>`);
+            $('#agResultsBadge').text(`Mostrando 0 de ${allAgendamientos.length}`);
             return;
         }
 
-        const html = rows.map(r => `
-            <tr>
-                <td>${escapeHtml(r.vehiculo)}</td>
-                <td>${escapeHtml(r.clienteNombre)}<br><small>${escapeHtml(r.clienteEmail)}</small></td>
-                <td>${escapeHtml(r.fechaMantenimiento)}</td>
-                <td>${escapeHtml(r.proximoMantenimiento)}</td>
-                <td>
-                    <select class="form-select form-select-sm estado-select" data-id="${r.id}">
-                        ${estadosOptionsHtml(r.estadoId)}
-                    </select>
-                </td>
-                <td>${r.recordatorio ? 'Sí' : 'No'}</td>
-                <td>
-                    <div class="d-flex gap-2">
-                        <a class="btn btn-outline-primary btn-sm" href="/Mantenimientos/Detalle?id=${encodeURIComponent(r.id)}">Ver</a>
-                        <button class="btn btn-orange btn-sm" onclick="enviarRecordatorio(${r.id})">
-                            <i class="fa-solid fa-envelope"></i> Recordatorio
-                        </button>
-                        <button class="btn btn-secondary btn-sm" onclick="guardarEstado(${r.id})">
-                            Guardar estado
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
+        rows.forEach(a => {
+            const u = userById[a.cliente_id];
+            const v = vehById[a.vehiculo_id];
+            const e = estadosById[a.id_estado];
 
-        $tableBody.innerHTML = html;
+            const cliente = buildClienteName(u);
+            const placa   = v?.placa ?? v?.Placa ?? '';
+            const modelo  = v?.modelo ?? v?.Modelo ?? '';
+            const estadoNombre = e?.nombre ?? '(Desconocido)';
+
+            const selectHtml = buildEstadoSelect(a.id_agendamiento, a.id_estado);
+
+            $tb.append(`
+                <tr data-id="${a.id_agendamiento}">
+                    <td>${esc(formatFecha(a.fecha_estimada || a.fecha_agregada))}</td>
+                    <td>${esc(formatHora(a.hora_llegada))}</td>
+                    <td>${esc(cliente)}</td>
+                    <td>${esc(placa)} ${modelo ? ' - ' + esc(modelo) : ''}</td>
+                    <td>${selectHtml}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="restoreAgEstado(${a.id_agendamiento})">
+                            Deshacer
+                        </button>
+                    </td>
+                </tr>
+            `);
+        });
+
+        $('#agResultsBadge').text(`Mostrando ${rows.length} de ${allAgendamientos.length}`);
+
+        // Attach change handler a todos los selects
+        $('.estado-select').off('change').on('change', function(){
+            const agId = Number($(this).data('id'));
+            const newEstado = Number($(this).val());
+            updateAgEstado(agId, newEstado, this);
+        });
     }
 
-    function applyFilter() {
-        const q = $search.value.trim().toLowerCase();
-        if (!q) {
-            filteredRows = [...allRows];
-            return renderRows(filteredRows);
+    function buildEstadoSelect(agId, currentEstadoId){
+        let html = `<select class="form-select form-select-sm estado-select" data-id="${agId}">`;
+        estados.forEach(e => {
+            const sel = String(e.id_estado) === String(currentEstadoId) ? 'selected' : '';
+            html += `<option value="${e.id_estado}" ${sel}>${esc(e.nombre)}</option>`;
+        });
+        html += `</select>`;
+        return html;
+    }
+
+    async function updateAgEstado(agId, newEstadoId, selectEl){
+        const ag = allAgendamientos.find(x => Number(x.id_agendamiento) === Number(agId));
+        if(!ag){
+            alert('No se encontró el agendamiento.');
+            return;
         }
 
-        filteredRows = allRows.filter(r =>
-            r.vehiculo.toLowerCase().includes(q) ||
-            r.clienteNombre.toLowerCase().includes(q) ||
-            r.fechaMantenimiento.toLowerCase().includes(q)
-        );
+        const oldVal = ag.id_estado;
+        ag.id_estado = newEstadoId; // optimista
 
-        renderRows(filteredRows);
-    }
+        const $sel = $(selectEl);
+        $sel.prop('disabled', true);
 
-    async function loadEstados() {
-        try {
-            const res = await fetch(ESTADOS_URL);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            estados = await res.json();
+        const payload = {
+            id_agendamiento: ag.id_agendamiento,
+            cliente_id: ag.cliente_id,
+            vehiculo_id: ag.vehiculo_id,
+            fecha_agregada: ag.fecha_agregada,
+            fecha_estimada: ag.fecha_estimada,
+            hora_llegada: ag.hora_llegada,
+            id_estado: newEstadoId
+        };
 
-            // estados esperados: [{ id_estado: 4, nombre: "Ingresado" }, ...]
-        } catch (err) {
-            console.error('Error cargando estados', err);
-            estados = [];
-        }
-    }
-
-    async function loadMantenimientos() {
-        try {
-            const res = await fetch(MANTENIMIENTOS_URL);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-
-            allRows = (Array.isArray(data) ? data : data?.data ?? []).map(m => ({
-                id: m.id_mantenimiento ?? m.idMantenimiento ?? m.id ?? 0,
-                vehiculo: m.vehiculo?.placa ?? `#${m.id_vehiculo ?? m.idVehiculo}`,
-                clienteNombre: m.vehiculo?.cliente?.nombre ?? '—',
-                clienteEmail: m.vehiculo?.cliente?.email ?? '—',
-                fechaMantenimiento: m.fecha_mantenimiento ?? m.fechaMantenimiento ?? '—',
-                proximoMantenimiento: m.proximo_mantenimiento ?? m.proximoMantenimiento ?? '—',
-                recordatorio: m.recordatorio_enviado ?? m.recordatorioEnviado ?? false,
-                estadoId: m.idEstado ?? m.id_estado ?? 0
-            }));
-
-            filteredRows = [...allRows];
-            renderRows(filteredRows);
-
-        } catch (err) {
+        try{
+            await $.ajax({
+                url: AG_URL,
+                method: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(payload)
+            });
+            // éxito, mantenemos newEstadoId
+        }catch(err){
             console.error(err);
-            $tableBody.innerHTML = `<tr><td colspan="7">Error cargando datos.</td></tr>`;
+            ag.id_estado = oldVal;
+            $sel.val(oldVal);
+            alert('No se pudo actualizar el estado.');
+        }finally{
+            $sel.prop('disabled', false);
         }
     }
 
-    async function enviarRecordatorio(id) {
-        if (!confirm(`¿Enviar recordatorio para el mantenimiento #${id}?`)) return;
+    // Deshacer cambios de estado en UI al último valor cargado
+    window.restoreAgEstado = function(agId){
+        const ag = allAgendamientos.find(x => Number(x.id_agendamiento) === Number(agId));
+        if(!ag) return;
+        const $row = $(`tr[data-id="${agId}"]`);
+        const $sel = $row.find('.estado-select');
+        $sel.val(ag.id_estado);
+    };
 
-        try {
-            const res = await fetch(`${MANTENIMIENTOS_URL}/${id}/enviar-recordatorio`, {
-                method: 'POST',
-                headers: { 'Accept': '*/*' }
+    // ---------- EXPORTAR A CSV ----------
+    function csvEscape(val){
+        const s = (val ?? '').toString();
+        if (/[",\n\r;]/.test(s)) {
+            return `"${s.replace(/"/g, '""')}"`;
+        }
+        return s;
+    }
+
+    function buildAgCsv(rows){
+        const headers = ['Fecha','Hora','Cliente','Vehículo','Estado'];
+        const lines = [headers.join(',')];
+
+        rows.forEach(a => {
+            const u = userById[a.cliente_id];
+            const v = vehById[a.vehiculo_id];
+            const e = estadosById[a.id_estado];
+
+            const cliente = buildClienteName(u);
+            const placa   = v?.placa ?? v?.Placa ?? '';
+            const modelo  = v?.modelo ?? v?.Modelo ?? '';
+            const vehText = modelo ? `${placa} - ${modelo}` : placa;
+            const estadoNombre = e?.nombre ?? '';
+
+            lines.push([
+                csvEscape(formatFecha(a.fecha_estimada || a.fecha_agregada)),
+                csvEscape(formatHora(a.hora_llegada)),
+                csvEscape(cliente),
+                csvEscape(vehText),
+                csvEscape(estadoNombre)
+            ].join(','));
+        });
+
+        return '\uFEFF' + lines.join('\r\n');
+    }
+
+    window.exportAgToExcel = function(){
+        const rows = applyAgFilters();
+        if (!rows.length){
+            alert('No hay datos para exportar.');
+            return;
+        }
+        const csv = buildAgCsv(rows);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+        const now = new Date();
+        const pad = n => n.toString().padStart(2,'0');
+        const fname = `agendamientos_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fname;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    };
+
+    async function loadAllData(){
+        try{
+            const [agList, vehList, userList, estList] = await Promise.all([
+                $.getJSON(AG_URL),
+                $.getJSON(VEH_URL),
+                $.getJSON(USERS_URL),
+                $.getJSON(EST_URL)
+            ]);
+
+            allAgendamientos = Array.isArray(agList) ? agList.slice() : [];
+            // ordenar por fecha/hora asc
+            allAgendamientos.sort((a,b) => {
+                const fa = (a.fecha_estimada || a.fecha_agregada || '').toString();
+                const fb = (b.fecha_estimada || b.fecha_agregada || '').toString();
+                if (fa < fb) return -1;
+                if (fa > fb) return 1;
+                const ha = (a.hora_llegada || '').toString();
+                const hb = (b.hora_llegada || '').toString();
+                return ha.localeCompare(hb);
             });
 
-            const data = await res.json().catch(() => ({}));
-
-            if (res.ok) {
-                alert(data.mensaje || "Recordatorio enviado correctamente.");
-            } else {
-                alert(data.mensaje || "Ocurrió un error enviando el recordatorio.");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Error de conexión al enviar el recordatorio.");
-        }
-    }
-
-    async function guardarEstado(id) {
-        const select = document.querySelector(`select.estado-select[data-id="${id}"]`);
-        if (!select) {
-            alert("No se encontró el selector de estado.");
-            return;
-        }
-
-        const nuevoEstado = parseInt(select.value, 10);
-        if (!nuevoEstado) {
-            alert("Debe seleccionar un estado válido.");
-            return;
-        }
-
-        if (!confirm(`¿Actualizar el estado del mantenimiento #${id}?`)) return;
-
-        try {
-            const res = await fetch(`${MANTENIMIENTOS_URL}/${id}/estado`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ idEstado: nuevoEstado })
+            vehById = {};
+            (vehList || []).forEach(v => {
+                const id = v.id_vehiculo ?? v.id ?? v.Id;
+                if(id != null) vehById[id] = v;
             });
 
-            const data = await res.json().catch(() => ({}));
+            userById = {};
+            (userList || []).forEach(u => {
+                const id = u.id ?? u.Id;
+                if(id != null) userById[id] = u;
+            });
 
-            if (res.ok) {
-                alert(data.mensaje || "Estado actualizado correctamente.");
+            estados = Array.isArray(estList) ? estList.slice() : [];
+            estadosById = {};
+            estados.forEach(e => estadosById[e.id_estado] = e);
 
-                // actualizar en memoria
-                const row = allRows.find(r => r.id === id);
-                if (row) {
-                    row.estadoId = nuevoEstado;
-                }
-                applyFilter();
-            } else {
-                // historia de usuario: mensaje de error
-                alert(data.mensaje || "Error al actualizar estado del servicio");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Error al actualizar estado del servicio");
+            loadEstadosFilter();
+            renderAgTable(applyAgFilters());
+        }catch(e){
+            console.error(e);
+            $('#agTable').html(`<tr><td colspan="6" class="text-danger">Error cargando datos.</td></tr>`);
         }
     }
 
-    // Exponer funciones para los onclick del HTML
-    window.enviarRecordatorio = enviarRecordatorio;
-    window.guardarEstado = guardarEstado;
+    $(function(){
+        loadAllData();
 
-    $search.addEventListener('input', applyFilter);
-    $clear.addEventListener('click', () => { $search.value = ''; applyFilter(); });
+        $('#estadoFilter').on('change', () => renderAgTable(applyAgFilters()));
+        $('#searchAg').on('input', debounce(()=>renderAgTable(applyAgFilters()), 200));
+        $('#searchAg').on('keydown', e => {
+            if(e.key === 'Enter'){
+                e.preventDefault();
+                e.currentTarget.blur();
+            }
+        });
+        $('#clearSearchAg').on('click', () => {
+            $('#searchAg').val('');
+            renderAgTable(applyAgFilters());
+            $('#searchAg').focus();
+        });
 
-    // Inicialización: primero estados, luego mantenimientos
-    (async function init() {
-        await loadEstados();
-        await loadMantenimientos();
-    })();
+        $('#exportAgBtn').on('click', () => window.exportAgToExcel());
+    });
 </script>
+
