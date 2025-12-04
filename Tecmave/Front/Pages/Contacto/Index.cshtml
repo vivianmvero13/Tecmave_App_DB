@@ -8,80 +8,59 @@
     <div class="container grid cols-2">
         <div class="card">
             <h3>Escríbenos</h3>
-            <div class="form-row">
-                <div>
-                    <label>Nombre</label>
-                    <input class="input" id="contacto-nombre" placeholder="Tu nombre" />
+
+            <!-- Mostrar mensajes de éxito -->
+            @if (!string.IsNullOrEmpty(Model.Message))
+            {
+                <div class="alert alert-success">@Model.Message</div>
+            }
+
+            <!-- Resumen de validación del servidor -->
+            @Html.ValidationSummary(excludePropertyErrors: true, message: "", htmlAttributes: new { @class = "text-danger subtle", style = "margin-bottom:.5rem;" })
+
+            <form method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="form-row">
+                    <div>
+                        <label asp-for="Nombre">Nombre</label>
+                        <input class="input" asp-for="Nombre" placeholder="Tu nombre" />
+                        <span class="text-danger" asp-validation-for="Nombre"></span>
+                    </div>
                 </div>
-            </div>
-            <div class="form-row">
-                <div>
-                    <label>Email</label>
-                    <input class="input" id="contacto-email" type="email" placeholder="correo@dominio.com" />
+
+                <div class="form-row">
+                    <div>
+                        <label asp-for="Email">Email</label>
+                        <input class="input" asp-for="Email" type="email" placeholder="correo@dominio.com" />
+                        <span class="text-danger" asp-validation-for="Email"></span>
+                    </div>
                 </div>
-            </div>
-            <div class="form-row">
-                <div>
-                    <label>Mensaje</label>
-                    <textarea class="input" id="contacto-mensaje" rows="4" placeholder="¿Cómo podemos ayudarte?"></textarea>
+
+                <div class="form-row">
+                    <div>
+                        <label asp-for="Mensaje">Mensaje</label>
+                        <textarea class="input" asp-for="Mensaje" rows="4" placeholder="¿Cómo podemos ayudarte?"></textarea>
+                        <span class="text-danger" asp-validation-for="Mensaje"></span>
+                    </div>
                 </div>
-            </div>
-            <button type="button" class="btn" id="btnEnviarContacto">ENVIAR</button>
-            <div id="contacto-msg" class="subtle" style="margin-top:.5rem;display:none;"></div>
+
+                <button type="submit" class="btn">ENVIAR</button>
+            </form>
         </div>
 
         <div class="card">
             <h3>Ubicación</h3>
             <div class="map-wrapper">
-                <iframe
-                    title="Mapa Tecmave"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3930.0!2d-84.0!3d9.9"
-                    width="100%" height="320" style="border:0;" allowfullscreen loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+                <iframe title="Mapa Tecmave"
+                        src="https://www.google.com/maps?q=9.95559,-84.04064&z=16&output=embed"
+                        width="100%" height="320" style="border:0;" allowfullscreen loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"></iframe>
             </div>
-        </div>
         </div>
     </div>
 </section>
 
-
-
 @section Scripts {
-    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const nombre = document.getElementById('contacto-nombre');
-            const email = document.getElementById('contacto-email');
-            const mensaje = document.getElementById('contacto-mensaje');
-            const msg = document.getElementById('contacto-msg');
-            const btn = document.getElementById('btnEnviarContacto');
-
-            if (!btn) return;
-
-            const EMAILJS_PUBLIC_KEY = "DvkQr9T-CzO1LF4kv";
-
-            btn.addEventListener('click', function () {
-                if (!nombre.value || !email.value || !mensaje.value) {
-                    msg.textContent = "Completa todos los campos para enviar tu mensaje.";
-                    msg.style.color = "#c0392b";
-                    msg.style.display = "block";
-                    return;
-                }
-
-                msg.textContent = "Mensaje enviado. Te contactaremos pronto.";
-                    msg.style.color = "#27ae60";
-                    msg.style.display = "block";
-
-                    nombre.value = "";
-                    email.value = "";
-                    mensaje.value = "";
-                }).catch(function (error) {
-                    console.error("Error al enviar el mensaje:", error);
-                    msg.textContent = "Ocurrió un error al enviar el mensaje. Revisa la configuración de EmailJS.";
-                    msg.style.color = "#c0392b";
-                    msg.style.display = "block";
-                });
-            });
-        });
-    </script>
+    <partial name="_ValidationScriptsPartial" />
 }

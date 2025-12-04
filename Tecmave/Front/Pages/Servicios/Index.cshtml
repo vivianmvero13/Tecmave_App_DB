@@ -6,8 +6,8 @@
 
 <style>
     /* ========================
-           ESTILOS MEJORADOS
-           ======================== */
+                   ESTILOS MEJORADOS
+                   ======================== */
 
     /* Tarjetas */
     .card {
@@ -20,7 +20,7 @@
 
     h3 {
         margin-bottom: 1rem;
-        color: #fff;
+        color: #000 !important;
     }
 
     /* Inputs */
@@ -71,9 +71,13 @@
             background: #7ab3ff;
         }
 
+    .btn-proforma {
+        margin-right: .25rem;
+    }
+
     /* ================
-           MODAL MEJORADO
-           ================ */
+                   MODAL MEJORADO
+                   ================ */
     .modal {
         position: fixed;
         top: 0;
@@ -99,6 +103,7 @@
         color: #fff;
         border: 1px solid #444;
         animation: slideUp .25s ease;
+        position: relative;
     }
 
     @@keyframes fadeIn {
@@ -121,7 +126,7 @@
         }
     }
 
-    .close-btn {
+    .close {
         position: absolute;
         top: 10px;
         right: 15px;
@@ -130,7 +135,7 @@
         color: #bbb;
     }
 
-        .close-btn:hover {
+        .close:hover {
             color: #fff;
         }
 
@@ -197,8 +202,6 @@
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: .35rem 1rem;
     }
-
-
 
     /* === Correcciones visuales específicas de esta página (Servicios) === */
     /* Dropdowns: asegurar que las opciones sean visibles */
@@ -273,18 +276,17 @@
                         <th>Servicio</th>
                         <th>Fecha</th>
                         <th>Hora</th>
+                        <th>Estado</th>
                         <th>Acción</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             </table>
-
         </div>
-
     </div>
 </section>
 
-<!-- Modal -->
+<!-- Modal Proforma -->
 <div id="modalProforma" style="display:none;">
     <div class="modal">
         <div class="modal-content">
@@ -293,6 +295,30 @@
                 Descargar PDF
             </button>
             <div id="proformaContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cancelar Cita -->
+<div id="modalCancelar" style="display:none;">
+    <div class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModalCancelar()">&times;</span>
+            <div id="cancelarContent"></div>
+            <div style="margin-top: 1rem; text-align: right;">
+                <button type="button" class="btn-proforma" onclick="confirmarCancelar()">
+                    Confirmar cancelación
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay de Carga -->
+<div id="loadingOverlay" style="display:none;">
+    <div class="modal">
+        <div class="modal-content">
+            <p>Cargando, por favor espere un momento...</p>
         </div>
     </div>
 </div>
@@ -308,16 +334,21 @@
         SERV_REV: "https://tecmave-api.azurewebsites.net/ServiciosRevision",
         VEHICULO: "https://tecmave-api.azurewebsites.net/Vehiculos",
         SERV: "https://tecmave-api.azurewebsites.net/Servicios",
-        TIPO_SERV: "https://tecmave-api.azurewebsites.net/TipoServicios"
+        TIPO_SERV: "https://tecmave-api.azurewebsites.net/TipoServicios",
+        ESTADOS: "https://tecmave-api.azurewebsites.net/Estados"
     };
 
     const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
 
-    let cacheVehiculos = {}, cacheServicios = {}, cacheTipos = {};
+    let cacheVehiculos = {}, cacheServicios = {}, cacheTipos = {}, cacheEstados = {};
     let cacheAgendamientos = [], cacheRevisiones = [];
 
-
     let ultimaProforma = null;
+
+    // Para cancelar en modal
+    let revisionACancelar = null;
+    let agendamientoACancelar = null;
+
     /* =================================================================================
        INIT
        ================================================================================= */
@@ -326,10 +357,22 @@
         await cargarTipos();
         await cargarServicios();
         await cargarAgendamientos();
+        await cargarEstados();
         await cargarRevisiones();
         renderPertenencias();
     });
 
+
+    /* =================================================================================
+       HELPERS LOADING
+       ================================================================================= */
+    function mostrarLoading() {
+        $("#loadingOverlay").show();
+    }
+
+    function ocultarLoading() {
+        $("#loadingOverlay").hide();
+    }
 
     /* =================================================================================
        CARGA DE DATOS
@@ -375,6 +418,20 @@
         return $.get(API.AGENDAMIENTO, a => cacheAgendamientos = a);
     }
 
+    function cargarEstados() {
+        return $.get(API.ESTADOS, e => {
+            e.forEach(x => {
+                cacheEstados[x.id_estado] = x;
+            });
+        });
+    }
+
+    function obtenerIdEstadoPorNombre(nombreBuscado) {
+        if (!nombreBuscado) return null;
+        const estados = Object.values(cacheEstados);
+        const encontrado = estados.find(e => (e.nombre || "").toLowerCase() === nombreBuscado.toLowerCase());
+        return encontrado ? encontrado.id_estado : null;
+    }
 
     /* =================================================================================
        PERTENENCIAS
@@ -450,6 +507,8 @@
        CREAR REVISIÓN COMPLETA
        ================================================================================= */
     $("#btnAgendar").on("click", async function () {
+        const btn = $(this);
+
         const vehId = $("#vehiculo_id").val();
         const servId = $("#servicio_id").val();
         const fecha = $("#fecha").val();
@@ -463,63 +522,74 @@
             return;
         }
 
-        /* 1️⃣ Agendamiento */
-        const ag = await $.ajax({
-            url: API.AGENDAMIENTO,
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({
-                cliente_id: parseInt(userId),
-                vehiculo_id: parseInt(vehId),
-                fecha_agregada: fecha,
-                fecha_estimada: fecha,
-                hora_llegada: hora,
-                id_estado: 12
-            })
-        });
+        mostrarLoading();
+        btn.prop("disabled", true);
 
-        /* 2️⃣ Revisión */
-        const rev = await $.ajax({
-            url: API.REVISION,
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({
-                vehiculo_id: parseInt(vehId),
-                fecha_ingreso: new Date().toISOString(),
-                id_estado: 4,
-                id_agendamiento: ag.id_agendamiento
-            })
-        });
+        try {
+            /* Agendamiento */
+            const ag = await $.ajax({
+                url: API.AGENDAMIENTO,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    cliente_id: parseInt(userId),
+                    vehiculo_id: parseInt(vehId),
+                    fecha_agregada: fecha,
+                    fecha_estimada: fecha,
+                    hora_llegada: hora,
+                    id_estado: 12
+                })
+            });
 
-        /* 3️⃣ Servicio */
-        await $.ajax({
-            url: API.SERV_REV,
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({
-                revision_id: rev.id_revision,
-                servicio_id: parseInt(servId)
-            })
-        });
+            /* Revisión */
+            const rev = await $.ajax({
+                url: API.REVISION,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    vehiculo_id: parseInt(vehId),
+                    fecha_ingreso: new Date().toISOString(),
+                    id_estado: 4,
+                    id_agendamiento: ag.id_agendamiento
+                })
+            });
 
-        /* 4️⃣ Pertenencias */
-        for (let p of pertenencias) {
+            /* Servicio */
             await $.ajax({
-                url: API.REV_PERT,
+                url: API.SERV_REV,
                 method: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({
                     revision_id: rev.id_revision,
-                    nombre: p,
-                    presente: true
+                    servicio_id: parseInt(servId)
                 })
             });
+
+            /* Pertenencias */
+            for (let p of pertenencias) {
+                await $.ajax({
+                    url: API.REV_PERT,
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        revision_id: rev.id_revision,
+                        nombre: p,
+                        presente: true
+                    })
+                });
+            }
+
+            alert("Revisión agendada correctamente.");
+
+            await cargarAgendamientos();
+            await cargarRevisiones();
+        } catch (err) {
+            console.error(err);
+            alert("Ocurrió un error al agendar la revisión.");
+        } finally {
+            ocultarLoading();
+            btn.prop("disabled", false);
         }
-
-        alert("Revisión agendada correctamente.");
-
-        await cargarAgendamientos();
-        await cargarRevisiones();
     });
 
 
@@ -546,6 +616,7 @@
 
             const ag = cacheAgendamientos.find(a => a.id_agendamiento === r.id_agendamiento);
             const veh = cacheVehiculos[r.vehiculo_id];
+            const estado = ag ? cacheEstados[ag.id_estado] : null;
 
             $("table tbody").append(`
                 <tr>
@@ -554,9 +625,16 @@
                     <td>${serv?.nombre || "Desconocido"}</td>
                     <td>${ag?.fecha_estimada || "-"}</td>
                     <td>${ag?.hora_llegada || "-"}</td>
+                    <td>${estado?.nombre || "-"}</td>
                     <td>
                         <button class="btn-proforma" onclick="verProforma(${r.id_revision})">
                             Ver Proforma
+                        </button>
+                        <button class="btn-proforma" onclick="cancelarRevision(${r.id_revision})">
+                            Cancelar
+                        </button>
+                        <button class="btn-proforma" onclick="reagendarRevision(${r.id_revision})">
+                            Reagendar
                         </button>
                     </td>
                 </tr>
@@ -571,15 +649,15 @@
     function verProforma(id) {
         $.get(`${API.REVISION}/Detalle/${id}`, function (d) {
 
-              ultimaProforma = {
-            idRevision: id,
-            vehiculo: d.vehiculo,
-            servicio: d.servicio,
-            tipoServicio: d.tipo_servicio,
-            agendamiento: d.agendamiento,
-            pertenencias: d.pertenencias || [],
-            trabajos: d.trabajos || []
-        };
+            ultimaProforma = {
+                idRevision: id,
+                vehiculo: d.vehiculo,
+                servicio: d.servicio,
+                tipoServicio: d.tipo_servicio,
+                agendamiento: d.agendamiento,
+                pertenencias: d.pertenencias || [],
+                trabajos: d.trabajos || []
+            };
 
 
             const veh = d.vehiculo;
@@ -617,7 +695,7 @@
                 html += `<p>No se han registrado trabajos.</p>`;
             } else {
                 html += `<ul>`;
-                d.trabajos.forEach(t => html += `<li>${t.nombre}</li>`);
+                d.trabajos.forEach(t2 => html += `<li>${t2.nombre}</li>`);
                 html += `</ul>`;
             }
 
@@ -630,7 +708,7 @@
         document.getElementById("modalProforma").style.display = "none";
     }
 
-           async function descargarPDF() {
+    async function descargarPDF() {
 
         if (!ultimaProforma) {
             alert("No hay datos cargados para exportar.");
@@ -807,7 +885,7 @@
         doc.save(`Proforma_${ultimaProforma.idRevision}.pdf`);
     }
 
-        function togglePertenencias() {
+    function togglePertenencias() {
         const body = document.getElementById("pertenencias-container");
         const arrow = document.getElementById("arrow-pertenencias");
 
@@ -820,5 +898,151 @@
         }
     }
 
+    /* =================================================================================
+       CANCELAR / REAGENDAR
+       ================================================================================= */
+    function cancelarRevision(idRevision) {
+        const rev = cacheRevisiones.find(r => r.id_revision === idRevision);
+        if (!rev) {
+            alert("No se encontró la revisión.");
+            return;
+        }
 
+        const ag = cacheAgendamientos.find(a => a.id_agendamiento === rev.id_agendamiento);
+        if (!ag) {
+            alert("No se encontró el agendamiento asociado.");
+            return;
+        }
+
+        const veh = cacheVehiculos[rev.vehiculo_id];
+
+        revisionACancelar = rev;
+        agendamientoACancelar = ag;
+
+        const html = `
+            <h2>Cancelar cita</h2>
+            <p>Está a punto de cancelar la revisión <strong>#${rev.id_revision}</strong>.</p>
+            <p><strong>Vehículo:</strong> ${veh?.placa || "-"} - ${veh?.modelo || "-"}</p>
+            <p><strong>Fecha:</strong> ${ag.fecha_estimada}</p>
+            <p><strong>Hora:</strong> ${ag.hora_llegada}</p>
+            <p>¿Desea continuar y cancelar esta cita?</p>
+        `;
+
+        $("#cancelarContent").html(html);
+        $("#modalCancelar").show();
+    }
+
+    function cerrarModalCancelar() {
+        $("#modalCancelar").hide();
+        revisionACancelar = null;
+        agendamientoACancelar = null;
+    }
+
+    async function confirmarCancelar() {
+        if (!agendamientoACancelar) {
+            alert("No se encontró la cita a cancelar.");
+            return;
+        }
+
+        const ag = agendamientoACancelar;
+
+        // Construimos payload explícito y cambiamos estado a 11 (Cancelado)
+        const payload = {
+            id_agendamiento: ag.id_agendamiento,
+            cliente_id: ag.cliente_id,
+            vehiculo_id: ag.vehiculo_id,
+            fecha_agregada: ag.fecha_agregada,
+            fecha_estimada: ag.fecha_estimada,
+            hora_llegada: ag.hora_llegada,
+            id_estado: 11
+        };
+
+        $("#modalCancelar").hide();
+        mostrarLoading();
+
+        try {
+            await $.ajax({
+                url: `${API.AGENDAMIENTO}/${ag.id_agendamiento}`,
+                method: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(payload)
+            });
+
+            alert("Revisión cancelada correctamente.");
+
+            await cargarAgendamientos();
+            await cargarRevisiones();
+        } catch (err) {
+            console.error(err);
+            alert("Ocurrió un error al cancelar la revisión.");
+        } finally {
+            ocultarLoading();
+            revisionACancelar = null;
+            agendamientoACancelar = null;
+        }
+    }
+
+    async function reagendarRevision(idRevision) {
+        const rev = cacheRevisiones.find(r => r.id_revision === idRevision);
+        if (!rev) {
+            alert("No se encontró la revisión.");
+            return;
+        }
+
+        const ag = cacheAgendamientos.find(a => a.id_agendamiento === rev.id_agendamiento);
+        if (!ag) {
+            alert("No se encontró el agendamiento asociado.");
+            return;
+        }
+
+        const veh = cacheVehiculos[rev.vehiculo_id];
+
+        const nuevaFecha = prompt(
+            `Ingrese la nueva fecha (YYYY-MM-DD) para la revisión #${idRevision} del vehículo ${veh?.placa || ""}`,
+            ag.fecha_estimada
+        );
+        if (!nuevaFecha) return;
+
+        const hoy = new Date();
+        if (new Date(nuevaFecha) <= hoy) {
+            alert("La nueva fecha debe ser futura.");
+            return;
+        }
+
+        const horaActual = ag.hora_llegada ? ag.hora_llegada.substring(0, 5) : "";
+        const nuevaHora = prompt("Ingrese la nueva hora (HH:mm):", horaActual);
+        if (!nuevaHora) return;
+
+        // No cambiar el estado al reagendar, solo fecha y hora
+        const payload = {
+            id_agendamiento: ag.id_agendamiento,
+            cliente_id: ag.cliente_id,
+            vehiculo_id: ag.vehiculo_id,
+            fecha_agregada: ag.fecha_agregada,
+            fecha_estimada: nuevaFecha,
+            hora_llegada: nuevaHora,
+            id_estado: ag.id_estado
+        };
+
+        mostrarLoading();
+
+        try {
+            await $.ajax({
+                url: `${API.AGENDAMIENTO}/${ag.id_agendamiento}`,
+                method: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(payload)
+            });
+
+            alert("Revisión reagendada correctamente.");
+
+            await cargarAgendamientos();
+            await cargarRevisiones();
+        } catch (err) {
+            console.error(err);
+            alert("Ocurrió un error al reagendar la revisión.");
+        } finally {
+            ocultarLoading();
+        }
+    }
 </script>
