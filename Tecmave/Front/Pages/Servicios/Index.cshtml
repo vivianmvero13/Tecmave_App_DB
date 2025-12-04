@@ -585,6 +585,14 @@
 
             alert("Revisión agendada correctamente.");
 
+            $("#vehiculo_id").val("");
+            $("#tipo_servicio_id").val("");
+            $("#servicio_id").html(`<option value="">Seleccione</option>`);
+            $("#fecha").val("");
+            $("#hora").html("");
+            $("#pertenencias input:checked").prop("checked", false);
+
+
             await cargarAgendamientos();
             await cargarRevisiones();
         } catch (err) {
@@ -600,10 +608,20 @@
     /* =================================================================================
        LISTADO
        ================================================================================= */
-    async function cargarRevisiones() {
+        async function cargarRevisiones() {
         const data = await $.get(API.REVISION);
 
-        const propias = data.filter(r => cacheVehiculos[r.vehiculo_id]?.cliente_id == userId);
+        // id del estado "Cancelado" (puede ser null si aún no se cargaron estados)
+        const idCancelado = obtenerIdEstadoPorNombre("Cancelado");
+
+        // Filtrar solo las revisiones del usuario y excluir las asociadas a agendamientos cancelados
+        const propias = data.filter(r => {
+            const esMio = cacheVehiculos[r.vehiculo_id]?.cliente_id == userId;
+            const ag = cacheAgendamientos.find(a => a.id_agendamiento === r.id_agendamiento);
+            const estaCancelado = idCancelado != null && ag && ag.id_estado === idCancelado;
+            return esMio && !estaCancelado;
+        });
+
         cacheRevisiones = propias;
 
         $("table tbody").html("");
@@ -617,7 +635,7 @@
             }
 
             const serv = servRev ? cacheServicios[servRev.servicio_id] : null;
-            const servicioId = servRev ? servRev.servicio_id : null; // <<<
+            const servicioId = servRev ? servRev.servicio_id : null;
 
             const ag = cacheAgendamientos.find(a => a.id_agendamiento === r.id_agendamiento);
             const veh = cacheVehiculos[r.vehiculo_id];
@@ -943,7 +961,7 @@
         agendamientoACancelar = null;
     }
 
-    async function confirmarCancelar() {
+        async function confirmarCancelar() {
         if (!agendamientoACancelar) {
             alert("No se encontró la cita a cancelar.");
             return;
@@ -958,13 +976,14 @@
             fecha_agregada: ag.fecha_agregada,
             fecha_estimada: ag.fecha_estimada,
             hora_llegada: ag.hora_llegada,
-            id_estado: 11
+            id_estado: obtenerIdEstadoPorNombre("Cancelado") ?? 11 // fallback a 11
         };
 
         $("#modalCancelar").hide();
         mostrarLoading();
 
         try {
+            // 1) Actualizamos en el backend
             await $.ajax({
                 url: API.AGENDAMIENTO,
                 method: "PUT",
@@ -972,13 +991,28 @@
                 data: JSON.stringify(payload)
             });
 
+            // 2) Actualizamos caches locales para que la tabla cambie inmediatamente
+            // actualizar cacheAgendamientos
+            const idx = cacheAgendamientos.findIndex(x => x.id_agendamiento === ag.id_agendamiento);
+            if (idx !== -1) {
+                cacheAgendamientos[idx].id_estado = payload.id_estado;
+            } else {
+                // si no estaba en cache, añadimos versión marcada como cancelada
+                cacheAgendamientos.push({ ...ag, id_estado: payload.id_estado });
+            }
+
+            // 3) Remover la revisión del cacheRevisiones (si quieres que desaparezca)
+            cacheRevisiones = cacheRevisiones.filter(r => r.id_agendamiento !== ag.id_agendamiento);
+
             alert("Revisión cancelada correctamente.");
 
-            await cargarAgendamientos();
+            // 4) Redibuja la lista desde cache actualizado (más rápido que forzar GET)
             await cargarRevisiones();
         } catch (err) {
             console.error(err);
             alert("Ocurrió un error al cancelar la revisión.");
+            // como fallback, intentar recargar desde servidor
+            try { await cargarAgendamientos(); await cargarRevisiones(); } catch {}
         } finally {
             ocultarLoading();
             revisionACancelar = null;
