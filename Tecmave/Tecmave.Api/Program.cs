@@ -1,13 +1,15 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;                
+using System.Text.Json;
 using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 using Tecmave.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+// ======================
+//    CONFIG JSON / MVC
+// ======================
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
     {
@@ -18,12 +20,16 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// --- CONEXIÓN A MySQL ---
+// ======================
+//    CONEXIÓN A MySQL
+// ======================
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
 
-// --- IDENTITY CONFIG ---
+// ======================
+//      IDENTITY
+// ======================
 builder.Services
     .AddIdentity<Usuario, AppRole>(options =>
     {
@@ -37,14 +43,21 @@ builder.Services
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-// --- CORS (Frontend permitido) ---
+// ======================
+//         CORS
+// ======================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermirFrontend", policy => policy
         .WithOrigins(
             "http://localhost:7190",
+            "https://localhost:7190",
             "http://localhost:5173",
-            "http://localhost:5173"
+            "https://localhost:5173",
+            "https://front20251203141905-e8a6bserfthzbtd2.canadacentral-01.azurewebsites.net",
+            "https://www.innovaciontecmave.com",
+            "https://innovaciontecmave.com"
+
         )
         .AllowAnyHeader()
         .AllowAnyMethod()
@@ -52,9 +65,13 @@ builder.Services.AddCors(options =>
     );
 });
 
+
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 
+// ======================
+//   SERVICES / DI
+// ======================
 builder.Services.AddScoped<UserAdminService>();
 builder.Services.AddScoped<RolesService>();
 builder.Services.AddScoped<VehiculosService>();
@@ -72,28 +89,39 @@ builder.Services.AddScoped<EstadosService>();
 builder.Services.AddScoped<ColaboradoresService>();
 builder.Services.AddScoped<PlanillasService>();
 builder.Services.AddScoped<AgendamientoService>();
-builder.Services.AddScoped<AgendamientoService>();
 builder.Services.AddHostedService<RecordatorioService>();
 builder.Services.AddScoped<MantenimientoService>();
 builder.Services.AddScoped<RevisionPertenenciasService>();
 builder.Services.AddScoped<RevisionTrabajosService>();
 builder.Services.AddScoped<ServiciosRevisionService>();
+
 builder.WebHost.UseWebRoot("wwwroot");
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Tecmave API v1");
+    c.RoutePrefix = "swagger"; // /swagger
+});
 
 app.UseStaticFiles();
 app.UseHttpsRedirection();
+
 app.UseCors("PermirFrontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
+
 app.MapControllers();
+
+app.MapGet("/", () => Results.Ok(new
+{
+    message = "Tecmave API está corriendo en Azure.",
+    environment = app.Environment.EnvironmentName
+}));
 
 app.Run();

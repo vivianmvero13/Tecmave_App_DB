@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.btn-hero-secondary, .btn-cta-secondary').forEach(btn => {
         btn.addEventListener('click', function() {
             // Call phone number
-            window.location.href = 'tel:+50622223333';
+            window.location.href = 'tel:+50622856409';
 
             // Animación de clic
             this.style.transform = 'scale(0.95)';

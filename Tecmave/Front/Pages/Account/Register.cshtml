@@ -175,7 +175,7 @@
             cedulaHelp.text("Verificando cédula…");
 
             $.ajax({
-                url: `http://localhost:7504/cedula=${cedula}`,
+                url: `https://localhost:7504/cedula=${cedula}`,
                 method: "GET",
                 success: function (data) {
                     if (data && data.nombre) {

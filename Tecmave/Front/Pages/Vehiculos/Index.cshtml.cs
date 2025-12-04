@@ -17,7 +17,7 @@ namespace Front.Pages.Vehiculos
 
         public void OnGet()
         {
-            ApiBase = _cfg.GetSection("Api")["BaseUrl"] ?? "http://localhost:7096";
+            ApiBase = _cfg.GetSection("Api")["BaseUrl"] ?? "https://tecmave-api.azurewebsites.net";
         }
     }
 }
