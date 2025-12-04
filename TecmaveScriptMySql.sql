@@ -238,19 +238,22 @@ CREATE TABLE detalle_factura (
 -- ============================================
 -- 6. Reseñas
 -- ============================================
+
+
 CREATE TABLE resenas (
   id_resena INT NOT NULL AUTO_INCREMENT,
   cliente_id INT DEFAULT NULL,
-  servicio_id INT NOT NULL,
   comentario TEXT NOT NULL,
   calificacion FLOAT NOT NULL,
-  fecha DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  revision_id INT NOT NULL,
   PRIMARY KEY (id_resena),
-  KEY FK_Resenas_Servicio (servicio_id),
   KEY FK_Resenas_Cliente (cliente_id),
+  KEY FK_Resenas_Revision_idx (revision_id),
   CONSTRAINT FK_Resenas_Cliente FOREIGN KEY (cliente_id) REFERENCES aspnetusers (Id),
-  CONSTRAINT FK_Resenas_Servicio FOREIGN KEY (servicio_id) REFERENCES servicios (id_servicio)
+  CONSTRAINT FK_Resenas_Revision FOREIGN KEY (revision_id) REFERENCES revision (id_revision)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 -- ============================================
 -- 7. Notificaciones y Promociones
@@ -431,6 +434,15 @@ ALTER TABLE aspnetroles
 -- ============================================
 ALTER TABLE factura
   ADD COLUMN estado_pago VARCHAR(100) NULL AFTER metodo_pago;
+
+
+ALTER TABLE revision
+  DROP FOREIGN KEY FK_Revision_Servicio;
+
+
+ALTER TABLE revision
+  DROP COLUMN id_servicio;
+
 
 ALTER TABLE revision
   ADD COLUMN id_agendamiento INT NULL AFTER fecha_entrega_final,
