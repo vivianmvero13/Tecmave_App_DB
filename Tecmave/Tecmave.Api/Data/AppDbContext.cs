@@ -117,6 +117,7 @@ namespace Tecmave.Api.Data
             b.Entity<ServiciosRevisionModel>().ToTable("servicios_revision").HasKey(x => x.id_servicio_revision);
             b.Entity<PromocionEnvio>().ToTable("promocion_envios").HasKey(x => x.IdEnvio);
             b.Entity<Recordatorio>().ToTable("recordatorios").HasKey(x => x.Id);
+            b.Entity<PlanillasModel>().ToTable("planillas").HasKey(x => x.id);
 
             // ---------------- MANTENIMIENTOS (CORREGIDO) ----------------
             b.Entity<MantenimientoModel>(e =>

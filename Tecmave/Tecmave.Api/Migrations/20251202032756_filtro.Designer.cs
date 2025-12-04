@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tecmave.Api.Data;
 
@@ -11,9 +12,11 @@ using Tecmave.Api.Data;
 namespace Tecmave.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251202032756_filtro")]
+    partial class filtro
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -427,7 +430,7 @@ namespace Tecmave.Api.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("planillas", (string)null);
+                    b.ToTable("planillas");
                 });
 
             modelBuilder.Entity("Tecmave.Api.Models.PromocionEnvio", b =>

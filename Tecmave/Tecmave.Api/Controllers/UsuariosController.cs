@@ -47,7 +47,7 @@ namespace Tecmave.Api.Controllers
                 u.UserName!,
                 u.Email,
                 u.PhoneNumber,
-                u.Estado 
+                u.Estado
             ));
             return Ok(data);
         }

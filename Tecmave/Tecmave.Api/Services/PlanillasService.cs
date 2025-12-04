@@ -31,6 +31,10 @@ namespace Tecmave.Api.Services
 
         public PlanillasModel AddPlanillas(PlanillasModel PlanillasModel)
         {
+            if (PlanillasModel.neto_pagar == 0)
+            {
+                PlanillasModel.neto_pagar = PlanillasModel.total_salario - PlanillasModel.deducciones;
+            }
             _context.planillas.Add(PlanillasModel);
             _context.SaveChanges();
             return PlanillasModel;
@@ -46,7 +50,13 @@ namespace Tecmave.Api.Services
                 return false;
             }
 
-            entidad.id = PlanillasModel.id;
+            entidad.horas_trabajadas = PlanillasModel.horas_trabajadas;
+            entidad.valor_hora = PlanillasModel.valor_hora;
+            entidad.total_salario = PlanillasModel.total_salario;
+            entidad.deducciones = PlanillasModel.deducciones;
+            entidad.neto_pagar = PlanillasModel.neto_pagar;
+            entidad.estado = PlanillasModel.estado;
+            entidad.observaciones = PlanillasModel.observaciones;
 
 
             _context.SaveChanges();
@@ -69,6 +79,48 @@ namespace Tecmave.Api.Services
             _context.SaveChanges();
             return true;
 
+        }
+
+        public PlanillasModel RegistrarHoras(int id, decimal horas_extra)
+        {
+            var planilla = _context.planillas.FirstOrDefault(p => p.id == id);
+
+            if (planilla == null)
+            {
+                return null;
+            }
+
+            planilla.horas_trabajadas += horas_extra;
+            planilla.total_salario = planilla.horas_trabajadas * planilla.valor_hora;
+            planilla.neto_pagar = planilla.total_salario - planilla.deducciones;
+            _context.SaveChanges();
+            return planilla;
+        }
+
+        public PlanillasModel AjustarPago(int id, decimal neto_pagar)
+        {
+            var planilla = _context.planillas.FirstOrDefault(p => p.id == id);
+            if (planilla == null)
+            {
+                return null;
+            }
+
+            planilla.neto_pagar = neto_pagar;
+            _context.SaveChanges();
+            return planilla;
+        }
+
+        public bool AprobarPlanilla(int id)
+        {
+            var planilla = _context.planillas.FirstOrDefault(p => p.id == id);
+            if (planilla == null)
+            {
+                return false;
+            }
+
+            planilla.estado = "Aprobada";
+            _context.SaveChanges();
+            return true;
         }
 
     }

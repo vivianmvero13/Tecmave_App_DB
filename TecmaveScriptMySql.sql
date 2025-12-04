@@ -240,6 +240,7 @@ CREATE TABLE detalle_factura (
 -- ============================================
 CREATE TABLE resenas (
   id_resena INT NOT NULL AUTO_INCREMENT,
+  servicio_id INT DEFAULT NULL,
   cliente_id INT DEFAULT NULL,
   comentario TEXT NOT NULL,
   calificacion FLOAT NOT NULL,
@@ -288,6 +289,7 @@ CREATE TABLE promociones (
 -- ============================================
 CREATE TABLE revision (
   id_revision INT NOT NULL AUTO_INCREMENT,
+  id_servicio INT NOT NULL,
   vehiculo_id INT NOT NULL,
   fecha_ingreso DATETIME NOT NULL,
   id_estado INT NOT NULL,
@@ -340,8 +342,7 @@ CREATE TABLE colaboradores (
   salario DECIMAL(10,2) NOT NULL,
   fecha_contratacion VARCHAR(45) NOT NULL,
   PRIMARY KEY (id_colaborador),
-  KEY FK_Colab_Usuario (id_usuario),
-  CONSTRAINT FK_Colab_Usuario FOREIGN KEY (id_usuario) REFERENCES aspnetusers (Id) ON DELETE CASCADE
+  KEY FK_Colab_Usuario (id_usuario)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE role_change_audit (
@@ -539,4 +540,14 @@ VALUES
 ('Cambio de frenos', 'Reemplazo de pastillas y discos de freno', 'Mantenimiento correctivo', 200.00, 2),
 ('Reparación de motor', 'Corrección de fallas graves en el motor', 'Mantenimiento correctivo', 500.00, 2);
 
+DROP DATABASE tecmave;
+CREATE DATABASE tecmave;
+
+USE tecmave;
+SHOW TABLES;
+
+DESCRIBE colaboradores;
+
+SELECT * FROM colaboradores;
+SELECT * FROM aspnetusers;
 

@@ -1,19 +1,8 @@
 (function() {
-    const body = document.body || document.getElementsByTagName('body')[0];
-
-    const adminAttr = (body && body.getAttribute('data-is-admin')) || 'false';
-    const clienteAttr = (body && body.getAttribute('data-is-cliente')) || 'false';
-
-    const isAdmin = String(adminAttr).toLowerCase() === 'true';
-    const isCliente = String(clienteAttr).toLowerCase() === 'true';
-
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-
-    if (!isCliente || isAdmin) {
+    if (user.role !== 'cliente') {
         return;
     }
-
-
 
     const chatIcon = document.createElement('div');
     chatIcon.innerHTML = '<i class="fas fa-comment-dots"></i>';

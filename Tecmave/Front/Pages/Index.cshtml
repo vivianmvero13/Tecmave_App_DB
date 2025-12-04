@@ -136,6 +136,115 @@
     </div>
 </section>
 
+
+
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="http://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+
+<script>
+    // ============================
+    // Panel de cliente (resumen)
+    // ============================
+    const API_BASE_PANEL        = "http://localhost:7096";
+    const URL_AGENDAMIENTOS_P   = API_BASE_PANEL + "/Agendamiento";
+    const URL_VEHICULOS_P       = API_BASE_PANEL + "/vehiculos";
+    const URL_PROMOCIONES_P     = API_BASE_PANEL + "/promociones";
+    const URL_FACTURAS_P        = API_BASE_PANEL + "/facturas";
+
+    function formatCRCP(n) {
+        const v = Number(n || 0);
+        return v.toLocaleString("es-CR", {
+            style: "currency",
+            currency: "CRC",
+            maximumFractionDigits: 0
+        });
+    }
+
+    function parseDateOnlyPanel(v) {
+        if (!v) return null;
+        const d = new Date(v);
+        if (isNaN(d)) return null;
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    function cargarResumenClientePanel() {
+        cargarProximaCitaPanel();
+        cargarVehiculosPanel();
+        cargarBalanceMesPanel();
+        cargarPromosDestacadasPanel();
+    }
+
+    function cargarProximaCitaPanel() {
+        const hoyISO = new Date().toISOString().split("T")[0];
+
+        $.get(URL_AGENDAMIENTOS_P, function (lista) {
+            const ags = Array.isArray(lista) ? lista : [];
+            const delUsuario = ags.filter(a => String(a.cliente_id) === String(userId));
+
+            if (!delUsuario.length) {
+                $("#kpi-proxima-dia").text("Sin citas");
+                $("#kpi-proxima-hora").text("--:--");
+                $("#kpi-proxima-estado")
+                    .text("Sin citas programadas")
+                    .removeClass("pill-success")
+                    .addClass("pill-neutral");
+                return;
+            }
+
+            const futuros = delUsuario.filter(a => a.fecha_estimada >= hoyISO);
+            if (!futuros.length) {
+                $("#kpi-proxima-dia").text("Sin citas");
+                $("#kpi-proxima-hora").text("--:--");
+                $("#kpi-proxima-estado")
+                    .text("Sin citas futuras")
+                    .removeClass("pill-success")
+                    .addClass("pill-neutral");
+                return;
+            }
+
+            futuros.sort((a, b) => {
+                const da = new Date(a.fecha_estimada + "T" + (a.hora_llegada || "00:00"));
+                const db = new Date(b.fecha_estimada + "T" + (b.hora_llegada || "00:00"));
+                return da - db;
+            });
+
+            const prox = futuros[0];
+
+            const fecha = parseDateOnlyPanel(prox.fecha_estimada);
+            if (fecha) {
+                const opts = { weekday: "short", day: "2-digit", month: "2-digit" };
+                $("#kpi-proxima-dia").text(fecha.toLocaleDateString("es-CR", opts));
+            } else {
+                $("#kpi-proxima-dia").text(prox.fecha_estimada || "Próxima cita");
+            }
+
+            if (prox.hora_llegada) {
+                $("#kpi-proxima-hora").text(prox.hora_llegada.substring(0,5));
+            } else {
+                $("#kpi-proxima-hora").text("--:--");
+            }
+
+            $("#kpi-proxima-estado")
+                .text("Programada")
+                .removeClass("pill-neutral")
+                .addClass("pill-success");
+        });
+    }
+
+    function cargarVehiculosPanel() {
+        $.ajax({
+            url: URL_VEHICULOS_P,
+            method: "GET",
+            xhrFields: { withCredentials: true },
+            success: function (data) {
+                const lista = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+                const propios = lista.filter(v => {
+                    const cid = v.cliente_id ?? v.clienteId ?? v.cliente?.id ?? v.ClienteId ?? 0;
+                    return String(cid) === String(userId);
+                });
 <script>
     // ============================
     // Panel de cliente (resumen)

@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Tecmave",
+    "Projects": [
+      {
+        "Path": "Tecmave.Api\\Tecmave.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Front\\Front.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

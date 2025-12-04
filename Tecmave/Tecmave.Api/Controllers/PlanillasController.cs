@@ -36,13 +36,7 @@ namespace Tecmave.Api.Controllers
 
             var newPlanillasModel = _PlanillasService.AddPlanillas(PlanillasModel);
 
-            return
-                CreatedAtAction(
-                        nameof(GetPlanillasModel), new
-                        {
-                            id = newPlanillasModel.id,
-                        },
-                        newPlanillasModel);
+            return CreatedAtAction(nameof(GetPlanillasModel), new { id = newPlanillasModel.id }, newPlanillasModel);
 
         }
 
@@ -53,12 +47,8 @@ namespace Tecmave.Api.Controllers
 
             if (!_PlanillasService.UpdatePlanillas(PlanillasModel))
             {
-                return NotFound(
-                        new
-                        {
-                            elmsneaje = "La  colaborador no fue encontrado"
-                        }
-                    );
+                return NotFound(new { mensaje = "La plantilla no se encuentra en el sistema" });
+                       
             }
 
             return NoContent();
@@ -66,7 +56,7 @@ namespace Tecmave.Api.Controllers
         }
 
         //APIS DELETE
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public IActionResult DeletePlanillasModel(int id)
         {
 
@@ -82,6 +72,41 @@ namespace Tecmave.Api.Controllers
 
             return NoContent();
 
+        }
+
+        [HttpPost("registrar-horas")]
+        public ActionResult<PlanillasModel> RegistrarHoras(int id, decimal horas_extras)
+        {
+            var planilla = _PlanillasService.RegistrarHoras(id, horas_extras);
+            if (planilla == null)
+            {
+                return NotFound(new { mensaje = "La planilla no fue encontrada en el sistema" });
+            }
+
+            return Ok(planilla);
+        }
+
+        [HttpPut("ajustar-pago")]
+        public ActionResult<PlanillasModel> AjustarPago(int id, decimal pago_neto)
+        {
+            var planilla = _PlanillasService.AjustarPago(id, pago_neto);
+            if(planilla == null)
+            {
+                return NotFound(new { mensaje = "La planilla no fue encontrada en el sistema" });
+            }
+
+            return Ok(planilla);
+        }
+
+        [HttpPut("aprobar/{id}")]
+        public IActionResult AprobarPlanilla(int id)
+        {
+            if (!_PlanillasService.AprobarPlanilla(id))
+            {
+                return NotFound(new { mensaje = "La planilla no fue encontrada en el sistema " });
+            }
+
+            return NoContent();
         }
     }
 }

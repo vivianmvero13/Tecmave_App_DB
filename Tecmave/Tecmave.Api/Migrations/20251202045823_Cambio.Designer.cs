@@ -12,8 +12,8 @@ using Tecmave.Api.Data;
 namespace Tecmave.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251018014623_AddNombreApellidosToUsuario")]
-    partial class AddNombreApellidosToUsuario
+    [Migration("20251202045823_Cambio")]
+    partial class Cambio
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -139,9 +139,14 @@ namespace Tecmave.Api.Migrations
                     b.Property<int>("cliente_id")
                         .HasColumnType("int");
 
-                    b.Property<string>("fecha_agregada")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<DateOnly>("fecha_agregada")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("fecha_estimada")
+                        .HasColumnType("date");
+
+                    b.Property<TimeOnly?>("hora_llegada")
+                        .HasColumnType("time(6)");
 
                     b.Property<int>("id_estado")
                         .HasColumnType("int");
@@ -272,22 +277,62 @@ namespace Tecmave.Api.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id_factura"));
 
-                    b.Property<int>("cliente_id")
+                    b.Property<int?>("cliente_id")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("fecha_emision")
+                    b.Property<string>("estado_pago")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("fecha_emision")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("metodo_pago")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<decimal>("total")
+                    b.Property<decimal?>("total")
                         .HasColumnType("decimal(65,30)");
 
                     b.HasKey("id_factura");
 
                     b.ToTable("factura", (string)null);
+                });
+
+            modelBuilder.Entity("Tecmave.Api.Models.MantenimientoModel", b =>
+                {
+                    b.Property<int>("IdMantenimiento")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("IdMantenimiento");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdMantenimiento"));
+
+                    b.Property<DateOnly>("FechaMantenimiento")
+                        .HasColumnType("date")
+                        .HasColumnName("FechaMantenimiento");
+
+                    b.Property<int>("IdEstado")
+                        .HasColumnType("int")
+                        .HasColumnName("IdEstado");
+
+                    b.Property<int>("IdVehiculo")
+                        .HasColumnType("int")
+                        .HasColumnName("IdVehiculo");
+
+                    b.Property<DateOnly?>("ProximoMantenimiento")
+                        .HasColumnType("date")
+                        .HasColumnName("ProximoMantenimiento");
+
+                    b.Property<bool>("RecordatorioEnviado")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("RecordatorioEnviado");
+
+                    b.HasKey("IdMantenimiento");
+
+                    b.HasIndex("IdEstado");
+
+                    b.HasIndex("IdVehiculo");
+
+                    b.ToTable("Mantenimientos", (string)null);
                 });
 
             modelBuilder.Entity("Tecmave.Api.Models.MarcasModel", b =>
@@ -321,6 +366,9 @@ namespace Tecmave.Api.Migrations
                     b.Property<int>("id_estado")
                         .HasColumnType("int");
 
+                    b.Property<int?>("id_promocion")
+                        .HasColumnType("int");
+
                     b.Property<string>("mensaje")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -337,34 +385,153 @@ namespace Tecmave.Api.Migrations
                     b.ToTable("notificaciones", (string)null);
                 });
 
+            modelBuilder.Entity("Tecmave.Api.Models.PlanillasModel", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id"));
+
+                    b.Property<int>("colaborador_id")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("deducciones")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("estado")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("fecha_generada")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<decimal>("horas_trabajadas")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal>("neto_pagar")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("observaciones")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateOnly>("periodo_fin")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("periodo_inicio")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("total_salario")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal>("valor_hora")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.HasKey("id");
+
+                    b.ToTable("planillas", (string)null);
+                });
+
+            modelBuilder.Entity("Tecmave.Api.Models.PromocionEnvio", b =>
+                {
+                    b.Property<int>("IdEnvio")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_envio");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdEnvio"));
+
+                    b.Property<DateTime>("FechaEnvio")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("fecha_envio");
+
+                    b.Property<int>("IdPromocion")
+                        .HasColumnType("int")
+                        .HasColumnName("id_promocion");
+
+                    b.Property<int>("IdUsuario")
+                        .HasColumnType("int")
+                        .HasColumnName("id_usuario");
+
+                    b.HasKey("IdEnvio");
+
+                    b.ToTable("promocion_envios", (string)null);
+                });
+
             modelBuilder.Entity("Tecmave.Api.Models.PromocionesModel", b =>
                 {
                     b.Property<int>("id_promocion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("id_promocion");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id_promocion"));
 
                     b.Property<string>("descripcion")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("longtext")
+                        .HasColumnName("descripcion");
 
                     b.Property<DateOnly>("fecha_fin")
-                        .HasColumnType("date");
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_fin");
 
                     b.Property<DateOnly>("fecha_inicio")
-                        .HasColumnType("date");
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_inicio");
 
                     b.Property<int>("id_estado")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("id_estado");
+
+                    b.Property<string>("imagen_url")
+                        .HasColumnType("longtext")
+                        .HasColumnName("imagen_url");
+
+                    b.Property<bool>("recordatorio_enviado")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("recordatorio_enviado");
 
                     b.Property<string>("titulo")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("longtext")
+                        .HasColumnName("titulo");
 
                     b.HasKey("id_promocion");
 
                     b.ToTable("promociones", (string)null);
+                });
+
+            modelBuilder.Entity("Tecmave.Api.Models.Recordatorio", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("FechaEnvio")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("FechaEnvio");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("Tipo");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int")
+                        .HasColumnName("UsuarioId");
+
+                    b.Property<int>("VehiculoId")
+                        .HasColumnType("int")
+                        .HasColumnName("VehiculoId");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("recordatorios", (string)null);
                 });
 
             modelBuilder.Entity("Tecmave.Api.Models.ResenasModel", b =>
@@ -385,7 +552,7 @@ namespace Tecmave.Api.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("servicio_id")
+                    b.Property<int>("revision_id")
                         .HasColumnType("int");
 
                     b.HasKey("id_resena");
@@ -401,28 +568,106 @@ namespace Tecmave.Api.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id_revision"));
 
-                    b.Property<DateTime>("fecha_entrega_final")
+                    b.Property<DateTime?>("fecha_entrega_final")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<DateTime>("fecha_estimada_entrega")
+                    b.Property<DateTime?>("fecha_estimada_entrega")
                         .HasColumnType("datetime(6)");
 
                     b.Property<DateTime>("fecha_ingreso")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<bool>("golpes_arriba")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("golpes_delantera")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("golpes_derecha")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("golpes_izquierda")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("golpes_trasera")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("id_agendamiento")
+                        .HasColumnType("int");
+
                     b.Property<int>("id_estado")
                         .HasColumnType("int");
 
-                    b.Property<int>("id_servicio")
+                    b.Property<int?>("kilometraje")
                         .HasColumnType("int");
 
-                    b.Property<string>("vehiculo_id")
-                        .IsRequired()
+                    b.Property<string>("nivel_combustible")
                         .HasColumnType("longtext");
+
+                    b.Property<string>("notas_taller")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("observaciones_cliente")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("vehiculo_id")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("vehiculo_mojado")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("vehiculo_sucio")
+                        .HasColumnType("tinyint(1)");
 
                     b.HasKey("id_revision");
 
                     b.ToTable("revision", (string)null);
+                });
+
+            modelBuilder.Entity("Tecmave.Api.Models.RevisionPertenenciasModel", b =>
+                {
+                    b.Property<int>("id_pertenencia")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id_pertenencia"));
+
+                    b.Property<string>("nombre")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("presente")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("revision_id")
+                        .HasColumnType("int");
+
+                    b.HasKey("id_pertenencia");
+
+                    b.ToTable("revision_pertenencias");
+                });
+
+            modelBuilder.Entity("Tecmave.Api.Models.RevisionTrabajosModel", b =>
+                {
+                    b.Property<int>("id_trabajo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id_trabajo"));
+
+                    b.Property<string>("nombre")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("realizado")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("revision_id")
+                        .HasColumnType("int");
+
+                    b.HasKey("id_trabajo");
+
+                    b.ToTable("revision_trabajos");
                 });
 
             modelBuilder.Entity("Tecmave.Api.Models.RoleChangeAudit", b =>
@@ -567,12 +812,19 @@ namespace Tecmave.Api.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("Apellidos")
+                    b.Property<string>("Apellido")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Cedula")
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Direccion")
                         .HasColumnType("longtext");
 
                     b.Property<string>("Email")
@@ -581,6 +833,9 @@ namespace Tecmave.Api.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("tinyint(1)");
@@ -599,6 +854,9 @@ namespace Tecmave.Api.Migrations
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
+
+                    b.Property<bool>("NotificacionesActivadas")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("longtext");
@@ -631,32 +889,42 @@ namespace Tecmave.Api.Migrations
                     b.ToTable("aspnetusers", (string)null);
                 });
 
-            modelBuilder.Entity("Tecmave.Api.Models.VehiculosModel", b =>
+            modelBuilder.Entity("Tecmave.Api.Models.Vehiculo", b =>
                 {
-                    b.Property<int>("id_vehiculo")
+                    b.Property<int>("IdVehiculo")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("id_vehiculo");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("id_vehiculo"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdVehiculo"));
 
-                    b.Property<int>("anno")
-                        .HasColumnType("int");
+                    b.Property<int>("Anno")
+                        .HasColumnType("int")
+                        .HasColumnName("anno");
 
-                    b.Property<int>("cliente_id")
-                        .HasColumnType("int");
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int")
+                        .HasColumnName("cliente_id");
 
-                    b.Property<int>("id_marca")
-                        .HasColumnType("int");
+                    b.Property<int>("IdMarca")
+                        .HasColumnType("int")
+                        .HasColumnName("id_marca");
 
-                    b.Property<string>("modelo")
+                    b.Property<string>("Modelo")
+                        .HasColumnType("longtext")
+                        .HasColumnName("modelo");
+
+                    b.Property<string>("Placa")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasColumnType("longtext")
+                        .HasColumnName("placa");
 
-                    b.Property<string>("placa")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<DateOnly?>("Proximo")
+                        .HasColumnType("date");
 
-                    b.HasKey("id_vehiculo");
+                    b.HasKey("IdVehiculo");
+
+                    b.HasIndex("ClienteId");
 
                     b.ToTable("vehiculos", (string)null);
                 });
@@ -710,6 +978,38 @@ namespace Tecmave.Api.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Tecmave.Api.Models.MantenimientoModel", b =>
+                {
+                    b.HasOne("Tecmave.Api.Models.EstadosModel", "Estado")
+                        .WithMany()
+                        .HasForeignKey("IdEstado")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_Mantenimientos_Estado");
+
+                    b.HasOne("Tecmave.Api.Models.Vehiculo", "Vehiculo")
+                        .WithMany()
+                        .HasForeignKey("IdVehiculo")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_Mantenimientos_vehiculos_IdVehiculo");
+
+                    b.Navigation("Estado");
+
+                    b.Navigation("Vehiculo");
+                });
+
+            modelBuilder.Entity("Tecmave.Api.Models.Vehiculo", b =>
+                {
+                    b.HasOne("Tecmave.Api.Models.Usuario", "Cliente")
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cliente");
                 });
 #pragma warning restore 612, 618
         }

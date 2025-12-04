@@ -54,7 +54,8 @@ namespace Tecmave.Api.Services
             string userName,
             string email,
             string password,
-            string? phone = null)
+            string? phone = null,
+            string? cedula = null)
         {
             var user = new Usuario
             {
@@ -62,7 +63,8 @@ namespace Tecmave.Api.Services
                 Apellido = apellidos,
                 UserName = userName,
                 Email = email,
-                PhoneNumber = phone
+                PhoneNumber = phone,
+
             };
 
             var res = await _userManager.CreateAsync(user, password);
