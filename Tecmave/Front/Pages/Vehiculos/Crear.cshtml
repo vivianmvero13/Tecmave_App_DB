@@ -2,6 +2,7 @@
 @model Front.Pages.Vehiculos.CrearModel
 @{
     ViewData["Title"] = "Registrar vehículo";
+    var esCliente = User.IsInRole("Cliente");
 }
 
 <section class="section">
@@ -67,10 +68,12 @@
                 </tbody>
             </table>
         </div>
-
         <div class="mt-4 d-flex gap-2">
             <button id="guardarBtn" class="btn btn-orange" type="button">Guardar</button>
-            <a class="btn btn-secondary" asp-page="/Vehiculos/Index">Volver</a>
+            @if (!esCliente)
+            {
+                <a class="btn btn-secondary" asp-page="/Vehiculos/Index">Volver</a>
+            }
         </div>
     </div>
 </section>

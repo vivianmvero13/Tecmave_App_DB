@@ -58,16 +58,13 @@
             </div>
             <div class="subtle">Gestión</div>
             <nav class="nav">
-                <a href="/"><i class="fa-solid fa-house"></i> Home</a>
-                <a asp-page="/Servicios/Index"><i class="fa-solid fa-screwdriver-wrench"></i> Agendar Servicio </a>
-                <a asp-page="/Vehiculos/Crear"><i class="fa-solid fa-car"></i>Mis Vehículos</a>
-                <a asp-page="/Promociones/NuestrasPromociones"><i class="fa-solid fa-car"></i>Promociones</a>
-
-                
-
                 @* Panel de cliente *@
-                @if (!isAdmin && isCliente)
+                @if (isCliente)
                 {
+                    <a href="/"><i class="fa-solid fa-house"></i> Home</a>
+                    <a asp-page="/Servicios/Index"><i class="fa-solid fa-screwdriver-wrench"></i> Agendar Servicio </a>
+                    <a asp-page="/Vehiculos/Crear"><i class="fa-solid fa-car"></i>Mis Vehículos</a>
+                    <a asp-page="/Promociones/NuestrasPromociones"><i class="fa-solid fa-car"></i>Promociones</a>
                     <div class="subtle">Panel</div>
                     <nav class="nav">
                         <a href="/Panel"><i class="fa-solid fa-gauge-high"></i> Panel</a>
@@ -78,17 +75,16 @@
 
                 @if (isAdmin)
                 {
-                    <div class="subtle">Gestión</div>
                     <nav class="nav">
                         <a asp-page="/Estadistica/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
                         <a asp-page="/Usuarios/Index"><i class="fa-solid fa-user-group"></i> Usuarios</a>
                         <a asp-page="/Vehiculos/Index"><i class="fa-solid fa-car"></i> Vehículos</a>
-                        <a asp-page="/Vehiculos/Promociones"><i class="fa-solid fa-car"></i> Promociones</a>
+                        <a asp-page="/Promociones/Index"><i class="fa-solid fa-car"></i> Promociones</a>
                         <a asp-page="/Mantenimientos/Index"><i class="fa-solid fa-user-group"></i> Mantenimientos</a>
                         <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
                         <a asp-page="/Factura/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Factura</a>
                         <a asp-page="/Planillas/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Planillas</a>
-                        <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
+                        <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Auditoría</a>
                     </nav>
                 }
             </nav>

@@ -13,20 +13,33 @@ namespace Tecmave.Api.Services
             _context = context;
         }
 
+        private static string NormalizarPlaca(string? placaSinNormalizar)
+        {
+            return (placaSinNormalizar ?? string.Empty)
+                .ToUpperInvariant()
+                .Trim();
+        }
+
         // Listar todos
         public async Task<List<Vehiculo>> ListAsync(CancellationToken ct = default)
-            => await _context.Vehiculos.AsNoTracking().ToListAsync(ct);
+        {
+            return await _context.Vehiculos
+                .AsNoTracking()
+                .ToListAsync(ct);
+        }
 
         // Obtener por id
         public async Task<Vehiculo?> GetByIdAsync(int id, CancellationToken ct = default)
-            => await _context.Vehiculos.AsNoTracking()
-                   .FirstOrDefaultAsync(v => v.IdVehiculo == id, ct);
+        {
+            return await _context.Vehiculos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(v => v.IdVehiculo == id, ct);
+        }
 
         // Crear
         public async Task<Vehiculo> AddAsync(Vehiculo v, CancellationToken ct = default)
         {
-            // Normaliza placa, valida mínimos si quieres
-            v.Placa = (v.Placa ?? string.Empty).ToUpperInvariant();
+            v.Placa = NormalizarPlaca(v.Placa);
 
             _context.Vehiculos.Add(v);
             await _context.SaveChangesAsync(ct);
@@ -43,7 +56,8 @@ namespace Tecmave.Api.Services
             v.ClienteId = input.ClienteId;
             v.IdMarca = input.IdMarca;
             v.Anno = input.Anno;
-            v.Placa = (input.Placa ?? string.Empty).ToUpperInvariant();
+            v.Placa = NormalizarPlaca(input.Placa);
+            v.Modelo = (input.Modelo ?? string.Empty).Trim();
 
             await _context.SaveChangesAsync(ct);
             return true;
@@ -52,12 +66,38 @@ namespace Tecmave.Api.Services
         // Eliminar (retorna false si no existe)
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
-            var v = await _context.Vehiculos.FirstOrDefaultAsync(x => x.IdVehiculo == id, ct);
+            var v = await _context.Vehiculos
+                .FirstOrDefaultAsync(x => x.IdVehiculo == id, ct);
+
             if (v is null) return false;
 
-            _context.Vehiculos.Remove(v);
-            await _context.SaveChangesAsync(ct);
-            return true;
+            // Cargar y eliminar agendamientos asociados
+            // Ajusta "vehiculo_id" según el nombre real de tu propiedad FK.
+            var agendamientos = await _context.agendamientos
+                .Where(a => a.vehiculo_id == id)
+                .ToListAsync(ct);
+
+            using var tx = await _context.Database.BeginTransactionAsync(ct);
+
+            try
+            {
+                if (agendamientos.Any())
+                {
+                    _context.agendamientos.RemoveRange(agendamientos);
+                }
+
+                _context.Vehiculos.Remove(v);
+
+                await _context.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
+
+                return true;
+            }
+            catch
+            {
+                await tx.RollbackAsync(ct);
+                throw;
+            }
         }
     }
 }

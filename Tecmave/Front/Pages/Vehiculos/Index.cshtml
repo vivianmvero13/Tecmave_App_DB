@@ -48,7 +48,7 @@
     </table>
 </div>
 
-<!-- Modal reutilizable (igual estilo que en Crear) -->
+<!-- Modal reutilizable -->
 <div id="appModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
     <div class="modal-backdrop" data-close="1"></div>
     <div class="modal-dialog" role="document">
@@ -73,7 +73,6 @@
             background: #8f9a11 !important;
         }
 
-    /* Acciones en línea (Ver / Eliminar uno al lado del otro) */
     .actions-group {
         display: flex;
         gap: 0.35rem;
@@ -84,7 +83,6 @@
             white-space: nowrap;
         }
 
-    /* Modal (mismo estilo que Crear) */
     .modal {
         position: fixed;
         inset: 0;
@@ -147,7 +145,6 @@
 <script>
     const API_BASE = 'https://tecmave-api.azurewebsites.net';
 
-    // Endpoints (sin /api)
     const VEHICULOS_URL = `${API_BASE}/vehiculos`;
     const USUARIOS_URL  = `${API_BASE}/api/usuarios`;
     const MARCAS_URL    = `${API_BASE}/Marcas`;
@@ -161,11 +158,9 @@
     let allRows = [];
     let filteredRows = [];
 
-    // Diccionarios auxiliares
-    const usersMap  = new Map(); // id -> { nombre, email }
-    const marcasMap = new Map(); // id -> nombre
+    const usersMap  = new Map();
+    const marcasMap = new Map();
 
-    // ===== Helpers =====
     function pick(obj, paths, def = '') {
         for (const p of paths) {
             const v = p.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
@@ -188,16 +183,17 @@
         return full || user || 'Usuario';
     }
 
-    /* =================== Modal helpers (igual patrón que en Crear) =================== */
+    /* =================== Modal helpers =================== */
     const Modal = (() => {
         const root   = document.getElementById('appModal');
         const title  = document.getElementById('modalTitle');
         const body   = document.getElementById('modalBody');
         const icon   = document.getElementById('modalIcon');
+        const primaryBtn = document.getElementById('modalPrimary');
+
         let onClose  = null;
 
         function setKind(kind){
-            // kind: 'ok' | 'warn' | 'error' | 'info'
             const map = {
                 ok:   { bg:'#e7f6ec', color:'#2e7d32', text:'✓' },
                 warn: { bg:'#fff4e5', color:'#a15c00', text:'!' },
@@ -218,9 +214,8 @@
             root.classList.add('show');
             root.style.display = 'block';
             root.setAttribute('aria-hidden', 'false');
-            if (autoFocus) {
-                const primary = document.getElementById('modalPrimary');
-                setTimeout(() => primary?.focus(), 0);
+            if (autoFocus && primaryBtn) {
+                setTimeout(() => primaryBtn.focus(), 0);
             }
             document.addEventListener('keydown', escListener);
         }
@@ -238,9 +233,60 @@
         }
 
         function escListener(e) { if (e.key === 'Escape') hide(); }
-        root.addEventListener('click', (e) => { if (e.target?.dataset?.close === '1') hide(); });
 
-        return { show, hide };
+        root.addEventListener('click', (e) => {
+            if (e.target?.dataset?.close === '1') hide();
+        });
+
+        // Confirm genérico reutilizable
+        function confirm({ titleText, bodyText, kind = 'warn', confirmText = 'Eliminar', onConfirm }) {
+            if (!primaryBtn) {
+                show({ titleText, bodyText, kind });
+                return;
+            }
+
+            const prevText = primaryBtn.textContent;
+            const prevClose = primaryBtn.getAttribute('data-close');
+
+            primaryBtn.textContent = confirmText;
+            primaryBtn.removeAttribute('data-close');
+
+            const handler = async () => {
+                primaryBtn.removeEventListener('click', handler);
+                try {
+                    if (typeof onConfirm === 'function') {
+                        await onConfirm();
+                    }
+                } finally {
+                    primaryBtn.textContent = prevText;
+                    if (prevClose) {
+                        primaryBtn.setAttribute('data-close', prevClose);
+                    } else {
+                        primaryBtn.removeAttribute('data-close');
+                    }
+                    hide();
+                }
+            };
+
+            primaryBtn.addEventListener('click', handler, { once: true });
+
+            show({
+                titleText,
+                bodyText,
+                kind,
+                onCloseCb: () => {
+                    primaryBtn.removeEventListener('click', handler);
+                    primaryBtn.textContent = prevText;
+                    if (prevClose) {
+                        primaryBtn.setAttribute('data-close', prevClose);
+                    } else {
+                        primaryBtn.removeAttribute('data-close');
+                    }
+                }
+            });
+        }
+
+        return { show, hide, confirm };
     })();
 
     // ===== Cargas base =====
@@ -275,7 +321,9 @@
 
     // ===== Transformación de fila del API a modelo UI =====
     function mapApiRow(r) {
-        const id       = pick(r, ['id','id_vehiculo','idVehiculo']);
+        const idRaw = pick(r, ['id','id_vehiculo','idVehiculo','Id','IdVehiculo']);
+        const id    = idRaw !== undefined && idRaw !== null ? Number(idRaw) : null;
+
         const placa    = String(pick(r, ['placa','Placa'], '')).toUpperCase();
         const annoRaw  = Number(pick(r, ['anno','anio','Año','year'], 0));
         const anno     = annoRaw > 0 ? annoRaw : '—';
@@ -364,7 +412,7 @@
         URL.revokeObjectURL(url);
     }
 
-    // ===== Eliminar vehículo (llamado solo desde el modal) =====
+    // ===== Eliminar vehículo =====
     async function deleteVehiculo(id) {
         try {
             const res = await fetch(`${VEHICULOS_URL}/${id}`, {
@@ -387,6 +435,7 @@
             }
 
             await loadVehiculos();
+
             Modal.show({
                 titleText: 'Eliminado',
                 bodyText: 'Vehículo eliminado correctamente.',
@@ -402,38 +451,21 @@
         }
     }
 
-    // ===== Confirmar eliminación (abre modal como en Crear) =====
+    // ===== Confirmar eliminación usando la lógica del Modal =====
     function confirmarEliminar(id) {
-        const btn = document.getElementById('modalPrimary');
-        const prevText = btn.textContent;
-        const prevClose = btn.getAttribute('data-close');
-
-        btn.textContent = 'Eliminar';
-        btn.removeAttribute('data-close');
-
-        const handler = async () => {
-            btn.removeEventListener('click', handler);
-            try {
-                await deleteVehiculo(id);
-            } finally {
-                btn.textContent = prevText;
-                if (prevClose) btn.setAttribute('data-close', prevClose);
-            }
-        };
-
-        btn.addEventListener('click', handler, { once: true });
-
-        Modal.show({
+        Modal.confirm({
             titleText: 'Confirmar eliminación',
             bodyText: '¿Estás seguro que deseas eliminar este vehículo?',
             kind: 'warn',
-            onCloseCb: () => {
-                btn.removeEventListener('click', handler);
-                btn.textContent = prevText;
-                if (prevClose) btn.setAttribute('data-close', prevClose);
+            confirmText: 'Eliminar',
+            onConfirm: async () => {
+                await deleteVehiculo(id);
             }
         });
     }
+
+    // Exponer para onclick del HTML
+    window.confirmarEliminar = confirmarEliminar;
 
     // ===== Carga principal =====
     async function loadVehiculos() {
@@ -447,7 +479,10 @@
                        : Array.isArray(data?.data) ? data.data
                        : [];
 
-            allRows = list.map(mapApiRow);
+            allRows = list
+                .map(mapApiRow)
+                .filter(r => r.id !== null && r.id !== undefined);
+
             filteredRows = [...allRows];
             renderRows(filteredRows);
         } catch (err) {
@@ -457,11 +492,9 @@
         }
     }
 
-    // Eventos
     $search.addEventListener('input', applyFilter);
     $clear.addEventListener('click', () => { $search.value = ''; applyFilter(); });
     $export.addEventListener('click', exportCsv);
 
-    // Init
     loadVehiculos();
 </script>
