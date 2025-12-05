@@ -146,6 +146,7 @@ namespace Tecmave.Api.Controllers
             return NoContent();
         }
 
+
         [HttpDelete("{id:int}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
@@ -153,106 +154,122 @@ namespace Tecmave.Api.Controllers
         [ProducesResponseType(500)]
         public async Task<IActionResult> Delete(int id)
         {
-            var vehiculo = await _db.Vehiculos
-                .FirstOrDefaultAsync(x => x.IdVehiculo == id);
-
-            if (vehiculo is null)
+            // Verificamos que exista el vehículo
+            var existe = await _db.Vehiculos.AnyAsync(x => x.IdVehiculo == id);
+            if (!existe)
                 return NotFound(new { message = $"Vehículo {id} no existe." });
 
             using var tx = await _db.Database.BeginTransactionAsync();
 
             try
             {
-                // 1) Agendamientos del vehículo
-                var agendamientos = await _db.agendamientos
-                    .Where(a => a.vehiculo_id == id)
-                    .ToListAsync();
+                // IMPORTANTES:
+                // - Nombres de tabla/cólumnas igual que en MySQL: agendamiento, revision, etc.
+                // - El orden respeta las FKs:
+                //   hijos de revision -> revision -> agendamiento -> otros -> vehiculos
 
-                var agIds = agendamientos
-                    .Select(a => a.id_agendamiento)
-                    .ToList();
+                var idVehiculo = id;
 
-                // 2) Revisiones del vehículo:
-                //    - por vehiculo_id
-                //    - o por id_agendamiento dentro de los agIds
-                var revisiones = await _db.revision
-                    .Where(r =>
-                        r.vehiculo_id == id ||
-                        (agIds.Count > 0 && agIds.Contains(r.id_agendamiento)))
-                    .ToListAsync();
+                // 1) Hijos de revision (servicios_revision, revision_pertenencias, revision_trabajos, resenas)
 
-                var revisionIds = revisiones
-                    .Select(r => r.id_revision)
-                    .ToList();
+                // 1.1) servicios_revision
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            DELETE FROM servicios_revision
+            WHERE revision_id IN (
+                SELECT id_revision
+                FROM revision
+                WHERE vehiculo_id = {idVehiculo}
+                   OR id_agendamiento IN (
+                       SELECT id_agendamiento
+                       FROM agendamiento
+                       WHERE vehiculo_id = {idVehiculo}
+                   )
+            );
+        ");
 
-                if (revisionIds.Any())
-                {
-                    // 2.1) servicios_revision
-                    var serviciosRev = await _db.servicios_revision
-                        .Where(sr => revisionIds.Contains(sr.revision_id))
-                        .ToListAsync();
+                // 1.2) revision_pertenencias
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            DELETE FROM revision_pertenencias
+            WHERE revision_id IN (
+                SELECT id_revision
+                FROM revision
+                WHERE vehiculo_id = {idVehiculo}
+                   OR id_agendamiento IN (
+                       SELECT id_agendamiento
+                       FROM agendamiento
+                       WHERE vehiculo_id = {idVehiculo}
+                   )
+            );
+        ");
 
-                    if (serviciosRev.Any())
-                        _db.servicios_revision.RemoveRange(serviciosRev);
+                // 1.3) revision_trabajos
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            DELETE FROM revision_trabajos
+            WHERE revision_id IN (
+                SELECT id_revision
+                FROM revision
+                WHERE vehiculo_id = {idVehiculo}
+                   OR id_agendamiento IN (
+                       SELECT id_agendamiento
+                       FROM agendamiento
+                       WHERE vehiculo_id = {idVehiculo}
+                   )
+            );
+        ");
 
-                    // 2.2) revision_pertenencias
-                    var pertenencias = await _db.revision_pertenencias
-                        .Where(rp => revisionIds.Contains(rp.revision_id))
-                        .ToListAsync();
+                // 1.4) resenas
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            DELETE FROM resenas
+            WHERE revision_id IN (
+                SELECT id_revision
+                FROM revision
+                WHERE vehiculo_id = {idVehiculo}
+                   OR id_agendamiento IN (
+                       SELECT id_agendamiento
+                       FROM agendamiento
+                       WHERE vehiculo_id = {idVehiculo}
+                   )
+            );
+        ");
 
-                    if (pertenencias.Any())
-                        _db.revision_pertenencias.RemoveRange(pertenencias);
-
-                    // 2.3) revision_trabajos
-                    var trabajos = await _db.revision_trabajos
-                        .Where(rt => revisionIds.Contains(rt.revision_id))
-                        .ToListAsync();
-
-                    if (trabajos.Any())
-                        _db.revision_trabajos.RemoveRange(trabajos);
-
-                    // 2.4) resenas ligadas a esas revisiones
-                    var resenas = await _db.resenas
-                        .Where(rs => revisionIds.Contains(rs.revision_id))
-                        .ToListAsync();
-
-                    if (resenas.Any())
-                        _db.resenas.RemoveRange(resenas);
-
-                    // 2.5) finalmente, las revisiones
-                    _db.revision.RemoveRange(revisiones);
-                }
+                // 2) Revisiones del vehículo (por vehiculo_id o por agendamiento del vehículo)
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            DELETE FROM revision
+            WHERE vehiculo_id = {idVehiculo}
+               OR id_agendamiento IN (
+                   SELECT id_agendamiento
+                   FROM agendamiento
+                   WHERE vehiculo_id = {idVehiculo}
+               );
+        ");
 
                 // 3) Agendamientos del vehículo
-                if (agendamientos.Any())
-                    _db.agendamientos.RemoveRange(agendamientos);
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            DELETE FROM agendamiento
+            WHERE vehiculo_id = {idVehiculo};
+        ");
 
-                // 4) Recordatorios ligados al vehículo
-                var recordatorios = await _db.recordatorios
-                    .Where(r => r.VehiculoId == id)
-                    .ToListAsync();
+                // 4) Recordatorios ligados al vehículo (no tienen FK, pero los limpiamos)
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            DELETE FROM recordatorios
+            WHERE VehiculoId = {idVehiculo};
+        ");
 
-                if (recordatorios.Any())
-                    _db.recordatorios.RemoveRange(recordatorios);
-
-                // 5) Mantenimientos
-                var mantenimientos = await _db.Mantenimientos
-                    .Where(m => m.IdVehiculo == id)
-                    .ToListAsync();
-
-                if (mantenimientos.Any())
-                    _db.Mantenimientos.RemoveRange(mantenimientos);
+                // 5) Mantenimientos del vehículo (además de tener ON DELETE CASCADE)
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            DELETE FROM mantenimientos
+            WHERE IdVehiculo = {idVehiculo};
+        ");
 
                 // 6) Finalmente, el vehículo
-                _db.Vehiculos.Remove(vehiculo);
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            DELETE FROM vehiculos
+            WHERE id_vehiculo = {idVehiculo};
+        ");
 
-                await _db.SaveChangesAsync();
                 await tx.CommitAsync();
 
-                _log.LogInformation(
-                    "Vehículo {Id} y sus registros asociados fueron eliminados correctamente.",
-                    id);
-
+                _log.LogInformation("Vehículo {Id} y sus registros asociados fueron eliminados correctamente.", id);
                 return NoContent();
             }
             catch (DbUpdateException ex)
@@ -273,5 +290,6 @@ namespace Tecmave.Api.Controllers
                 return StatusCode(500, new { message = "Error interno al eliminar el vehículo." });
             }
         }
+
     }
 }
