@@ -1,0 +1,216 @@
+﻿@page
+@model EditProformaModel
+@{
+    ViewData["Title"] = "Editar Proforma";
+}
+
+<h2>Editar Proforma</h2>
+
+<div id="info"></div>
+
+<h3>Pertenencias</h3>
+<div id="contenedorPertenencias" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;"></div>
+
+<h3>Trabajos</h3>
+<select id="selectTrabajos"></select>
+<button onclick="addTrabajo()">Agregar trabajo</button>
+<div id="contenedorTrabajos"></div>
+
+<br>
+
+<button onclick="finalizar()" style="background:green;color:white;">Marcar Finalizada</button>
+<button onclick="descargarPDF()">Descargar PDF</button>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+    const API = {
+        AGENDAMIENTO: "https://tecmave-api.azurewebsites.net/Agendamiento",
+        REVISION: "https://tecmave-api.azurewebsites.net/Revision",
+        REV_PERT: "https://tecmave-api.azurewebsites.net/api/RevisionPertenencias",
+        REV_TRAB: "https://tecmave-api.azurewebsites.net/api/RevisionTrabajos",
+        SERV_REV: "https://tecmave-api.azurewebsites.net/ServiciosRevision",
+        VEHICULO: "https://tecmave-api.azurewebsites.net/Vehiculos",
+        SERV: "https://tecmave-api.azurewebsites.net/Servicios",
+        TIPO_SERV: "https://tecmave-api.azurewebsites.net/TipoServicios",
+        ESTADOS: "https://tecmave-api.azurewebsites.net/Estados"
+    };
+
+    const PERTENENCIAS = [
+    "Radio","Encendedor","Gar Celular","Antena","Espejo","Alfombras","Halogeno","Llave Rana",
+    "Gata Mec/HD","Herramienta","Triangulos","Lagartos","Llanta de repuesto","Copas","Paraguas",
+    "Botiquin","Chaleco","Booster","Linga","Extintor"
+    ];
+
+    const TRABAJOS = [
+    "DIAGNOSTICO 0 M.","DIAGNOSTICO 3000 M.","DIAGNOSTICO 6000 M.","DIAGNOSTICO 9000 M.",
+    "DIAGNOSTICO 12000 M.","DIAGNOSTICO 15000 M.","R.T.V.","DIAGNOSTICO INYECCION",
+    "DIAGNOSTICO SIST. FRENOS","DIAGNOSTICO SIST. DIRECCION","DIAGNOSTICO SIST. SUSPENSION",
+    "DIAGNOSTICO SIST. ENFRIAMIENTO","REVISION SIST. ELECTRICO","REVISION DE TRANSMISION",
+    "AFINAMIENTO","TUNEUP","CAMBIO DE ACEITE Y FILTRO","CAMBIO DE ACEITE DE TRANSMISION",
+    "CAMBIO DE ACEITE DE DIFERENCIA","REVISION DE NIVELES","ENGRASE","LIMPIEZA DE INYECTORES",
+    "ALINEADO DE DIRECCION","BALANCEO","ROTACION DE LLANTAS","REPARACION DE TAPICERIA",
+    "REPARACION De A/C","REPARACION DE CARROCERIA"
+    ];
+
+    let revisionId = new URLSearchParams(window.location.search).get("id");
+    let detalleActual = null;
+
+    $(document).ready(() => {
+        cargarDetalle();
+    });
+
+    async function cargarDetalle() {
+        const d = await $.get(`${API.REVISION}/Detalle/${revisionId}`);
+        detalleActual = d;
+
+        const estados = await $.get(API.ESTADOS);
+
+        const estado = estados.find(e => e.id_estado === d.agendamiento.id_estado);
+
+        $("#info").html(`
+            <h3>Vehículo</h3>
+            <p>${d.vehiculo.modelo} - ${d.vehiculo.placa}</p>
+
+            <h3>Servicio</h3>
+            <p>${d.servicio?.nombre || "No registrado"}</p>
+
+            <h3>Estado</h3>
+            <p>${estado?.nombre || "Sin estado"}</p>
+        `);
+
+        renderPertenencias(d.pertenencias);
+        renderTrabajos(d.trabajos);
+    }
+
+    function renderPertenencias(lista) {
+        $("#contenedorPertenencias").html("");
+
+        PERTENENCIAS.forEach(nombre => {
+            const existe = lista.find(p => p.nombre === nombre);
+            const check = existe?.presente ? "checked" : "";
+            $("#contenedorPertenencias").append(`
+                <label><input type="checkbox" onchange="togglePertenencia('${nombre}', this.checked)" ${check}> ${nombre}</label>
+            `);
+        });
+    }
+
+    async function togglePertenencia(nombre, presente) {
+        const actual = detalleActual.pertenencias.find(x => x.nombre === nombre);
+
+        if (actual) {
+            await $.ajax({
+                url: API.REV_PERT,
+                method: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    id_pertenencia: actual.id_pertenencia,
+                    revision_id: revisionId,
+                    nombre,
+                    presente
+                })
+            });
+        } else {
+            await $.ajax({
+                url: API.REV_PERT,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    revision_id: revisionId,
+                    nombre,
+                    presente
+                })
+            });
+        }
+        cargarDetalle();
+    }
+
+    function renderTrabajos(lista) {
+        $("#contenedorTrabajos").html("");
+        $("#selectTrabajos").html(`<option value="">Seleccione trabajo</option>`);
+
+        TRABAJOS.forEach(t => $("#selectTrabajos").append(`<option>${t}</option>`));
+
+        lista.forEach(t => {
+            $("#contenedorTrabajos").append(`
+                <div>
+                    <input type="checkbox" ${t.realizado ? "checked" : ""}
+                           onchange="updateTrabajo(${t.id_trabajo}, this.checked)">
+                    ${t.nombre}
+                    <button onclick="deleteTrabajo(${t.id_trabajo})">Eliminar</button>
+                </div>
+            `);
+        });
+    }
+
+    async function addTrabajo() {
+        const nombre = $("#selectTrabajos").val();
+        if (!nombre) return alert("Seleccione un trabajo");
+
+        await $.ajax({
+            url: API.REV_TRAB,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ revision_id: revisionId, nombre, realizado: false })
+        });
+
+        cargarDetalle();
+    }
+
+    async function updateTrabajo(id, realizado) {
+        const tr = detalleActual.trabajos.find(x => x.id_trabajo === id);
+        await $.ajax({
+            url: API.REV_TRAB,
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify({
+                id_trabajo: id,
+                revision_id: revisionId,
+                nombre: tr.nombre,
+                realizado
+            })
+        });
+    }
+
+    async function deleteTrabajo(id) {
+        await $.ajax({
+            url: `${API.REV_TRAB}?id=${id}`,
+            method: "DELETE"
+        });
+
+        cargarDetalle();
+    }
+
+    async function finalizar() {
+
+        if (!confirm("¿Finalizar esta proforma?")) return;
+
+        const rev = await $.get(`${API.REVISION}/${revisionId}`);
+        const ag = await $.get(`${API.AGENDAMIENTO}/${rev.id_agendamiento}`);
+
+        rev.id_estado = 9;
+        ag.id_estado = 9;
+
+        await $.ajax({
+            url: API.REVISION,
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify(rev)
+        });
+
+        await $.ajax({
+            url: API.AGENDAMIENTO,
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify(ag)
+        });
+
+        alert("Revisión finalizada");
+        location.href = "/Index";
+    }
+
+    // <-- conecta con tu función actual
+    function descargarPDF() {
+        verProforma(revisionId);
+    }
+</script>

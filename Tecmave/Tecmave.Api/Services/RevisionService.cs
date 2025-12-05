@@ -47,10 +47,29 @@ namespace Tecmave.Api.Services
                 return false;
             }
 
+            
+            entidad.fecha_ingreso = RevisionModel.fecha_ingreso;
+            entidad.id_estado = RevisionModel.id_estado;
+            entidad.fecha_estimada_entrega = RevisionModel.fecha_estimada_entrega;
+            entidad.fecha_entrega_final = RevisionModel.fecha_entrega_final;
+            entidad.id_agendamiento = RevisionModel.id_agendamiento;
+            entidad.kilometraje = RevisionModel.kilometraje;
+            entidad.observaciones_cliente = RevisionModel.observaciones_cliente;
+            entidad.nivel_combustible = RevisionModel.nivel_combustible;
+            entidad.golpes_delantera = RevisionModel.golpes_delantera;
+            entidad.golpes_trasera = RevisionModel.golpes_trasera;
+            entidad.golpes_izquierda = RevisionModel.golpes_izquierda;
+            entidad.golpes_derecha = RevisionModel.golpes_derecha;
+            entidad.golpes_arriba = RevisionModel.golpes_arriba;
+            entidad.vehiculo_sucio = RevisionModel.vehiculo_sucio;
+            entidad.vehiculo_mojado = RevisionModel.vehiculo_mojado;
+            entidad.notas_taller = RevisionModel.notas_taller;
+
+           
+
             _context.SaveChanges();
 
             return true;
-
         }
 
 

@@ -1,0 +1,69 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Proformas / Revisiones";
+}
+
+<h2>Proformas pendientes</h2>
+
+<table id="tablaProformas">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Vehículo</th>
+            <th>Cliente</th>
+            <th>Estado</th>
+            <th>Fecha ingreso</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+    const API = {
+        AGENDAMIENTO: "https://tecmave-api.azurewebsites.net/Agendamiento",
+        REVISION: "https://tecmave-api.azurewebsites.net/Revision",
+        REV_PERT: "https://tecmave-api.azurewebsites.net/api/RevisionPertenencias",
+        REV_TRAB: "https://tecmave-api.azurewebsites.net/api/RevisionTrabajos",
+        SERV_REV: "https://tecmave-api.azurewebsites.net/ServiciosRevision",
+        VEHICULO: "https://tecmave-api.azurewebsites.net/Vehiculos",
+        SERV: "https://tecmave-api.azurewebsites.net/Servicios",
+        TIPO_SERV: "https://tecmave-api.azurewebsites.net/TipoServicios",
+        ESTADOS: "https://tecmave-api.azurewebsites.net/Estados"
+    };
+
+    $(document).ready(() => {
+        cargarProformas();
+    });
+
+    async function cargarProformas() {
+        const revisiones = await $.get(API.REVISION);
+        const vehiculos = await $.get(API.VEHICULO);
+        const estados = await $.get(API.ESTADOS);
+
+        const pendientes = revisiones.filter(r => r.id_estado !== 9);
+
+        $("#tablaProformas tbody").html("");
+
+        pendientes.forEach(r => {
+            const veh = vehiculos.find(v => v.idVehiculo === r.vehiculo_id);
+            const estado = estados.find(e => e.id_estado === r.id_estado);
+
+            $("#tablaProformas tbody").append(`
+                <tr>
+                    <td>${r.id_revision}</td>
+                    <td>${veh ? `${veh.modelo} - ${veh.placa}` : ''}</td>
+                    <td>${veh?.cliente?.nombre || 'Cliente'}</td>
+                    <td>${estado?.nombre || "Sin Estado"}</td>
+                    <td>${r.fecha_ingreso?.substring(0,10)}</td>
+                    <td>
+                        <button onclick="location.href='/EditProforma?id=${r.id_revision}'">Gestionar</button>
+                    </td>
+                </tr>
+            `);
+        });
+    }
+</script>
