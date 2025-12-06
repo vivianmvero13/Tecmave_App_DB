@@ -1,15 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Front.Pages.Colaboradores
 {
-    public class IndexModel : PageModel
+    public class EditarModel : PageModel
     {
         private readonly IConfiguration _cfg;
 
-        public IndexModel(IConfiguration cfg)
+        public EditarModel(IConfiguration cfg)
         {
             _cfg = cfg;
         }
+
+        [BindProperty(SupportsGet = true)]
+        public int Id { get; set; }
 
         public string ApiBase { get; private set; } = "";
 

@@ -1,0 +1,72 @@
+﻿@page
+@model Front.Pages.Colaboradores.EditarModel
+@{
+    Layout = "_Layout";
+}
+
+<h2>Editar colaborador</h2>
+
+<div class="card p-3">
+    <input id="cedula" class="form-control mb-2" placeholder="Cédula">
+    <input id="nombre" class="form-control mb-2" placeholder="Nombre">
+    <input id="apellido" class="form-control mb-2" placeholder="Apellido">
+    <input id="telefono" class="form-control mb-2" placeholder="Teléfono">
+    <input id="email" class="form-control mb-2" placeholder="Correo">
+    <input id="puesto" class="form-control mb-2" placeholder="Puesto">
+    <input id="salario" class="form-control mb-2" placeholder="Salario">
+
+    <button id="btnActualizar" class="btn btn-success mt-3">Actualizar</button>
+</div>
+
+<script>
+    const api = "@Model.ApiBase/colaboradores/" + "@Model.Id";
+
+    function validar() {
+        const rCed = /^\d{9}$/;
+        const rTel = /^\d{8}$/;
+        const rMail = /^[^@]+@[^@]+\.[a-zA-Z]{2,}$/;
+
+        if (!rCed.test(cedula.value)) return false;
+        if (!rTel.test(telefono.value)) return false;
+        if (!rMail.test(email.value)) return false;
+
+        return true;
+    }
+
+    function cargar() {
+        fetch(api)
+            .then(r => r.json())
+            .then(c => {
+                cedula.value = c.cedula;
+                nombre.value = c.nombre;
+                apellido.value = c.apellido;
+                telefono.value = c.telefono;
+                email.value = c.email;
+                puesto.value = c.puesto;
+                salario.value = c.salario;
+            });
+    }
+
+    btnActualizar.onclick = () => {
+        if (!validar()) return alert("Datos inválidos");
+
+        const body = {
+            cedula: cedula.value,
+            nombre: nombre.value,
+            apellido: apellido.value,
+            telefono: telefono.value,
+            email: email.value,
+            puesto: puesto.value,
+            salario: parseFloat(salario.value)
+        };
+
+        fetch(api, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        })
+        .then(() => location.href = "/Colaboradores");
+    };
+
+    cargar();
+</script>
