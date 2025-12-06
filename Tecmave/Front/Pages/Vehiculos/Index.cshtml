@@ -48,6 +48,33 @@
     </table>
 </div>
 
+<!-- Controles de paginación -->
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <div class="d-flex align-items-center gap-2">
+        <label for="pageSizeSelectVeh" class="form-label mb-0">Mostrar:</label>
+        <select id="pageSizeSelectVeh" class="form-select form-select-sm" style="width:auto;">
+            <option value="5" selected>5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+        </select>
+    </div>
+    <nav aria-label="Paginación vehículos" class="vehiculos-pagination-nav">
+        <ul class="pagination pagination-sm mb-0 d-flex flex-row align-items-center gap-2"
+            style="list-style:none; margin:0; padding:0;">
+            <li class="page-item" id="prevPageItemVeh" style="list-style:none;">
+                <button class="page-link" type="button" id="prevPageBtnVeh" aria-label="Anterior">&laquo;</button>
+            </li>
+            <li class="page-item disabled" style="list-style:none;">
+                <span class="page-link" id="pageInfoVeh">1 / 1</span>
+            </li>
+            <li class="page-item" id="nextPageItemVeh" style="list-style:none;">
+                <button class="page-link" type="button" id="nextPageBtnVeh" aria-label="Siguiente">&raquo;</button>
+            </li>
+        </ul>
+    </nav>
+</div>
+
 <!-- Modal reutilizable -->
 <div id="appModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
     <div class="modal-backdrop" data-close="1"></div>
@@ -140,6 +167,28 @@
         gap: .5rem;
         margin-top: 1rem;
     }
+
+    /* Paginación vehículos: flecha – número – flecha en línea */
+    .vehiculos-pagination-nav .pagination {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.5rem !important;
+    }
+
+    .vehiculos-pagination-nav .page-item {
+        list-style: none !important;
+    }
+
+    .vehiculos-pagination-nav .page-link {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        padding: .35rem .65rem;
+        border-radius: 8px;
+        cursor: pointer;
+    }
 </style>
 
 <script>
@@ -154,6 +203,18 @@
     const $clear     = document.getElementById('clearSearch');
     const $badge     = document.getElementById('resultsBadge');
     const $export    = document.getElementById('exportBtn');
+
+    // Paginación
+    const PAGE_SIZES_VEH = [5, 10, 20, 50];
+    let pageSizeVeh = 5;
+    let currentPageVeh = 1;
+
+    const $pageSizeSelectVeh = document.getElementById('pageSizeSelectVeh');
+    const $pageInfoVeh       = document.getElementById('pageInfoVeh');
+    const $prevPageBtnVeh    = document.getElementById('prevPageBtnVeh');
+    const $nextPageBtnVeh    = document.getElementById('nextPageBtnVeh');
+    const $prevPageItemVeh   = document.getElementById('prevPageItemVeh');
+    const $nextPageItemVeh   = document.getElementById('nextPageItemVeh');
 
     let allRows = [];
     let filteredRows = [];
@@ -188,7 +249,7 @@
         const root   = document.getElementById('appModal');
         const title  = document.getElementById('modalTitle');
         const body   = document.getElementById('modalBody');
-        const icon   = document.getElementById('modalIcon');
+        the icon   = document.getElementById('modalIcon');
         const primaryBtn = document.getElementById('modalPrimary');
 
         let onClose  = null;
@@ -340,57 +401,96 @@
         return { id, placa, anno, marca, modelo, cliente, email };
     }
 
-    // ===== Render =====
-    function renderRows(rows) {
-        if (!rows.length) {
+    // ===== Render paginado =====
+    function renderRows(pageRows, total, from, to, page, totalPages) {
+        if (!total) {
             $tableBody.innerHTML = `<tr><td colspan="7">Sin resultados</td></tr>`;
-            $badge.textContent = `Mostrando 0 de ${allRows.length}`;
+            $badge.textContent = `Mostrando 0 de 0`;
+            $pageInfoVeh.textContent = '0 / 0';
+            $prevPageItemVeh.classList.add('disabled');
+            $nextPageItemVeh.classList.add('disabled');
             return;
         }
-        const html = rows.map(r => `
-            <tr>
-                <td>${escapeHtml(r.placa)}</td>
-                <td>${escapeHtml(String(r.anno))}</td>
-                <td>${escapeHtml(r.marca)}</td>
-                <td>${escapeHtml(r.modelo)}</td>
-                <td>${escapeHtml(r.cliente)}</td>
-                <td>${escapeHtml(r.email)}</td>
-                <td>
-                    <div class="actions-group">
-                        <a class="btn btn-outline-primary"
-                           href="/Vehiculos/Crear?id=${encodeURIComponent(r.id)}">
-                            Ver
-                        </a>
-                        <button type="button"
-                                class="btn btn-outline-danger"
-                                onclick="confirmarEliminar(${r.id})">
-                            Eliminar
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-        $tableBody.innerHTML = html;
-        $badge.textContent = `Mostrando ${rows.length} de ${allRows.length}`;
+
+        if (!pageRows.length) {
+            $tableBody.innerHTML = `<tr><td colspan="7">Sin resultados en esta página</td></tr>`;
+        } else {
+            const html = pageRows.map(r => `
+                <tr>
+                    <td>${escapeHtml(r.placa)}</td>
+                    <td>${escapeHtml(String(r.anno))}</td>
+                    <td>${escapeHtml(r.marca)}</td>
+                    <td>${escapeHtml(r.modelo)}</td>
+                    <td>${escapeHtml(r.cliente)}</td>
+                    <td>${escapeHtml(r.email)}</td>
+                    <td>
+                        <div class="actions-group">
+                            <a class="btn btn-outline-primary"
+                               href="/Vehiculos/Crear?id=${encodeURIComponent(r.id)}">
+                                Ver
+                            </a>
+                            <button type="button"
+                                    class="btn btn-outline-danger"
+                                    onclick="confirmarEliminar(${r.id})">
+                                Eliminar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            $tableBody.innerHTML = html;
+        }
+
+        $badge.textContent = `Mostrando ${from}-${to} de ${total}`;
+        $pageInfoVeh.textContent = `${page} / ${totalPages}`;
+
+        if (page <= 1) {
+            $prevPageItemVeh.classList.add('disabled');
+        } else {
+            $prevPageItemVeh.classList.remove('disabled');
+        }
+
+        if (page >= totalPages) {
+            $nextPageItemVeh.classList.add('disabled');
+        } else {
+            $nextPageItemVeh.classList.remove('disabled');
+        }
     }
 
-    // ===== Filtro local =====
-    function applyFilter() {
+    function applyFilterVeh() {
         const q = $search.value.trim().toLowerCase();
         if (!q) {
             filteredRows = [...allRows];
-            renderRows(filteredRows);
+        } else {
+            filteredRows = allRows.filter(r =>
+                r.placa.toLowerCase().includes(q) ||
+                String(r.anno).toLowerCase().includes(q) ||
+                r.marca.toLowerCase().includes(q) ||
+                r.modelo.toLowerCase().includes(q) ||
+                r.cliente.toLowerCase().includes(q) ||
+                r.email.toLowerCase().includes(q)
+            );
+        }
+    }
+
+    function refreshVehiculosTable() {
+        applyFilterVeh();
+        const total = filteredRows.length;
+
+        if (!total) {
+            renderRows([], 0, 0, 0, 0, 0);
             return;
         }
-        filteredRows = allRows.filter(r =>
-            r.placa.toLowerCase().includes(q) ||
-            String(r.anno).toLowerCase().includes(q) ||
-            r.marca.toLowerCase().includes(q) ||
-            r.modelo.toLowerCase().includes(q) ||
-            r.cliente.toLowerCase().includes(q) ||
-            r.email.toLowerCase().includes(q)
-        );
-        renderRows(filteredRows);
+
+        const totalPages = Math.max(1, Math.ceil(total / pageSizeVeh));
+        if (currentPageVeh > totalPages) currentPageVeh = totalPages;
+        if (currentPageVeh < 1) currentPageVeh = 1;
+
+        const startIndex = (currentPageVeh - 1) * pageSizeVeh;
+        const endIndex = Math.min(startIndex + pageSizeVeh, total);
+        const pageRows = filteredRows.slice(startIndex, endIndex);
+
+        renderRows(pageRows, total, startIndex + 1, endIndex, currentPageVeh, totalPages);
     }
 
     // ===== Exportar CSV =====
@@ -483,8 +583,9 @@
                 .map(mapApiRow)
                 .filter(r => r.id !== null && r.id !== undefined);
 
+            currentPageVeh = 1;
             filteredRows = [...allRows];
-            renderRows(filteredRows);
+            refreshVehiculosTable();
         } catch (err) {
             console.error(err);
             $tableBody.innerHTML = `<tr><td colspan="7">Error cargando datos.</td></tr>`;
@@ -492,9 +593,43 @@
         }
     }
 
-    $search.addEventListener('input', applyFilter);
-    $clear.addEventListener('click', () => { $search.value = ''; applyFilter(); });
+    $search.addEventListener('input', () => {
+        currentPageVeh = 1;
+        refreshVehiculosTable();
+    });
+
+    $clear.addEventListener('click', () => {
+        $search.value = '';
+        currentPageVeh = 1;
+        refreshVehiculosTable();
+    });
+
     $export.addEventListener('click', exportCsv);
 
+    // Eventos de paginación
+    $pageSizeSelectVeh.addEventListener('change', () => {
+        const val = Number($pageSizeSelectVeh.value);
+        pageSizeVeh = PAGE_SIZES_VEH.includes(val) ? val : 5;
+        currentPageVeh = 1;
+        refreshVehiculosTable();
+    });
+
+    $prevPageBtnVeh.addEventListener('click', () => {
+        if (currentPageVeh > 1) {
+            currentPageVeh--;
+            refreshVehiculosTable();
+        }
+    });
+
+    $nextPageBtnVeh.addEventListener('click', () => {
+        const total = filteredRows.length || allRows.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSizeVeh));
+        if (currentPageVeh < totalPages) {
+            currentPageVeh++;
+            refreshVehiculosTable();
+        }
+    });
+
+    // Carga inicial
     loadVehiculos();
 </script>
