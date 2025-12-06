@@ -57,9 +57,9 @@
         color: #fff !important;
     }
 
-    .btn-orange:hover {
-        background: #9FAA13 !important;
-    }
+        .btn-orange:hover {
+            background: #9FAA13 !important;
+        }
 
     .badge-estado {
         font-size: .75rem;
@@ -70,67 +70,79 @@
 
 <script>
     const API_BASE = 'https://tecmave-api.azurewebsites.net';
-    const AG_URL   = `${API_BASE}/Agendamiento`;
-    const VEH_URL  = `${API_BASE}/Vehiculos`;
-    const USERS_URL= `${API_BASE}/api/usuarios`;
-    const EST_URL  = `${API_BASE}/Estados`;
+    const AG_URL    = `${API_BASE}/Agendamiento`;
+    const VEH_URL   = `${API_BASE}/Vehiculos`;
+    const USERS_URL = `${API_BASE}/api/usuarios`;
+    const EST_URL   = `${API_BASE}/Estados`;
 
     let allAgendamientos = [];
-    let vehById = {};
-    let userById = {};
-    let estados = [];
+    let vehById   = {};
+    let userById  = {};
+    let estados   = [];
     let estadosById = {};
 
     const U = s => (s ?? '').toString().trim().toUpperCase();
-    const esc = s => String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;')
-                                     .replaceAll('>','&gt;').replaceAll('"','&quot;')
-                                     .replaceAll("'",'&#39;');
-    function debounce(fn, d=250){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), d);} }
+    const esc = s => String(s ?? '')
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#39;');
 
-    function formatFecha(f){
-        if(!f) return '-';
+    function debounce(fn, d = 250) {
+        let t;
+        return (...a) => {
+            clearTimeout(t);
+            t = setTimeout(() => fn(...a), d);
+        };
+    }
+
+    function formatFecha(f) {
+        if (!f) return '-';
         // viene como "2025-12-11" o "2025-12-11T00:00:00"
-        return f.toString().substring(0,10);
-    }
-    function formatHora(h){
-        if(!h) return '-';
-        return h.toString().substring(0,5);
+        return f.toString().substring(0, 10);
     }
 
-    function buildClienteName(u){
-        if(!u) return '(Sin usuario)';
+    function formatHora(h) {
+        if (!h) return '-';
+        // "10:30:00" -> "10:30"
+        return h.toString().substring(0, 5);
+    }
+
+    function buildClienteName(u) {
+        if (!u) return '(Sin usuario)';
         const n = (u.nombre ?? u.Nombre ?? '').trim();
         const a = (u.apellidos ?? u.Apellidos ?? '').trim();
-        const full = [n,a].filter(Boolean).join(' ').trim();
+        const full = [n, a].filter(Boolean).join(' ').trim();
         return full || (u.userName ?? u.UserName ?? 'Usuario');
     }
 
-    function loadEstadosFilter(){
+    function loadEstadosFilter() {
         const $sel = $('#estadoFilter').empty();
         $sel.append(`<option value="">(Todos)</option>`);
         estados
             .slice()
-            .sort((a,b) => a.nombre.localeCompare(b.nombre))
+            .sort((a, b) => (a.nombre ?? '').localeCompare(b.nombre ?? ''))
             .forEach(e => {
                 $sel.append(`<option value="${e.id_estado}">${esc(e.nombre)}</option>`);
             });
     }
 
-    function applyAgFilters(){
+    function applyAgFilters() {
         const estadoSel = $('#estadoFilter').val();
         const q = ($('#searchAg').val() || '').toLowerCase();
 
         return allAgendamientos.filter(a => {
-            if(estadoSel && String(a.id_estado) !== String(estadoSel)) return false;
+            if (estadoSel && String(a.id_estado) !== String(estadoSel)) return false;
 
-            if(!q) return true;
+            if (!q) return true;
 
             const u = userById[a.cliente_id];
             const v = vehById[a.vehiculo_id];
             const e = estadosById[a.id_estado];
 
             const nombreCliente = buildClienteName(u);
-            const placa = v?.placa ?? v?.Placa ?? '';
+            const placa  = v?.placa ?? v?.Placa ?? '';
             const modelo = v?.modelo ?? v?.Modelo ?? '';
             const estadoNombre = e?.nombre ?? '';
 
@@ -147,9 +159,69 @@
         });
     }
 
-    function renderAgTable(rows){
+    function buildEstadoSelect(agId, currentEstadoId) {
+        let html = `<select class="form-select form-select-sm estado-select" data-id="${agId}">`;
+        estados.forEach(e => {
+            const sel = String(e.id_estado) === String(currentEstadoId) ? 'selected' : '';
+            html += `<option value="${e.id_estado}" ${sel}>${esc(e.nombre)}</option>`;
+        });
+        html += `</select>`;
+        return html;
+    }
+
+    async function updateAgEstado(agId, newEstadoId, selectEl) {
+        const ag = allAgendamientos.find(x => Number(x.id_agendamiento) === Number(agId));
+        if (!ag) {
+            alert('No se encontró el agendamiento.');
+            return;
+        }
+
+        const oldVal = ag.id_estado;
+        ag.id_estado = newEstadoId; // actualización optimista en memoria
+
+        const $sel = $(selectEl);
+        $sel.prop('disabled', true);
+
+        const payload = {
+            id_agendamiento: ag.id_agendamiento,
+            cliente_id:      ag.cliente_id,
+            vehiculo_id:     ag.vehiculo_id,
+            fecha_agregada:  ag.fecha_agregada,
+            fecha_estimada:  ag.fecha_estimada,
+            hora_llegada:    ag.hora_llegada,
+            id_estado:       newEstadoId
+        };
+
+        try {
+            await $.ajax({
+                url: AG_URL,
+                method: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(payload)
+            });
+            // éxito: dejamos el valor nuevo
+        } catch (err) {
+            console.error(err);
+            ag.id_estado = oldVal;
+            $sel.val(oldVal);
+            alert('No se pudo actualizar el estado.');
+        } finally {
+            $sel.prop('disabled', false);
+        }
+    }
+
+    // Deshacer cambios de estado en UI al último valor cargado
+    window.restoreAgEstado = function (agId) {
+        const ag = allAgendamientos.find(x => Number(x.id_agendamiento) === Number(agId));
+        if (!ag) return;
+        const $row = $(`tr[data-id="${agId}"]`);
+        const $sel = $row.find('.estado-select');
+        $sel.val(ag.id_estado);
+    };
+
+    function renderAgTable(rows) {
         const $tb = $('#agTable').empty();
-        if(!rows.length){
+        if (!rows.length) {
             $tb.html(`<tr><td colspan="6" class="text-muted">No hay agendamientos.</td></tr>`);
             $('#agResultsBadge').text(`Mostrando 0 de ${allAgendamientos.length}`);
             return;
@@ -172,12 +244,22 @@
                     <td>${esc(formatFecha(a.fecha_estimada || a.fecha_agregada))}</td>
                     <td>${esc(formatHora(a.hora_llegada))}</td>
                     <td>${esc(cliente)}</td>
-                    <td>${esc(placa)} ${modelo ? ' - ' + esc(modelo) : ''}</td>
+                    <td>${esc(placa)}${modelo ? ' - ' + esc(modelo) : ''}</td>
                     <td>${selectHtml}</td>
                     <td>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="restoreAgEstado(${a.id_agendamiento})">
-                            Deshacer
-                        </button>
+                        <div class="d-flex gap-2">
+                            <!-- EDITAR: aquí luego apuntas a tu página de edición de mantenimiento -->
+                            <a class="btn btn-sm btn-primary"
+                               href="/Mantenimientos/Editar/${a.id_agendamiento}">
+                                Editar
+                            </a>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-secondary"
+                                    onclick="restoreAgEstado(${a.id_agendamiento})">
+                                Deshacer
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `);
@@ -186,75 +268,15 @@
         $('#agResultsBadge').text(`Mostrando ${rows.length} de ${allAgendamientos.length}`);
 
         // Attach change handler a todos los selects
-        $('.estado-select').off('change').on('change', function(){
-            const agId = Number($(this).data('id'));
+        $('.estado-select').off('change').on('change', function () {
+            const agId      = Number($(this).data('id'));
             const newEstado = Number($(this).val());
             updateAgEstado(agId, newEstado, this);
         });
     }
 
-    function buildEstadoSelect(agId, currentEstadoId){
-        let html = `<select class="form-select form-select-sm estado-select" data-id="${agId}">`;
-        estados.forEach(e => {
-            const sel = String(e.id_estado) === String(currentEstadoId) ? 'selected' : '';
-            html += `<option value="${e.id_estado}" ${sel}>${esc(e.nombre)}</option>`;
-        });
-        html += `</select>`;
-        return html;
-    }
-
-    async function updateAgEstado(agId, newEstadoId, selectEl){
-        const ag = allAgendamientos.find(x => Number(x.id_agendamiento) === Number(agId));
-        if(!ag){
-            alert('No se encontró el agendamiento.');
-            return;
-        }
-
-        const oldVal = ag.id_estado;
-        ag.id_estado = newEstadoId; // optimista
-
-        const $sel = $(selectEl);
-        $sel.prop('disabled', true);
-
-        const payload = {
-            id_agendamiento: ag.id_agendamiento,
-            cliente_id: ag.cliente_id,
-            vehiculo_id: ag.vehiculo_id,
-            fecha_agregada: ag.fecha_agregada,
-            fecha_estimada: ag.fecha_estimada,
-            hora_llegada: ag.hora_llegada,
-            id_estado: newEstadoId
-        };
-
-        try{
-            await $.ajax({
-                url: AG_URL,
-                method: "PUT",
-                contentType: "application/json",
-                data: JSON.stringify(payload)
-            });
-            // éxito, mantenemos newEstadoId
-        }catch(err){
-            console.error(err);
-            ag.id_estado = oldVal;
-            $sel.val(oldVal);
-            alert('No se pudo actualizar el estado.');
-        }finally{
-            $sel.prop('disabled', false);
-        }
-    }
-
-    // Deshacer cambios de estado en UI al último valor cargado
-    window.restoreAgEstado = function(agId){
-        const ag = allAgendamientos.find(x => Number(x.id_agendamiento) === Number(agId));
-        if(!ag) return;
-        const $row = $(`tr[data-id="${agId}"]`);
-        const $sel = $row.find('.estado-select');
-        $sel.val(ag.id_estado);
-    };
-
     // ---------- EXPORTAR A CSV ----------
-    function csvEscape(val){
+    function csvEscape(val) {
         const s = (val ?? '').toString();
         if (/[",\n\r;]/.test(s)) {
             return `"${s.replace(/"/g, '""')}"`;
@@ -262,8 +284,8 @@
         return s;
     }
 
-    function buildAgCsv(rows){
-        const headers = ['Fecha','Hora','Cliente','Vehículo','Estado'];
+    function buildAgCsv(rows) {
+        const headers = ['Fecha', 'Hora', 'Cliente', 'Vehículo', 'Estado'];
         const lines = [headers.join(',')];
 
         rows.forEach(a => {
@@ -289,22 +311,22 @@
         return '\uFEFF' + lines.join('\r\n');
     }
 
-    window.exportAgToExcel = function(){
+    window.exportAgToExcel = function () {
         const rows = applyAgFilters();
-        if (!rows.length){
+        if (!rows.length) {
             alert('No hay datos para exportar.');
             return;
         }
-        const csv = buildAgCsv(rows);
+        const csv  = buildAgCsv(rows);
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
 
         const now = new Date();
-        const pad = n => n.toString().padStart(2,'0');
-        const fname = `agendamientos_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+        const pad = n => n.toString().padStart(2, '0');
+        const fname = `agendamientos_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
 
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
+        const a   = document.createElement('a');
+        a.href    = url;
         a.download = fname;
         document.body.appendChild(a);
         a.click();
@@ -312,8 +334,8 @@
         URL.revokeObjectURL(url);
     };
 
-    async function loadAllData(){
-        try{
+    async function loadAllData() {
+        try {
             const [agList, vehList, userList, estList] = await Promise.all([
                 $.getJSON(AG_URL),
                 $.getJSON(VEH_URL),
@@ -322,8 +344,9 @@
             ]);
 
             allAgendamientos = Array.isArray(agList) ? agList.slice() : [];
+
             // ordenar por fecha/hora asc
-            allAgendamientos.sort((a,b) => {
+            allAgendamientos.sort((a, b) => {
                 const fa = (a.fecha_estimada || a.fecha_agregada || '').toString();
                 const fb = (b.fecha_estimada || b.fecha_agregada || '').toString();
                 if (fa < fb) return -1;
@@ -336,34 +359,34 @@
             vehById = {};
             (vehList || []).forEach(v => {
                 const id = v.id_vehiculo ?? v.id ?? v.Id;
-                if(id != null) vehById[id] = v;
+                if (id != null) vehById[id] = v;
             });
 
             userById = {};
             (userList || []).forEach(u => {
                 const id = u.id ?? u.Id;
-                if(id != null) userById[id] = u;
+                if (id != null) userById[id] = u;
             });
 
             estados = Array.isArray(estList) ? estList.slice() : [];
             estadosById = {};
-            estados.forEach(e => estadosById[e.id_estado] = e);
+            estados.forEach(e => { estadosById[e.id_estado] = e; });
 
             loadEstadosFilter();
             renderAgTable(applyAgFilters());
-        }catch(e){
+        } catch (e) {
             console.error(e);
             $('#agTable').html(`<tr><td colspan="6" class="text-danger">Error cargando datos.</td></tr>`);
         }
     }
 
-    $(function(){
+    $(function () {
         loadAllData();
 
         $('#estadoFilter').on('change', () => renderAgTable(applyAgFilters()));
-        $('#searchAg').on('input', debounce(()=>renderAgTable(applyAgFilters()), 200));
+        $('#searchAg').on('input', debounce(() => renderAgTable(applyAgFilters()), 200));
         $('#searchAg').on('keydown', e => {
-            if(e.key === 'Enter'){
+            if (e.key === 'Enter') {
                 e.preventDefault();
                 e.currentTarget.blur();
             }
@@ -377,4 +400,3 @@
         $('#exportAgBtn').on('click', () => window.exportAgToExcel());
     });
 </script>
-

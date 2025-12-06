@@ -172,6 +172,32 @@ namespace Tecmave.Api.Data
                  .HasConstraintName("FK_Agendamiento_Cliente")
                  .OnDelete(DeleteBehavior.Cascade);
             });
+
+            // ---------------- MANTENIMIENTOS ----------------
+            b.Entity<MantenimientoModel>(e =>
+            {
+                e.ToTable("Mantenimientos");
+
+                e.HasKey(x => x.IdMantenimiento);
+
+                e.Property(x => x.IdMantenimiento).HasColumnName("IdMantenimiento");
+                e.Property(x => x.IdVehiculo).HasColumnName("IdVehiculo");
+                e.Property(x => x.FechaMantenimiento).HasColumnName("FechaMantenimiento");
+                e.Property(x => x.ProximoMantenimiento).HasColumnName("ProximoMantenimiento");
+                e.Property(x => x.RecordatorioEnviado).HasColumnName("RecordatorioEnviado");
+                e.Property(x => x.IdEstado).HasColumnName("IdEstado");
+
+                e.HasOne(x => x.Vehiculo)
+                 .WithMany()
+                 .HasForeignKey(x => x.IdVehiculo)
+                 .HasConstraintName("FK_Mantenimientos_vehiculos_IdVehiculo");
+
+                e.HasOne(x => x.Estado)
+                 .WithMany()
+                 .HasForeignKey(x => x.IdEstado)
+                 .HasConstraintName("FK_Mantenimientos_Estado");
+            });
         }
     }
 }
+
