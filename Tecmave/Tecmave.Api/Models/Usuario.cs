@@ -19,8 +19,5 @@ namespace Tecmave.Api.Models
         public string Cedula { get; set; }
 
         public string Direccion { get; set; }
-
-       
-
     }
 }

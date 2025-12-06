@@ -81,212 +81,247 @@
     let allRoleNamesNorm = [];
     const U = s => (s ?? '').toString().trim().toUpperCase();
 
-    function debounce(fn, d=250){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), d);} }
-    function escapeHtml(s){ return String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
-
-    async function loadRolesList(){
-      try{
-        const roles = await $.getJSON(ROLES_URL);
-        allRoleNamesNorm = roles
-          .map(r => r.normalizedName ?? r.NormalizedName ?? (r.name ? U(r.name) : null))
-          .filter(Boolean);
-      }catch{ allRoleNamesNorm = []; }
+    function debounce(fn, d = 250) {
+        let t;
+        return (...a) => {
+            clearTimeout(t);
+            t = setTimeout(() => fn(...a), d);
+        };
     }
 
-    function populateRoleFilter(){
-      const union = new Set([
-        ...allRoleNamesNorm,
-        ...allUsers.flatMap(u => (u.roles || []).map(U))
-      ]);
-      const $sel = $('#roleFilter').empty();
-      $sel.append(`<option value="">(Todos)</option>`);
-      $sel.append(`<option value="__SIN_ROL__">(SIN ROL)</option>`);
-      Array.from(union).filter(Boolean).sort().forEach(r =>
-        $sel.append(`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`)
-      );
+    function escapeHtml(s) {
+        return String(s ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
     }
 
-    function getSearchText(){ return ($('#localSearch').val() || '').toLowerCase(); }
-
-    function formatEstado(e){
-      const v = Number(e);
-      switch (v) {
-        case 1: return 'Activo';
-        case 2: return 'Inactivo';
-        default:
-          return e == null ? 'Sin estado' : `(${e})`;
-      }
+    async function loadRolesList() {
+        try {
+            const roles = await $.getJSON(ROLES_URL);
+            allRoleNamesNorm = roles
+                .map(r => r.normalizedName ?? r.NormalizedName ?? (r.name ? U(r.name) : null))
+                .filter(Boolean);
+        } catch {
+            allRoleNamesNorm = [];
+        }
     }
 
-    function applyFilters(){
-      const selected = $('#roleFilter').val();
-      const q = getSearchText();
-      return allUsers.filter(u => {
-        const roles = Array.isArray(u.roles) ? u.roles.map(U) : [];
-        const roleOk = !selected
-          ? true
-          : (selected === '__SIN_ROL__' ? roles.length === 0 : roles.includes(U(selected)));
-
-        const estadoText = formatEstado(u.estado);
-
-        const haystack = [
-          u.userNameNorm || U(u.userName),
-          u.email || '',
-          u.phoneNumber || '',
-          ...roles,
-          estadoText
-        ].join(' ').toLowerCase();
-
-        return roleOk && (!q || haystack.includes(q));
-      });
+    function populateRoleFilter() {
+        const union = new Set([
+            ...allRoleNamesNorm,
+            ...allUsers.flatMap(u => (u.roles || []).map(U))
+        ]);
+        const $sel = $('#roleFilter').empty();
+        $sel.append(`<option value="">(Todos)</option>`);
+        $sel.append(`<option value="__SIN_ROL__">(SIN ROL)</option>`);
+        Array.from(union).filter(Boolean).sort().forEach(r =>
+            $sel.append(`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`)
+        );
     }
 
-    function renderTable(users){
-      const $tb = $('#userTable').empty();
-      if(!users.length){
-        $tb.html(`<tr><td colspan="8" class="text-muted">No hay usuarios.</td></tr>`);
-        $('#resultsBadge').text(`Mostrando 0 de ${allUsers.length}`);
-        return;
-      }
-      users.forEach(u=>{
-        const rolesText = (u.roles && u.roles.length) ? u.roles.map(U).join(', ') : '(SIN ROL)';
-        const estadoText = formatEstado(u.estado);
-        $tb.append(`<tr>
-            <td>${escapeHtml(u.nombre || 'Sin definir')}</td>
-            <td>${escapeHtml(u.apellidos || 'Sin definir')}</td>
-            <td>${escapeHtml(u.userNameNorm || U(u.userName))}</td>
-            <td>${escapeHtml(u.email)}</td>
-            <td>${escapeHtml(u.phoneNumber)}</td>
-            <td>${escapeHtml(estadoText)}</td>
-            <td>${escapeHtml(rolesText)}</td>
-            <td><a class="btn btn-primary btn-sm" href="/Usuarios/Editar/${encodeURIComponent(u.id)}">Editar</a></td>
-        </tr>`);
-      });
-      $('#resultsBadge').text(`Mostrando ${users.length} de ${allUsers.length}`);
+    function getSearchText() { return ($('#localSearch').val() || '').toLowerCase(); }
+
+    function formatEstado(e) {
+        const v = Number(e);
+        switch (v) {
+            case 1: return 'Activo';
+            case 2: return 'Inactivo';
+            default:
+                return e == null ? 'Sin estado' : `(${e})`;
+        }
     }
 
-    async function loadUsers(){
-      try{
-        // 1) Intento optimizado: /api/usuarios/with-role (por si existe)
-        try{
-          const res = await fetch(`${USERS_URL}/with-role`);
-          if(res.ok){
-            const rows = await res.json();
-            allUsers = rows.map(u => {
-              const userName = u.userName ?? u.UserName ?? u.user_name ?? '';
-              const phone    = u.phoneNumber ?? u.PhoneNumber ?? u.phone_number ?? '';
-              const estado   = u.estado ?? u.Estado ?? 1;
-              return {
-                id: u.id ?? u.Id,
-                nombre: u.nombre ?? u.Nombre ?? '',
-                apellidos: u.apellidos ?? u.Apellidos ?? '',
-                userName,
-                userNameNorm: U(userName),
-                email: u.email ?? u.Email ?? '',
-                phoneNumber: phone,
-                estado,
-                roles: u.role ? [U(u.role)] : []
-              };
+    function applyFilters() {
+        const selected = $('#roleFilter').val();
+        const q = getSearchText();
+        return allUsers.filter(u => {
+            const roles = Array.isArray(u.roles) ? u.roles.map(U) : [];
+            const roleOk = !selected
+                ? true
+                : (selected === '__SIN_ROL__' ? roles.length === 0 : roles.includes(U(selected)));
+
+            const estadoText = formatEstado(u.estado);
+
+            const haystack = [
+                u.userNameNorm || U(u.userName),
+                u.email || '',
+                u.phoneNumber || '',
+                ...roles,
+                estadoText
+            ].join(' ').toLowerCase();
+
+            return roleOk && (!q || haystack.includes(q));
+        });
+    }
+
+    function renderTable(users) {
+        const $tb = $('#userTable').empty();
+        if (!users.length) {
+            $tb.html(`<tr><td colspan="8" class="text-muted">No hay usuarios.</td></tr>`);
+            $('#resultsBadge').text(`Mostrando 0 de ${allUsers.length}`);
+            return;
+        }
+        users.forEach(u => {
+            const rolesText = (u.roles && u.roles.length) ? u.roles.map(U).join(', ') : '(SIN ROL)';
+            const estadoText = formatEstado(u.estado);
+            $tb.append(`<tr>
+                <td>${escapeHtml(u.nombre || 'Sin definir')}</td>
+                <td>${escapeHtml(u.apellidos || 'Sin definir')}</td>
+                <td>${escapeHtml(u.userNameNorm || U(u.userName))}</td>
+                <td>${escapeHtml(u.email ?? '')}</td>
+                <td>${escapeHtml(u.phoneNumber ?? '')}</td>
+                <td>${escapeHtml(estadoText)}</td>
+                <td>${escapeHtml(rolesText)}</td>
+                <td>
+                    <a class="btn btn-primary btn-sm" href="/Usuarios/Editar/${encodeURIComponent(u.id)}">Editar</a>
+                    <button class="btn btn-danger btn-sm ms-1" type="button" onclick="eliminarUsuario(${u.id})">Eliminar</button>
+                </td>
+            </tr>`);
+        });
+        $('#resultsBadge').text(`Mostrando ${users.length} de ${allUsers.length}`);
+    }
+
+    async function loadUsers() {
+        try {
+            // 1) Intento optimizado: /api/usuarios/with-role (por si existe)
+            try {
+                const res = await fetch(`${USERS_URL}/with-role`);
+                if (res.ok) {
+                    const rows = await res.json();
+                    allUsers = rows.map(u => {
+                        const userName = u.userName ?? u.UserName ?? u.user_name ?? '';
+                        const phone = u.phoneNumber ?? u.PhoneNumber ?? u.phone_number ?? '';
+                        const estado = u.estado ?? u.Estado ?? 1;
+                        return {
+                            id: u.id ?? u.Id,
+                            nombre: u.nombre ?? u.Nombre ?? '',
+                            apellidos: u.apellidos ?? u.Apellidos ?? '',
+                            userName,
+                            userNameNorm: U(userName),
+                            email: u.email ?? u.Email ?? '',
+                            phoneNumber: phone,
+                            estado,
+                            roles: u.role ? [U(u.role)] : []
+                        };
+                    });
+                    populateRoleFilter();
+                    renderTable(applyFilters());
+                    return;
+                }
+            } catch { }
+
+            // 2) Fallback: /api/usuarios
+            const users = await $.getJSON(USERS_URL);
+            const roleFetches = users.map(async (u) => {
+                const baseUser = {
+                    id: u.id ?? u.Id,
+                    nombre: u.nombre ?? u.Nombre ?? '',
+                    apellidos: u.apellidos ?? u.Apellidos ?? '',
+                    userName: u.userName ?? u.UserName ?? u.user_name ?? '',
+                    userNameNorm: U(u.userName ?? u.UserName ?? u.user_name ?? ''),
+                    email: u.email ?? u.Email ?? '',
+                    phoneNumber: u.phoneNumber ?? u.PhoneNumber ?? u.phone_number ?? '',
+                    estado: u.estado ?? u.Estado ?? 1
+                };
+                try {
+                    const arr = await $.getJSON(`${USERS_URL}/${baseUser.id}/roles`);
+                    const roles = Array.isArray(arr) ? arr.map(U) : [];
+                    return { ...baseUser, roles };
+                } catch {
+                    try {
+                        const obj = await $.getJSON(`${USERS_URL}/${baseUser.id}/role`);
+                        const roleName = obj?.role ?? obj?.Role;
+                        const roles = roleName ? [U(roleName)] : [];
+                        return { ...baseUser, roles };
+                    } catch {
+                        return { ...baseUser, roles: [] };
+                    }
+                }
             });
+            allUsers = await Promise.all(roleFetches);
             populateRoleFilter();
             renderTable(applyFilters());
-            return;
-          }
-        }catch{}
-
-        // 2) Fallback: /api/usuarios (el que ahora sabemos que devuelve snake_case)
-        const users = await $.getJSON(USERS_URL);
-        const roleFetches = users.map(async (u) => {
-          const baseUser = {
-            id: u.id ?? u.Id,
-            nombre: u.nombre ?? u.Nombre ?? '',
-            apellidos: u.apellidos ?? u.Apellidos ?? '',
-            userName: u.userName ?? u.UserName ?? u.user_name ?? '',
-            userNameNorm: U(u.userName ?? u.UserName ?? u.user_name ?? ''),
-            email: u.email ?? u.Email ?? '',
-            phoneNumber: u.phoneNumber ?? u.PhoneNumber ?? u.phone_number ?? '',
-            estado: u.estado ?? u.Estado ?? 1
-          };
-          try{
-            const arr = await $.getJSON(`${USERS_URL}/${baseUser.id}/roles`);
-            const roles = Array.isArray(arr) ? arr.map(U) : [];
-            return { ...baseUser, roles };
-          }catch{
-            try{
-              const obj = await $.getJSON(`${USERS_URL}/${baseUser.id}/role`);
-              const roleName = obj?.role ?? obj?.Role;
-              const roles = roleName ? [U(roleName)] : [];
-              return { ...baseUser, roles };
-            }catch{
-              return { ...baseUser, roles: [] };
-            }
-          }
-        });
-        allUsers = await Promise.all(roleFetches);
-        populateRoleFilter();
-        renderTable(applyFilters());
-      }catch(e){
-        console.error(e);
-        $('#userTable').html(`<tr><td colspan="8" class="text-danger">Error cargando usuarios</td></tr>`);
-      }
+        } catch (e) {
+            console.error(e);
+            $('#userTable').html(`<tr><td colspan="8" class="text-danger">Error cargando usuarios</td></tr>`);
+        }
     }
 
     // ---------- EXPORTAR A EXCEL  ----------
-    function csvEscape(val){
-      const s = (val ?? '').toString();
-      if (/[",\n\r;]/.test(s)) {
-        return `"${s.replace(/"/g, '""')}"`;
-      }
-      return s;
+    function csvEscape(val) {
+        const s = (val ?? '').toString();
+        if (/[",\n\r;]/.test(s)) {
+            return `"${s.replace(/"/g, '""')}"`;
+        }
+        return s;
     }
 
-    function buildCsv(rows){
-      const headers = ['Username','Email','Teléfono','Estado','Rol'];
-      const lines = [headers.join(',')];
-      rows.forEach(u => {
-        const rol = (u.roles && u.roles.length) ? u.roles.join(' | ') : '(SIN ROL)';
-        const estadoText = formatEstado(u.estado);
-        lines.push([
-          csvEscape(u.userNameNorm || U(u.userName)),
-          csvEscape(u.email || ''),
-          csvEscape(u.phoneNumber || ''),
-          csvEscape(estadoText),
-          csvEscape(rol)
-        ].join(','));
-      });
-      return '\uFEFF' + lines.join('\r\n');
+    function buildCsv(rows) {
+        const headers = ['Username', 'Email', 'Teléfono', 'Estado', 'Rol'];
+        const lines = [headers.join(',')];
+        rows.forEach(u => {
+            const rol = (u.roles && u.roles.length) ? u.roles.join(' | ') : '(SIN ROL)';
+            const estadoText = formatEstado(u.estado);
+            lines.push([
+                csvEscape(u.userNameNorm || U(u.userName)),
+                csvEscape(u.email || ''),
+                csvEscape(u.phoneNumber || ''),
+                csvEscape(estadoText),
+                csvEscape(rol)
+            ].join(','));
+        });
+        return '\uFEFF' + lines.join('\r\n');
     }
 
-    window.exportToExcel = function(){
-      const rows = applyFilters();
-      if (!rows.length){
-        alert('No hay datos para exportar.');
-        return;
-      }
-      const csv = buildCsv(rows);
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    window.exportToExcel = function () {
+        const rows = applyFilters();
+        if (!rows.length) {
+            alert('No hay datos para exportar.');
+            return;
+        }
+        const csv = buildCsv(rows);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
 
-      const now = new Date();
-      const pad = n => n.toString().padStart(2,'0');
-      const fname = `usuarios_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+        const now = new Date();
+        const pad = n => n.toString().padStart(2, '0');
+        const fname = `usuarios_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
 
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fname;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fname;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
     };
 
-    $(function(){
-      loadRolesList().then(loadUsers);
-      $('#roleFilter').on('change', ()=>renderTable(applyFilters()));
-      $('#localSearch').on('input', debounce(()=>renderTable(applyFilters()), 200));
-      $('#localSearch').on('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); e.currentTarget.blur(); }});
-      $('#clearSearch').on('click', ()=>{ $('#localSearch').val(''); renderTable(applyFilters()); $('#localSearch').focus(); });
+    // ---------- ELIMINAR USUARIO ----------
+    async function eliminarUsuario(userId) {
+        if (!confirm('⚠️ Vas a ELIMINAR este usuario y todos sus datos relacionados. Esta acción es irreversible. ¿Deseas continuar?')) {
+            return;
+        }
 
-      $('#exportBtn').on('click', ()=>window.exportToExcel());
+        const res = await fetch(`${USERS_URL}/${userId}`, { method: 'DELETE' });
+
+        if (res.ok) {
+            await loadUsers();
+            alert('Usuario eliminado correctamente.');
+        } else {
+            try {
+                const err = await res.json();
+                alert(`Error al eliminar usuario: ${err.message || err.Message || 'No se pudo eliminar.'}`);
+            } catch {
+                alert('No se pudo eliminar el usuario (error desconocido).');
+            }
+        }
+    }
+
+    $(function () {
+        loadRolesList().then(loadUsers);
+        $('#roleFilter').on('change', () => renderTable(applyFilters()));
+        $('#localSearch').on('input', debounce(() => renderTable(applyFilters()), 200));
+        $('#localSearch').on('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } });
+        $('#clearSearch').on('click', () => { $('#localSearch').val(''); renderTable(applyFilters()); $('#localSearch').focus(); });
+
+        $('#exportBtn').on('click', () => window.exportToExcel());
     });
 </script>

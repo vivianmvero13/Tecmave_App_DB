@@ -138,12 +138,10 @@ namespace Tecmave.Api.Data
                  .HasForeignKey(x => x.IdVehiculo)
                  .HasConstraintName("FK_Mantenimientos_vehiculos_IdVehiculo");
 
-
                 e.HasOne(x => x.Estado)
                  .WithMany()
                  .HasForeignKey(x => x.IdEstado)
                  .HasConstraintName("FK_Mantenimientos_Estado");
-
             });
 
             // ---------------- AGENDAMIENTO ----------------
@@ -160,14 +158,20 @@ namespace Tecmave.Api.Data
                 e.Property(x => x.fecha_estimada).HasColumnName("fecha_estimada");
                 e.Property(x => x.hora_llegada).HasColumnName("hora_llegada");
 
-                // FK Agendamiento
+                // FK Agendamiento -> Vehiculo
                 e.HasOne<Vehiculo>()
-     .WithMany()
-     .HasForeignKey(x => x.vehiculo_id)
-     .HasConstraintName("FK_Agendamiento_Vehiculo")
-     .OnDelete(DeleteBehavior.Restrict);
-            });
+                 .WithMany()
+                 .HasForeignKey(x => x.vehiculo_id)
+                 .HasConstraintName("FK_Agendamiento_Vehiculo")
+                 .OnDelete(DeleteBehavior.Restrict);
 
+                // FK Agendamiento -> Usuario (cliente)
+                e.HasOne<Usuario>()
+                 .WithMany()
+                 .HasForeignKey(x => x.cliente_id)
+                 .HasConstraintName("FK_Agendamiento_Cliente")
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }

@@ -64,13 +64,13 @@ namespace Tecmave.Api.Services
                 UserName = userName,
                 Email = email,
                 PhoneNumber = phone,
-
+                Cedula = cedula ?? string.Empty,
+                Direccion = string.Empty
             };
 
             var res = await _userManager.CreateAsync(user, password);
             if (!res.Succeeded) return (res, null);
 
-            // Claims de nombre (opcional, útil para mostrar en UI)
             await EnsureNameClaimsAsync(user);
 
             return (IdentityResult.Success, user);
@@ -86,7 +86,6 @@ namespace Tecmave.Api.Services
                 var role = new AppRole
                 {
                     Name = roleName,
-                    // NormalizedName lo maneja RoleManager internamente
                     IsActive = true
                 };
                 await _roleManager.CreateAsync(role);
@@ -200,7 +199,6 @@ namespace Tecmave.Api.Services
 
             var errors = new List<IdentityError>();
 
-            // Campos personalizados (se asignan directo)
             var changedNames = false;
             if (nombre != null && nombre != user.Nombre)
             {
@@ -213,35 +211,30 @@ namespace Tecmave.Api.Services
                 changedNames = true;
             }
 
-            // UserName (normaliza/valida)
             if (!string.IsNullOrWhiteSpace(userName) && userName != user.UserName)
             {
                 var r = await _userManager.SetUserNameAsync(user, userName);
                 if (!r.Succeeded) errors.AddRange(r.Errors);
             }
 
-            // Email (normaliza/valida)
             if (!string.IsNullOrWhiteSpace(email) && email != user.Email)
             {
                 var r = await _userManager.SetEmailAsync(user, email);
                 if (!r.Succeeded) errors.AddRange(r.Errors);
             }
 
-            // Teléfono
             if (phone != null && phone != user.PhoneNumber)
             {
                 var r = await _userManager.SetPhoneNumberAsync(user, phone);
                 if (!r.Succeeded) errors.AddRange(r.Errors);
             }
 
-            // Guarda cambios (incluye props custom)
             var up = await _userManager.UpdateAsync(user);
             if (!up.Succeeded) errors.AddRange(up.Errors);
 
             if (errors.Count > 0)
                 return IdentityResult.Failed(errors.ToArray());
 
-            // Refresca claims de nombre si cambió
             if (changedNames)
                 await EnsureNameClaimsAsync(user);
 
@@ -257,6 +250,8 @@ namespace Tecmave.Api.Services
             if (user is null)
                 return IdentityResult.Failed(new IdentityError { Description = "Usuario no encontrado" });
 
+            // Aquí se dispara el borrado de aspnetusers y, con las FKs en CASCADE,
+            // se eliminan también registros asociados.
             return await _userManager.DeleteAsync(user);
         }
 
