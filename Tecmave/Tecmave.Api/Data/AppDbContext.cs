@@ -158,6 +158,12 @@ namespace Tecmave.Api.Data
                 e.Property(x => x.fecha_estimada).HasColumnName("fecha_estimada");
                 e.Property(x => x.hora_llegada).HasColumnName("hora_llegada");
 
+                // NUEVOS CAMPOS
+                e.Property(x => x.fecha_estimada_entrega).HasColumnName("fecha_estimada_entrega");
+                e.Property(x => x.costo_mantenimiento)
+                    .HasColumnName("costo_mantenimiento")
+                    .HasColumnType("decimal(10,2)");
+
                 // FK Agendamiento -> Vehiculo
                 e.HasOne<Vehiculo>()
                  .WithMany()
@@ -172,6 +178,7 @@ namespace Tecmave.Api.Data
                  .HasConstraintName("FK_Agendamiento_Cliente")
                  .OnDelete(DeleteBehavior.Cascade);
             });
+
 
             // ---------------- MANTENIMIENTOS ----------------
             b.Entity<MantenimientoModel>(e =>

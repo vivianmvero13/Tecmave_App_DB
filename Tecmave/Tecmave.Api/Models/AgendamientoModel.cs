@@ -14,8 +14,15 @@ namespace Tecmave.Api.Models
 
         public int id_estado { get; set; }
 
+        // Fecha de la cita
         public DateOnly? fecha_estimada { get; set; }
 
         public TimeOnly? hora_llegada { get; set; }
+
+        // NUEVO: fecha estimada de entrega del vehículo
+        public DateOnly? fecha_estimada_entrega { get; set; }
+
+        // NUEVO: costo del mantenimiento
+        public decimal? costo_mantenimiento { get; set; }
     }
 }

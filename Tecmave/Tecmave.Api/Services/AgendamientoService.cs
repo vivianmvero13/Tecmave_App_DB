@@ -45,13 +45,16 @@ namespace Tecmave.Api.Services
                 return false;
             }
 
-            // Copiar campos
             entidad.cliente_id = agendamientoModel.cliente_id;
             entidad.vehiculo_id = agendamientoModel.vehiculo_id;
             entidad.id_estado = agendamientoModel.id_estado;
             entidad.fecha_agregada = agendamientoModel.fecha_agregada;
             entidad.fecha_estimada = agendamientoModel.fecha_estimada;
             entidad.hora_llegada = agendamientoModel.hora_llegada;
+
+            // NUEVOS CAMPOS
+            entidad.fecha_estimada_entrega = agendamientoModel.fecha_estimada_entrega;
+            entidad.costo_mantenimiento = agendamientoModel.costo_mantenimiento;
 
             _context.SaveChanges();
             return true;
