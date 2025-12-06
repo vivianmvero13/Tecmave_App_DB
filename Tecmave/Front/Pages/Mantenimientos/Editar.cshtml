@@ -34,8 +34,11 @@
             </div>
 
             <div>
-                <label class="form-label">Estado actual</label>
-                <input id="estado_nombre" class="form-control" readonly />
+                <label class="form-label">Estado del vehículo / agendamiento</label>
+                <select id="estado_select" class="form-select"></select>
+                <small class="text-muted">
+                    Selecciona el estado actual del trabajo (ingresado, en mantenimiento, finalizado, etc.).
+                </small>
             </div>
 
             <div>
@@ -144,10 +147,10 @@
                 const vehId     = pick(a, ['vehiculo_id','vehiculoId']);
                 const estadoId  = pick(a, ['id_estado','idEstado']);
 
-                const fechaAg   = pick(a, ['fecha_agregada','fechaAgregada']);
+                const fechaAg      = pick(a, ['fecha_agregada','fechaAgregada']);
                 const fechaEntrega = pick(a, ['fecha_estimada_entrega','fechaEstimadaEntrega']);
-                const horaLl    = pick(a, ['hora_llegada','horaLlegada']);
-                const costo     = pick(a, ['costo_mantenimiento','costoMantenimiento','costo']);
+                const horaLl       = pick(a, ['hora_llegada','horaLlegada']);
+                const costo        = pick(a, ['costo_mantenimiento','costoMantenimiento','costo']);
 
                 $('#id_ag').val(idAg ?? '');
                 $('#cliente_id').val(clienteId ?? '');
@@ -162,39 +165,54 @@
 
                 const reqs = [];
 
+                // Vehículo
                 if (vehId != null) {
                     reqs.push(
                         $.getJSON(`${API}/Vehiculos/${vehId}`)
-                         .then(v => $('#vehiculo_desc').val(buildVehiculoDesc(v)))
-                         .fail(() => $('#vehiculo_desc').val('(Error cargando vehículo)'))
+                            .then(v => $('#vehiculo_desc').val(buildVehiculoDesc(v)))
+                            .fail(() => $('#vehiculo_desc').val('(Error cargando vehículo)'))
                     );
                 } else {
                     $('#vehiculo_desc').val('(Sin vehículo)');
                 }
 
+                // Cliente
                 if (clienteId != null) {
                     reqs.push(
                         $.getJSON(`${API}/api/usuarios/${clienteId}`)
-                         .then(u => $('#cliente_nombre').val(buildClienteNombre(u)))
-                         .fail(() => $('#cliente_nombre').val('(Error cargando cliente)'))
+                            .then(u => $('#cliente_nombre').val(buildClienteNombre(u)))
+                            .fail(() => $('#cliente_nombre').val('(Error cargando cliente)'))
                     );
                 } else {
                     $('#cliente_nombre').val('(Sin usuario)');
                 }
 
-                if (estadoId != null) {
-                    reqs.push(
-                        $.getJSON(`${API}/Estados`)
-                         .then(list => {
-                             const arr = Array.isArray(list) ? list : [];
-                             const found = arr.find(e => String(e.id_estado) === String(estadoId));
-                             $('#estado_nombre').val(found?.nombre ?? `Estado #${estadoId}`);
-                         })
-                         .fail(() => $('#estado_nombre').val(`Estado #${estadoId}`))
-                    );
-                } else {
-                    $('#estado_nombre').val('(Sin estado)');
-                }
+                // Estados -> select
+                reqs.push(
+                    $.getJSON(`${API}/Estados`)
+                        .then(list => {
+                            const arr = Array.isArray(list) ? list : [];
+                            const $sel = $('#estado_select').empty();
+
+                            // Orden alfabético
+                            arr.sort((a, b) => (a.nombre ?? '').localeCompare(b.nombre ?? ''));
+
+                            arr.forEach(e => {
+                                const val = e.id_estado;
+                                const nombre = e.nombre ?? '';
+                                const selAttr = String(val) === String(estadoId) ? ' selected' : '';
+                                $sel.append(`<option value="${val}"${selAttr}>${escapeHtml(nombre)}</option>`);
+                            });
+
+                            // Mantener sincronizado el hidden por si lo usas en otro lado
+                            $('#estado_select').on('change', function () {
+                                $('#id_estado').val($(this).val());
+                            });
+                        })
+                        .fail(() => {
+                            $('#estado_select').html('<option value="">(Error cargando estados)</option>');
+                        })
+                );
 
                 Promise.allSettled(reqs);
             }).fail(function (xhr) {
@@ -215,7 +233,7 @@
             const idAg      = $('#id_ag').val();
             const clienteId = $('#cliente_id').val();
             const vehId     = $('#vehiculo_id').val();
-            const estadoId  = $('#id_estado').val();
+            const estadoId  = $('#estado_select').val() || $('#id_estado').val();
 
             const fechaAg   = pick(currentAg, ['fecha_agregada','fechaAgregada']);
             const fechaCita = pick(currentAg, ['fecha_estimada','fechaEstimada']);
