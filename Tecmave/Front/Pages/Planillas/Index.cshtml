@@ -4,22 +4,24 @@
     ViewData["Title"] = "Planillas";
 }
 
-
 <section class="section">
     <div class="container grid cols-2">
 
-        <!-- Formulario de nueva planilla -->
+        <!-- FORM NUEVA PLANILLA / EDITAR -->
         <div class="card">
-            <h3>Nueva Planilla</h3>
+            <h3 id="tituloForm">Nueva Planilla</h3>
+
             <div class="form-row">
                 <div>
                     <label>Colaborador</label>
                     <select class="input" id="colaborador_id"></select>
                 </div>
+
                 <div>
                     <label>Periodo Inicio</label>
                     <input class="input" id="periodo_inicio" type="date" />
                 </div>
+
                 <div>
                     <label>Periodo Fin</label>
                     <input class="input" id="periodo_fin" type="date" />
@@ -30,10 +32,11 @@
                 <div>
                     <label>Horas Trabajadas</label>
                     <input class="input" id="horas_trabajadas" type="number" step="0.01" />
+                    <button type="button" onclick="setHorasSemana()">Todas las horas de la semana</button>
                 </div>
                 <div>
                     <label>Valor Hora</label>
-                    <input class="input" id="valor_hora" type="number" step="0.01" />
+                    <input class="input" id="valor_hora" type="number" step="0.01" readonly />
                 </div>
             </div>
 
@@ -44,7 +47,10 @@
                 </div>
                 <div>
                     <label>Estado</label>
-                    <input class="input" id="estado" type="text" />
+                    <select class="input" id="estado">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
                 </div>
             </div>
 
@@ -57,6 +63,7 @@
 
             <button id="btnAgregarPlanilla" type="button">Agregar</button>
         </div>
+
 
         <!-- TABLA PLANILLAS -->
         <div class="card">
@@ -79,6 +86,7 @@
     </div>
 </section>
 
+
 <script>
 
     const API_PLANILLA     = "https://tecmave-api.azurewebsites.net/api/Planillas";
@@ -87,28 +95,22 @@
 
     let cacheColaboradores = {};
     let cacheUsuarios = {};
+    let editId = null;
 
-    // ===============================
     // 1. Cargar usuarios
-    // ===============================
     function cargarUsuarios() {
         return $.get(API_USUARIOS, function (usuarios) {
             usuarios.forEach(u => cacheUsuarios[u.id] = u);
         });
     }
 
-    // ===============================
     // 2. Cargar colaboradores
-    // ===============================
     function cargarColaboradores() {
         return $.get(API_COLABORADOR, function (colab) {
-
-            $("#colaborador_id").empty();
-            $("#colaborador_id").append(`<option value="">Seleccione un colaborador</option>`);
+            $("#colaborador_id").empty().append(`<option value="">Seleccione un colaborador</option>`);
 
             colab.forEach(c => {
                 cacheColaboradores[c.id_colaborador] = c;
-
                 const usuario = cacheUsuarios[c.id_usuario];
 
                 $("#colaborador_id").append(`
@@ -120,12 +122,26 @@
         });
     }
 
-    // ===============================
+    // Autocompletar valor hora
+    $("#colaborador_id").on("change", function () {
+        const id = $(this).val();
+        if (!id) return;
+
+        const colab = cacheColaboradores[id];
+        if (!colab) return;
+
+        $("#valor_hora").val(colab.salario);
+    });
+
+    function setHorasSemana() {
+        $("#horas_trabajadas").val(40);
+    }
+
     // 3. Cargar planillas
-    // ===============================
-        function cargarPlanillas() {
+    function cargarPlanillas() {
         $.get(API_PLANILLA, function (data) {
 
+            window.planillas = data;
             $("table tbody").empty();
 
             data.forEach(p => {
@@ -141,9 +157,8 @@
                         <td>${p.estado}</td>
 
                         <td>
-                            <button class="danger" onclick="eliminarPlanilla(${p.id})">
-                                Eliminar
-                            </button>
+                            <button onclick="editarPlanilla(${p.id})">Editar</button>
+                            <button class="danger" onclick="eliminarPlanilla(${p.id})">Eliminar</button>
                         </td>
                     </tr>
                 `);
@@ -151,59 +166,86 @@
         });
     }
 
-           function eliminarPlanilla(id) {
+    function eliminarPlanilla(id) {
         if (!confirm("¿Seguro que quieres eliminar esta planilla?")) return;
 
         $.ajax({
-            url: `${API_PLANILLA}?id=${id}`,   // ← ESTA ES LA RUTA CORRECTA
+            url: `${API_PLANILLA}?id=${id}`,
             method: "DELETE",
             success: function () {
                 alert("Planilla eliminada");
                 cargarPlanillas();
-            },
-            error: function (xhr) {
-                console.error("Error eliminando planilla:", xhr.responseText);
-                alert("No se pudo eliminar la planilla.");
             }
         });
     }
 
-
-
-    // ===============================
-    // 4. Agregar planilla
-    // ===============================
+    // 4. Agregar / Editar planilla
     function agregarPlanilla() {
 
-        const nuevo = {
+        const obj = {
             colaborador_id: parseInt($("#colaborador_id").val()),
             periodo_inicio: $("#periodo_inicio").val(),
             periodo_fin: $("#periodo_fin").val(),
             horas_trabajadas: parseFloat($("#horas_trabajadas").val()),
             valor_hora: parseFloat($("#valor_hora").val()),
             deducciones: parseFloat($("#deducciones").val()),
-            fecha_generada: new Date().toISOString(),
+            fecha_generada: new Date(),
             estado: $("#estado").val(),
-            observaciones: $("#observaciones").val(),
-            total_salario: parseFloat($("#horas_trabajadas").val()) * parseFloat($("#valor_hora").val()),
-            neto_pagar: (parseFloat($("#horas_trabajadas").val()) * parseFloat($("#valor_hora").val())) - parseFloat($("#deducciones").val())
+            observaciones: $("#observaciones").val()
         };
 
+        obj.total_salario = obj.horas_trabajadas * obj.valor_hora;
+        obj.neto_pagar = obj.total_salario - obj.deducciones;
+
+        const method = editId ? "PUT" : "POST";
+        const url = editId ? `${API_PLANILLA}?id=${editId}` : API_PLANILLA;
+
         $.ajax({
-            url: API_PLANILLA,
-            method: "POST",
+            url,
+            method,
             contentType: "application/json",
-            data: JSON.stringify(nuevo),
+            data: JSON.stringify(obj),
             success: function () {
-                alert("Planilla agregada");
+                alert(editId ? "Planilla actualizada" : "Planilla creada");
+
+                editId = null;
+                $("#btnAgregarPlanilla").text("Agregar");
+                $("#tituloForm").text("Nueva Planilla");
+                limpiarForm();
                 cargarPlanillas();
             }
         });
     }
 
-    // ===============================
-    // 5. Inicialización
-    // ===============================
+    function editarPlanilla(id) {
+        const p = window.planillas.find(x => x.id === id);
+        editId = id;
+
+        $("#colaborador_id").val(p.colaborador_id);
+        $("#periodo_inicio").val(p.periodo_inicio);
+        $("#periodo_fin").val(p.periodo_fin);
+        $("#horas_trabajadas").val(p.horas_trabajadas);
+        $("#valor_hora").val(p.valor_hora);
+        $("#deducciones").val(p.deducciones);
+        $("#estado").val(p.estado);
+        $("#observaciones").val(p.observaciones);
+
+        $("#btnAgregarPlanilla").text("Actualizar");
+        $("#tituloForm").text("Editar Planilla");
+    }
+
+    function limpiarForm(){
+        $("#colaborador_id").val("");
+        $("#periodo_inicio").val("");
+        $("#periodo_fin").val("");
+        $("#horas_trabajadas").val("");
+        $("#valor_hora").val("");
+        $("#deducciones").val("");
+        $("#estado").val("Pendiente");
+        $("#observaciones").val("");
+    }
+
+    // 5 Inicializar
     $(document).ready(function () {
 
         cargarUsuarios()
