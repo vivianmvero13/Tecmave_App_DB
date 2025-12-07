@@ -1,11 +1,12 @@
-﻿using Tecmave.Api.Data;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 
 namespace Tecmave.Api.Services
 {
     public class AgendamientoService
     {
-
         private readonly AppDbContext _context;
 
         public AgendamientoService(AppDbContext context)
@@ -13,47 +14,53 @@ namespace Tecmave.Api.Services
             _context = context;
         }
 
-        //Aca necesitamos el modelo de datos para el almacenamiento temporal
-        private readonly List<AgendamientoModel> _agendamiento = new List<AgendamientoModel>();
-        private int _nextId = 1;
-
-
-        //funcion de obtener agendamientos
+        // Obtener todos
         public List<AgendamientoModel> GetAgendamientoModel()
         {
             return _context.agendamientos.ToList();
         }
 
-
+        // Obtener por ID
         public AgendamientoModel GetById(int id)
         {
             return _context.agendamientos.FirstOrDefault(p => p.id_agendamiento == id);
         }
 
-        public AgendamientoModel AddAgendamiento(AgendamientoModel AgendamientoModel)
+        // Insertar
+        public AgendamientoModel AddAgendamiento(AgendamientoModel agendamientoModel)
         {
-            _context.agendamientos.Add(AgendamientoModel);
+            _context.agendamientos.Add(agendamientoModel);
             _context.SaveChanges();
-            return AgendamientoModel;
+            return agendamientoModel;
         }
 
-
-        public bool UpdateAgendamiento(AgendamientoModel AgendamientoModel)
+        // Actualizar
+        public bool UpdateAgendamiento(AgendamientoModel agendamientoModel)
         {
-            var entidad = _context.agendamientos.FirstOrDefault(p => p.id_agendamiento == AgendamientoModel.id_agendamiento);
+            var entidad = _context.agendamientos
+                .FirstOrDefault(p => p.id_agendamiento == agendamientoModel.id_agendamiento);
 
             if (entidad == null)
             {
                 return false;
             }
 
+            entidad.cliente_id = agendamientoModel.cliente_id;
+            entidad.vehiculo_id = agendamientoModel.vehiculo_id;
+            entidad.id_estado = agendamientoModel.id_estado;
+            entidad.fecha_agregada = agendamientoModel.fecha_agregada;
+            entidad.fecha_estimada = agendamientoModel.fecha_estimada;
+            entidad.hora_llegada = agendamientoModel.hora_llegada;
+
+            // NUEVOS CAMPOS
+            entidad.fecha_estimada_entrega = agendamientoModel.fecha_estimada_entrega;
+            entidad.costo_mantenimiento = agendamientoModel.costo_mantenimiento;
+
             _context.SaveChanges();
-
             return true;
-
         }
 
-
+        // Eliminar
         public bool DeleteAgendamiento(int id)
         {
             var entidad = _context.agendamientos.FirstOrDefault(p => p.id_agendamiento == id);
@@ -66,9 +73,6 @@ namespace Tecmave.Api.Services
             _context.agendamientos.Remove(entidad);
             _context.SaveChanges();
             return true;
-
         }
-
-
     }
 }

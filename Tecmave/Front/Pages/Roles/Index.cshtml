@@ -27,6 +27,18 @@
     Política: un único rol por usuario. Si ya tiene uno, se pedirá confirmación para reemplazarlo.
 </p>
 
+<!-- ==================== SELECT DE CANTIDAD ==================== -->
+<div class="d-flex align-items-center gap-3 mb-2">
+    <label class="mb-0">Mostrar:</label>
+    <select id="rolesPageSize" class="form-select form-select-sm" style="width:80px;">
+        <option value="5" selected>5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+    </select>
+</div>
+
+<!-- ==================== TABLA DE USUARIOS ==================== -->
 <div class="table-responsive mt-3">
     <table class="table table-bordered align-middle">
         <thead>
@@ -39,246 +51,218 @@
         </thead>
         <tbody id="usuariosRolesTable"></tbody>
     </table>
+
+    <!-- ==================== PAGINACIÓN ==================== -->
+    <nav aria-label="Paginación usuarios roles" class="roles-pagination-nav mt-3">
+        <ul class="pagination pagination-sm mb-0 d-flex flex-row align-items-center gap-2"
+            style="list-style:none; margin:0; padding:0;">
+
+            <li class="page-item" id="rolesPrevPageItem" style="list-style:none;">
+                <button class="page-link" id="rolesPrevPageBtn" type="button">&laquo;</button>
+            </li>
+
+            <li class="page-item disabled" style="list-style:none;">
+                <span class="page-link" id="rolesPageInfo">1 / 1</span>
+            </li>
+
+            <li class="page-item" id="rolesNextPageItem" style="list-style:none;">
+                <button class="page-link" id="rolesNextPageBtn" type="button">&raquo;</button>
+            </li>
+
+        </ul>
+    </nav>
+
+    <div class="mt-4 d-flex gap-2">
+        <a class="btn btn-secondary" asp-page="/Usuarios/Index">Volver</a>
+    </div>
 </div>
 
 <script src="~/lib/jquery/jquery.min.js"></script>
 <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<style>
+    /* ================= Paginación Profesional ================= */
+    .roles-pagination-nav .pagination {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.5rem !important;
+    }
+
+    .roles-pagination-nav .page-item {
+        list-style: none !important;
+    }
+
+    .roles-pagination-nav .page-link {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        padding: .35rem .65rem;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+</style>
 
 <script>
     const API = 'https://tecmave-api.azurewebsites.net';
     const ROLES_URL = `${API}/api/roles`;
     const USERS_URL = `${API}/api/usuarios`;
 
+    // ================= VARIABLES DE PAGINACIÓN ================
+    let rolesPage = 1;
+    let rolesPageSize = 5;
+    let allUsersRoles = [];
+
     $(function () {
         cargarRoles();
         cargarUsuariosConRol();
+        $("#rolesPageSize").on("change", () => {
+            rolesPageSize = Number($("#rolesPageSize").val());
+            rolesPage = 1;
+            renderRolesPaged();
+        });
+
+        $("#rolesPrevPageBtn").on("click", () => {
+            if (rolesPage > 1) {
+                rolesPage--;
+                renderRolesPaged();
+            }
+        });
+
+        $("#rolesNextPageBtn").on("click", () => {
+            const totalPages = Math.ceil(allUsersRoles.length / rolesPageSize);
+            if (rolesPage < totalPages) {
+                rolesPage++;
+                renderRolesPaged();
+            }
+        });
     });
 
-    function safe(v) { return v === null || v === undefined ? '' : escapeHtml(String(v)); }
+    // Helpers de escape
+    function safe(v) { return v == null ? "" : escapeHtml(String(v)); }
     function escapeHtml(s) {
-        return String(s).replace(/[&<>"']/g, m => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;'
+        return s.replace(/[&<>"']/g, m => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;',
+            '"': '&quot;', "'": '&#39;'
         }[m]));
     }
-    function escapeAttr(s) {
-        return String(s).replace(/"/g, '&quot;');
-    }
 
-    // ================== ROLES ==================
+    // ================== CARGAR ROLES ==================
     function cargarRoles() {
-        $.getJSON(ROLES_URL, function (roles) {
+        $.getJSON(ROLES_URL, roles => {
             const $tbody = $('#rolTable').empty();
 
             roles.forEach(r => {
-                const name = r.name ?? r.Name ?? '';
-                const desc = r.description ?? r.Description ?? '';
-                const isActive = (r.is_active ?? r.isActive ?? r.IsActive) === true;
-
                 const tr = `
                     <tr>
-                      <td>${safe(name)}</td>
-                      <td>${desc ? safe(desc) : '<span class="text-muted">—</span>'}</td>
-                      <td>${isActive
-                        ? '<span class="badge bg-success">Sí</span>'
-                        : '<span class="badge bg-secondary">No</span>'}</td>
+                        <td>${safe(r.name ?? r.Name)}</td>
+                        <td>${safe(r.description ?? r.Description) || "<span class='text-muted'>—</span>"}</td>
+                        <td>${(r.isActive ?? r.is_active) ? "<span class='badge bg-success'>Sí</span>" : "<span class='badge bg-secondary'>No</span>"}</td>
                     </tr>`;
                 $tbody.append(tr);
             });
 
-            // Guardar roles activos para selects
-            window.__rolesActivos = roles
-                .filter(r => (r.is_active ?? r.isActive ?? r.IsActive) === true)
-                .map(r => ({
-                    name: r.name ?? r.Name ?? ''
-                }));
-        }).fail(err => {
-            console.error('Error cargando roles', err);
-            alert('No se pudieron cargar los roles.');
-        });
-    }
-    function safe(v) {
-        return v === null || v === undefined ? '' : escapeHtml(String(v));
-    }
-
-    function escapeHtml(s) {
-        return String(s).replace(/[&<>"']/g, m => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;'
-        }[m]));
-    }
-
-    function escapeAttr(s) {
-        return String(s).replace(/"/g, '&quot;');
-    }
-
-    // =============== ROLES =================
-    function cargarRoles() {
-        $.getJSON(ROLES_URL, function (roles) {
-            const $tbody = $('#rolTable').empty();
-
-            roles.forEach(r => {
-                const name = r.name ?? r.Name ?? '';
-                const desc = r.description ?? r.Description ?? '';
-                const isActive = (r.is_active ?? r.isActive ?? r.IsActive) === true;
-
-                const tr = `
-                    <tr>
-                        <td>${safe(name)}</td>
-                        <td>${desc ? safe(desc) : '<span class="text-muted">—</span>'}</td>
-                        <td>${
-                            isActive
-                                ? '<span class="badge bg-success">Sí</span>'
-                                : '<span class="badge bg-secondary">No</span>'
-                        }</td>
-                    </tr>`;
-                $tbody.append(tr);
-            });
-
-            // Guardar roles activos para selects
-            window.__rolesActivos = roles
-                .filter(r => (r.is_active ?? r.isActive ?? r.IsActive) === true)
-                .map(r => ({
-                    name: r.name ?? r.Name ?? ''
-                }));
-        }).fail(err => {
-            console.error('Error cargando roles', err);
-            alert('No se pudieron cargar los roles.');
+            window.__rolesActivos = roles.filter(r => r.isActive ?? r.is_active)
+                .map(r => ({ name: r.name }));
         });
     }
 
-        function verDetallesRol(roleId) {
-            $.getJSON(`${ROLES_URL}/${roleId}/details`, function (det) {
-                $('#detNombre').text(det.name ?? '');
-                $('#detDescripcion').text(det.description ?? '—');
-                $('#detActivo').html(det.isActive ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-secondary">No</span>');
-                const perms = (det.permissions || []);
-                $('#detPermisos').html(perms.length
-                    ? '<ul>' + perms.map(p => `<li>${escapeHtml(p)}</li>`).join('') + '</ul>'
-                    : '<span class="text-muted">Sin permisos definidos</span>');
-                const modal = new bootstrap.Modal(document.getElementById('roleDetailsModal'));
-                modal.show();
-            }).fail(err => {
-                console.error('Error obteniendo detalles del rol', err);
-                alert('No se pudieron obtener los detalles del rol.');
+    // =============== CARGAR USUARIOS Y PAGINAR ===============
+    async function cargarUsuariosConRol() {
+        const res = await fetch(USERS_URL);
+        const usuarios = await res.json();
+
+        allUsersRoles = [];
+
+        for (const u of usuarios) {
+            const r = await fetch(`${USERS_URL}/${u.id}/role`);
+            const rData = r.ok ? await r.json() : {};
+            const rolActual = rData.role || null;
+
+            allUsersRoles.push({
+                id: u.id,
+                nombre: u.nombre ?? u.userName,
+                rol: rolActual
             });
         }
 
-        async function cargarUsuariosConRol() {
-            try {
-                const uRes = await fetch(USERS_URL);
-                const usuarios = await uRes.json();
+        renderRolesPaged();
+    }
 
-            const $tbody = $('#usuariosRolesTable').empty();
+    function renderRolesPaged() {
+        const $tbody = $("#usuariosRolesTable").empty();
 
-                for (const u of usuarios) {
-                    const rRes = await fetch(`${USERS_URL}/${u.id}/role`);
-                    const rJson = await rRes.json();
-                    const currentRole = rJson.role || null;
+        const start = (rolesPage - 1) * rolesPageSize;
+        const end = start + rolesPageSize;
+        const pageItems = allUsersRoles.slice(start, end);
 
-                    const selectHtml = buildRolesSelect(u.id);
-                    const tr = `
-                        <tr>
-                          <td>${safe(u.userName)}</td>
-                          <td>${currentRole ? safe(currentRole) : '<i class="text-muted">Sin rol</i>'}</td>
-                          <td>${selectHtml}</td>
-                          <td>
-                            <button class="btn btn-sm btn-outline-danger" onclick="quitarRol(${u.id})">Quitar rol</button>
-                          </td>
-                        </tr>`;
-                    $tbody.append(tr);
-                }
-            } catch (err) {
-                console.error('Error cargando usuarios/roles', err);
-                alert('No se pudieron cargar los usuarios y sus roles.');
-            }
-        }
+        pageItems.forEach(u => {
+            const selectHtml = buildRolesSelect(u.id);
 
-        function buildRolesSelect(userId) {
-            const roles = window.__rolesActivos || [];
-            const options = roles.map(r => `<option value="${escapeAttr(r.name)}">${escapeHtml(r.name)}</option>`).join('');
-            return `
-                <div class="input-group">
-                    <select class="form-select" id="sel_${userId}">
-                        <option value="" selected disabled>Selecciona rol…</option>
-                        ${options}
-                    </select>
-                    <button class="btn btn-outline-success" type="button" onclick="asignarRol(${userId})">Asignar</button>
-                </div>
-            `;
-        }
+            const tr = `
+                <tr>
+                    <td>${safe(u.nombre)}</td>
+                    <td>${u.rol ? safe(u.rol) : "<i class='text-muted'>Sin rol</i>"}</td>
+                    <td>${selectHtml}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarUsuario(${u.id})">Eliminar usuario</button>
+                    </td>
+                </tr>`;
+            $tbody.append(tr);
+        });
 
-        async function asignarRol(userId) {
-            const sel = document.getElementById(`sel_${userId}`);
-            if (!sel || !sel.value) {
-                alert('Selecciona un rol.');
-                return;
-            }
-            const roleName = sel.value;
-            let body = { roleName, forceReplace: false };
+        const totalPages = Math.ceil(allUsersRoles.length / rolesPageSize);
+        $("#rolesPageInfo").text(`${rolesPage} / ${totalPages}`);
 
-            let res = await fetch(`${USERS_URL}/${userId}/role`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
+        $("#rolesPrevPageItem").toggleClass("disabled", rolesPage <= 1);
+        $("#rolesNextPageItem").toggleClass("disabled", rolesPage >= totalPages);
+    }
+
+    function buildRolesSelect(userId) {
+        const roles = window.__rolesActivos || [];
+        return `
+            <div class="input-group">
+                <select class="form-select" id="sel_${userId}">
+                    <option value="" disabled selected>Seleccionar…</option>
+                    ${roles.map(r => `<option value="${safe(r.name)}">${safe(r.name)}</option>`).join("")}
+                </select>
+                <button class="btn btn-outline-success" onclick="asignarRol(${userId})">Asignar</button>
+            </div>`;
+    }
+
+    // ================= ASIGNAR ROL =================
+    async function asignarRol(userId) {
+        const sel = document.getElementById(`sel_${userId}`);
+        if (!sel || !sel.value) return alert("Selecciona un rol.");
+
+        const body = { roleName: sel.value, forceReplace: true };
+
+        const res = await fetch(`${USERS_URL}/${userId}/role`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
 
         if (res.ok) {
-            await recargarUsuarios();
-            alert('Rol asignado correctamente.');
-            return;
-        }
-
-            if (res.status === 409) {
-                const data = await res.json();
-                const ok = confirm(`${data.Message}\n\n¿Deseas reemplazar el rol '${data.Previous}' por '${roleName}'?`);
-                if (ok) {
-                    body.forceReplace = true;
-                    res = await fetch(`${USERS_URL}/${userId}/role`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(body)
-                    });
-                    if (res.ok) {
-                        await recargarUsuarios();
-                        alert('Rol reemplazado correctamente.');
-                        return;
-                    }
-                }
-            }
-            try {
-                const err = await res.json();
-                alert(`Error: ${err.Message || 'No se pudo asignar el rol.'}`);
-            } catch {
-                alert('No se pudo asignar el rol.');
-            }
-        }
-
-    async function quitarRol(userId) {
-        if (!confirm('¿Seguro que deseas dejar a este usuario SIN rol?')) return;
-
-        const res = await fetch(`${USERS_URL}/${userId}/role`, { method: 'DELETE' });
-
-        if (res.ok) {
-            await recargarUsuarios();
-            alert('Usuario quedó sin rol.');
+            cargarUsuariosConRol();
+            alert("Rol asignado correctamente.");
         } else {
-            try {
-                const err = await res.json();
-                alert(`Error: ${err.message || err.Message || 'No se pudo remover el rol.'}`);
-            } catch {
-                alert('No se pudo remover el rol.');
-            }
+            alert("Error asignando rol.");
         }
     }
 
-    async function recargarUsuarios() {
-        await cargarUsuariosConRol();
+    // ================= ELIMINAR USUARIO =================
+    async function eliminarUsuario(userId) {
+        if (!confirm("¿Eliminar usuario definitivamente?")) return;
+
+        const res = await fetch(`${USERS_URL}/${userId}`, { method: "DELETE" });
+
+        if (res.ok) {
+            cargarUsuariosConRol();
+            alert("Usuario eliminado.");
+        } else {
+            alert("Error eliminando usuario.");
+        }
     }
 </script>

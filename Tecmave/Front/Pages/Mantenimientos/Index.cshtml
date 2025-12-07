@@ -41,11 +41,13 @@
                 <th>Cliente</th>
                 <th>Vehículo</th>
                 <th>Estado</th>
-                <th>Acción</th>
+                <th>Fecha de Entrega</th>
+                <th>Costo</th>
+                <th style="width:180px;">Acciones</th>
             </tr>
         </thead>
         <tbody id="agTable">
-            <tr><td colspan="6">Cargando agendamientos…</td></tr>
+            <tr><td colspan="8">Cargando agendamientos…</td></tr>
         </tbody>
     </table>
 </div>
@@ -57,9 +59,9 @@
         color: #fff !important;
     }
 
-    .btn-orange:hover {
-        background: #9FAA13 !important;
-    }
+        .btn-orange:hover {
+            background: #9FAA13 !important;
+        }
 
     .badge-estado {
         font-size: .75rem;
@@ -69,29 +71,36 @@
 </style>
 
 <script>
-    const API_BASE = 'https://tecmave-api.azurewebsites.net';
-    const AG_URL   = `${API_BASE}/Agendamiento`;
-    const VEH_URL  = `${API_BASE}/Vehiculos`;
-    const USERS_URL= `${API_BASE}/api/usuarios`;
-    const EST_URL  = `${API_BASE}/Estados`;
+    const API_BASE  = 'https://tecmave-api.azurewebsites.net';
+    const AG_URL    = `${API_BASE}/Agendamiento`;
+    const VEH_URL   = `${API_BASE}/Vehiculos`;
+    const USERS_URL = `${API_BASE}/api/usuarios`;
+    const EST_URL   = `${API_BASE}/Estados`;
 
     let allAgendamientos = [];
-    let vehById = {};
-    let userById = {};
-    let estados = [];
+    let vehById   = {};
+    let userById  = {};
+    let estados   = [];
     let estadosById = {};
 
     const U = s => (s ?? '').toString().trim().toUpperCase();
-    const esc = s => String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;')
-                                     .replaceAll('>','&gt;').replaceAll('"','&quot;')
-                                     .replaceAll("'",'&#39;');
-    function debounce(fn, d=250){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), d);} }
+    const esc = s => String(s ?? '')
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#39;');
+
+    function debounce(fn, d=250){
+        let t;
+        return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), d); };
+    }
 
     function formatFecha(f){
         if(!f) return '-';
-        // viene como "2025-12-11" o "2025-12-11T00:00:00"
         return f.toString().substring(0,10);
     }
+
     function formatHora(h){
         if(!h) return '-';
         return h.toString().substring(0,5);
@@ -110,9 +119,10 @@
         $sel.append(`<option value="">(Todos)</option>`);
         estados
             .slice()
-            .sort((a,b) => a.nombre.localeCompare(b.nombre))
+            .sort((a,b) => (a.nombre ?? a.Nombre ?? '').localeCompare(b.nombre ?? b.Nombre ?? ''))
             .forEach(e => {
-                $sel.append(`<option value="${e.id_estado}">${esc(e.nombre)}</option>`);
+                const nombre = e.nombre ?? e.Nombre ?? '';
+                $sel.append(`<option value="${e.id_estado}">${esc(nombre)}</option>`);
             });
     }
 
@@ -122,7 +132,6 @@
 
         return allAgendamientos.filter(a => {
             if(estadoSel && String(a.id_estado) !== String(estadoSel)) return false;
-
             if(!q) return true;
 
             const u = userById[a.cliente_id];
@@ -130,9 +139,12 @@
             const e = estadosById[a.id_estado];
 
             const nombreCliente = buildClienteName(u);
-            const placa = v?.placa ?? v?.Placa ?? '';
+            const placa  = v?.placa ?? v?.Placa ?? '';
             const modelo = v?.modelo ?? v?.Modelo ?? '';
-            const estadoNombre = e?.nombre ?? '';
+            const estadoNombre = e?.nombre ?? e?.Nombre ?? '';
+
+            const fechaEntregaRaw = a.fecha_estimada_entrega ?? a.fecha_estimada;
+            const costoRaw = a.costo_mantenimiento ?? a.costo;
 
             const haystack = [
                 nombreCliente,
@@ -140,67 +152,70 @@
                 modelo,
                 estadoNombre,
                 formatFecha(a.fecha_estimada),
-                formatHora(a.hora_llegada)
+                formatFecha(fechaEntregaRaw),
+                (costoRaw ?? '').toString()
             ].join(' ').toLowerCase();
 
             return haystack.includes(q);
         });
     }
 
-    function renderAgTable(rows){
-        const $tb = $('#agTable').empty();
-        if(!rows.length){
-            $tb.html(`<tr><td colspan="6" class="text-muted">No hay agendamientos.</td></tr>`);
-            $('#agResultsBadge').text(`Mostrando 0 de ${allAgendamientos.length}`);
-            return;
-        }
-
-        rows.forEach(a => {
-            const u = userById[a.cliente_id];
-            const v = vehById[a.vehiculo_id];
-            const e = estadosById[a.id_estado];
-
-            const cliente = buildClienteName(u);
-            const placa   = v?.placa ?? v?.Placa ?? '';
-            const modelo  = v?.modelo ?? v?.Modelo ?? '';
-            const estadoNombre = e?.nombre ?? '(Desconocido)';
-
-            const selectHtml = buildEstadoSelect(a.id_agendamiento, a.id_estado);
-
-            $tb.append(`
-                <tr data-id="${a.id_agendamiento}">
-                    <td>${esc(formatFecha(a.fecha_estimada || a.fecha_agregada))}</td>
-                    <td>${esc(formatHora(a.hora_llegada))}</td>
-                    <td>${esc(cliente)}</td>
-                    <td>${esc(placa)} ${modelo ? ' - ' + esc(modelo) : ''}</td>
-                    <td>${selectHtml}</td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="restoreAgEstado(${a.id_agendamiento})">
-                            Deshacer
-                        </button>
-                    </td>
-                </tr>
-            `);
-        });
-
-        $('#agResultsBadge').text(`Mostrando ${rows.length} de ${allAgendamientos.length}`);
-
-        // Attach change handler a todos los selects
-        $('.estado-select').off('change').on('change', function(){
-            const agId = Number($(this).data('id'));
-            const newEstado = Number($(this).val());
-            updateAgEstado(agId, newEstado, this);
-        });
-    }
-
     function buildEstadoSelect(agId, currentEstadoId){
         let html = `<select class="form-select form-select-sm estado-select" data-id="${agId}">`;
         estados.forEach(e => {
-            const sel = String(e.id_estado) === String(currentEstadoId) ? 'selected' : '';
-            html += `<option value="${e.id_estado}" ${sel}>${esc(e.nombre)}</option>`;
+            const idEst = e.id_estado;
+            const nombre = e.nombre ?? e.Nombre ?? '';
+            const sel = String(idEst) === String(currentEstadoId) ? 'selected' : '';
+            html += `<option value="${idEst}" ${sel}>${esc(nombre)}</option>`;
         });
         html += `</select>`;
         return html;
+    }
+
+    function getEstadoCode(ag){
+        const e = estadosById[ag.id_estado];
+        return e?.id_estado ?? ag.id_estado;
+    }
+
+    // HTML para fecha de entrega (con mensajes estéticos)
+    function formatFechaEntregaHtml(ag){
+        const raw = ag.fecha_estimada_entrega ?? ag.fecha_estimada_entrega_raw ?? ag.fecha_estimada;
+        const code = getEstadoCode(ag);
+
+        if(!raw){
+            const needsUpdate = (code === 9 || code === 10); // Finalizado / Entregado
+            const text = needsUpdate ? 'Se debe actualizar' : 'Aún no hay datos';
+            const cls  = needsUpdate ? 'badge bg-warning text-dark' : 'badge bg-secondary';
+            return `<span class="${cls}">${esc(text)}</span>`;
+        }
+
+        return esc(formatFecha(raw));
+    }
+
+    // HTML para costo (con mensajes estéticos)
+    function formatCostoHtml(ag){
+        const raw = ag.costo_mantenimiento ?? ag.costo;
+        const code = getEstadoCode(ag);
+
+        if(raw == null || raw === ''){
+            const needsUpdate = (code === 9 || code === 10);
+            const text = needsUpdate ? 'Se debe actualizar' : 'Aún no hay datos';
+            const cls  = needsUpdate ? 'badge bg-warning text-dark' : 'badge bg-secondary';
+            return `<span class="${cls}">${esc(text)}</span>`;
+        }
+
+        const num = Number(raw);
+        if (isNaN(num)){
+            return esc(String(raw));
+        }
+
+        // Formato moneda CR
+        const formatted = num.toLocaleString('es-CR', {
+            style: 'currency',
+            currency: 'CRC'
+        });
+
+        return esc(formatted);
     }
 
     async function updateAgEstado(agId, newEstadoId, selectEl){
@@ -217,13 +232,16 @@
         $sel.prop('disabled', true);
 
         const payload = {
-            id_agendamiento: ag.id_agendamiento,
-            cliente_id: ag.cliente_id,
-            vehiculo_id: ag.vehiculo_id,
-            fecha_agregada: ag.fecha_agregada,
-            fecha_estimada: ag.fecha_estimada,
-            hora_llegada: ag.hora_llegada,
-            id_estado: newEstadoId
+            id_agendamiento:          ag.id_agendamiento,
+            cliente_id:               ag.cliente_id,
+            vehiculo_id:              ag.vehiculo_id,
+            fecha_agregada:           ag.fecha_agregada,
+            fecha_estimada:           ag.fecha_estimada,
+            hora_llegada:             ag.hora_llegada,
+            id_estado:                newEstadoId,
+            // nuevos campos (si existen en el backend los tomará, si no, se ignoran)
+            fecha_estimada_entrega:   ag.fecha_estimada_entrega ?? null,
+            costo_mantenimiento:      ag.costo_mantenimiento ?? null
         };
 
         try{
@@ -233,7 +251,6 @@
                 contentType: "application/json",
                 data: JSON.stringify(payload)
             });
-            // éxito, mantenemos newEstadoId
         }catch(err){
             console.error(err);
             ag.id_estado = oldVal;
@@ -244,7 +261,6 @@
         }
     }
 
-    // Deshacer cambios de estado en UI al último valor cargado
     window.restoreAgEstado = function(agId){
         const ag = allAgendamientos.find(x => Number(x.id_agendamiento) === Number(agId));
         if(!ag) return;
@@ -252,6 +268,65 @@
         const $sel = $row.find('.estado-select');
         $sel.val(ag.id_estado);
     };
+
+    function renderAgTable(rows){
+        const $tb = $('#agTable').empty();
+
+        if(!rows.length){
+            $tb.html(`<tr><td colspan="8" class="text-muted">No hay agendamientos.</td></tr>`);
+            $('#agResultsBadge').text(`Mostrando 0 de ${allAgendamientos.length}`);
+            return;
+        }
+
+        rows.forEach(a => {
+            const u = userById[a.cliente_id];
+            const v = vehById[a.vehiculo_id];
+            const e = estadosById[a.id_estado];
+
+            const cliente = buildClienteName(u);
+            const placa   = v?.placa ?? v?.Placa ?? '';
+            const modelo  = v?.modelo ?? v?.Modelo ?? '';
+            const estadoNombre = e?.nombre ?? e?.Nombre ?? '(Desconocido)';
+            const selectHtml   = buildEstadoSelect(a.id_agendamiento, a.id_estado);
+
+            const fechaBase = formatFecha(a.fecha_estimada || a.fecha_agregada);
+            const fechaEntregaHtml = formatFechaEntregaHtml(a);
+            const costoHtml        = formatCostoHtml(a);
+
+            $tb.append(`
+                <tr data-id="${a.id_agendamiento}">
+                    <td>${esc(fechaBase)}</td>
+                    <td>${esc(formatHora(a.hora_llegada))}</td>
+                    <td>${esc(cliente)}</td>
+                    <td>${esc(placa)}${modelo ? ' - ' + esc(modelo) : ''}</td>
+                    <td>${selectHtml}</td>
+                    <td>${fechaEntregaHtml}</td>
+                    <td>${costoHtml}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button"
+                                    class="btn btn-outline-secondary"
+                                    onclick="restoreAgEstado(${a.id_agendamiento})">
+                                Deshacer Estado
+                            </button>
+                            <a class="btn btn-primary"
+                               href="/Mantenimientos/Editar/${a.id_agendamiento}">
+                                Editar
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            `);
+        });
+
+        $('#agResultsBadge').text(`Mostrando ${rows.length} de ${allAgendamientos.length}`);
+
+        $('.estado-select').off('change').on('change', function(){
+            const agId = Number($(this).data('id'));
+            const newEstado = Number($(this).val());
+            updateAgEstado(agId, newEstado, this);
+        });
+    }
 
     // ---------- EXPORTAR A CSV ----------
     function csvEscape(val){
@@ -263,7 +338,7 @@
     }
 
     function buildAgCsv(rows){
-        const headers = ['Fecha','Hora','Cliente','Vehículo','Estado'];
+        const headers = ['Fecha','Hora','Cliente','Vehículo','Estado','FechaEntrega','Costo'];
         const lines = [headers.join(',')];
 
         rows.forEach(a => {
@@ -275,14 +350,31 @@
             const placa   = v?.placa ?? v?.Placa ?? '';
             const modelo  = v?.modelo ?? v?.Modelo ?? '';
             const vehText = modelo ? `${placa} - ${modelo}` : placa;
-            const estadoNombre = e?.nombre ?? '';
+            const estadoNombre = e?.nombre ?? e?.Nombre ?? '';
+
+            const fechaBase = formatFecha(a.fecha_estimada || a.fecha_agregada);
+            const fechaEntregaRaw = a.fecha_estimada_entrega ?? a.fecha_estimada_entrega_raw ?? a.fecha_estimada;
+            const costoRaw = a.costo_mantenimiento ?? a.costo;
+
+            const code = getEstadoCode(a);
+            const needsUpdate = (code === 9 || code === 10);
+
+            const fechaEntregaText = fechaEntregaRaw
+                ? formatFecha(fechaEntregaRaw)
+                : (needsUpdate ? 'Se debe actualizar' : 'Aún no hay datos');
+
+            const costoText = (costoRaw == null || costoRaw === '')
+                ? (needsUpdate ? 'Se debe actualizar' : 'Aún no hay datos')
+                : String(costoRaw);
 
             lines.push([
-                csvEscape(formatFecha(a.fecha_estimada || a.fecha_agregada)),
+                csvEscape(fechaBase),
                 csvEscape(formatHora(a.hora_llegada)),
                 csvEscape(cliente),
                 csvEscape(vehText),
-                csvEscape(estadoNombre)
+                csvEscape(estadoNombre),
+                csvEscape(fechaEntregaText),
+                csvEscape(costoText)
             ].join(','));
         });
 
@@ -322,7 +414,6 @@
             ]);
 
             allAgendamientos = Array.isArray(agList) ? agList.slice() : [];
-            // ordenar por fecha/hora asc
             allAgendamientos.sort((a,b) => {
                 const fa = (a.fecha_estimada || a.fecha_agregada || '').toString();
                 const fb = (b.fecha_estimada || b.fecha_agregada || '').toString();
@@ -347,13 +438,15 @@
 
             estados = Array.isArray(estList) ? estList.slice() : [];
             estadosById = {};
-            estados.forEach(e => estadosById[e.id_estado] = e);
+            estados.forEach(e => {
+                estadosById[e.id_estado] = e;
+            });
 
             loadEstadosFilter();
             renderAgTable(applyAgFilters());
         }catch(e){
             console.error(e);
-            $('#agTable').html(`<tr><td colspan="6" class="text-danger">Error cargando datos.</td></tr>`);
+            $('#agTable').html(`<tr><td colspan="8" class="text-danger">Error cargando datos.</td></tr>`);
         }
     }
 
@@ -377,4 +470,3 @@
         $('#exportAgBtn').on('click', () => window.exportAgToExcel());
     });
 </script>
-

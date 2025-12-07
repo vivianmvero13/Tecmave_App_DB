@@ -138,12 +138,10 @@ namespace Tecmave.Api.Data
                  .HasForeignKey(x => x.IdVehiculo)
                  .HasConstraintName("FK_Mantenimientos_vehiculos_IdVehiculo");
 
-
                 e.HasOne(x => x.Estado)
                  .WithMany()
                  .HasForeignKey(x => x.IdEstado)
                  .HasConstraintName("FK_Mantenimientos_Estado");
-
             });
 
             // ---------------- AGENDAMIENTO ----------------
@@ -160,14 +158,53 @@ namespace Tecmave.Api.Data
                 e.Property(x => x.fecha_estimada).HasColumnName("fecha_estimada");
                 e.Property(x => x.hora_llegada).HasColumnName("hora_llegada");
 
-                // FK Agendamiento
+                // NUEVOS CAMPOS
+                e.Property(x => x.fecha_estimada_entrega).HasColumnName("fecha_estimada_entrega");
+                e.Property(x => x.costo_mantenimiento)
+                    .HasColumnName("costo_mantenimiento")
+                    .HasColumnType("decimal(10,2)");
+
+                // FK Agendamiento -> Vehiculo
                 e.HasOne<Vehiculo>()
-     .WithMany()
-     .HasForeignKey(x => x.vehiculo_id)
-     .HasConstraintName("FK_Agendamiento_Vehiculo")
-     .OnDelete(DeleteBehavior.Restrict);
+                 .WithMany()
+                 .HasForeignKey(x => x.vehiculo_id)
+                 .HasConstraintName("FK_Agendamiento_Vehiculo")
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                // FK Agendamiento -> Usuario (cliente)
+                e.HasOne<Usuario>()
+                 .WithMany()
+                 .HasForeignKey(x => x.cliente_id)
+                 .HasConstraintName("FK_Agendamiento_Cliente")
+                 .OnDelete(DeleteBehavior.Cascade);
             });
 
+
+            // ---------------- MANTENIMIENTOS ----------------
+            b.Entity<MantenimientoModel>(e =>
+            {
+                e.ToTable("Mantenimientos");
+
+                e.HasKey(x => x.IdMantenimiento);
+
+                e.Property(x => x.IdMantenimiento).HasColumnName("IdMantenimiento");
+                e.Property(x => x.IdVehiculo).HasColumnName("IdVehiculo");
+                e.Property(x => x.FechaMantenimiento).HasColumnName("FechaMantenimiento");
+                e.Property(x => x.ProximoMantenimiento).HasColumnName("ProximoMantenimiento");
+                e.Property(x => x.RecordatorioEnviado).HasColumnName("RecordatorioEnviado");
+                e.Property(x => x.IdEstado).HasColumnName("IdEstado");
+
+                e.HasOne(x => x.Vehiculo)
+                 .WithMany()
+                 .HasForeignKey(x => x.IdVehiculo)
+                 .HasConstraintName("FK_Mantenimientos_vehiculos_IdVehiculo");
+
+                e.HasOne(x => x.Estado)
+                 .WithMany()
+                 .HasForeignKey(x => x.IdEstado)
+                 .HasConstraintName("FK_Mantenimientos_Estado");
+            });
         }
     }
 }
+

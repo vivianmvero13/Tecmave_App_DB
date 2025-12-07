@@ -1,0 +1,205 @@
+﻿@page "{id:int}"
+@model Front.Pages.Planillas.EditarModel
+@{
+    ViewData["Title"] = "Editar Planilla";
+}
+
+<section class="section">
+    <h3>Editar Planilla</h3>
+
+    <div class="form-row">
+        <div>
+            <label>Colaborador</label>
+            <input id="colaborador_nombre" class="input" readonly />
+        </div>
+        <div>
+            <label>Periodo Inicio</label>
+            <input id="periodo_inicio" type="date" class="input" />
+        </div>
+        <div>
+            <label>Periodo Fin</label>
+            <input id="periodo_fin" type="date" class="input" />
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div>
+            <label>Horas Trabajadas</label>
+            <input id="horas_trabajadas" type="number" step="0.01" class="input" />
+        </div>
+        <div>
+            <label>Valor Hora</label>
+            <input id="valor_hora" type="number" step="0.01" class="input" />
+        </div>
+        <div>
+            <label>Total Salario</label>
+            <input id="total_salario" class="input" readonly />
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div>
+            <label>Deducciones</label>
+            <input id="deducciones" step="0.01" type="number" class="input" />
+        </div>
+        <div>
+            <label>Neto Pagar</label>
+            <input id="neto_pagar" readonly class="input" />
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div>
+            <label>Estado</label>
+            <select id="estado" class="input"></select>
+        </div>
+        <div>
+            <label>Observaciones</label>
+            <input id="observaciones" type="text" class="input" />
+        </div>
+    </div>
+
+    <button id="btnGuardar" class="primary">Guardar Cambios</button>
+    <a href="/Planillas" class="secondary">Volver</a>
+</section>
+
+
+<script>
+    // Endpoints
+    const API_PLANILLA = "https://tecmave-api.azurewebsites.net/api/Planillas";
+    const API_COLABORADOR = "https://tecmave-api.azurewebsites.net/Colaboradores";
+    const API_USUARIOS = "https://tecmave-api.azurewebsites.net/api/usuarios";
+    const API_ESTADOS = "https://tecmave-api.azurewebsites.net/Estados";
+
+    let idPlanilla = @Model.Id;
+
+    $(document).ready(() => {
+        cargarEstados();
+        cargarPlanillaPorId(idPlanilla);
+
+        $("#horas_trabajadas, #valor_hora").on("input", calcular);
+        $("#deducciones").on("input", calcularNeto);
+        $("#btnGuardar").on("click", guardarCambios);
+    });
+
+    // ALERTAS NATIVAS
+    function mostrarExito(mensaje) {
+        alert("✔ " + mensaje);
+    }
+
+    function mostrarError(mensaje) {
+        alert("❌ " + mensaje);
+    }
+
+    function cargarEstados(){
+        $.get(API_ESTADOS)
+            .done(estados => {
+                $("#estado").empty();
+                (estados || [])
+                    .filter(e => e.id_estado === 2 || e.id_estado === 11)
+                    .forEach(e => $("#estado").append(`<option value="${e.nombre}">${e.nombre}</option>`));
+            })
+            .fail(err => {
+                console.error("Error cargando estados:", err);
+                mostrarError("Error cargando los estados.");
+            });
+    }
+
+    function cargarPlanillaPorId(id){
+        $.get(`${API_PLANILLA}/${id}`)
+            .done(planilla => {
+                $("#id").val(planilla.id ?? "");
+                $("#colaborador_id").val(planilla.colaborador_id ?? "");
+                $("#periodo_inicio").val(planilla.periodo_inicio?.substring(0,10) || "");
+                $("#periodo_fin").val(planilla.periodo_fin?.substring(0,10) || "");
+                $("#horas_trabajadas").val(planilla.horas_trabajadas ?? "");
+                $("#valor_hora").val(planilla.valor_hora ?? "");
+                $("#total_salario").val(planilla.total_salario ?? "");
+                $("#deducciones").val(planilla.deducciones ?? "");
+                $("#neto_pagar").val(planilla.neto_pagar ?? "");
+                $("#estado").val(planilla.estado ?? "");
+                $("#observaciones").val(planilla.observaciones ?? "");
+                $("#fecha_generada").val(planilla.fecha_generada ?? "");
+
+                if (planilla.colaborador_id != null) {
+                    cargarColaboradorYUsuario(planilla.colaborador_id);
+                } else {
+                    $("#colaborador_nombre").val("No asignado");
+                }
+            })
+            .fail(err => {
+                console.error("Error cargando planilla:", err);
+                mostrarError("No se pudo cargar la información de la planilla.");
+            });
+    }
+
+    function cargarColaboradorYUsuario(idColaborador){
+        $("#colaborador_id").val(idColaborador);
+
+        $.get(`${API_COLABORADOR}/${idColaborador}`)
+            .done(colaborador => {
+                const idUsuario = colaborador.id_usuario ?? colaborador.usuario_id;
+                if (idUsuario) {
+                    $.get(`${API_USUARIOS}/${idUsuario}`)
+                        .done(usuario => {
+                            const ape = usuario.apellidos ?? usuario.apellido ?? "";
+                            $("#colaborador_nombre").val(`${usuario.nombre} ${ape}`.trim());
+                        })
+                        .fail(() => $("#colaborador_nombre").val(`Colaborador ${idColaborador}`));
+                } else {
+                    $("#colaborador_nombre").val(`Colaborador ${idColaborador}`);
+                }
+            })
+            .fail(() => $("#colaborador_nombre").val(`Colaborador ${idColaborador}`));
+    }
+
+      function calcular(){
+        const h = parseFloat($("#horas_trabajadas").val()) || 0;
+        const v = parseFloat($("#valor_hora").val()) || 0;
+        const total = h * v;
+
+        $("#total_salario").val(total.toFixed(2));
+        calcularNeto();
+    }
+
+        function calcularNeto() {
+        const total = parseFloat($("#total_salario").val()) || 0;
+        const dedPorcentaje = parseFloat($("#deducciones").val()) || 0;
+
+        const deduccionCalculada = total * dedPorcentaje; // porcentaje de deducción
+        $("#neto_pagar").val((total - deduccionCalculada).toFixed(2));
+    }
+
+    function guardarCambios() {
+        const data = {
+            id: idPlanilla,
+            colaborador_id: $("#colaborador_id").val(),
+            periodo_inicio: $("#periodo_inicio").val(),
+            periodo_fin: $("#periodo_fin").val(),
+            horas_trabajadas: $("#horas_trabajadas").val(),
+            valor_hora: $("#valor_hora").val(),
+            total_salario: $("#total_salario").val(),
+            deducciones: $("#deducciones").val(),
+            neto_pagar: $("#neto_pagar").val(),
+            fecha_generada: $("#fecha_generada").val(),
+            estado: $("#estado").val(),
+            observaciones: $("#observaciones").val()
+        };
+
+        $.ajax({
+            url: API_PLANILLA,
+            method: "PUT",
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            success: function () {
+                mostrarExito("La planilla fue actualizada correctamente.");
+                window.location.href = "/Planillas";
+            },
+            error: function (xhr) {
+                console.log("Error API:", xhr);
+                mostrarError("No fue posible actualizar la planilla.");
+            }
+        });
+    }
+</script>
+

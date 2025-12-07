@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 using Tecmave.Api.Services;
@@ -12,19 +11,20 @@ namespace Tecmave.Api.Controllers
     public class AgendamientoController : Controller
     {
         private readonly AgendamientoService _agendamientoService;
-        private readonly AppDbContext _context;
         private readonly IEmailSender _emailSender;
         private readonly UserManager<Usuario> _userManager;
-        public AgendamientoController(AgendamientoService agendamientoService,
-    IEmailSender emailSender,
-    UserManager<Usuario> userManager)
+
+        public AgendamientoController(
+            AgendamientoService agendamientoService,
+            IEmailSender emailSender,
+            UserManager<Usuario> userManager)
         {
             _agendamientoService = agendamientoService;
             _emailSender = emailSender;
             _userManager = userManager;
         }
 
-        //Apis GET, POST, PUT   y DELETE
+        // ========= GET =========
         [HttpGet]
         public ActionResult<IEnumerable<AgendamientoModel>> GetAgendamientoModel()
         {
@@ -34,16 +34,18 @@ namespace Tecmave.Api.Controllers
         [HttpGet("{id}")]
         public ActionResult<AgendamientoModel> GetById(int id)
         {
-            return _agendamientoService.GetById(id);
+            var ag = _agendamientoService.GetById(id);
+            if (ag == null) return NotFound();
+            return ag;
         }
 
-        //Apis POST
+        // ========= POST =========
         [HttpPost]
         public async Task<ActionResult<AgendamientoModel>> AddAgendamiento(AgendamientoModel agendamientoModel)
         {
             var newAg = _agendamientoService.AddAgendamiento(agendamientoModel);
 
-            // ========== OBTENER EMAIL DESDE ASPNETUSERS ==========
+            // OBTENER EMAIL DESDE aspnetusers
             var user = await _userManager.FindByIdAsync(newAg.cliente_id.ToString());
 
             if (user != null && !string.IsNullOrWhiteSpace(user.Email))
@@ -51,67 +53,59 @@ namespace Tecmave.Api.Controllers
                 string subject = "Confirmación de Agendamiento - Tecmave";
 
                 string bodyHtml = $@"
-            <h2 style='color:#0053ff'>Tu revisión ha sido agendada</h2>
-            <p>Hola <strong>{user.Nombre}</strong>,</p>
-            <p>Tu cita ha sido registrada con éxito.</p>
+                    <h2 style='color:#0053ff'>Tu revisión ha sido agendada</h2>
+                    <p>Hola <strong>{user.Nombre}</strong>,</p>
+                    <p>Tu cita ha sido registrada con éxito.</p>
 
-            <h3>Detalles del Agendamiento:</h3>
-            <ul>
-                <li><strong>Fecha:</strong> {newAg.fecha_estimada}</li>
-                <li><strong>Hora:</strong> {newAg.hora_llegada}</li>
-            </ul>
+                    <h3>Detalles del Agendamiento:</h3>
+                    <ul>
+                        <li><strong>Fecha:</strong> {newAg.fecha_estimada}</li>
+                        <li><strong>Hora:</strong> {newAg.hora_llegada}</li>
+                    </ul>
 
-            <p>Gracias por confiar en Tecmave.</p>
-            <p><em>Este es un mensaje automático, por favor no responder.</em></p>
-        ";
+                    <p>Gracias por confiar en Tecmave.</p>
+                    <p><em>Este es un mensaje automático, por favor no responder.</em></p>
+                ";
 
                 await _emailSender.SendAsync(user.Email, subject, bodyHtml);
             }
 
-            return CreatedAtAction(nameof(GetAgendamientoModel),
+            return CreatedAtAction(
+                nameof(GetById),
                 new { id = newAg.id_agendamiento },
-                newAg);
+                newAg
+            );
         }
 
-        //APIS PUT
+        // ========= PUT =========
         [HttpPut]
         public IActionResult UpdateAgendamiento(AgendamientoModel agendamientoModel)
         {
-
             if (!_agendamientoService.UpdateAgendamiento(agendamientoModel))
             {
-                return NotFound(
-                        new
-                        {
-                            elmsneaje = "El agendamiento no fue encontrado"
-                        }
-                    );
+                return NotFound(new
+                {
+                    mensaje = "El agendamiento no fue encontrado"
+                });
             }
 
             return NoContent();
-
         }
 
-        //APIS DELETE
+        // ========= DELETE =========
+        // Se mantiene así para no romper llamadas existentes: /Agendamiento?id=5
         [HttpDelete]
         public IActionResult DeleteAgendamientoModel(int id)
         {
-
             if (!_agendamientoService.DeleteAgendamiento(id))
             {
-                return NotFound(
-                        new
-                        {
-                            elmsneaje = "El agendamiento no fue encontrado"
-                        }
-                    );
+                return NotFound(new
+                {
+                    mensaje = "El agendamiento no fue encontrado"
+                });
             }
 
             return NoContent();
-
         }
-
-       
-
     }
 }
