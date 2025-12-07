@@ -19,7 +19,7 @@
 </div>
 
 <script>
-    const api = "@Model.ApiBase/colaboradores/" + "@Model.Id";
+    const api = `${"@(Model.ApiBase)"}/colaboradores/${"@Model.Id"}`;
 
     function validar() {
         const rCed = /^\d{9}$/;
