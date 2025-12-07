@@ -20,10 +20,7 @@ namespace Tecmave.Api.Controllers
             _userService = userService;
         }
 
-        // ───────────────────────────────────────────────
-        // BUSCAR COLABORADORES
-        // ───────────────────────────────────────────────
-
+      
         [HttpGet("buscar")]
         public ActionResult<IEnumerable<object>> BuscarColaboradores(
             [FromQuery] string? nombre,
@@ -115,28 +112,23 @@ namespace Tecmave.Api.Controllers
             );
         }
 
-        // ───────────────────────────────────────────────
-        // PUT (CORREGIDO)
-        // ───────────────────────────────────────────────
-        //  Ahora SI acepta /colaboradores/{id}
-        //  Como tu frontend YA LO USA.
-        // ───────────────────────────────────────────────
+
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateColaboradores(
             int id,
-            [FromBody] ColaboradoresModel model,
-            [FromQuery] string? rol)
+            [FromBody] ColaboradoresModel model)
         {
-            model.id_colaborador = id; // ← Aseguramos que se actualice el correcto
+            model.id_colaborador = id; // Asegurar ID correcto
 
-            var actualizado = await _ColaboradoresService.UpdateColaboradoresAsync(model, rol);
+            var actualizado = await _ColaboradoresService.UpdateColaboradoresAsync(model);
 
             if (!actualizado)
                 return NotFound(new { mensaje = "El colaborador no se encontró en el sistema" });
 
             return NoContent();
         }
+
 
         // ───────────────────────────────────────────────
         // DELETE

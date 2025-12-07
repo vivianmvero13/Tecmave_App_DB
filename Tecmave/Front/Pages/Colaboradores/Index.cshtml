@@ -11,13 +11,11 @@
 <table class="table table-striped" id="tblColaboradores">
     <thead>
         <tr>
-            <th>Cédula</th>
-            <th>Nombre</th>
-            <th>Apellido</th>
-            <th>Teléfono</th>
-            <th>Correo</th>
+            <th>Nombre completo</th>
             <th>Puesto</th>
             <th>Salario</th>
+            <th>Estado</th>
+            <th>Rol</th>
             <th></th>
         </tr>
     </thead>
@@ -32,12 +30,7 @@
             </div>
             <div class="modal-body">
 
-                <input id="cedula" class="form-control mb-2" placeholder="Cédula">
-                <input id="nombre" class="form-control mb-2" placeholder="Nombre">
-                <input id="apellido" class="form-control mb-2" placeholder="Apellido">
-                <input id="telefono" class="form-control mb-2" placeholder="Teléfono">
-                <input id="email" class="form-control mb-2" placeholder="Correo">
-                <hr>
+                <input id="nombre" class="form-control mb-2" placeholder="Nombre completo">
                 <input id="puesto" class="form-control mb-2" placeholder="Puesto">
                 <input id="salario" class="form-control mb-2" placeholder="Salario">
 
@@ -50,8 +43,7 @@
 </div>
 
 <script>
-    const api = "@(Model.ApiBase)/colaboradores";
-
+    const api = "@Model.ApiBase/colaboradores";
 
     function cargar() {
         fetch(api)
@@ -60,44 +52,29 @@
                 let rows = "";
                 data.forEach(c => {
                     rows += `
-                    <tr>
-                        <td>${c.cedula}</td>
-                        <td>${c.nombre}</td>
-                        <td>${c.apellido}</td>
-                        <td>${c.telefono}</td>
-                        <td>${c.email}</td>
-                        <td>${c.puesto}</td>
-                        <td>${c.salario}</td>
-                        <td><a href="/Colaboradores/Editar?id=${c.id_colaborador}" class="btn btn-warning">Editar</a></td>
-                    </tr>`;
+                        <tr>
+                            <td>${c.nombre}</td>
+                            <td>${c.puesto}</td>
+                            <td>${c.salario}</td>
+                            <td>${c.estado}</td>
+                            <td>${c.rol}</td>
+                            <td>
+                                <a href="/Colaboradores/Editar?id=${c.id_colaborador}" class="btn btn-warning">
+                                    Editar
+                                </a>
+                            </td>
+                        </tr>`;
                 });
                 document.querySelector("#tblColaboradores tbody").innerHTML = rows;
             });
     }
 
-    function validar() {
-        const rCed = /^\d{9}$/;
-        const rTel = /^\d{8}$/;
-        const rMail = /^[^@]+@[^@]+\.[a-zA-Z]{2,}$/;
-
-        if (!rCed.test(cedula.value)) return false;
-        if (!rTel.test(telefono.value)) return false;
-        if (!rMail.test(email.value)) return false;
-
-        return true;
-    }
-
     btnNuevo.onclick = () => new bootstrap.Modal(modalCrear).show();
 
     btnGuardar.onclick = () => {
-        if (!validar()) return alert("Datos inválidos");
 
         const body = {
-            cedula: cedula.value,
             nombre: nombre.value,
-            apellido: apellido.value,
-            telefono: telefono.value,
-            email: email.value,
             puesto: puesto.value,
             salario: parseFloat(salario.value),
             rol: "Colaborador"
@@ -108,7 +85,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body)
         })
-        .then(r => {
+        .then(() => {
             cargar();
             bootstrap.Modal.getInstance(modalCrear).hide();
         });

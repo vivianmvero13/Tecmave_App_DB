@@ -7,11 +7,8 @@
 <h2>Editar colaborador</h2>
 
 <div class="card p-3">
-    <input id="cedula" class="form-control mb-2" placeholder="Cédula">
-    <input id="nombre" class="form-control mb-2" placeholder="Nombre">
-    <input id="apellido" class="form-control mb-2" placeholder="Apellido">
-    <input id="telefono" class="form-control mb-2" placeholder="Teléfono">
-    <input id="email" class="form-control mb-2" placeholder="Correo">
+
+    <input id="nombre" class="form-control mb-2" placeholder="Nombre completo">
     <input id="puesto" class="form-control mb-2" placeholder="Puesto">
     <input id="salario" class="form-control mb-2" placeholder="Salario">
 
@@ -19,43 +16,23 @@
 </div>
 
 <script>
-    const api = `${"@(Model.ApiBase)"}/colaboradores/${"@Model.Id"}`;
-
-    function validar() {
-        const rCed = /^\d{9}$/;
-        const rTel = /^\d{8}$/;
-        const rMail = /^[^@]+@[^@]+\.[a-zA-Z]{2,}$/;
-
-        if (!rCed.test(cedula.value)) return false;
-        if (!rTel.test(telefono.value)) return false;
-        if (!rMail.test(email.value)) return false;
-
-        return true;
-    }
+    const api = "@(Model.ApiBase)/colaboradores/@Model.Id";
 
     function cargar() {
         fetch(api)
             .then(r => r.json())
             .then(c => {
-                cedula.value = c.cedula;
                 nombre.value = c.nombre;
-                apellido.value = c.apellido;
-                telefono.value = c.telefono;
-                email.value = c.email;
                 puesto.value = c.puesto;
                 salario.value = c.salario;
             });
     }
 
     btnActualizar.onclick = () => {
-        if (!validar()) return alert("Datos inválidos");
 
         const body = {
-            cedula: cedula.value,
+            id_colaborador: @Model.Id,
             nombre: nombre.value,
-            apellido: apellido.value,
-            telefono: telefono.value,
-            email: email.value,
             puesto: puesto.value,
             salario: parseFloat(salario.value)
         };
