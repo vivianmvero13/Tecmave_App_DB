@@ -74,9 +74,23 @@
     /**
      * Main initialization function on DOMContentLoaded.
      */
+    function initLogout() {
+        const logoutLink = document.getElementById("logout-btn");
+        if (!logoutLink) return;
+        logoutLink.addEventListener("click", function (ev) {
+            ev.preventDefault();
+            const form = document.createElement("form");
+            form.method = "post";
+            form.action = "/Account/Logout?returnUrl=/Account/Login";
+            document.body.appendChild(form);
+            form.submit();
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
         initCarousel();
         initModals();
+        initLogout();
     });
 
 })();

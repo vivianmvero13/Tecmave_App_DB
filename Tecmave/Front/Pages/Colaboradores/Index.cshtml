@@ -73,7 +73,7 @@
                     <input class="input" id="puesto" type="text" />
                 </div>
                 <div>
-                    <label>Salario</label>
+                    <label>Costo por hora</label>
                     <input class="input" id="salario" type="number" step="0.01" />
                 </div>
             </div>
@@ -198,7 +198,13 @@
             rol: $("#rol").val(),
             colaboradores: {
                 puesto: $("#puesto").val(),
-                salario: parseFloat($("#salario").val()),
+                salario: (function() {
+                    const costoHora = parseFloat($("#salario").val());
+                    if (isNaN(costoHora) || costoHora <= 0) return 0;
+                    const hoy = new Date();
+                    const diasMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+                    return costoHora * 8 * diasMes;
+                })(),
                 fecha_contratacion: $("#fecha_contratacion").val()
             }
         };

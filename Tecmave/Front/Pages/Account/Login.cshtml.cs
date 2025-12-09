@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using Tecmave.Front.Models;
 
 namespace Front.Pages.Account
@@ -33,7 +34,7 @@ namespace Front.Pages.Account
             if (!ModelState.IsValid)
                 return Page();
 
-            var user = await _userManager.FindByEmailAsync(Login.Email);
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == Login.Email);
             if (user == null)
             {
                 ErrorMessage = "Error al iniciar sesi�n: correo o contrase�a inv�lidos.";

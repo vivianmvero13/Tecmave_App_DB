@@ -52,18 +52,6 @@
                 </div>
             </div>
 
-            <!-- CONTROLES DE EXPORTACIÓN -->
-            <div class="form-row" style="display:flex;flex-wrap:wrap;gap:1rem;margin-top:1rem;">
-                <div>
-                    <label>Mes a exportar</label>
-                    <input id="filtroMesExport" type="month" class="input" />
-                </div>
-                <div>
-                    <label>Cliente a exportar</label>
-                    <select id="selClienteExport" class="input"></select>
-                </div>
-            </div>
-
             <!-- Estado de carga -->
             <div id="estadoCarga" class="muted" style="margin: .75rem 0;">Cargando…</div>
 
@@ -914,12 +902,9 @@
         });
 
         $("#btnPdf").on("click", function () {
-            exportarPdf(FACTURAS);
+            const listaFiltrada = FACTURAS.filter(pasaFiltros);
+            exportarPdf(listaFiltrada);
         });
-
-        $("#btnExportMes").on("click", exportarMes);
-        $("#btnExportCliente").on("click", exportarPorCliente);
-        $("#btnExportPendientes").on("click", exportarPendientes);
 
         // Inicio
         $(document).ready(function () {

@@ -39,7 +39,7 @@
 
         <div class="mt-4 d-flex gap-2">
             <button id="btnSave" type="submit" class="btn btn-primary">Guardar</button>
-            <a class="btn btn-secondary" asp-page="/Usuarios/Index">Volver</a>
+            <a class="btn btn-secondary" asp-page="/Index">Volver</a>
         </div>
     </form>
 </div>
@@ -107,7 +107,7 @@
               data: JSON.stringify(payload)
             });
 
-            window.location.href = '/Usuarios/Index';
+            alert('✔ El perfil se actualizó correctamente.');
           } catch (err) {
             console.error(err);
             alert('No se pudo guardar el usuario.');
