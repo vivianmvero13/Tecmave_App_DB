@@ -59,8 +59,8 @@
         </div>
     </div>
 
-    <button id="btnGuardar" class="primary">Guardar Cambios</button>
-    <a href="/Planillas" class="secondary">Volver</a>
+    <button id="btnGuardar" class="btn primary">Guardar Cambios</button>
+    <a href="/Planillas" class="btn btn-secondary">Volver</a>
 </section>
 
 
@@ -193,7 +193,6 @@
             contentType: "application/json",
             success: function () {
                 mostrarExito("La planilla fue actualizada correctamente.");
-                window.location.href = "/Planillas";
             },
             error: function (xhr) {
                 console.log("Error API:", xhr);

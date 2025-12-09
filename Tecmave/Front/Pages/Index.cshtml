@@ -256,7 +256,7 @@
         });
     }
 
-    function cargarBalanceMesPanel() {
+       function cargarBalanceMesPanel() {
         const hoy = new Date();
         const mesActual = hoy.getMonth();
         const annoActual = hoy.getFullYear();
@@ -271,12 +271,19 @@
             xhrFields: { withCredentials: true },
             success: function (data) {
                 const lista = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+
                 const propias = lista.filter(f => {
                     const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
                     if (String(clienteId) !== String(userId)) return false;
 
-                    const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? "").toString().toLowerCase();
-                    if (estado !== "pagada" && estado !== "pagado") return false;
+                    const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? "")
+                        .toString()
+                        .toLowerCase()
+                        .trim();
+
+                    // SOLO facturas pendientes
+                    if (estado !== "pendiente")
+                        return false;
 
                     const fechaVal = f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision;
                     const d = parseDateOnlyPanel(fechaVal);
@@ -284,13 +291,16 @@
                     return d.getMonth() === mesActual && d.getFullYear() === annoActual;
                 });
 
-                const total = propias.reduce((acc, f) => acc + Number(f.total ?? f.Total ?? f.monto_total ?? 0), 0);
+                const total = propias.reduce(
+                    (acc, f) => acc + Number(f.total ?? f.Total ?? f.monto_total ?? 0),
+                    0
+                );
 
                 $("#kpi-balance-monto").text(formatCRCP(total));
                 $("#kpi-balance-estado")
-                    .text(total > 0 ? "Pagado" : "Sin pagos registrados")
-                    .toggleClass("pill-success", total > 0)
-                    .toggleClass("pill-neutral", total <= 0);
+                    .text(total > 0 ? "Pendiente de pago" : "Sin facturas pendientes")
+                    .removeClass("pill-success")
+                    .addClass("pill-neutral");
             },
             error: function () {
                 $("#kpi-balance-monto").text("₡0");
@@ -301,6 +311,7 @@
             }
         });
     }
+
 
     function cargarPromosDestacadasPanel() {
         $.ajax({

@@ -1,5 +1,7 @@
 @page "/"
-@{ Layout = null; }
+@{
+    Layout = null;
+}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -26,9 +28,9 @@
         <nav class="alpha-nav">
             <div class="nav-brand">
                 <div class="logo">
-                    <img src="~/assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave Logo">
+                    <img src="~/assets/img/tecmave_logo_innovacion.jpg">
                 </div>
-                <h1>TECMAVE</h1>
+                <h1 style="display:none;">TECMAVE</h1>
             </div>
 
             <div class="nav-menu">
@@ -253,7 +255,7 @@
                 </div>
                 <div class="video-container" data-aos="fade-left">
                     <div class="video-wrapper">
-                        <iframe src="https://www.facebook.com/plugins/video.php?height=317&href=https%3A%2F%2Fwww.facebook.com%2Fitecmave%2Fvideos%2F622389242538519%2F&show_text=false&width=560&t=0%22
+                        <iframe src="https://www.facebook.com/plugins/video.php?height=317&href=https%3A%2F%2Fwww.facebook.com%2Fitecmave%2Fvideos%2F622389242538519%2F&show_text=false&width=560&t=0"
                                 width="100%"
                                 height="317"
                                 style="border:none;overflow:hidden"
@@ -264,6 +266,7 @@
                         </iframe>
                     </div>
                 </div>
+
             </div>
         </div>
     </section>
@@ -335,45 +338,45 @@
     <script src="~/assets/js/disney-script.js"></script>
     <script defer src="~/assets/js/footer-config.js"></script>
     <script src="~/assets/js/global-features.js"></script>
-  <script>
-    
-document.addEventListener('DOMContentLoaded', () => {
-        const testimonialsContainer = document.getElementById('testimonials-container');
-        let reviews = JSON.parse(localStorage.getItem('tecmave.reviews')) || [
-            { name: 'María Rodríguez', rating: 5, comment: 'Excelente servicio! Repararon mi vehículo en tiempo récord y con una calidad impresionante. Definitivamente mi taller de confianza.', date: '2020-01-01' },
-            { name: 'Carlos Méndez', rating: 5, comment: 'El diagnóstico computarizado detectó un problema que otros talleres no pudieron encontrar. Muy profesionales y transparentes.', date: '2021-01-01' },
-            { name: 'Ana Fernández', rating: 5, comment: 'Servicio de grúa 24/7 me salvó en una emergencia. Rápidos, eficientes y con precios justos. Los recomiendo totalmente.', date: '2022-01-01' }
-        ];
+    <script>
 
-        function renderTestimonials() {
-            testimonialsContainer.innerHTML = '';
-            const latestReviews = reviews.slice(0, 3);
-            latestReviews.forEach(review => {
-            const testimonialEl = document.createElement('div');
-            testimonialEl.className = 'testimonial-card';
-            testimonialEl.innerHTML = `
-                <div class="testimonial-content">
-                    <i class="fas fa-quote-left"></i>
-                        <p>${review.comment}</p>
-                </div>
-                <div class="testimonial-author">
-                    <div class="author-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="author-info">
-                            <h4>${review.name}</h4>
-                            <span>Cliente desde ${new Date(review.date).getFullYear()}</span>
-                    </div>
-                </div>
-            `;
-            testimonialsContainer.appendChild(testimonialEl);
+        document.addEventListener('DOMContentLoaded', () => {
+                const testimonialsContainer = document.getElementById('testimonials-container');
+                let reviews = JSON.parse(localStorage.getItem('tecmave.reviews')) || [
+                    { name: 'María Rodríguez', rating: 5, comment: 'Excelente servicio! Repararon mi vehículo en tiempo récord y con una calidad impresionante. Definitivamente mi taller de confianza.', date: '2020-01-01' },
+                    { name: 'Carlos Méndez', rating: 5, comment: 'El diagnóstico computarizado detectó un problema que otros talleres no pudieron encontrar. Muy profesionales y transparentes.', date: '2021-01-01' },
+                    { name: 'Ana Fernández', rating: 5, comment: 'Servicio de grúa 24/7 me salvó en una emergencia. Rápidos, eficientes y con precios justos. Los recomiendo totalmente.', date: '2022-01-01' }
+                ];
+
+                function renderTestimonials() {
+                    testimonialsContainer.innerHTML = '';
+                    const latestReviews = reviews.slice(0, 3);
+                    latestReviews.forEach(review => {
+                    const testimonialEl = document.createElement('div');
+                    testimonialEl.className = 'testimonial-card';
+                    testimonialEl.innerHTML = `
+                        <div class="testimonial-content">
+                            <i class="fas fa-quote-left"></i>
+                                <p>${review.comment}</p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="author-info">
+                                    <h4>${review.name}</h4>
+                                    <span>Cliente desde ${new Date(review.date).getFullYear()}</span>
+                            </div>
+                        </div>
+                    `;
+                    testimonialsContainer.appendChild(testimonialEl);
+                    });
+                }
+
+                renderTestimonials();
             });
-        }
+    </script>
 
-        renderTestimonials();
-    });
-</script>
-
-  <script defer src="~/assets/js/translator.js"></script>
+    <script defer src="~/assets/js/translator.js"></script>
 </body>
 </html>

@@ -59,28 +59,27 @@
             <div class="subtle">Gestión</div>
             <nav class="nav">
                 @* Panel de cliente *@
-                @if (isCliente)
+                
+@if (isCliente)
                 {
-                    <a href="/"><i class="fa-solid fa-house"></i> Home</a>
-                    <a asp-page="/Servicios/Index"><i class="fa-solid fa-screwdriver-wrench"></i> Agendar Servicio </a>
-                    <a asp-page="/Vehiculos/Crear"><i class="fa-solid fa-car"></i>Mis Vehículos</a>
-                    <a asp-page="/Promociones/NuestrasPromociones"><i class="fa-solid fa-car"></i>Promociones</a>
-                    <div class="subtle">Panel</div>
-                    <nav class="nav">
-                        <a href="/Panel"><i class="fa-solid fa-gauge-high"></i> Panel</a>
-                    </nav>
+                    <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
+                    <a asp-page="/Home"><i class="fa-solid fa-house"></i> Home</a>
+                    <a asp-page="/Servicios/Index"><i class="fa-solid fa-screwdriver-wrench"></i> Agendar servicio</a>
+                    <a asp-page="/Vehiculos/Crear"><i class="fa-solid fa-car-side"></i> Mis vehículos</a>
+                    <a asp-page="/Promociones/NuestrasPromociones"><i class="fa-solid fa-tags"></i> Promociones</a>
+                    <a asp-page="/Colaboradores/MisMantenimientos"><i class="fa-solid fa-clipboard-list"></i> Mis mantenimientos</a>
                 }
 
-                @* Bloque de gestión solo visible para Admin *@
-
-                @if (isAdmin)
+                @* Bloque de gestión solo visible para Admin *@                @if (isAdmin)
                 {
                     <nav class="nav">
-                        <a asp-page="/Estadistica/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
+                        <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
+                        <a asp-page="/Home"><i class="fa-solid fa-house"></i> Home</a>
                         <a asp-page="/Usuarios/Index"><i class="fa-solid fa-user-group"></i> Usuarios</a>
                         <a asp-page="/Vehiculos/Index"><i class="fa-solid fa-car"></i> Vehículos</a>
                         <a asp-page="/Promociones/Index"><i class="fa-solid fa-car"></i> Promociones</a>
                         <a asp-page="/Mantenimientos/Index"><i class="fa-solid fa-user-group"></i> Mantenimientos</a>
+                        <a asp-page="/Colaboradores/MisMantenimientos"><i class="fa-solid fa-id-badge"></i> Mis mantenimientos</a>
                         <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
                         <a asp-page="/Factura/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Factura</a>
                         <a asp-page="/Planillas/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Planillas</a>
@@ -89,11 +88,23 @@
                 }
             </nav>
 
-            <div class="subtle">Cuenta</div>
-            <nav class="nav">
-                <a id="login-link" asp-page="/Login"><i class="fa-regular fa-circle-user"></i> Iniciar sesión</a>
-                <a id="logout-btn" asp-page="#"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
-            </nav>
+            
+<div class="subtle">Cuenta</div>
+<nav class="nav">
+    @if (SignInManager.IsSignedIn(User) && currentUser != null)
+    {
+        <a asp-page="/Usuarios/Editar" asp-route-id="@currentUser.Id">
+            <i class="fa-regular fa-circle-user"></i> Administrar perfil
+        </a>
+        <a id="logout-btn" asp-page="#"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
+    }
+    else
+    {
+        <a id="login-link" asp-page="/Account/Login">
+            <i class="fa-regular fa-circle-user"></i> Iniciar sesión
+        </a>
+    }
+</nav>
         </aside>
 
         <header class="topbar">
@@ -101,7 +112,7 @@
             <div id="site-header" class="brand2">
                 <img class="logo-xs" src="~/assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave"
                      style="width:20px;height:20px;border-radius:6px;margin-right:6px;" />
-                <span>@ViewData["Title"] | TECMAVE CR</span>
+                <span>@ViewData["Title"] | TECMAVE</span>
             </div>
             <div class="search">
                 <input type="search" placeholder="Buscar clientes, placas, servicios…" />
@@ -118,7 +129,25 @@
 
     </div>
 
+
+<!-- Modal global para mensajes bonitos -->
+<div id="appFeedbackModal" class="app-modal">
+    <div class="app-modal-dialog">
+        <div class="app-modal-icon" id="appModalIcon">
+            <i class="fa-solid fa-circle-info"></i>
+        </div>
+        <div class="app-modal-content">
+            <h4 class="app-modal-title" id="appModalTitle">Aviso</h4>
+            <p class="app-modal-message" id="appModalMessage"></p>
+            <div class="app-modal-footer">
+                <button type="button" id="appModalClose" class="btn primary">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <script src="~/js/dashboard.js"></script>
+    <script defer src="~/js/global-modal.js"></script>
     <script defer src="~/js/nav-active.js"></script>
     <script defer src="~/js/role-ui.js"></script>
     <script defer src="~/js/carousel-polish.js"></script>
@@ -176,95 +205,95 @@
         </div>
     </footer>
 
-    
-<script src="~/assets/js/dashboard.js"></script>
-<script src="~/assets/js/nav-active.js"></script>
-<script src="~/assets/js/global-features.js"></script>
-<script src="~/assets/js/footer-config.js"></script>
-<script src="~/assets/js/translator.js"></script>
 
-<script>
-    (function () {
+    <script src="~/assets/js/dashboard.js"></script>
+    <script src="~/assets/js/nav-active.js"></script>
+    <script src="~/assets/js/global-features.js"></script>
+    <script src="~/assets/js/footer-config.js"></script>
+    <script src="~/assets/js/translator.js"></script>
+
+    <script>
+        (function () {
+            document.addEventListener('DOMContentLoaded', function () {
+                try {
+                    var body = document.body;
+                    if (!body) return;
+                    var isAdmin = (body.getAttribute('data-is-admin') || 'false') === 'true';
+                    var isCliente = (body.getAttribute('data-is-cliente') || 'false') === 'true';
+                    var userName = body.getAttribute('data-user-name') || 'Usuario';
+                    var userId = body.getAttribute('data-user-id') || null;
+
+                    var role = 'anon';
+                    if (isAdmin) role = 'admin';
+                    else if (isCliente) role = 'cliente';
+
+                    var userObj = { id: userId, name: userName, role: role };
+                    if (window.localStorage) {
+                        localStorage.setItem('user', JSON.stringify(userObj));
+                    }
+                } catch (e) {
+                    console && console.warn && console.warn('No se pudo sincronizar el usuario para el chatbot', e);
+                }
+            });
+        })();
+    </script>
+    <script src="~/assets/js/chatbot.js"></script>
+
+
+    <script>
+        // Control del sidebar y overlay, independiente de otros scripts
         document.addEventListener('DOMContentLoaded', function () {
             try {
-                var body = document.body;
-                if (!body) return;
-                var isAdmin = (body.getAttribute('data-is-admin') || 'false') === 'true';
-                var isCliente = (body.getAttribute('data-is-cliente') || 'false') === 'true';
-                var userName = body.getAttribute('data-user-name') || 'Usuario';
-                var userId = body.getAttribute('data-user-id') || null;
+                var sidebar = document.querySelector('.sidebar');
+                if (!sidebar) return;
 
-                var role = 'anon';
-                if (isAdmin) role = 'admin';
-                else if (isCliente) role = 'cliente';
-
-                var userObj = { id: userId, name: userName, role: role };
-                if (window.localStorage) {
-                    localStorage.setItem('user', JSON.stringify(userObj));
+                var overlay = document.querySelector('.sidebar-overlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.className = 'sidebar-overlay';
+                    document.body.appendChild(overlay);
                 }
+
+                function setClosed() {
+                    sidebar.classList.remove('open');
+                    sidebar.style.transform = 'translateX(-100%)';
+                    sidebar.style.visibility = '';
+                    sidebar.style.opacity = '';
+                    overlay.classList.remove('active');
+                }
+
+                function setOpen() {
+                    sidebar.classList.add('open');
+                    sidebar.style.transform = 'translateX(0)';
+                    sidebar.style.visibility = 'visible';
+                    sidebar.style.opacity = '1';
+                    overlay.classList.add('active');
+                }
+
+                // Estado inicial: cerrado
+                setClosed();
+
+                document.addEventListener('click', function (ev) {
+                    var toggleBtn = ev.target.closest('[data-toggle-sidebar]');
+                    if (toggleBtn) {
+                        ev.preventDefault();
+                        var isOpen = sidebar.classList.contains('open');
+                        if (isOpen) setClosed(); else setOpen();
+                    }
+                });
+
+                overlay.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    setClosed();
+                });
             } catch (e) {
-                console && console.warn && console.warn('No se pudo sincronizar el usuario para el chatbot', e);
+                console && console.error && console.error('Error inicializando sidebar:', e);
             }
         });
-    })();
-</script>
-<script src="~/assets/js/chatbot.js"></script>
+    </script>
 
 
-<script>
-// Control del sidebar y overlay, independiente de otros scripts
-document.addEventListener('DOMContentLoaded', function () {
-    try {
-        var sidebar = document.querySelector('.sidebar');
-        if (!sidebar) return;
-
-        var overlay = document.querySelector('.sidebar-overlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.className = 'sidebar-overlay';
-            document.body.appendChild(overlay);
-        }
-
-        function setClosed() {
-            sidebar.classList.remove('open');
-            sidebar.style.transform = 'translateX(-100%)';
-            sidebar.style.visibility = '';
-            sidebar.style.opacity = '';
-            overlay.classList.remove('active');
-        }
-
-        function setOpen() {
-            sidebar.classList.add('open');
-            sidebar.style.transform = 'translateX(0)';
-            sidebar.style.visibility = 'visible';
-            sidebar.style.opacity = '1';
-            overlay.classList.add('active');
-        }
-
-        // Estado inicial: cerrado
-        setClosed();
-
-        document.addEventListener('click', function (ev) {
-            var toggleBtn = ev.target.closest('[data-toggle-sidebar]');
-            if (toggleBtn) {
-                ev.preventDefault();
-                var isOpen = sidebar.classList.contains('open');
-                if (isOpen) setClosed(); else setOpen();
-            }
-        });
-
-        overlay.addEventListener('click', function (ev) {
-            ev.preventDefault();
-            setClosed();
-        });
-    } catch (e) {
-        console && console.error && console.error('Error inicializando sidebar:', e);
-    }
-});
-</script>
-
-
-@RenderSection("Scripts", required: false)
+    @RenderSection("Scripts", required: false)
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>

@@ -3,29 +3,7 @@
 @{
     ViewData["Title"] = "Planillas";
 }
-<style>
-    .btn-edit {
-    display: inline-block;
-    padding: 6px 12px;
-    background-color: #007bff; /* Azul */
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    text-decoration: none;
-    font-size: 14px;
-    font-family: inherit;
-    margin-right: 5px;
-    }
 
-    .btn-edit:hover {
-    background-color: #0069d9;
-    }
-
-    .btn-edit:active {
-    transform: scale(0.97);
-    }
-</style>
 
 <section class="section">
     <div class="container grid cols-2">
@@ -225,8 +203,8 @@
                         <td>${p.neto_pagar}</td>
                         <td>${p.estado}</td>
                         <td>
-                            <a href="/Planillas/Editar/${p.id}" class="btn-edit">Editar</a>
-                            <button class="danger" onclick="eliminarPlanilla(${p.id})">Eliminar</button>
+                            <a href="/Planillas/Editar/${p.id}" class="btn btn-secondary">Editar</a>
+                            <button class="btn primary" onclick="eliminarPlanilla(${p.id})">Eliminar</button>
                         </td>
                     </tr>
                 `);
@@ -252,6 +230,36 @@
 
     // ---------- Agregar planilla
     function agregarPlanilla() {
+
+    // Validación de periodo: máximo 1 día de diferencia
+    const inicioStr = $("#periodo_inicio").val();
+    const finStr = $("#periodo_fin").val();
+
+    if (!inicioStr || !finStr) {
+        alert("Debe indicar el periodo de inicio y fin.");
+        return;
+    }
+
+    const inicio = new Date(inicioStr);
+    const fin = new Date(finStr);
+
+    if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) {
+        alert("Fechas inválidas. Verifique el formato.");
+        return;
+    }
+
+    if (fin < inicio) {
+        alert("La fecha de fin no puede ser menor que la fecha de inicio.");
+        return;
+    }
+
+    const diffMs = fin.getTime() - inicio.getTime();
+    const maxDiff = 24 * 60 * 60 * 1000; 
+
+    if (diffMs < maxDiff) {
+        alert("El periodo debe de ser mayor a 1 día.");
+        return;
+    }
         const nuevo = {
             id: 0,
             colaborador_id: parseInt($("#colaborador_id").val()),
@@ -289,7 +297,7 @@
         if (!confirm("¿Eliminar planilla?")) return;
 
         $.ajax({
-            url: `${API_PLANILLA}?id=${id}`,
+            url: `${API_PLANILLA}/${id}`,
             method: "DELETE",
             success: function () {
                 alert("Planilla eliminada");
