@@ -24,24 +24,28 @@
                     <input class="input" id="apellido" type="text" />
                 </div>
             </div>
+
             <div class="form-row">
-    <div>
-        <label>Cédula</label>
-        <input class="input" id="cedula" type="text" />
-    </div>
-</div>
-           <div class="form-row">
-            <div>
-                <label>Dirección</label>
-                <input class="input" id="direccion" type="text" />
+                <div>
+                    <label>Cédula</label>
+                    <input class="input" id="cedula" type="text" />
+                </div>
             </div>
-           </div>
-           <div class="form-row">
-            <div>
-                <label>Teléfono</label>
-                <input class="input" id="telefono" type="text" />
+
+            <div class="form-row">
+                <div>
+                    <label>Dirección</label>
+                    <input class="input" id="direccion" type="text" />
+                </div>
             </div>
-           </div>
+
+            <div class="form-row">
+                <div>
+                    <label>Teléfono</label>
+                    <input class="input" id="telefono" type="text" />
+                </div>
+            </div>
+
             <div class="form-row">
                 <div>
                     <label>Email</label>
@@ -53,17 +57,8 @@
                 </div>
             </div>
 
-            <div class="form-row">
-                <div>
-                    <label>Rol</label>
-                    <select class="input" id="rol">
-                        <option value="">Seleccione Rol</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Colaborador">Colaborador</option>
-                        <option value="Gerente">Gerente</option>
-                    </select>
-                </div>
-            </div>
+            <!-- ROL OCULTO - SIEMPRE COLABORADOR -->
+            <input type="hidden" id="rol" value="Colaborador" />
 
             <hr />
 
@@ -95,7 +90,7 @@
                 <thead>
                     <tr>
                         <th>Usuario</th>
-                        <th>Cedula</th>
+                        <th>Cédula</th>
                         <th>Puesto</th>
                         <th>Salario</th>
                         <th>Fecha</th>
@@ -115,15 +110,21 @@
 
     let cacheUsuarios = {};
 
+    // ============================
+    //       CARGAR USUARIOS
+    // ============================
     function cargarUsuarios() {
         return $.get(API_USUARIOS, function (usuarios) {
             cacheUsuarios = {};
             usuarios.forEach(u => cacheUsuarios[u.id] = u);
-        }).fail(xhr => {
+        }).fail(() => {
             Swal.fire("Error", "No se pudieron cargar los usuarios", "error");
         });
     }
 
+    // ============================
+    //     CARGAR COLABORADORES
+    // ============================
     function cargarColaboradores() {
         $.get(API_COLABORADOR, function (data) {
 
@@ -135,7 +136,7 @@
                 $("table tbody").append(`
                     <tr>
                         <td>${u ? `${u.nombre} ${u.apellidos}` : "Desconocido"}</td>
-                        <td>${u ? u.phone_number : "N/A"}</td>
+                        <td>${u ? u.cedula : "N/A"}</td>
                         <td>${c.puesto}</td>
                         <td>${c.salario}</td>
                         <td>${c.fecha_contratacion}</td>
@@ -148,11 +149,14 @@
                 `);
             });
 
-        }).fail(xhr => {
+        }).fail(() => {
             Swal.fire("Error", "No se pudieron cargar los colaboradores", "error");
         });
     }
 
+    // ============================
+    //      ELIMINAR COLABORADOR
+    // ============================
     function eliminarColaborador(id) {
         Swal.fire({
             title: "¿Eliminar colaborador?",
@@ -169,15 +173,8 @@
                 url: `${API_COLABORADOR}/${id}`,
                 method: "DELETE",
                 success: () => {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Eliminado",
-                        text: "El colaborador fue eliminado",
-                        timer: 1800,
-                        showConfirmButton: false
-                    });
-
-                    cargarColaboradores();
+                    Swal.fire("Eliminado", "El colaborador fue eliminado", "success");
+                    cargarUsuarios().then(() => cargarColaboradores());
                 },
                 error: (xhr) => {
                     Swal.fire("Error", xhr.responseText, "error");
@@ -186,6 +183,9 @@
         });
     }
 
+    // ============================
+    //    AGREGAR USUARIO + COLAB
+    // ============================
     function agregarUsuarioColaborador() {
         const dto = {
             nombre: $("#nombre").val(),
@@ -195,10 +195,11 @@
             telefono: $("#telefono").val(),
             user_name: $("#UserName").val(),
             email: $("#email").val(),
-            rol: $("#rol").val(),
+            rol: $("#rol").val(),  // SIEMPRE "Colaborador"
+
             colaboradores: {
                 puesto: $("#puesto").val(),
-                salario: (function() {
+                salario: (function () {
                     const costoHora = parseFloat($("#salario").val());
                     if (isNaN(costoHora) || costoHora <= 0) return 0;
                     const hoy = new Date();
@@ -209,8 +210,6 @@
             }
         };
 
-        console.log("Enviando DTO:", dto);
-
         $.ajax({
             url: API_COLABORADOR,
             method: "POST",
@@ -218,38 +217,32 @@
             data: JSON.stringify(dto),
             success: () => {
 
-
                 limpiarFormulario();
-                cargarColaboradores();
+
+                // REFRESCAR USUARIOS Y LUEGO COLABORADORES
+                cargarUsuarios().then(() => cargarColaboradores());
             },
             error: (xhr) => {
-
-                console.error("Error:", xhr.responseText);
+                Swal.fire("Error", xhr.responseText, "error");
             }
         });
     }
 
+    // ============================
+    //     LIMPIAR FORMULARIO
+    // ============================
     function limpiarFormulario() {
-        $("#nombre").val("");
-        $("#apellido").val("");
-        $("#cedula").val("");
-        $("#direccion").val("");
-        $("#telefono").val("");
-        $("#UserName").val("");
-        $("#email").val("");
-        $("#rol").val("");
-        $("#puesto").val("");
-        $("#salario").val("");
-        $("#fecha_contratacion").val("");
+        $("#nombre, #apellido, #cedula, #direccion, #telefono, #UserName, #email, #puesto, #salario, #fecha_contratacion").val("");
+        $("#rol").val("Colaborador"); // Mantener valor por defecto
     }
 
     // ============================
-    //        DOCUMENT READY
+    //       DOCUMENT READY
     // ============================
     $(document).ready(function () {
+
         cargarUsuarios().then(() => cargarColaboradores());
 
-        $("#btnAgregarUsuarioColaborador")
-            .on("click", agregarUsuarioColaborador);
+        $("#btnAgregarUsuarioColaborador").on("click", agregarUsuarioColaborador);
     });
 </script>

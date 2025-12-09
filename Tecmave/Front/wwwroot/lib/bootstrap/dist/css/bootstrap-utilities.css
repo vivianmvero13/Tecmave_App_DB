@@ -176,7 +176,12 @@
   align-self: stretch;
 }
 
-.visually-hidden,
+.visually-
+
+
+
+
+,
 .visually-hidden-focusable:not(:focus):not(:focus-within) {
   position: absolute !important;
   width: 1px !important;

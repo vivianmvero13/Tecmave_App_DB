@@ -137,7 +137,8 @@ function initializeHoverEffects() {
             ripple.style.top = y + 'px';
 
             this.style.position = 'relative';
-            this.style.overflow = 'hidden';
+            this.style.overflow = '
+            ';
             this.appendChild(ripple);
 
             setTimeout(() => ripple.remove(), 600);

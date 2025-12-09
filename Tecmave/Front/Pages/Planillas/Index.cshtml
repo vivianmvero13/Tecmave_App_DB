@@ -254,10 +254,10 @@
     }
 
     const diffMs = fin.getTime() - inicio.getTime();
-    const maxDiff = 24 * 60 * 60 * 1000; // 1 día
+    const maxDiff = 24 * 60 * 60 * 1000; 
 
-    if (diffMs > maxDiff) {
-        alert("El periodo no puede ser mayor a 1 día.");
+    if (diffMs < maxDiff) {
+        alert("El periodo debe de ser mayor a 1 día.");
         return;
     }
         const nuevo = {
@@ -297,7 +297,7 @@
         if (!confirm("¿Eliminar planilla?")) return;
 
         $.ajax({
-            url: `${API_PLANILLA}?id=${id}`,
+            url: `${API_PLANILLA}/${id}`,
             method: "DELETE",
             success: function () {
                 alert("Planilla eliminada");
