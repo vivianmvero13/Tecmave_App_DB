@@ -109,6 +109,8 @@
     const API_USUARIOS = "https://tecmave-api.azurewebsites.net/api/usuarios";
 
     let cacheUsuarios = {};
+    let cacheColaboradores = [];
+    let colaboradorEnEdicion = null;
 
     // ============================
     //       CARGAR USUARIOS
@@ -126,13 +128,11 @@
     //     CARGAR COLABORADORES
     // ============================
     function cargarColaboradores() {
-        $.get(API_COLABORADOR, function (data) {
-
+        $.get(API_COLABORADOR, function(data) {
+            cacheColaboradores = data;
             $("table tbody").empty();
-
             data.forEach(c => {
                 const u = cacheUsuarios[c.id_usuario];
-
                 $("table tbody").append(`
                     <tr>
                         <td>${u ? `${u.nombre} ${u.apellidos}` : "Desconocido"}</td>
@@ -141,17 +141,13 @@
                         <td>${c.salario}</td>
                         <td>${c.fecha_contratacion}</td>
                         <td>
-                            <button class="danger" onclick="eliminarColaborador(${c.id_colaborador})">
-                                Eliminar
-                            </button>
+                            <button class="warning" onclick="editarColaborador(${c.id_colaborador})">Editar</button>
+                            <button class="danger" onclick="eliminarColaborador(${c.id_colaborador})">Eliminar</button>
                         </td>
                     </tr>
                 `);
             });
-
-        }).fail(() => {
-            Swal.fire("Error", "No se pudieron cargar los colaboradores", "error");
-        });
+        }).fail(() => Swal.fire("Error", "No se pudieron cargar los colaboradores", "error"));
     }
 
     // ============================
@@ -176,15 +172,35 @@
                     Swal.fire("Eliminado", "El colaborador fue eliminado", "success");
                     cargarUsuarios().then(() => cargarColaboradores());
                 },
-                error: (xhr) => {
-                    Swal.fire("Error", xhr.responseText, "error");
-                }
+                error: (xhr) => Swal.fire("Error", xhr.responseText, "error")
             });
         });
     }
 
     // ============================
-    //    AGREGAR USUARIO + COLAB
+    //       EDITAR COLABORADOR
+    // ============================
+    function editarColaborador(id) {
+        const colab = cacheColaboradores.find(c => c.id_colaborador === id);
+        const usuario = cacheUsuarios[colab.id_usuario];
+
+        $("#nombre").val(usuario.nombre);
+        $("#apellido").val(usuario.apellidos);
+        $("#cedula").val(usuario.cedula);
+        $("#direccion").val(usuario.direccion);
+        $("#telefono").val(usuario.telefono);
+        $("#UserName").val(usuario.user_name);
+        $("#email").val(usuario.email);
+        $("#puesto").val(colab.puesto);
+        $("#salario").val(colab.salario / (8 * new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()));
+        $("#fecha_contratacion").val(colab.fecha_contratacion);
+
+        $("#btnAgregarUsuarioColaborador").text("Actualizar Colaborador");
+        colaboradorEnEdicion = id;
+    }
+
+    // ============================
+    //    AGREGAR O ACTUALIZAR COLABORADOR
     // ============================
     function agregarUsuarioColaborador() {
         const dto = {
@@ -195,8 +211,7 @@
             telefono: $("#telefono").val(),
             user_name: $("#UserName").val(),
             email: $("#email").val(),
-            rol: $("#rol").val(),  // SIEMPRE "Colaborador"
-
+            rol: $("#rol").val(),
             colaboradores: {
                 puesto: $("#puesto").val(),
                 salario: (function () {
@@ -210,22 +225,37 @@
             }
         };
 
-        $.ajax({
-            url: API_COLABORADOR,
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(dto),
-            success: () => {
-
-                limpiarFormulario();
-
-                // REFRESCAR USUARIOS Y LUEGO COLABORADORES
-                cargarUsuarios().then(() => cargarColaboradores());
-            },
-            error: (xhr) => {
-                Swal.fire("Error", xhr.responseText, "error");
-            }
-        });
+        if (colaboradorEnEdicion) {
+            // ACTUALIZAR
+            $.ajax({
+                url: `${API_COLABORADOR}/${colaboradorEnEdicion}`,
+                method: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(dto),
+                success: () => {
+                    Swal.fire("Actualizado", "Colaborador actualizado correctamente", "success");
+                    limpiarFormulario();
+                    colaboradorEnEdicion = null;
+                    $("#btnAgregarUsuarioColaborador").text("Crear Usuario y Colaborador");
+                    cargarUsuarios().then(() => cargarColaboradores());
+                },
+                error: (xhr) => Swal.fire("Error", xhr.responseText, "error")
+            });
+        } else {
+            // CREAR
+            $.ajax({
+                url: API_COLABORADOR,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(dto),
+                success: () => {
+                    Swal.fire("Éxito", "Colaborador creado correctamente", "success");
+                    limpiarFormulario();
+                    cargarUsuarios().then(() => cargarColaboradores());
+                },
+                error: (xhr) => Swal.fire("Error", xhr.responseText, "error")
+            });
+        }
     }
 
     // ============================
@@ -233,16 +263,14 @@
     // ============================
     function limpiarFormulario() {
         $("#nombre, #apellido, #cedula, #direccion, #telefono, #UserName, #email, #puesto, #salario, #fecha_contratacion").val("");
-        $("#rol").val("Colaborador"); // Mantener valor por defecto
+        $("#rol").val("Colaborador");
     }
 
     // ============================
     //       DOCUMENT READY
     // ============================
     $(document).ready(function () {
-
         cargarUsuarios().then(() => cargarColaboradores());
-
         $("#btnAgregarUsuarioColaborador").on("click", agregarUsuarioColaborador);
     });
 </script>
