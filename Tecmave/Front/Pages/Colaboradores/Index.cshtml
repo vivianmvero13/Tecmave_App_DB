@@ -109,7 +109,6 @@
     const API_USUARIOS = "https://tecmave-api.azurewebsites.net/api/usuarios";
 
     let cacheUsuarios = {};
-    let cacheColaboradores = [];
     let colaboradorEnEdicion = null;
 
     // ============================
@@ -120,7 +119,12 @@
             cacheUsuarios = {};
             usuarios.forEach(u => cacheUsuarios[u.id] = u);
         }).fail(() => {
-            Swal.fire("Error", "No se pudieron cargar los usuarios", "error");
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "No se pudieron cargar los usuarios",
+                confirmButtonText: "OK"
+            });
         });
     }
 
@@ -128,8 +132,7 @@
     //     CARGAR COLABORADORES
     // ============================
     function cargarColaboradores() {
-        $.get(API_COLABORADOR, function(data) {
-            cacheColaboradores = data;
+        $.get(API_COLABORADOR, function (data) {
             $("table tbody").empty();
             data.forEach(c => {
                 const u = cacheUsuarios[c.id_usuario];
@@ -147,7 +150,14 @@
                     </tr>
                 `);
             });
-        }).fail(() => Swal.fire("Error", "No se pudieron cargar los colaboradores", "error"));
+        }).fail(() => {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "No se pudieron cargar los colaboradores",
+                confirmButtonText: "OK"
+            });
+        });
     }
 
     // ============================
@@ -158,52 +168,43 @@
             title: "¿Eliminar colaborador?",
             text: "Esta acción no se puede revertir.",
             icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Sí, eliminar",
+            confirmButtonText: "Sí",
             cancelButtonText: "Cancelar",
-            confirmButtonColor: "#d33"
+            reverseButtons: true
         }).then(result => {
-            if (!result.isConfirmed) return;
-
-            $.ajax({
-                url: `${API_COLABORADOR}/${id}`,
-                method: "DELETE",
-                success: () => {
-                    Swal.fire("Eliminado", "El colaborador fue eliminado", "success");
-                    cargarUsuarios().then(() => cargarColaboradores());
-                },
-                error: (xhr) => Swal.fire("Error", xhr.responseText, "error")
-            });
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `${API_COLABORADOR}/${id}`,
+                    method: "DELETE",
+                    success: () => {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Eliminado",
+                            text: "Colaborador eliminado correctamente",
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        cargarUsuarios().then(() => cargarColaboradores());
+                    },
+                    error: (xhr) => {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: xhr.responseText,
+                            confirmButtonText: "OK"
+                        });
+                    }
+                });
+            }
         });
-    }
-
-    // ============================
-    //       EDITAR COLABORADOR
-    // ============================
-    function editarColaborador(id) {
-        const colab = cacheColaboradores.find(c => c.id_colaborador === id);
-        const usuario = cacheUsuarios[colab.id_usuario];
-
-        $("#nombre").val(usuario.nombre);
-        $("#apellido").val(usuario.apellidos);
-        $("#cedula").val(usuario.cedula);
-        $("#direccion").val(usuario.direccion);
-        $("#telefono").val(usuario.telefono);
-        $("#UserName").val(usuario.user_name);
-        $("#email").val(usuario.email);
-        $("#puesto").val(colab.puesto);
-        $("#salario").val(colab.salario / (8 * new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()));
-        $("#fecha_contratacion").val(colab.fecha_contratacion);
-
-        $("#btnAgregarUsuarioColaborador").text("Actualizar Colaborador");
-        colaboradorEnEdicion = id;
     }
 
     // ============================
     //    AGREGAR O ACTUALIZAR COLABORADOR
     // ============================
-    function agregarUsuarioColaborador() {
+    function guardarColaborador() {
         const dto = {
+            id_usuario: colaboradorEnEdicion ? colaboradorEnEdicion.id_usuario : undefined,
             nombre: $("#nombre").val(),
             apellido: $("#apellido").val(),
             cedula: $("#cedula").val(),
@@ -214,13 +215,7 @@
             rol: $("#rol").val(),
             colaboradores: {
                 puesto: $("#puesto").val(),
-                salario: (function () {
-                    const costoHora = parseFloat($("#salario").val());
-                    if (isNaN(costoHora) || costoHora <= 0) return 0;
-                    const hoy = new Date();
-                    const diasMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
-                    return costoHora * 8 * diasMes;
-                })(),
+                salario: parseFloat($("#salario").val()) * 8 * new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate(),
                 fecha_contratacion: $("#fecha_contratacion").val()
             }
         };
@@ -228,34 +223,93 @@
         if (colaboradorEnEdicion) {
             // ACTUALIZAR
             $.ajax({
-                url: `${API_COLABORADOR}/${colaboradorEnEdicion}`,
+                url: `${API_COLABORADOR}/${colaboradorEnEdicion.id_colaborador}`,
                 method: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(dto),
                 success: () => {
-                    Swal.fire("Actualizado", "Colaborador actualizado correctamente", "success");
+                    Swal.fire({
+                        icon: "success",
+                        title: "Actualizado",
+                        text: "Colaborador actualizado correctamente",
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
                     limpiarFormulario();
-                    colaboradorEnEdicion = null;
                     $("#btnAgregarUsuarioColaborador").text("Crear Usuario y Colaborador");
+                    colaboradorEnEdicion = null;
                     cargarUsuarios().then(() => cargarColaboradores());
                 },
-                error: (xhr) => Swal.fire("Error", xhr.responseText, "error")
+                error: (xhr) => {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: xhr.responseText,
+                        confirmButtonText: "OK"
+                    });
+                }
             });
         } else {
-            // CREAR
+            // AGREGAR
             $.ajax({
                 url: API_COLABORADOR,
                 method: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(dto),
                 success: () => {
-                    Swal.fire("Éxito", "Colaborador creado correctamente", "success");
+                    Swal.fire({
+                        icon: "success",
+                        title: "Éxito",
+                        text: "Colaborador creado correctamente",
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
                     limpiarFormulario();
                     cargarUsuarios().then(() => cargarColaboradores());
                 },
-                error: (xhr) => Swal.fire("Error", xhr.responseText, "error")
+                error: (xhr) => {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: xhr.responseText,
+                        confirmButtonText: "OK"
+                    });
+                }
             });
         }
+    }
+
+    // ============================
+    //       EDITAR COLABORADOR
+    // ============================
+    function editarColaborador(id) {
+        $.get(`${API_COLABORADOR}/${id}`, function(c) {
+            const u = cacheUsuarios[c.id_usuario];
+            $("#nombre").val(u.nombre);
+            $("#apellido").val(u.apellidos);
+            $("#cedula").val(u.cedula);
+            $("#direccion").val(u.direccion);
+            $("#telefono").val(u.telefono);
+            $("#UserName").val(u.user_name);
+            $("#email").val(u.email);
+            $("#puesto").val(c.puesto);
+            $("#salario").val(c.salario / (8 * new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate()));
+            $("#fecha_contratacion").val(c.fecha_contratacion);
+
+            colaboradorEnEdicion = {
+                id_colaborador: c.id_colaborador,
+                id_usuario: c.id_usuario
+            };
+
+            $("#btnAgregarUsuarioColaborador").text("Actualizar Colaborador");
+        }).fail(() => {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "No se pudo cargar el colaborador para editar",
+                confirmButtonText: "OK"
+            });
+        });
     }
 
     // ============================
@@ -264,6 +318,8 @@
     function limpiarFormulario() {
         $("#nombre, #apellido, #cedula, #direccion, #telefono, #UserName, #email, #puesto, #salario, #fecha_contratacion").val("");
         $("#rol").val("Colaborador");
+        colaboradorEnEdicion = null;
+        $("#btnAgregarUsuarioColaborador").text("Crear Usuario y Colaborador");
     }
 
     // ============================
@@ -271,6 +327,6 @@
     // ============================
     $(document).ready(function () {
         cargarUsuarios().then(() => cargarColaboradores());
-        $("#btnAgregarUsuarioColaborador").on("click", agregarUsuarioColaborador);
+        $("#btnAgregarUsuarioColaborador").on("click", guardarColaborador);
     });
 </script>
