@@ -4,13 +4,11 @@
     ViewData["Title"] = "Gestión de Colaboradores";
 }
 
-<!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <section class="section">
     <div class="container grid cols-2">
 
-        <!-- Formulario de nuevo colaborador + usuario -->
         <div class="card">
             <h3>Colaboradores</h3>
 
@@ -57,7 +55,6 @@
                 </div>
             </div>
 
-            <!-- ROL OCULTO - SIEMPRE COLABORADOR -->
             <input type="hidden" id="rol" value="Colaborador" />
 
             <hr />
@@ -83,7 +80,6 @@
             <button id="btnAgregarUsuarioColaborador">Crear Usuario y Colaborador</button>
         </div>
 
-        <!-- Tabla de colaboradores -->
         <div class="card">
             <h3>Lista de Colaboradores</h3>
             <table class="table">
@@ -112,7 +108,7 @@
     let colaboradorEnEdicion = null;
 
     // ============================
-    //       CARGAR USUARIOS
+    //      CARGAR USUARIOS
     // ============================
     function cargarUsuarios() {
         return $.get(API_USUARIOS, function (usuarios) {
@@ -161,16 +157,18 @@
     }
 
     // ============================
-    //      ELIMINAR COLABORADOR
+    //      ELIMINAR COLABORADOR (AJUSTADO: SÍ y CANCELAR)
     // ============================
     function eliminarColaborador(id) {
         Swal.fire({
             title: "¿Eliminar colaborador?",
             text: "Esta acción no se puede revertir.",
             icon: "warning",
+            // Ajuste para tener solo "Sí" y "Cancelar"
             confirmButtonText: "Sí",
             cancelButtonText: "Cancelar",
-            reverseButtons: true
+            showCancelButton: true, // Asegura que el botón de cancelar sea visible
+            reverseButtons: true // Opcional: invierte el orden de los botones (Cancelar, Sí)
         }).then(result => {
             if (result.isConfirmed) {
                 $.ajax({
@@ -200,7 +198,7 @@
     }
 
     // ============================
-    //    AGREGAR O ACTUALIZAR COLABORADOR
+    //  AGREGAR O ACTUALIZAR COLABORADOR
     // ============================
     function guardarColaborador() {
         const dto = {
@@ -215,6 +213,7 @@
             rol: $("#rol").val(),
             colaboradores: {
                 puesto: $("#puesto").val(),
+                // Cálculo del salario mensual a partir del costo por hora
                 salario: parseFloat($("#salario").val()) * 8 * new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate(),
                 fecha_contratacion: $("#fecha_contratacion").val()
             }
@@ -280,7 +279,7 @@
     }
 
     // ============================
-    //       EDITAR COLABORADOR
+    //      EDITAR COLABORADOR
     // ============================
     function editarColaborador(id) {
         $.get(`${API_COLABORADOR}/${id}`, function(c) {
@@ -293,7 +292,10 @@
             $("#UserName").val(u.user_name);
             $("#email").val(u.email);
             $("#puesto").val(c.puesto);
+
+            // Revertir el cálculo del salario mensual a costo por hora
             $("#salario").val(c.salario / (8 * new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate()));
+
             $("#fecha_contratacion").val(c.fecha_contratacion);
 
             colaboradorEnEdicion = {
@@ -313,7 +315,7 @@
     }
 
     // ============================
-    //     LIMPIAR FORMULARIO
+    //      LIMPIAR FORMULARIO
     // ============================
     function limpiarFormulario() {
         $("#nombre, #apellido, #cedula, #direccion, #telefono, #UserName, #email, #puesto, #salario, #fecha_contratacion").val("");
@@ -323,7 +325,7 @@
     }
 
     // ============================
-    //       DOCUMENT READY
+    //      DOCUMENT READY
     // ============================
     $(document).ready(function () {
         cargarUsuarios().then(() => cargarColaboradores());
