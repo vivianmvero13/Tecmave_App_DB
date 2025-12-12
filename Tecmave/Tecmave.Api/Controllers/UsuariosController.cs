@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tecmave.Api.Services;
 
@@ -14,7 +13,9 @@ namespace Tecmave.Api.Controllers
         private readonly UserAdminService _svc;
         public UsuariosController(UserAdminService svc) => _svc = svc;
 
-        // DTOs salida: no exponer campos sensibles
+        // -----------------------
+        // DTOs salida
+        // -----------------------
         public record UsuarioItemDto(
             int Id,
             string? Nombre,
@@ -22,24 +23,42 @@ namespace Tecmave.Api.Controllers
             string UserName,
             string? Email,
             string? PhoneNumber,
-            int Estado);
+            string Cedula,
+            int Estado
+        );
 
+        // -----------------------
         // DTOs entrada
+        // -----------------------
         public record CreateUserDto(
             [Required, StringLength(50)] string nombre,
             [Required, StringLength(50)] string apellidos,
             [Required, StringLength(256)] string UserName,
             [Required, EmailAddress] string Email,
             [Required, MinLength(6)] string Password,
-            string? PhoneNumber);
+            string? PhoneNumber,
+            string? Cedula
+        );
 
-        public record UpdateUserDto(string? nombre, string? apellidos, string? UserName, string? Email, string? PhoneNumber);
+        public record UpdateUserDto(
+            string? nombre,
+            string? apellidos,
+            string? UserName,
+            string? Email,
+            string? PhoneNumber,
+            string? Cedula
+        );
+
         public record AssignRoleDto([Required] string RoleName, bool ForceReplace = false);
 
+        // -----------------------
+        // GET: api/usuarios
+        // -----------------------
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UsuarioItemDto>>> List()
         {
             var users = await _svc.ListAsync();
+
             var data = users.Select(u => new UsuarioItemDto(
                 u.Id,
                 u.Nombre,
@@ -47,16 +66,22 @@ namespace Tecmave.Api.Controllers
                 u.UserName!,
                 u.Email,
                 u.PhoneNumber,
+                u.Cedula ?? string.Empty,
                 u.Estado
             ));
+
             return Ok(data);
         }
 
+        // -----------------------
+        // GET: api/usuarios/{id}
+        // -----------------------
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Get(int id)
         {
             var u = await _svc.GetByIdAsync(id);
             if (u is null) return NotFound();
+
             return Ok(new UsuarioItemDto(
                 u.Id,
                 u.Nombre,
@@ -64,16 +89,31 @@ namespace Tecmave.Api.Controllers
                 u.UserName!,
                 u.Email,
                 u.PhoneNumber,
+                u.Cedula ?? string.Empty,
                 u.Estado
             ));
         }
 
+        // -----------------------
+        // POST: api/usuarios
+        // -----------------------
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
         {
             if (!ModelState.IsValid) return ValidationProblem(ModelState);
-            var (res, user) = await _svc.CreateAsync(dto.nombre, dto.apellidos, dto.UserName, dto.Email, dto.Password, dto.PhoneNumber);
+
+            var (res, user) = await _svc.CreateAsync(
+                dto.nombre,
+                dto.apellidos,
+                dto.UserName,
+                dto.Email,
+                dto.Password,
+                dto.PhoneNumber,
+                dto.Cedula
+            );
+
             if (!res.Succeeded) return BadRequest(res.Errors);
+
             var outDto = new UsuarioItemDto(
                 user!.Id,
                 user.Nombre,
@@ -81,19 +121,42 @@ namespace Tecmave.Api.Controllers
                 user.UserName!,
                 user.Email,
                 user.PhoneNumber,
+                user.Cedula ?? string.Empty,
                 user.Estado
             );
-            return CreatedAtAction(nameof(Get), new { id = user!.Id }, outDto);
+
+            return CreatedAtAction(nameof(Get), new { id = user.Id }, outDto);
         }
 
+        // -----------------------
+        // PUT: api/usuarios/{id}
+        // -----------------------
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto dto)
         {
             if (!ModelState.IsValid) return ValidationProblem(ModelState);
-            var res = await _svc.UpdateAsync(id, dto.nombre, dto.apellidos, dto.UserName, dto.Email, dto.PhoneNumber);
+
+            // Si tu service aún no actualiza cédula, podés:
+            // 1) agregar lógica en el service UpdateAsync
+            // 2) o dejarlo así y solo exponerlo para más adelante
+            var res = await _svc.UpdateAsync(
+                id,
+                dto.nombre,
+                dto.apellidos,
+                dto.UserName,
+                dto.Email,
+                dto.PhoneNumber
+            );
+
+            // Nota: aquí NO se actualiza Cedula todavía porque tu UpdateAsync no la recibe.
+            // Si querés que se actualice, te paso el cambio del service también.
+
             return res.Succeeded ? NoContent() : BadRequest(res.Errors);
         }
 
+        // -----------------------
+        // DELETE: api/usuarios/{id}
+        // -----------------------
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -101,6 +164,9 @@ namespace Tecmave.Api.Controllers
             return res.Succeeded ? NoContent() : BadRequest(res.Errors);
         }
 
+        // -----------------------
+        // ROLES
+        // -----------------------
         [HttpGet("{id:int}/roles")]
         public async Task<IActionResult> GetRoles(int id) => Ok(await _svc.GetRolesAsync(id));
 
@@ -123,12 +189,21 @@ namespace Tecmave.Api.Controllers
             var adminName = User.Identity?.Name;
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
 
-            var (res, previous) = await _svc.SetSingleRoleAsync(id, dto.RoleName, dto.ForceReplace, adminId, adminName, ip);
+            var (res, previous) = await _svc.SetSingleRoleAsync(
+                id,
+                dto.RoleName,
+                dto.ForceReplace,
+                adminId,
+                adminName,
+                ip
+            );
+
             if (!res.Succeeded)
             {
                 var err = res.Errors.FirstOrDefault();
                 var code = err?.Code ?? "Error";
                 var msg = err?.Description ?? "Error";
+
                 return code switch
                 {
                     "UserNotFound" => NotFound(new { code, message = msg }),
@@ -138,6 +213,7 @@ namespace Tecmave.Api.Controllers
                     _ => BadRequest(new { code, message = msg })
                 };
             }
+
             return Ok(new { previous, current = dto.RoleName });
         }
 
