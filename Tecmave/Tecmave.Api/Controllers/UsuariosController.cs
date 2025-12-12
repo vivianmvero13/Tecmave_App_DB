@@ -52,7 +52,7 @@ namespace Tecmave.Api.Controllers
         public record AssignRoleDto([Required] string RoleName, bool ForceReplace = false);
 
         // -----------------------
-        // GET: api/usuarios
+        // GET: api/usuarios (SOLO ACTIVOS)
         // -----------------------
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UsuarioItemDto>>> List()
@@ -74,13 +74,13 @@ namespace Tecmave.Api.Controllers
         }
 
         // -----------------------
-        // GET: api/usuarios/{id}
+        // GET: api/usuarios/{id} (solo activo; si está inactivo => 404)
         // -----------------------
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Get(int id)
         {
             var u = await _svc.GetByIdAsync(id);
-            if (u is null) return NotFound();
+            if (u is null) return NotFound(new { message = "Usuario no encontrado" });
 
             return Ok(new UsuarioItemDto(
                 u.Id,
@@ -112,7 +112,7 @@ namespace Tecmave.Api.Controllers
                 dto.Cedula
             );
 
-            if (!res.Succeeded) return BadRequest(res.Errors);
+            if (!res.Succeeded) return BadRequest(new { message = "No se pudo crear el usuario", errors = res.Errors });
 
             var outDto = new UsuarioItemDto(
                 user!.Id,
@@ -136,9 +136,6 @@ namespace Tecmave.Api.Controllers
         {
             if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-            // Si tu service aún no actualiza cédula, podés:
-            // 1) agregar lógica en el service UpdateAsync
-            // 2) o dejarlo así y solo exponerlo para más adelante
             var res = await _svc.UpdateAsync(
                 id,
                 dto.nombre,
@@ -148,20 +145,25 @@ namespace Tecmave.Api.Controllers
                 dto.PhoneNumber
             );
 
-            // Nota: aquí NO se actualiza Cedula todavía porque tu UpdateAsync no la recibe.
-            // Si querés que se actualice, te paso el cambio del service también.
+            if (res.Succeeded) return NoContent();
 
-            return res.Succeeded ? NoContent() : BadRequest(res.Errors);
+            var first = res.Errors.FirstOrDefault();
+            var msg = first?.Description ?? "No se pudo actualizar";
+            return BadRequest(new { code = first?.Code, message = msg, errors = res.Errors });
         }
 
         // -----------------------
-        // DELETE: api/usuarios/{id}
+        // DELETE: api/usuarios/{id}  => SOFT DELETE (Estado=2)
         // -----------------------
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             var res = await _svc.DeleteAsync(id);
-            return res.Succeeded ? NoContent() : BadRequest(res.Errors);
+            if (res.Succeeded) return NoContent();
+
+            var first = res.Errors.FirstOrDefault();
+            var msg = first?.Description ?? "No se pudo desactivar el usuario";
+            return BadRequest(new { code = first?.Code, message = msg, errors = res.Errors });
         }
 
         // -----------------------
@@ -207,6 +209,7 @@ namespace Tecmave.Api.Controllers
                 return code switch
                 {
                     "UserNotFound" => NotFound(new { code, message = msg }),
+                    "UserInactive" => BadRequest(new { code, message = msg }),
                     "RoleNotFound" => NotFound(new { code, message = msg }),
                     "RoleInactive" => BadRequest(new { code, message = msg }),
                     "RoleConflict" => Conflict(new { code, message = msg, previous }),
@@ -226,7 +229,11 @@ namespace Tecmave.Api.Controllers
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
 
             var res = await _svc.RemoveAllRolesAsync(id, adminId, adminName, ip);
-            return res.Succeeded ? Ok(new { role = (string?)null }) : BadRequest(res.Errors);
+            if (res.Succeeded) return Ok(new { role = (string?)null });
+
+            var first = res.Errors.FirstOrDefault();
+            var msg = first?.Description ?? "No se pudo eliminar roles";
+            return BadRequest(new { code = first?.Code, message = msg, errors = res.Errors });
         }
     }
 }

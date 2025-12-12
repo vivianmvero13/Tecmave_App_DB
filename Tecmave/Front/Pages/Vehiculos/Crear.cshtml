@@ -68,6 +68,7 @@
                 </tbody>
             </table>
         </div>
+
         <div class="mt-4 d-flex gap-2">
             <button id="guardarBtn" class="btn btn-orange" type="button">Guardar</button>
             @if (!esCliente)
@@ -78,21 +79,118 @@
     </div>
 </section>
 
-<!-- Modal reutilizable -->
-<div id="appModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
-    <div class="modal-backdrop" data-close="1"></div>
-    <div class="modal-dialog" role="document">
-        <button class="modal-close" type="button" aria-label="Cerrar" data-close="1">×</button>
-        <div class="modal-icon" id="modalIcon">✓</div>
-        <h3 id="modalTitle">Título</h3>
-        <p id="modalBody">Mensaje…</p>
-        <div class="modal-actions">
-            <button id="modalPrimary" class="btn btn-orange" type="button" data-close="1">Aceptar</button>
+<!-- Modal estilo SweetAlert2 (misma estética) -->
+<div id="appModal" class="swal2-container" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
+    <div class="swal2-backdrop" data-close="1"></div>
+    <div class="swal2-popup" role="document" tabindex="-1">
+        <button class="swal2-close" type="button" aria-label="Cerrar" data-close="1">×</button>
+        <div class="swal2-icon" id="modalIconWrap" aria-hidden="true">
+            <span class="swal2-icon-content" id="modalIcon">!</span>
+        </div>
+        <h2 class="swal2-title" id="modalTitle">Título</h2>
+        <div class="swal2-html-container" id="modalBody">Mensaje…</div>
+        <div class="swal2-actions">
+            <button id="modalConfirm" class="btn btn-orange" type="button">Aceptar</button>
+            <button id="modalCancel" class="btn btn-secondary" type="button" data-close="1" style="display:none">Cancelar</button>
         </div>
     </div>
 </div>
 
 <style>
+    /* Modal estilo SweetAlert2 */
+    .swal2-container {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+    }
+
+        .swal2-container.show {
+            display: block;
+        }
+
+    .swal2-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, .45);
+    }
+
+    .swal2-popup {
+        position: relative;
+    }
+
+    .swal2-close {
+        position: absolute !important;
+        top: 12px !important;
+        right: 14px !important;
+        left: auto !important;
+        bottom: auto !important;
+        justify-self: end;
+        align-self: start;
+    }
+
+    .swal2-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        margin: 6px 0 10px;
+        border: 4px solid transparent;
+    }
+
+    .swal2-icon-content {
+        font-size: 42px;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .swal2-title {
+        margin: 6px 0 8px;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .swal2-html-container {
+        margin: 0;
+        font-size: 1rem;
+        color: #4b5563;
+    }
+
+    .swal2-actions {
+        margin-top: 18px;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* Variantes (icon + borde como swal2) */
+    .swal2-icon.warn {
+        background: #fff4e5;
+        border-color: #f8bb86;
+        color: #a15c00;
+    }
+
+    .swal2-icon.ok {
+        background: #e7f6ec;
+        border-color: #a5dc86;
+        color: #2e7d32;
+    }
+
+    .swal2-icon.error {
+        background: #fdecea;
+        border-color: #f27474;
+        color: #b3261e;
+    }
+
+    .swal2-icon.info {
+        background: #e7f1ff;
+        border-color: #9dc1ff;
+        color: #0b57d0;
+    }
+
     .btn-orange {
         background: #ff8c00 !important;
         border: 1px solid #ff8c00 !important;
@@ -102,7 +200,7 @@
     }
 
         .btn-orange:hover {
-            background: #e67e00 !important
+            background: #e67e00 !important;
         }
 
     .btn-red {
@@ -114,7 +212,7 @@
     }
 
         .btn-red:hover {
-            background: #b92b3a !important
+            background: #b92b3a !important;
         }
 
     .btn-outline-primary.btn-sm {
@@ -162,65 +260,6 @@
             padding: .5rem;
             border-bottom: 1px solid #eee
         }
-
-    /* Modal */
-    .modal {
-        position: fixed;
-        inset: 0;
-        z-index: 1000;
-        display: none
-    }
-
-        .modal.show {
-            display: block
-        }
-
-    .modal-backdrop {
-        position: absolute;
-        inset: 0;
-        background: rgba(0,0,0,.45)
-    }
-
-    .modal-dialog {
-        position: relative;
-        max-width: 480px;
-        margin: 8vh auto 0;
-        background: #fff;
-        border-radius: .75rem;
-        padding: 1.25rem;
-        box-shadow: 0 10px 35px rgba(0,0,0,.25)
-    }
-
-    .modal-close {
-        position: absolute;
-        right: .5rem;
-        top: .5rem;
-        border: 0;
-        background: transparent;
-        font-size: 1.5rem;
-        line-height: 1;
-        cursor: pointer;
-        color: #888
-    }
-
-    .modal-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 999px;
-        margin: .25rem 0 .5rem;
-        display: grid;
-        place-content: center;
-        background: #e7f6ec;
-        color: #2e7d32;
-        font-weight: 700
-    }
-
-    .modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: .5rem;
-        margin-top: 1rem
-    }
 </style>
 
 <script>
@@ -252,53 +291,85 @@
       return p.get(name);
     }
 
-    /* =================== Modal helpers =================== */
+    /* =================== Modal helpers (CORREGIDO) =================== */
     const Modal = (() => {
-      const root   = document.getElementById('appModal');
-      const title  = document.getElementById('modalTitle');
-      const body   = document.getElementById('modalBody');
-      const icon   = document.getElementById('modalIcon');
-      let onClose  = null;
+      const root = document.getElementById('appModal');
+      const title = document.getElementById('modalTitle');
+      const body = document.getElementById('modalBody');
+      const icon = document.getElementById('modalIcon');
+      const iconWrap = document.getElementById('modalIconWrap');
+      const btnConfirm = document.getElementById('modalConfirm');
+      const btnCancel = document.getElementById('modalCancel');
+
+      let onConfirm = null;
+      let onClose = null;
 
       function setKind(kind){
-        // kind: 'ok' | 'warn' | 'error' | 'info'
+        iconWrap.classList.remove('warn','ok','error','info');
         const map = {
-          ok:   { bg:'#e7f6ec', color:'#2e7d32', text:'✓' },
-          warn: { bg:'#fff4e5', color:'#a15c00', text:'!' },
-          error:{ bg:'#fdecea', color:'#b3261e', text:'!' },
-          info: { bg:'#e7f1ff', color:'#0b57d0', text:'ℹ' }
+          ok:   { cls:'ok',   text:'✓' },
+          warn: { cls:'warn', text:'!' },
+          error:{ cls:'error',text:'!' },
+          info: { cls:'info', text:'ℹ' }
         };
         const k = map[kind] || map.info;
-        icon.style.background = k.bg;
-        icon.style.color = k.color;
+        iconWrap.classList.add(k.cls);
         icon.textContent = k.text;
       }
 
-      function show({ titleText = 'Información', bodyText = '', autoFocus = true, onCloseCb = null, kind = 'ok' }) {
+      function show({ titleText='Información', bodyText='', kind='info', confirmText='Aceptar', cancelText=null, onConfirmCb=null, onCloseCb=null }){
         setKind(kind);
         title.textContent = titleText;
-        body.textContent  = bodyText;
-        onClose = typeof onCloseCb === 'function' ? onCloseCb : null;
+        body.textContent = bodyText;
+
+        btnConfirm.textContent = confirmText;
+
+        if(cancelText){
+          btnCancel.style.display = 'inline-block';
+          btnCancel.textContent = cancelText;
+        }else{
+          btnCancel.style.display = 'none';
+        }
+
+        onConfirm = (typeof onConfirmCb === 'function') ? onConfirmCb : null;
+        onClose   = (typeof onCloseCb === 'function') ? onCloseCb : null;
+
         root.classList.add('show');
         root.style.display = 'block';
-        root.setAttribute('aria-hidden', 'false');
-        if (autoFocus) {
-          const primary = document.getElementById('modalPrimary');
-          setTimeout(() => primary?.focus(), 0);
-        }
+        root.setAttribute('aria-hidden','false');
+
+        setTimeout(() => btnConfirm.focus(), 0);
         document.addEventListener('keydown', escListener);
       }
 
-      function hide() {
+      function hide(){
         root.classList.remove('show');
         root.style.display = 'none';
-        root.setAttribute('aria-hidden', 'true');
+        root.setAttribute('aria-hidden','true');
         document.removeEventListener('keydown', escListener);
-        if (onClose) { const cb = onClose; onClose = null; try { cb(); } catch {} }
+
+        if(onClose){
+          const cb = onClose;
+          onClose = null;
+          try{ cb(); }catch{}
+        }
+        onConfirm = null;
       }
 
-      function escListener(e) { if (e.key === 'Escape') hide(); }
-      root.addEventListener('click', (e) => { if (e.target?.dataset?.close === '1') hide(); });
+      function escListener(e){ if(e.key === 'Escape') hide(); }
+
+      root.addEventListener('click', (e) => {
+        if(e.target?.dataset?.close === '1') hide();
+      });
+
+      btnConfirm.addEventListener('click', async () => {
+        if(onConfirm){
+          const cb = onConfirm;
+          onConfirm = null;
+          try{ await cb(); }catch{}
+        }
+        hide();
+      });
 
       return { show, hide };
     })();
@@ -308,7 +379,7 @@
         const input = document.getElementById('placaInput');
         if (!input) return;
         let v = (input.value || '').toUpperCase();
-        v = v.replace(/[^A-Z0-9]/g, ''); // quitar todo lo que no sea alfanumérico
+        v = v.replace(/[^A-Z0-9]/g, '');
         if (v.length > 6) v = v.slice(0, 6);
         input.value = v;
     }
@@ -432,7 +503,6 @@
       const modelo   = (document.getElementById('modeloInput').value || '').trim();
       const anno     = parseInt(document.getElementById('annoInput').value || '0', 10);
 
-      // normalizar placa igual que en input
       let placa = (document.getElementById('placaInput').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
       if (placa.length > 6) placa = placa.slice(0, 6);
 
@@ -467,7 +537,6 @@
         return showMsg(m);
       }
 
-      // limpiar y refrescar
       document.getElementById('marcaInput').value = '';
       document.getElementById('modeloInput').value = '';
       document.getElementById('annoInput').value = '';
@@ -507,7 +576,6 @@
     async function eliminarVehiculo(id){
       const r = await fetch(`${URL_VEHICULOS}/${id}`, { method:'DELETE', credentials:'include' });
       if(r.ok){
-        // si estabas editando ese mismo vehículo, sal de edición y limpia form
         if(currentVehiculoId && Number(currentVehiculoId) === Number(id)){
           salirModoEdicion();
         }
@@ -519,31 +587,13 @@
     }
 
     function confirmarEliminar(id){
-      const btn = document.getElementById('modalPrimary');
-      const prevText = btn.textContent;
-      const prevClose = btn.getAttribute('data-close');
-      btn.textContent = 'Eliminar';
-      btn.removeAttribute('data-close');
-
-      const handler = async () => {
-        btn.removeEventListener('click', handler);
-        try { await eliminarVehiculo(id); } finally {
-          btn.textContent = prevText;
-          if(prevClose) btn.setAttribute('data-close', prevClose);
-          Modal.hide();
-        }
-      };
-
-      btn.addEventListener('click', handler, { once:true });
       Modal.show({
-        titleText: 'Confirmar eliminación',
-        bodyText: '¿Desea eliminar este vehículo?',
+        titleText: '¿Eliminar vehículo?',
+        bodyText: 'Esta acción no se puede revertir.',
         kind: 'warn',
-        onCloseCb: () => {
-          btn.removeEventListener('click', handler);
-          btn.textContent = prevText;
-          if(prevClose) btn.setAttribute('data-close', prevClose);
-        }
+        confirmText: 'Sí, eliminar',
+        cancelText: 'Cancelar',
+        onConfirmCb: async () => { await eliminarVehiculo(id); }
       });
     }
 
@@ -613,7 +663,6 @@
     document.addEventListener('DOMContentLoaded', async () => {
         setModoCrear();
 
-        // ✔ Enlazar normalización de placa
         const placaEl = document.getElementById('placaInput');
         if (placaEl) {
             placaEl.addEventListener('input', normalizePlacaInput);
@@ -624,25 +673,21 @@
         const currentUserId = parseInt(body.dataset.userId || '0', 10);
         const isAdmin = body.dataset.isAdmin === 'true';
 
-        // Si NO es admin y tiene userId, lo usamos como cliente "por defecto"
         if (!isAdmin && currentUserId) {
             pendingClienteId = currentUserId;
         }
 
-        // Cargamos usuarios y marcas
         await Promise.all([cargarUsuarios(), cargarMarcas()]);
 
         const usuarioSelect = document.getElementById('usuarioInput');
         usuarioSelect.addEventListener('change', cargarVehiculosAsociados);
 
-        // Si es cliente (no admin), fijamos su usuario y bloqueamos el select
         if (!isAdmin && currentUserId) {
             usuarioSelect.value = String(currentUserId);
-            usuarioSelect.disabled = true; // opcional, para que no lo cambie
+            usuarioSelect.disabled = true;
             cargarVehiculosAsociados();
         }
 
-        // Soporte para modo edición vía ?id=
         const qsId = getQS('id');
         if (qsId) {
             try { await cargarVehiculoPorId(qsId); }

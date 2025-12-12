@@ -62,6 +62,8 @@ builder.Services.AddCors(options =>
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials()
+        .WithExposedHeaders("Set-Cookie")
+
     );
 });
 
@@ -109,7 +111,6 @@ app.UseSwaggerUI(c =>
 
 app.UseStaticFiles();
 app.UseHttpsRedirection();
-
 app.UseCors("PermirFrontend");
 
 app.UseAuthentication();
