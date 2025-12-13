@@ -39,10 +39,124 @@
 
         <div class="mt-4 d-flex gap-2">
             <button id="btnSave" type="submit" class="btn btn-primary">Guardar</button>
-            <a class="btn btn-secondary" asp-page="/Index">Volver</a>
+            <a class="btn btn-secondary" asp-page="/Usuarios/Index">Volver</a>
         </div>
     </form>
 </div>
+
+<!-- Modal estilo SweetAlert2 (reutilizable) -->
+<div id="appModal" class="swal2-container" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
+    <div class="swal2-backdrop" data-close="1"></div>
+    <div class="swal2-popup" role="document" tabindex="-1">
+        <button class="swal2-close" type="button" aria-label="Cerrar" data-close="1">×</button>
+
+        <div class="swal2-icon info" id="modalIconWrap" aria-hidden="true">
+            <span class="swal2-icon-content" id="modalIcon">ℹ</span>
+        </div>
+
+        <h2 class="swal2-title" id="modalTitle">Título</h2>
+        <div class="swal2-html-container" id="modalBody">Mensaje…</div>
+
+        <div class="swal2-actions">
+            <button id="modalConfirm" class="btn btn-orange" type="button">Aceptar</button>
+            <button id="modalCancel" class="btn btn-secondary" type="button" data-close="1" style="display:none">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-orange {
+        background: #9FAA13 !important;
+        border: 1px solid #9FAA13 !important;
+        color: #fff !important;
+    }
+    .btn-orange:hover { background: #8f9a11 !important; }
+
+    .swal2-container {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+    }
+    .swal2-container.show { display: block; }
+
+    .swal2-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, .45);
+    }
+
+    .swal2-popup {
+        position: relative;
+        width: min(520px, calc(100% - 24px));
+        margin: 10vh auto 0;
+        background: #fff;
+        border-radius: 16px;
+        padding: 28px 24px 20px;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, .25);
+        display: grid;
+        justify-items: center;
+        text-align: center;
+    }
+
+    .swal2-close {
+        position: absolute !important;
+        top: 12px !important;
+        right: 14px !important;
+        left: auto !important;
+        bottom: auto !important;
+        justify-self: end;
+        align-self: start;
+        border: 0;
+        background: transparent;
+        font-size: 26px;
+        line-height: 1;
+        color: #888;
+        cursor: pointer;
+    }
+
+    .swal2-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        margin: 6px 0 10px;
+        border: 4px solid transparent;
+    }
+
+    .swal2-icon-content {
+        font-size: 42px;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .swal2-title {
+        margin: 6px 0 8px;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .swal2-html-container {
+        margin: 0;
+        font-size: 1rem;
+        color: #4b5563;
+    }
+
+    .swal2-actions {
+        margin-top: 18px;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .swal2-icon.warn  { background: #fff4e5; border-color: #f8bb86; color: #a15c00; }
+    .swal2-icon.ok    { background: #e7f6ec; border-color: #a5dc86; color: #2e7d32; }
+    .swal2-icon.error { background: #fdecea; border-color: #f27474; color: #b3261e; }
+    .swal2-icon.info  { background: #e7f1ff; border-color: #9dc1ff; color: #0b57d0; }
+</style>
 
 @section Scripts {
     <script src="~/lib/jquery/jquery.min.js"></script>
@@ -50,16 +164,11 @@
         const API = '@Model.ApiBase';
         const USER_ID = @Model.Id;
 
-        $(function () {
-            loadUser();
-            $('#frmUser').on('submit', onSave);
+        // ✅ IMPORTANTE: si tu API usa cookies/Identity, jQuery debe enviar credentials.
+        // Esto aplica a $.getJSON y $.ajax.
+        $.ajaxSetup({
+            xhrFields: { withCredentials: true }
         });
-
-        function badge(text){
-          const t = (text ?? '').toString();
-          if(!t) return '';
-          return `<span class="badge" style="background:#eef1f5;color:#333;border:1px solid #d9dee5;margin-right:6px;">${escapeHtml(t)}</span>`;
-        }
 
         function escapeHtml(s){
           return String(s ?? '')
@@ -70,13 +179,119 @@
             .replaceAll("'",'&#39;');
         }
 
+        function badge(text){
+          const t = (text ?? '').toString();
+          if(!t) return '';
+          return `<span class="badge" style="background:#eef1f5;color:#333;border:1px solid #d9dee5;margin-right:6px;">${escapeHtml(t)}</span>`;
+        }
+
+        /* =================== Modal helpers (SweetAlert2-like) =================== */
+        const Modal = (() => {
+            const root   = document.getElementById('appModal');
+            const title  = document.getElementById('modalTitle');
+            const body   = document.getElementById('modalBody');
+            const icon   = document.getElementById('modalIcon');
+            const iconWrap = document.getElementById('modalIconWrap');
+            const btnConfirm = document.getElementById('modalConfirm');
+            const btnCancel  = document.getElementById('modalCancel');
+
+            let onClose = null;
+            let onConfirm = null;
+
+            function setKind(kind){
+                iconWrap.classList.remove('warn','ok','error','info');
+                const map = {
+                    ok:   { cls:'ok', text:'✓' },
+                    warn: { cls:'warn', text:'!' },
+                    error:{ cls:'error', text:'!' },
+                    info: { cls:'info', text:'ℹ' }
+                };
+                const k = map[kind] || map.info;
+                iconWrap.classList.add(k.cls);
+                icon.textContent = k.text;
+            }
+
+            function show({
+                titleText = 'Información',
+                bodyText = '',
+                kind = 'info',
+                confirmText = 'Aceptar',
+                cancelText = null,
+                onConfirmCb = null,
+                onCloseCb = null
+            }){
+                setKind(kind);
+                title.textContent = titleText;
+                body.textContent  = bodyText;
+
+                btnConfirm.textContent = confirmText;
+
+                if (cancelText) {
+                    btnCancel.style.display = 'inline-block';
+                    btnCancel.textContent = cancelText;
+                } else {
+                    btnCancel.style.display = 'none';
+                }
+
+                onConfirm = (typeof onConfirmCb === 'function') ? onConfirmCb : null;
+                onClose   = (typeof onCloseCb === 'function') ? onCloseCb : null;
+
+                btnConfirm.onclick = async () => {
+                    try { if (onConfirm) await onConfirm(); }
+                    finally { hide(); }
+                };
+
+                root.classList.add('show');
+                root.style.display = 'block';
+                root.setAttribute('aria-hidden','false');
+
+                setTimeout(() => btnConfirm.focus(), 0);
+                document.addEventListener('keydown', escListener);
+            }
+
+            function hide(){
+                root.classList.remove('show');
+                root.style.display = 'none';
+                root.setAttribute('aria-hidden','true');
+                document.removeEventListener('keydown', escListener);
+
+                const cb = onClose;
+                onClose = null;
+                onConfirm = null;
+                if (cb) { try { cb(); } catch {} }
+            }
+
+            function escListener(e){ if (e.key === 'Escape') hide(); }
+
+            root.addEventListener('click', (e) => {
+                if (e.target?.dataset?.close === '1') hide();
+            });
+
+            function confirm({ titleText, bodyText, kind='warn', confirmText='Aceptar', cancelText='Cancelar', onConfirmCb }){
+                show({ titleText, bodyText, kind, confirmText, cancelText, onConfirmCb });
+            }
+
+            return { show, hide, confirm };
+        })();
+
+        $(function () {
+            loadUser();
+            $('#frmUser').on('submit', onSave);
+        });
+
         function loadUser() {
           $.getJSON(`${API}/api/usuarios/${USER_ID}`, function (u) {
-            // Soportamos snake_case y Pascal/camel por si cambias el API
             $('#nombre').val(u.nombre ?? u.Nombre ?? '');
             $('#apellidos').val(u.apellidos ?? u.Apellidos ?? '');
             $('#Email').val(u.email ?? u.Email ?? '');
             $('#PhoneNumber').val(u.phoneNumber ?? u.PhoneNumber ?? u.phone_number ?? '');
+          }).fail(() => {
+            Modal.show({
+              titleText: 'Error',
+              bodyText: 'No se pudo cargar el usuario.',
+              kind: 'error',
+              confirmText: 'Aceptar'
+            });
           });
 
           $.getJSON(`${API}/api/usuarios/${USER_ID}/roles`, function (roles) {
@@ -91,7 +306,6 @@
           e.preventDefault();
           $('#btnSave').prop('disabled', true);
 
-          // OJO: usamos phone_number para que el backend en snake_case lo mapee bien
           const payload = {
             nombre: $('#nombre').val(),
             apellidos: $('#apellidos').val(),
@@ -107,10 +321,25 @@
               data: JSON.stringify(payload)
             });
 
-            alert('✔ El perfil se actualizó correctamente.');
+            Modal.show({
+              titleText: 'Éxito',
+              bodyText: 'El perfil se actualizó correctamente.',
+              kind: 'ok',
+              confirmText: 'Aceptar'
+            });
           } catch (err) {
             console.error(err);
-            alert('No se pudo guardar el usuario.');
+            let msg = 'No se pudo guardar el usuario.';
+            try {
+              const resp = err?.responseJSON;
+              msg = resp?.message || resp?.Message || msg;
+            } catch {}
+            Modal.show({
+              titleText: 'Error',
+              bodyText: msg,
+              kind: 'error',
+              confirmText: 'Aceptar'
+            });
           } finally {
             $('#btnSave').prop('disabled', false);
           }
