@@ -24,6 +24,12 @@ namespace Tecmave.Api.Services
             return _context.revision_pertenencias.ToList();
         }
 
+        public List<RevisionPertenenciasModel> GetPertenenciasByRevisionId(int revisionId)
+        {
+            return _context.revision_pertenencias
+                .Where(p => p.revision_id == revisionId)
+                .ToList();
+        }
 
         public RevisionPertenenciasModel GetById(int id)
         {
@@ -38,6 +44,19 @@ namespace Tecmave.Api.Services
         }
 
 
+        public bool DeletePorRevisionYNombre(int revisionId, string nombre)
+        {
+            var entidad = _context.revision_pertenencias
+                .FirstOrDefault(p => p.revision_id == revisionId && p.nombre == nombre);
+            if (entidad == null)
+            {
+                return false;
+            }
+            _context.revision_pertenencias.Remove(entidad);
+            _context.SaveChanges();
+            return true;
+        }
+
         public bool UpdateRevisionPertenencia(RevisionPertenenciasModel RevisionDiagnosticoModel)
         {
             var entidad = _context.revision_pertenencias.FirstOrDefault(p => p.id_pertenencia == RevisionDiagnosticoModel.id_pertenencia);
@@ -47,6 +66,8 @@ namespace Tecmave.Api.Services
                 return false;
             }
 
+            entidad.nombre = RevisionDiagnosticoModel.nombre;
+            
             _context.SaveChanges();
 
             return true;

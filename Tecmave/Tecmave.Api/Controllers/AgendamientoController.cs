@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Tecmave.Api.Data;
 using Tecmave.Api.Models;
+using Tecmave.Api.Models.Dto;
 using Tecmave.Api.Services;
 
 namespace Tecmave.Api.Controllers
@@ -79,9 +80,9 @@ namespace Tecmave.Api.Controllers
 
         // ========= PUT =========
         [HttpPut]
-        public IActionResult UpdateAgendamiento(AgendamientoModel agendamientoModel)
+        public IActionResult UpdateAgendamiento([FromBody] AgendamientoUpdateDto dto)
         {
-            if (!_agendamientoService.UpdateAgendamiento(agendamientoModel))
+            if (!_agendamientoService.UpdateAgendamiento(dto))
             {
                 return NotFound(new
                 {

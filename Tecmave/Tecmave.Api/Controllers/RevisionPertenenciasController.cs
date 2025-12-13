@@ -30,6 +30,47 @@ namespace Tecmave.Api.Controllers
             return _revisionPertenenciaService.GetById(id);
         }
 
+        [HttpGet("GetByIdRevision/{id_Revision}")]
+        public ActionResult<IEnumerable<RevisionPertenenciasModel>> GetByIdRevision(int id_revision)
+        {
+            var revisionPertenencias = _revisionPertenenciaService.GetPertenenciasByRevisionId(id_revision);
+            if (revisionPertenencias == null || !revisionPertenencias.Any())
+            {
+                return NotFound(
+                        new
+                        {
+                            mensaje = "No se encontraron pertenencias para a la revision especificada"
+                        }
+                    );
+            }
+            return Ok(revisionPertenencias);
+        }
+
+
+        [HttpDelete("Por-revision")]
+        public IActionResult DeletePorRevisionYNombre(
+          [FromQuery] int revisionId,
+          [FromQuery] string nombre)
+        {
+            if (revisionId <= 0 || string.IsNullOrWhiteSpace(nombre))
+            {
+                return BadRequest("Parámetros inválidos");
+            }
+
+            var eliminado = _revisionPertenenciaService.DeletePorRevisionYNombre(revisionId, nombre);
+
+            if (!eliminado)
+            {
+                return NotFound("La pertenencia no existe para esta revisión");
+            }
+
+            return Ok(new
+            {
+                mensaje = "Pertenencia eliminada correctamente"
+            });
+        }
+
+
         //Apis POST
         [HttpPost]
         public ActionResult<RevisionPertenenciasModel> AddRevision(RevisionPertenenciasModel RevisionDiagnosticoModel)

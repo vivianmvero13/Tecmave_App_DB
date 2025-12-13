@@ -1,0 +1,431 @@
+﻿@page "{id:int}"
+@model Front.Pages.Servicios.EditModel
+@{
+    ViewData["Title"] = "Editar Revisión";
+}
+
+<style>
+    /* Reutilizamos estilos del Index */
+    .card {
+        background: #1a1a1a;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        color: #ddd;
+    }
+
+    h3 {
+        margin-bottom: 1rem;
+        color: #000 !important;
+    }
+
+    .input, select {
+        width: 100%;
+        padding: .7rem;
+        background: #111;
+        border: 1px solid #333;
+        color: #eee;
+        border-radius: 8px;
+        margin-top: .3rem;
+    }
+
+        select, select option {
+            color: #ffffff !important;
+            background-color: #111111 !important;
+        }
+
+    #pertenencias {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: .35rem 1rem;
+        margin-top: .5rem;
+    }
+
+        #pertenencias label {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            color: #ffffff;
+        }
+
+    #btnGuardar {
+        background: #5a9cff;
+        padding: .7rem 1rem;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+        margin-right: .5rem;
+    }
+
+        #btnGuardar:hover {
+            background: #7ab3ff;
+        }
+</style>
+
+<section class="section">
+    <div class="container grid cols-2">
+
+        <!-- FORMULARIO EDITAR -->
+        <div class="card">
+            <h3>Editar Revisión</h3>
+
+            <div>
+                <label>Vehículo</label>
+                <select id="vehiculo_id" class="input"></select>
+            </div>
+
+            <div>
+                <label>Tipo de Servicio</label>
+                <select id="tipo_servicio_id" class="input"></select>
+            </div>
+
+            <div>
+                <label>Servicio</label>
+                <select id="servicio_id" class="input">
+                    <option value="">Seleccione</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Pertenencias</label>
+                <div id="pertenencias"></div>
+            </div>
+
+            <div>
+                <label>Fecha</label>
+                <input id="fecha" type="date" class="input" />
+            </div>
+
+            <div>
+                <label>Hora</label>
+                <select id="hora" class="input"></select>
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <button id="btnGuardar" type="button">Guardar cambios</button>
+                <a href="/Servicios" class="btn-proforma">Cancelar</a>
+            </div>
+        </div>
+
+      
+    </div>
+</section>
+
+<!-- OVERLAY DE CARGA (MISMO QUE INDEX) -->
+<div id="loadingOverlay" style="display:none;">
+    <div class="modal">
+        <div class="modal-content">
+            <p>Cargando, por favor espere un momento...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =======================
+       CONFIG
+       ======================= */
+    const API = {
+        AGENDAMIENTO: "http://localhost:7096/Agendamiento",
+        REVISION: "http://localhost:7096/Revision",
+        REV_PERT: "http://localhost:7096/api/RevisionPertenencias",
+        SERV_REV: "http://localhost:7096/ServiciosRevision",
+        VEHICULO: "http://localhost:7096/Vehiculos",
+        SERV: "http://localhost:7096/Servicios",
+        TIPO_SERV: "http://localhost:7096/TipoServicios"
+    };
+
+    const revisionId = @Model.RevisionId;
+    const userId = parseInt("@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value");
+
+    let cacheVehiculos = {};
+    let cacheServicios = {};
+    let cacheTipos = {};
+    let cacheAgendamientos = [];
+
+    let pertenenciasOriginales = [];
+    let agendamientoActualId = null;
+
+    /* =======================
+       INIT
+       ======================= */
+    $(document).ready(async () => {
+        mostrarLoading();
+
+        try {
+            await cargarVehiculos();
+            await cargarTipos();
+            await cargarServicios();
+            await cargarAgendamientos();
+            renderPertenencias();
+            await precargarRevision();
+
+            $("#tipo_servicio_id").on("change", filtrarServicios);
+            $("#fecha").on("change", () =>
+                cargarHorasDisponibles($("#fecha").val())
+            );
+            $("#btnGuardar").on("click", guardarCambios);
+
+        } catch (e) {
+            console.error(e);
+            alert("Error cargando la revisión");
+        } finally {
+            ocultarLoading();
+        }
+    });
+
+    /* =======================
+       LOADING
+       ======================= */
+    function mostrarLoading() { $("#loadingOverlay").show(); }
+    function ocultarLoading() { $("#loadingOverlay").hide(); }
+
+    /* =======================
+       CARGAS BASE
+       ======================= */
+    function cargarVehiculos() {
+        return $.get(API.VEHICULO, data => {
+            $("#vehiculo_id").html(`<option value="">Seleccione</option>`);
+
+            data
+                .filter(v => v.cliente_id === userId)
+                .forEach(v => {
+                    cacheVehiculos[v.id_vehiculo] = v;
+                    $("#vehiculo_id").append(
+                        `<option value="${v.id_vehiculo}">
+                            ${v.placa} - ${v.modelo}
+                         </option>`
+                    );
+                });
+        });
+    }
+
+    function cargarTipos() {
+        return $.get(API.TIPO_SERV, data => {
+            $("#tipo_servicio_id").html(`<option value="">Seleccione</option>`);
+
+            data.forEach(t => {
+                cacheTipos[t.id_tipo_servicio] = t;
+                $("#tipo_servicio_id").append(
+                    `<option value="${t.id_tipo_servicio}">
+                        ${t.nombre}
+                     </option>`
+                );
+            });
+        });
+    }
+
+    function cargarServicios() {
+        return $.get(API.SERV, data => {
+            data.forEach(s => cacheServicios[s.id_servicio] = s);
+        });
+    }
+
+    function cargarAgendamientos() {
+        return $.get(API.AGENDAMIENTO, data => {
+            cacheAgendamientos = data;
+        });
+    }
+
+    /* =======================
+       FILTRO SERVICIOS
+       ======================= */
+    function filtrarServicios() {
+        const tipoId = $("#tipo_servicio_id").val();
+
+        $("#servicio_id").html(`<option value="">Seleccione</option>`);
+
+        Object.values(cacheServicios)
+            .filter(s => s.tipo_servicio_id == tipoId)
+            .forEach(s => {
+                $("#servicio_id").append(
+                    `<option value="${s.id_servicio}">
+                        ${s.nombre}
+                     </option>`
+                );
+            });
+    }
+
+    /* =======================
+       PRECARGA REVISION
+       ======================= */
+    async function precargarRevision() {
+        const rev = await $.get(`${API.REVISION}/${revisionId}`);
+
+        $("#vehiculo_id").val(rev.vehiculo_id);
+
+        const ag = cacheAgendamientos.find(
+            a => a.id_agendamiento === rev.id_agendamiento
+        );
+
+        if (!ag) {
+            alert("Agendamiento no encontrado");
+            return;
+        }
+
+        agendamientoActualId = ag.id_agendamiento;
+
+        $("#fecha").val(ag.fecha_estimada);
+        cargarHorasDisponibles(ag.fecha_estimada);
+        $("#hora").val(ag.hora_llegada.substring(0, 5));
+
+        const sr = await $.get(`${API.SERV_REV}/ByRevision/${revisionId}`);
+        const servicio = cacheServicios[sr.servicio_id];
+
+        $("#tipo_servicio_id").val(servicio.tipo_servicio_id);
+        filtrarServicios();
+        $("#servicio_id").val(servicio.id_servicio);
+
+        const pert = await $.get(
+            `${API.REV_PERT}/GetByIdRevision/${revisionId}`
+        );
+
+        pertenenciasOriginales = pert;
+
+        $("#pertenencias input").each(function () {
+            $(this).prop(
+                "checked",
+                pert.some(p => p.nombre === this.value)
+            );
+        });
+    }
+
+    /* =======================
+       HORAS DISPONIBLES
+       ======================= */
+    function cargarHorasDisponibles(fecha) {
+        const horas = generarHoras();
+
+        const ocupadas = cacheAgendamientos
+            .filter(a =>
+                a.fecha_estimada === fecha &&
+                a.id_agendamiento !== agendamientoActualId
+            )
+            .map(a => a.hora_llegada.substring(0, 5));
+
+        $("#hora").html("");
+
+        horas
+            .filter(h => !ocupadas.includes(h))
+            .forEach(h => {
+                $("#hora").append(
+                    `<option value="${h}">${h}</option>`
+                );
+            });
+    }
+
+    function generarHoras() {
+        const lista = [];
+        let h = new Date(); h.setHours(7, 30, 0);
+        let fin = new Date(); fin.setHours(18, 0, 0);
+
+        while (h <= fin) {
+            lista.push(h.toTimeString().substring(0, 5));
+            h.setMinutes(h.getMinutes() + 30);
+        }
+        return lista;
+    }
+
+      /* =======================
+       RENDER PERTENENCIAS
+       (MISMO INDEX)
+       ======================= */
+    function renderPertenencias() {
+        $("#pertenencias").html("");
+
+        const lista = ["Radio","Encendedor","Gar Celular","Antena","Espejo","Alfombras","Halogeno","Llave Rana"
+        ,"Gata Mec/HD","Herramienta","Triangulos","Lagartos","Llanta de repuesto","Copas","Paraguas","Botiquin"
+        ,"Chaleco","Booster","Linga","Extintor"];
+
+        lista.forEach(p => {
+            $("#pertenencias").append(`
+                <label style="color: black;">
+                    <input type="checkbox" value="${p}" />
+                    ${p}
+                </label>
+            `);
+        });
+    }
+
+    /* =======================
+       GUARDAR CAMBIOS
+       ======================= */
+       async function guardarCambios() {
+        mostrarLoading();
+
+        try {
+            const seleccionadas = $("#pertenencias input:checked")
+                .map((_, e) => e.value)
+                .get();
+
+            const originales = pertenenciasOriginales.map(p => p.nombre);
+
+            /* =======================
+               ELIMINAR PERTENENCIAS
+               ======================= */
+            for (let p of pertenenciasOriginales.filter(x => !seleccionadas.includes(x.nombre))) {
+                    await $.ajax({
+        url: `${API.REV_PERT}/Por-revision?revisionId=${revisionId}&nombre=${encodeURIComponent(p.nombre)}`,
+        method: "DELETE"
+    });
+            }
+
+            /* =======================
+               AGREGAR PERTENENCIAS
+               ======================= */
+            for (let p of seleccionadas.filter(x => !originales.includes(x))) {
+                await $.ajax({
+                    url: API.REV_PERT,
+                    method: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        revision_id: revisionId,
+                        nombre: p,
+                        presente: true
+                    })
+                });
+            }
+
+            /* =======================
+               ACTUALIZAR AGENDAMIENTO
+               ======================= */
+            await $.ajax({
+        url: API.AGENDAMIENTO,
+        method: "PUT",
+        contentType: "application/json",
+        data: JSON.stringify({
+            id_agendamiento: agendamientoActualId,
+            vehiculo_id: parseInt($("#vehiculo_id").val()),
+            fecha_estimada: $("#fecha").val(),
+            hora_llegada: $("#hora").val()
+        })
+    });
+
+            /* =======================
+               ACTUALIZAR SERVICIO
+               ======================= */
+            const sr = await $.get(`${API.SERV_REV}/ByRevision/${revisionId}`);
+
+    await $.ajax({
+        url: API.SERV_REV,
+        method: "PUT",
+        contentType: "application/json",
+        data: JSON.stringify({
+            id_servicio_revision: sr.id_servicio_revision,
+            revision_id: sr.revision_id, 
+            servicio_id: $("#servicio_id").val(),
+            costo_final: sr.costo_final ?? 0
+        })
+    });
+
+            alert("Revisión actualizada correctamente");
+            location.href = "/Servicios";
+
+        } catch (e) {
+            console.error(e);
+            alert("Error al guardar la revisión");
+        } finally {
+            ocultarLoading();
+        }
+    }
+</script>
