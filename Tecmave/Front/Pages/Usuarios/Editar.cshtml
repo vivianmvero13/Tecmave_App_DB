@@ -58,7 +58,8 @@
         <div class="swal2-html-container" id="modalBody">Mensaje…</div>
 
         <div class="swal2-actions">
-            <button id="modalConfirm" class="btn btn-orange" type="button">Aceptar</button>
+            <!-- ✅ data-close para que cierre -->
+            <button id="modalConfirm" class="btn btn-orange" type="button" data-close="1">Aceptar</button>
             <button id="modalCancel" class="btn btn-secondary" type="button" data-close="1" style="display:none">Cancelar</button>
         </div>
     </div>
@@ -70,7 +71,10 @@
         border: 1px solid #9FAA13 !important;
         color: #fff !important;
     }
-    .btn-orange:hover { background: #8f9a11 !important; }
+
+        .btn-orange:hover {
+            background: #8f9a11 !important;
+        }
 
     .swal2-container {
         position: fixed;
@@ -78,7 +82,10 @@
         z-index: 1000;
         display: none;
     }
-    .swal2-container.show { display: block; }
+
+        .swal2-container.show {
+            display: block;
+        }
 
     .swal2-backdrop {
         position: absolute;
@@ -152,23 +159,39 @@
         width: 100%;
     }
 
-    .swal2-icon.warn  { background: #fff4e5; border-color: #f8bb86; color: #a15c00; }
-    .swal2-icon.ok    { background: #e7f6ec; border-color: #a5dc86; color: #2e7d32; }
-    .swal2-icon.error { background: #fdecea; border-color: #f27474; color: #b3261e; }
-    .swal2-icon.info  { background: #e7f1ff; border-color: #9dc1ff; color: #0b57d0; }
+    .swal2-icon.warn {
+        background: #fff4e5;
+        border-color: #f8bb86;
+        color: #a15c00;
+    }
+
+    .swal2-icon.ok {
+        background: #e7f6ec;
+        border-color: #a5dc86;
+        color: #2e7d32;
+    }
+
+    .swal2-icon.error {
+        background: #fdecea;
+        border-color: #f27474;
+        color: #b3261e;
+    }
+
+    .swal2-icon.info {
+        background: #e7f1ff;
+        border-color: #9dc1ff;
+        color: #0b57d0;
+    }
 </style>
 
 @section Scripts {
     <script src="~/lib/jquery/jquery.min.js"></script>
     <script>
-        const API = '@Model.ApiBase';
+        const API = '@(Model?.ApiBase ?? "https://tecmave-api.azurewebsites.net")';
         const USER_ID = @Model.Id;
 
-        // ✅ IMPORTANTE: si tu API usa cookies/Identity, jQuery debe enviar credentials.
-        // Esto aplica a $.getJSON y $.ajax.
-        $.ajaxSetup({
-            xhrFields: { withCredentials: true }
-        });
+        // ✅ cookies cross-domain (si tu API usa Identity cookie)
+        $.ajaxSetup({ xhrFields: { withCredentials: true } });
 
         function escapeHtml(s){
           return String(s ?? '')
@@ -187,10 +210,10 @@
 
         /* =================== Modal helpers (SweetAlert2-like) =================== */
         const Modal = (() => {
-            const root   = document.getElementById('appModal');
-            const title  = document.getElementById('modalTitle');
-            const body   = document.getElementById('modalBody');
-            const icon   = document.getElementById('modalIcon');
+            const root     = document.getElementById('appModal');
+            const title    = document.getElementById('modalTitle');
+            const body     = document.getElementById('modalBody');
+            const icon     = document.getElementById('modalIcon');
             const iconWrap = document.getElementById('modalIconWrap');
             const btnConfirm = document.getElementById('modalConfirm');
             const btnCancel  = document.getElementById('modalCancel');
@@ -214,6 +237,7 @@
             function show({
                 titleText = 'Información',
                 bodyText = '',
+                bodyHtml = null,
                 kind = 'info',
                 confirmText = 'Aceptar',
                 cancelText = null,
@@ -222,7 +246,10 @@
             }){
                 setKind(kind);
                 title.textContent = titleText;
-                body.textContent  = bodyText;
+
+                // ✅ si mandan HTML (roles badges), lo usamos; si no, texto plano
+                if (bodyHtml != null) body.innerHTML = bodyHtml;
+                else body.textContent = bodyText;
 
                 btnConfirm.textContent = confirmText;
 
@@ -302,15 +329,34 @@
           }).fail(()=> $('#RolesReadOnly').html('<span class="text-muted">(error)</span>'));
         }
 
+        function extractIdentityErrors(err) {
+            // puede venir como [{code, description}] o como objeto
+            const resp = err?.responseJSON;
+            if (!resp) return null;
+
+            if (Array.isArray(resp)) {
+                const msgs = resp.map(e => e.description || e.Description || e.message || e.Message).filter(Boolean);
+                return msgs.length ? msgs.join(' ') : null;
+            }
+
+            if (Array.isArray(resp.errors)) {
+                const msgs = resp.errors.map(e => e.description || e.Description).filter(Boolean);
+                return msgs.length ? msgs.join(' ') : null;
+            }
+
+            return resp.message || resp.Message || null;
+        }
+
         async function onSave(e) {
           e.preventDefault();
           $('#btnSave').prop('disabled', true);
 
+          // ✅ IMPORTANTE: manda propiedades como las espera tu UpdateUserDto
           const payload = {
             nombre: $('#nombre').val(),
             apellidos: $('#apellidos').val(),
-            email: $('#Email').val(),
-            phone_number: $('#PhoneNumber').val()
+            Email: $('#Email').val(),
+            PhoneNumber: $('#PhoneNumber').val()
           };
 
           try {
@@ -329,11 +375,9 @@
             });
           } catch (err) {
             console.error(err);
-            let msg = 'No se pudo guardar el usuario.';
-            try {
-              const resp = err?.responseJSON;
-              msg = resp?.message || resp?.Message || msg;
-            } catch {}
+
+            let msg = extractIdentityErrors(err) || 'No se pudo guardar el usuario.';
+
             Modal.show({
               titleText: 'Error',
               bodyText: msg,
