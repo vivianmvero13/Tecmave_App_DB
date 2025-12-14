@@ -19,28 +19,37 @@ namespace Tecmave.Api.Services
             _db = db;
         }
 
+        private static IdentityResult Fail(string code, string description) =>
+            IdentityResult.Failed(new IdentityError { Code = code, Description = description });
+
         // -----------------------
-        // Lectura
+        // Lectura (SOLO ACTIVOS)
         // -----------------------
         public Task<List<Usuario>> ListAsync() =>
             _userManager.Users
                 .AsNoTracking()
+                .Where(u => u.Estado == 1)
                 .OrderBy(u => u.UserName)
                 .ToListAsync();
 
         public Task<Usuario?> GetByIdAsync(int id) =>
-            _userManager.FindByIdAsync(id.ToString());
+            _userManager.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == id && u.Estado == 1);
 
         public async Task<IList<string>> GetRolesAsync(int id)
         {
             var user = await _userManager.FindByIdAsync(id.ToString());
-            return user is null ? new List<string>() : await _userManager.GetRolesAsync(user);
+            if (user is null) return new List<string>();
+            if (user.Estado != 1) return new List<string>(); // si está inactivo, no exponemos roles
+            return await _userManager.GetRolesAsync(user);
         }
 
         public async Task<string?> GetSingleRoleOrNullAsync(int id)
         {
             var user = await _userManager.FindByIdAsync(id.ToString());
             if (user is null) return null;
+            if (user.Estado != 1) return null;
             var roles = await _userManager.GetRolesAsync(user);
             return roles.FirstOrDefault();
         }
@@ -65,7 +74,8 @@ namespace Tecmave.Api.Services
                 Email = email,
                 PhoneNumber = phone,
                 Cedula = cedula ?? string.Empty,
-                Direccion = string.Empty
+                Direccion = string.Empty,
+                Estado = 1 
             };
 
             var res = await _userManager.CreateAsync(user, password);
@@ -102,15 +112,18 @@ namespace Tecmave.Api.Services
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user is null)
-                return (IdentityResult.Failed(new IdentityError { Code = "UserNotFound", Description = "Usuario no encontrado" }), null);
+                return (Fail("UserNotFound", "Usuario no encontrado"), null);
+
+            if (user.Estado != 1)
+                return (Fail("UserInactive", "No se puede modificar roles: el usuario está inactivo."), null);
 
             var normalized = roleName.ToUpperInvariant();
             var role = await _roleManager.Roles.FirstOrDefaultAsync(r => r.NormalizedName == normalized);
             if (role is null)
-                return (IdentityResult.Failed(new IdentityError { Code = "RoleNotFound", Description = "Rol no encontrado" }), null);
+                return (Fail("RoleNotFound", "Rol no encontrado"), null);
 
             if (!role.IsActive)
-                return (IdentityResult.Failed(new IdentityError { Code = "RoleInactive", Description = "El rol está inactivo" }), null);
+                return (Fail("RoleInactive", "El rol está inactivo"), null);
 
             var currentRoles = await _userManager.GetRolesAsync(user);
             var previous = currentRoles.FirstOrDefault();
@@ -119,7 +132,7 @@ namespace Tecmave.Api.Services
                 return (IdentityResult.Success, previous);
 
             if (currentRoles.Count > 0 && !forceReplace)
-                return (IdentityResult.Failed(new IdentityError { Code = "RoleConflict", Description = $"El usuario ya tiene el rol '{previous}'" }), previous);
+                return (Fail("RoleConflict", $"El usuario ya tiene el rol '{previous}'"), previous);
 
             if (currentRoles.Count > 0)
             {
@@ -156,7 +169,10 @@ namespace Tecmave.Api.Services
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user is null)
-                return IdentityResult.Failed(new IdentityError { Code = "UserNotFound", Description = "Usuario no encontrado" });
+                return Fail("UserNotFound", "Usuario no encontrado");
+
+            if (user.Estado != 1)
+                return Fail("UserInactive", "No se puede eliminar roles: el usuario está inactivo.");
 
             var current = await _userManager.GetRolesAsync(user);
             if (current.Count == 0) return IdentityResult.Success;
@@ -195,7 +211,10 @@ namespace Tecmave.Api.Services
         {
             var user = await _userManager.FindByIdAsync(id.ToString());
             if (user is null)
-                return IdentityResult.Failed(new IdentityError { Description = "Usuario no encontrado" });
+                return Fail("UserNotFound", "Usuario no encontrado");
+
+            if (user.Estado != 1)
+                return Fail("UserInactive", "No se puede actualizar: el usuario está inactivo.");
 
             var errors = new List<IdentityError>();
 
@@ -242,17 +261,27 @@ namespace Tecmave.Api.Services
         }
 
         // -----------------------
-        // Eliminación
+        // "ELIMINACIÓN" => SOFT DELETE (Estado = 2)
         // -----------------------
         public async Task<IdentityResult> DeleteAsync(int id)
         {
             var user = await _userManager.FindByIdAsync(id.ToString());
             if (user is null)
-                return IdentityResult.Failed(new IdentityError { Description = "Usuario no encontrado" });
+                return Fail("UserNotFound", "Usuario no encontrado");
 
-            // Aquí se dispara el borrado de aspnetusers y, con las FKs en CASCADE,
-            // se eliminan también registros asociados.
-            return await _userManager.DeleteAsync(user);
+            if (user.Estado == 2)
+                return IdentityResult.Success; // ya está inactivo
+
+            user.Estado = 2;
+
+            // (Opcional) si querés bloquear login de inmediato, podrías setear:
+            // user.LockoutEnabled = true;
+            // user.LockoutEnd = DateTimeOffset.MaxValue;
+
+            var res = await _userManager.UpdateAsync(user);
+            return res.Succeeded
+                ? IdentityResult.Success
+                : res;
         }
 
         // -----------------------

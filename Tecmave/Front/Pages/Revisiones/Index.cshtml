@@ -1,0 +1,231 @@
+﻿@page
+@model Front.Pages.Revisiones.IndexModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Revisiones";
+}
+
+<h1 class="mb-3">Revisiones</h1>
+
+<!-- FILTRO / BUSCADOR -->
+<div class="row g-3 align-items-end mb-3">
+    <div class="col-md-4">
+        <label class="form-label">Buscar</label>
+        <input id="searchRev" class="form-control"
+               placeholder="Buscar por vehículo, estado o ID…" />
+    </div>
+</div>
+
+<!-- RESULTADOS -->
+<small id="revResultsBadge" class="text-muted">Mostrando 0 de 0</small>
+
+<div class="table-responsive mt-2">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Vehículo</th>
+                <th>Fecha ingreso</th>
+                <th>Estado</th>
+                <th style="width:200px;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="revTable">
+            <tr>
+                <td colspan="5">Cargando revisiones…</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="d-flex align-items-center gap-2">
+        <div class="spinner-border text-primary"></div>
+        <span>Cargando revisiones…</span>
+    </div>
+</div>
+
+<style>
+    .loading-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(255,255,255,.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+        .loading-overlay.hidden {
+            display: none !important;
+        }
+</style>
+
+<script>
+/* ============================
+   CONFIGURACIÓN DE APIS
+============================ */
+const API_BASE      = 'https://tecmave-api.azurewebsites.net';
+
+const REV_URL       = `${API_BASE}/Revision`;                 // GET
+const VEH_URL       = `${API_BASE}/Vehiculos`;               // GET
+const ESTADOS_URL   = `${API_BASE}/Estados`;                 // GET
+
+// (No se usan aquí, pero se necesitarán en Finalizar Proforma)
+const PERT_URL      = `${API_BASE}/RevisionPertenencias`;    // GET / DELETE / POST
+const TRAB_URL      = `${API_BASE}/RevisionTrabajos`;        // GET / PUT
+const SERVREV_URL   = `${API_BASE}/ServiciosRevision`;       // GET / PUT
+const AG_URL        = `${API_BASE}/Agendamiento`;            // GET / PUT
+
+/* ============================
+   VARIABLES
+============================ */
+let revisiones   = [];
+let vehiculos    = {};
+let estados      = {};
+let filtered     = [];
+
+/* ============================
+   HELPERS
+============================ */
+const esc = s => String(s ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'",'&#39;');
+
+    function showLoading(msg = 'Cargando…') {
+        $('#loadingOverlay span').text(msg);
+        $('#loadingOverlay').removeClass('hidden');
+    }
+
+    function hideLoading() {
+        $('#loadingOverlay').addClass('hidden');
+    }
+
+function formatFecha(f) {
+    if (!f) return '-';
+    return f.toString().substring(0, 10);
+}
+
+/* ============================
+   INIT
+============================ */
+$(document).ready(function () {
+    loadAll();
+    $('#searchRev').on('input', applyFilter);
+});
+
+/* ============================
+   CARGA INICIAL
+============================ */
+async function loadAll() {
+    showLoading('Cargando datos…');
+
+    try {
+        const [revRes, vehRes, estRes] = await Promise.all([
+            $.get(REV_URL),
+            $.get(VEH_URL),
+            $.get(ESTADOS_URL)
+        ]);
+
+        revisiones = revRes;
+            vehRes.forEach(v => {
+        const id = v.id_vehiculo ?? v.vehiculo_id;
+        vehiculos[id] = v;
+    });
+            estRes.forEach(e => {
+        const id = e.id_estado ?? e.Id_Estado;
+        estados[id] = e;
+    });
+
+
+        filtered = [...revisiones];
+        renderTable(filtered);
+
+    } catch (err) {
+        console.error(err);
+        $('#revTable').html(`
+            <tr><td colspan="5">Error cargando revisiones</td></tr>
+        `);
+    } finally {
+        hideLoading();
+    }
+}
+
+/* ============================
+   FILTRO
+============================ */
+function applyFilter() {
+    const q = ($('#searchRev').val() || '').toLowerCase();
+
+    filtered = revisiones.filter(r => {
+        if (!q) return true;
+
+        const veh = vehiculos[r.vehiculo_id];
+        const est = estados[r.id_estado];
+
+        const text = [
+            r.id_revision,
+            veh?.placa,
+            veh?.modelo,
+            est?.nombre
+        ].join(' ').toLowerCase();
+
+        return text.includes(q);
+    });
+
+    renderTable(filtered);
+}
+
+/* ============================
+   RENDER TABLE
+============================ */
+function renderTable(list) {
+    $('#revResultsBadge').text(`Mostrando ${list.length} de ${revisiones.length}`);
+
+    if (!list.length) {
+        $('#revTable').html(`
+            <tr><td colspan="5">Sin revisiones</td></tr>
+        `);
+        return;
+    }
+
+    let html = '';
+
+    list.forEach(r => {
+        const veh = vehiculos[r.vehiculo_id];
+        const est = estados[r.id_estado];
+
+        html += `
+        <tr>
+            <td>${r.id_revision}</td>
+            <td>
+                ${esc(veh?.placa ?? '-') }
+                <br />
+                <small class="text-muted">${esc(veh?.modelo ?? '')}</small>
+            </td>
+            <td>${formatFecha(r.fecha_ingreso)}</td>
+            <td>${esc(est?.nombre ?? r.id_estado)}</td>
+            <td>
+                <button class="btn btn-sm btn-success finalizar-proforma"
+                        data-id="${r.id_revision}">
+                    Finalizar proforma
+                </button>
+            </td>
+        </tr>`;
+    });
+
+    $('#revTable').html(html);
+}
+
+/* ============================
+   NAVEGACIÓN
+============================ */
+$(document).on('click', '.finalizar-proforma', function () {
+    const revisionId = $(this).data('id');
+    window.location.href = `/Revisiones/FinalizarProforma?revisionId=${revisionId}`;
+});
+</script>

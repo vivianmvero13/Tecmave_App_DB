@@ -1,0 +1,566 @@
+﻿@page
+@model Front.Pages.Revisiones.FinalizarProformaModel
+@{
+    ViewData["Title"] = "Finalizar Proforma";
+}
+
+<style>
+    /* Reutilizamos estilos del Index / Edit */
+    .card {
+        background: #1a1a1a;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        color: #ddd;
+        grid-column: 1 / -1; 
+        max-width: 1200px; 
+        margin: 0 auto; 
+    }
+
+    h3 {
+        margin-bottom: 1rem;
+        color: #000 !important;
+    }
+
+    .input, select, textarea {
+        width: 100%;
+        padding: .7rem;
+        background: #111;
+        border: 1px solid #333;
+        color: #eee;
+        border-radius: 8px;
+        margin-top: .3rem;
+    }
+
+        select, select option {
+            color: #ffffff !important;
+            background-color: #111111 !important;
+        }
+
+    .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: .35rem 1rem;
+        margin-top: .5rem;
+    }
+
+    .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .35rem 1rem;
+        margin-top: .5rem;
+    }
+
+        .grid-4 label,
+        .grid-3 label {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            color: #000; /* TEXTO NEGRO */
+            font-weight: 500;
+        }
+
+        .grid-4 input[type="checkbox"],
+        .grid-3 input[type="checkbox"] {
+            accent-color: #000; /* checkbox negro (navegadores modernos) */
+        }
+
+    #btnGuardar {
+        background: #5a9cff;
+        padding: .7rem 1rem;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+        margin-right: .5rem;
+    }
+
+        #btnGuardar:hover {
+            background: #7ab3ff;
+        }
+
+    .accordion {
+        margin-top: .5rem;
+    }
+
+    .accordion-header {
+        background: transparent;
+        color: #000;
+        border: none;
+        padding: .3rem 0;
+        cursor: pointer;
+        font-weight: 600;
+        text-decoration: underline;
+    }
+
+        .accordion-header:hover {
+            opacity: .7;
+        }
+
+    .accordion-body {
+        display: none;
+        margin-top: .5rem;
+        padding-left: .5rem;
+    }
+</style>
+
+<section class="section">
+    <div class="container grid cols-2">
+
+        <!-- FORMULARIO FINALIZAR PROFORMA -->
+        <div class="card">
+            <h3>Finalizar Proforma</h3>
+
+            <div>
+                <label>ID Revisión</label>
+                <input id="revision_id" class="input" disabled />
+            </div>
+
+            <div>
+                <label>Fecha ingreso</label>
+                <input id="fecha_ingreso" type="date" class="input" disabled />
+            </div>
+
+            <div>
+                <label>Estado</label>
+                <select id="id_estado" class="input"></select>
+            </div>
+
+            <hr />
+
+            <div>
+                <label>Vehículo</label>
+                <input id="vehiculo_info" class="input" disabled />
+            </div>
+
+            <div>
+                <label>Kilometraje</label>
+                <input id="kilometraje" type="number" class="input" />
+            </div>
+
+            <div>
+                <label>Nivel de combustible</label>
+                <select id="nivel_combustible" class="input">
+                    <option value="">Seleccione</option>
+                    <option value="E">E</option>
+                    <option value="1/4">1/4</option>
+                    <option value="1/2">1/2</option>
+                    <option value="3/4">3/4</option>
+                    <option value="F">F</option>
+                </select>
+            </div>
+
+            <hr />
+
+            <label>Golpes del vehículo</label>
+            <div class="grid-3">
+                <label><input type="checkbox" id="golpes_delantera"> Delantera</label>
+                <label><input type="checkbox" id="golpes_trasera"> Trasera</label>
+                <label><input type="checkbox" id="golpes_izquierda"> Izquierda</label>
+                <label><input type="checkbox" id="golpes_derecha"> Derecha</label>
+                <label><input type="checkbox" id="golpes_arriba"> Arriba</label>
+            </div>
+
+            <br />
+
+            <label>Condición</label>
+            <div class="grid-3">
+                <label><input type="checkbox" id="vehiculo_sucio"> Vehículo sucio</label>
+                <label><input type="checkbox" id="vehiculo_mojado"> Vehículo mojado</label>
+            </div>
+
+            <hr />
+
+            <div>
+                <label>Pertenencias</label>
+                <div id="listaPertenencias" class="grid-4"></div>
+            </div>
+
+            <div>
+                <label>Trabajos realizados</label>
+
+                <div class="accordion">
+                    <button type="button" class="accordion-header">
+                        Ver / ocultar trabajos
+                    </button>
+
+                    <div class="accordion-body">
+                        <div id="listaTrabajos" class="grid-4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            <div>
+                <label>Tipo de Servicio</label>
+                <select id="tipo_servicio_id" class="input"></select>
+            </div>
+
+            <div>
+                <label>Servicio</label>
+                <select id="servicio_id" class="input">
+                    <option value="">Seleccione</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Costo final</label>
+                <input id="costo_final" type="number" step="0.01" class="input" />
+            </div>
+                <hr />
+
+            <div>
+                <label>Fecha</label>
+                <input id="fecha" type="date" class="input" />
+            </div>
+
+            <div>
+                <label>Hora</label>
+                <select id="hora" class="input"></select>
+            </div>
+            <hr />
+            <div>
+                <label>Fecha estimada de entrega</label>
+                <input id="fecha_estimada_entrega" type="date" class="input" />
+            </div>
+
+            <div>
+                <label>Fecha entrega final</label>
+                <input id="fecha_entrega_final" type="date" class="input" />
+            </div>
+
+            <div>
+                <label>Notas del taller</label>
+                <textarea id="notas_taller" rows="4" class="input"></textarea>
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <button id="btnGuardar" type="button">Guardar y finalizar</button>
+                <a href="/Revisiones" class="btn btn-secondary">
+                    Cancelar
+                </a>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- OVERLAY DE CARGA -->
+<div id="loadingOverlay" style="display:none;">
+    <div class="modal">
+        <div class="modal-content">
+            <p>Cargando, por favor espere un momento...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =======================
+       CONFIG
+    ======================= */
+    const API_BASE = "http://localhost:7096";
+
+    const API = {
+        REVISION:      `${API_BASE}/Revision`,
+        AGENDAMIENTO:  `${API_BASE}/Agendamiento`,
+        SERV_REV:      `${API_BASE}/ServiciosRevision`,
+        PERT:          `${API_BASE}/api/RevisionPertenencias`,
+        TRAB:          `${API_BASE}/api/RevisionTrabajos`,
+        VEHICULO:      `${API_BASE}/Vehiculos`,
+        SERVICIOS:     `${API_BASE}/Servicios`,
+        ESTADOS:       `${API_BASE}/Estados`,
+        TIPO_SERVICIO: `${API_BASE}/TipoServicios`
+    };
+
+    const revisionId = new URLSearchParams(window.location.search).get("revisionId");
+
+    let revision = null;
+    let agendamiento = null;
+    let servicioRevision = null;
+
+    let pertenenciasOriginales = [];
+    let trabajosOriginales = [];
+
+    let cacheServicios = {};
+    let cacheTipos = {};
+
+    /* =======================
+       LOADING
+    ======================= */
+    function mostrarLoading() { $("#loadingOverlay").show(); }
+    function ocultarLoading() { $("#loadingOverlay").hide(); }
+
+    /* =======================
+       INIT
+    ======================= */
+    $(document).ready(async () => {
+        if (!revisionId) {
+            alert("RevisionId no recibido");
+            return;
+        }
+
+            $(document).on('click', '.accordion-header', function () {
+        $(this).next('.accordion-body').slideToggle(200);
+    });
+
+        mostrarLoading();
+
+        try {
+            await cargarTodo();
+            $("#btnGuardar").on("click", guardarTodo);
+
+           
+
+        } catch (e) {
+            console.error(e);
+            alert("Error cargando la proforma");
+        } finally {
+            ocultarLoading();
+        }
+    });
+
+
+        async function cargarTipos() {
+        $("#tipo_servicio_id").html(`<option value="">Seleccione</option>`);
+        const data = await $.get(API.TIPO_SERVICIO);
+
+        data.forEach(t => {
+            cacheTipos[t.id_tipo_servicio] = t;
+            $("#tipo_servicio_id").append(
+                `<option value="${t.id_tipo_servicio}">${t.nombre}</option>`
+            );
+        });
+    }
+
+        function filtrarServicios() {
+        const tipoId = $("#tipo_servicio_id").val();
+
+        $("#servicio_id").html(`<option value="">Seleccione</option>`);
+
+        Object.values(cacheServicios)
+            .filter(s => s.tipo_servicio_id == tipoId)
+            .forEach(s => {
+                $("#servicio_id").append(
+                    `<option value="${s.id_servicio}">${s.nombre}</option>`
+                );
+            });
+    }
+
+
+        async function cargarServicios() {
+        const data = await $.get(API.SERVICIOS);
+        data.forEach(s => {
+            cacheServicios[s.id_servicio] = s;
+        });
+    }
+
+    /* =======================
+       CARGA GENERAL
+    ======================= */
+        async function cargarTodo() {
+
+        /* ========= REVISION ========= */
+        revision = await $.get(`${API.REVISION}/${revisionId}`);
+
+        $("#revision_id").val(revision.id_revision);
+        $("#fecha_ingreso").val(revision.fecha_ingreso?.substring(0, 10));
+        $("#kilometraje").val(revision.kilometraje ?? "");
+        $("#nivel_combustible").val(revision.nivel_combustible ?? "");
+
+        $("#golpes_delantera").prop("checked", revision.golpes_delantera);
+        $("#golpes_trasera").prop("checked", revision.golpes_trasera);
+        $("#golpes_izquierda").prop("checked", revision.golpes_izquierda);
+        $("#golpes_derecha").prop("checked", revision.golpes_derecha);
+        $("#golpes_arriba").prop("checked", revision.golpes_arriba);
+
+        $("#vehiculo_sucio").prop("checked", revision.vehiculo_sucio);
+        $("#vehiculo_mojado").prop("checked", revision.vehiculo_mojado);
+
+        $("#notas_taller").val(revision.notas_taller ?? "");
+
+        /* ========= ESTADOS ========= */
+        $("#id_estado").html("");
+        const estados = await $.get(API.ESTADOS);
+        estados.forEach(e => {
+            $("#id_estado").append(
+                `<option value="${e.id_estado}">${e.nombre}</option>`
+            );
+        });
+        $("#id_estado").val(revision.id_estado);
+
+        /* ========= VEHICULO ========= */
+        const vehiculo = await $.get(`${API.VEHICULO}/${revision.vehiculo_id}`);
+        $("#vehiculo_info").val(`${vehiculo.placa} - ${vehiculo.modelo}`);
+
+         /* ========= AGENDAMIENTO ========= */
+    agendamiento = await $.get(`${API.AGENDAMIENTO}/${revision.id_agendamiento}`);
+
+    $("#fecha").val(agendamiento.fecha_agregada?.substring(0, 10));
+    $("#fecha_estimada_entrega")
+        .val(agendamiento.fecha_estimada_entrega?.substring(0, 10));
+
+    $("#hora").html("");
+    for (let h = 7; h <= 17; h++) {
+        const hora = `${h.toString().padStart(2, "0")}:00`;
+        $("#hora").append(`<option value="${hora}">${hora}</option>`);
+    }
+
+   
+    $("#hora").val(agendamiento.hora_llegada?.substring(0, 5));
+
+        /* ========= TIPOS Y SERVICIOS (CLAVE) ========= */
+        await cargarTipos();       
+        await cargarServicios();   
+
+        /* ========= SERVICIO DE LA REVISION ========= */
+        servicioRevision = await $.get(`${API.SERV_REV}/ByRevision/${revisionId}`);
+
+        const servicio = cacheServicios[servicioRevision.servicio_id];
+
+        if (!servicio) {
+            console.error("Servicio no encontrado en cache", servicioRevision);
+            return;
+        }
+
+        $("#tipo_servicio_id").val(servicio.tipo_servicio_id);
+        filtrarServicios();                      // 🔥 llena servicios
+        $("#servicio_id").val(servicio.id_servicio);
+        $("#costo_final").val(servicioRevision.costo_final);
+
+        /* ========= CHECKLISTS ========= */
+        await cargarPertenencias();
+        await cargarTrabajos();
+    }
+
+   
+
+    /* =======================
+       PERTENENCIAS
+    ======================= */
+    async function cargarPertenencias() {
+        $("#listaPertenencias").html("");
+
+        const catalogo = [
+            "Radio","Encendedor","Gar Celular","Antena","Espejo","Alfombras",
+            "Halogeno","Llave Rana","Gata Mec/HD","Herramienta","Triangulos",
+            "Lagartos","Llanta de repuesto","Copas","Paraguas","Botiquin",
+            "Chaleco","Booster","Linga","Extintor"
+        ];
+
+        pertenenciasOriginales =
+            await $.get(`${API.PERT}/GetByIdRevision/${revisionId}`);
+
+        catalogo.forEach(p => {
+            const checked = pertenenciasOriginales.some(x => x.nombre === p);
+            $("#listaPertenencias").append(`
+                <label>
+                    <input type="checkbox" value="${p}" ${checked ? "checked" : ""}/>
+                    ${p}
+                </label>
+            `);
+        });
+    }
+
+    /* =======================
+       TRABAJOS
+    ======================= */
+    async function cargarTrabajos() {
+        $("#listaTrabajos").html("");
+
+        const catalogo = [
+            "DIAGNOSTICO 0 M.","DIAGNOSTICO 3000 M.","DIAGNOSTICO 6000 M.",
+            "DIAGNOSTICO 9000 M.","DIAGNOSTICO 12000 M.","DIAGNOSTICO 15000 M.",
+            "R.T.V.","DIAGNOSTICO INYECCION","DIAGNOSTICO SIST. FRENOS",
+            "DIAGNOSTICO SIST. DIRECCION","DIAGNOSTICO SIST. SUSPENSION",
+            "DIAGNOSTICO SIST. ENFRIAMIENTO","REVISION SIST. ELECTRICO",
+            "REVISION DE TRANSMISION","AFINAMIENTO","TUNEUP",
+            "CAMBIO DE ACEITE Y FILTRO","CAMBIO DE ACEITE DE TRANSMISION",
+            "CAMBIO DE ACEITE DE DIFERENCIA","REVISION DE NIVELES","ENGRASE",
+            "LIMPIEZA DE INYECTORES","ALINEADO DE DIRECCION","BALANCEO",
+            "ROTACION DE LLANTAS","REPARACION DE TAPICERIA",
+            "REPARACION DE A/C","REPARACION DE CARROCERIA"
+        ];
+
+        trabajosOriginales =
+            await $.get(`${API.TRAB}/GetByIdRevision/${revisionId}`);
+
+        catalogo.forEach(nombre => {
+            const checked = trabajosOriginales.some(t => t.nombre === nombre);
+            $("#listaTrabajos").append(`
+                <label>
+                    <input type="checkbox" value="${nombre}" ${checked ? "checked" : ""}/>
+                    ${nombre}
+                </label>
+            `);
+        });
+    }
+
+    /* =======================
+       GUARDAR
+    ======================= */
+    function toIsoDate(value) {
+        return value ? `${value}T00:00:00` : null;
+    }
+
+    async function guardarTodo() {
+        mostrarLoading();
+
+        try {
+            await $.ajax({
+                url: `${API.REVISION}/finalizar-proforma`,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    id_revision: revisionId,
+                    id_estado: $("#id_estado").val(),
+                    kilometraje: $("#kilometraje").val() || null,
+                    nivel_combustible: $("#nivel_combustible").val() || null,
+                    golpes_delantera: $("#golpes_delantera").is(":checked"),
+                    golpes_trasera: $("#golpes_trasera").is(":checked"),
+                    golpes_izquierda: $("#golpes_izquierda").is(":checked"),
+                    golpes_derecha: $("#golpes_derecha").is(":checked"),
+                    golpes_arriba: $("#golpes_arriba").is(":checked"),
+                    vehiculo_sucio: $("#vehiculo_sucio").is(":checked"),
+                    vehiculo_mojado: $("#vehiculo_mojado").is(":checked"),
+                    notas_taller: $("#notas_taller").val()
+                })
+            });
+
+               await $.ajax({
+        url: `${API.AGENDAMIENTO}/finalizar`,
+        method: "PUT",
+        contentType: "application/json",
+        data: JSON.stringify({
+            id_agendamiento: agendamiento.id_agendamiento,
+            vehiculo_id: agendamiento.vehiculo_id,
+            fecha_agregada: agendamiento.fecha_agregada,
+            fecha_estimada: $("#fecha").val(),
+            fecha_estimada_entrega: $("#fecha_estimada_entrega").val(),
+            hora_llegada: $("#hora").val() + ":00"
+        })
+    });
+
+    await $.ajax({
+            url: API.SERV_REV,
+            method: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify({
+                id_servicio_revision: servicioRevision.id_servicio_revision,
+                revision_id: revisionId,
+                servicio_id: $("#servicio_id").val(),
+                costo_final: parseFloat($("#costo_final").val()) || 0
+            })
+        });
+
+            alert("Proforma finalizada correctamente");
+            location.href = "/Revisiones";
+
+        } catch (e) {
+            console.error(e);
+            alert("Error al finalizar la proforma");
+        } finally {
+            ocultarLoading();
+        }
+    }
+</script>

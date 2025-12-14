@@ -7,9 +7,7 @@ using Tecmave.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ======================
-//    CONFIG JSON / MVC
-// ======================
+
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
     {
@@ -20,16 +18,12 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ======================
-//    CONEXIÓN A MySQL
-// ======================
+
 var cs = builder.Configuration.GetConnectionString("MySqlConnection");
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseMySql(cs, ServerVersion.AutoDetect(cs)));
 
-// ======================
-//      IDENTITY
-// ======================
+
 builder.Services
     .AddIdentity<Usuario, AppRole>(options =>
     {
@@ -62,6 +56,8 @@ builder.Services.AddCors(options =>
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials()
+        .WithExposedHeaders("Set-Cookie")
+
     );
 });
 
@@ -109,7 +105,6 @@ app.UseSwaggerUI(c =>
 
 app.UseStaticFiles();
 app.UseHttpsRedirection();
-
 app.UseCors("PermirFrontend");
 
 app.UseAuthentication();

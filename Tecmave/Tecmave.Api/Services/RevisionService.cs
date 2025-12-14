@@ -1,5 +1,6 @@
 ﻿using Tecmave.Api.Data;
 using Tecmave.Api.Models;
+using Tecmave.Api.Models.Dto;
 
 namespace Tecmave.Api.Services
 {
@@ -48,13 +49,10 @@ namespace Tecmave.Api.Services
             }
 
             
-            entidad.fecha_ingreso = RevisionModel.fecha_ingreso;
             entidad.id_estado = RevisionModel.id_estado;
             entidad.fecha_estimada_entrega = RevisionModel.fecha_estimada_entrega;
             entidad.fecha_entrega_final = RevisionModel.fecha_entrega_final;
-            entidad.id_agendamiento = RevisionModel.id_agendamiento;
             entidad.kilometraje = RevisionModel.kilometraje;
-            entidad.observaciones_cliente = RevisionModel.observaciones_cliente;
             entidad.nivel_combustible = RevisionModel.nivel_combustible;
             entidad.golpes_delantera = RevisionModel.golpes_delantera;
             entidad.golpes_trasera = RevisionModel.golpes_trasera;
@@ -72,6 +70,31 @@ namespace Tecmave.Api.Services
             return true;
         }
 
+        public bool FinalizarProforma(FinalizarProformaDto dto)
+        {
+            var entidad = _context.revision.FirstOrDefault(p => p.id_revision == dto.id_revision);
+            if (entidad == null) return false;
+
+            entidad.id_estado = dto.id_estado;
+            entidad.kilometraje = dto.kilometraje;
+            entidad.nivel_combustible = dto.nivel_combustible;
+
+            entidad.golpes_delantera = dto.golpes_delantera;
+            entidad.golpes_trasera = dto.golpes_trasera;
+            entidad.golpes_izquierda = dto.golpes_izquierda;
+            entidad.golpes_derecha = dto.golpes_derecha;
+            entidad.golpes_arriba = dto.golpes_arriba;
+
+            entidad.vehiculo_sucio = dto.vehiculo_sucio;
+            entidad.vehiculo_mojado = dto.vehiculo_mojado;
+
+            entidad.fecha_estimada_entrega = dto.fecha_estimada_entrega;
+            entidad.fecha_entrega_final = dto.fecha_entrega_final;
+            entidad.notas_taller = dto.notas_taller;
+
+            _context.SaveChanges();
+            return true;
+        }
 
         public bool DeleteRevision(int id)
         {

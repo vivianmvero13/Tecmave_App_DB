@@ -38,24 +38,22 @@ namespace Tecmave.Api.Services
         }
 
 
-        public bool UpdateServiciosRevision(ServiciosRevisionModel ServiciosRevisionModel)
+        public bool UpdateServiciosRevision(ServiciosRevisionModel model)
         {
-            var entidad = _context.servicios_revision.FirstOrDefault(p => p.id_servicio_revision == ServiciosRevisionModel.id_servicio_revision);
+            var entidad = _context.servicios_revision
+                .FirstOrDefault(x => x.revision_id == model.revision_id);
 
             if (entidad == null)
-            {
                 return false;
-            }
 
-            entidad.costo_final = ServiciosRevisionModel.costo_final;
-
+            entidad.servicio_id = model.servicio_id;
+            entidad.costo_final = model.costo_final;
 
             _context.SaveChanges();
-
             return true;
-
         }
 
+       
 
         public bool DeleteServiciosRevision(int id)
         {
