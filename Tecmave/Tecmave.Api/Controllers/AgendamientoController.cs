@@ -93,6 +93,21 @@ namespace Tecmave.Api.Controllers
             return NoContent();
         }
 
+        [HttpPut("finalizar")]
+        public IActionResult Finalizar([FromBody] AgendamientoFinalizarDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var ok = _agendamientoService.FinalizarAgendamiento(dto);
+
+            if (!ok)
+                return NotFound();
+
+            return Ok();
+        }
+
+
         // ========= DELETE =========
         // Se mantiene así para no romper llamadas existentes: /Agendamiento?id=5
         [HttpDelete]

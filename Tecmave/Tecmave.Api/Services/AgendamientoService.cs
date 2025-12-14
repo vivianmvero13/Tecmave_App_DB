@@ -58,6 +58,25 @@ namespace Tecmave.Api.Services
             return true;
         }
 
+
+        public bool FinalizarAgendamiento(AgendamientoFinalizarDto dto)
+        {
+            var entidad = _context.agendamientos
+                .FirstOrDefault(a => a.id_agendamiento == dto.id_agendamiento);
+
+            if (entidad == null)
+                return false;
+
+            entidad.vehiculo_id = dto.vehiculo_id;
+            entidad.fecha_agregada = dto.fecha_agregada;
+            entidad.fecha_estimada = dto.fecha_estimada;
+            entidad.fecha_estimada_entrega = dto.fecha_estimada_entrega;
+            entidad.hora_llegada = dto.hora_llegada;
+
+            _context.SaveChanges();
+            return true;
+        }
+
         // Eliminar
         public bool DeleteAgendamiento(int id)
         {
