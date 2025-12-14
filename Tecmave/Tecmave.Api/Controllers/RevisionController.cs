@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tecmave.Api.Data;
 using Tecmave.Api.Models;
+using Tecmave.Api.Models.Dto;
 using Tecmave.Api.Services;
 
 namespace Tecmave.Api.Controllers
@@ -66,6 +67,33 @@ namespace Tecmave.Api.Controllers
 
             return NoContent();
 
+        }
+
+        [HttpPost("finalizar-proforma")]
+        public IActionResult FinalizarProforma([FromBody] FinalizarProformaDto dto)
+        {
+            if (dto == null || dto.id_revision <= 0)
+            {
+                return BadRequest(new
+                {
+                    mensaje = "Datos inválidos para finalizar la proforma"
+                });
+            }
+
+            var resultado = _RevisionService.FinalizarProforma(dto);
+
+            if (!resultado)
+            {
+                return NotFound(new
+                {
+                    mensaje = "No se encontró la revisión a finalizar"
+                });
+            }
+
+            return Ok(new
+            {
+                mensaje = "Proforma finalizada correctamente"
+            });
         }
 
         //APIS DELETE

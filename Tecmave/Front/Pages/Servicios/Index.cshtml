@@ -275,7 +275,7 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        
                         <th>Vehículo</th>
                         <th>Servicio</th>
                         <th>Fecha</th>
@@ -643,7 +643,7 @@
 
             $("table tbody").append(`
                 <tr>
-                    <td>${r.id_revision}</td>
+                    
                     <td>${veh?.placa || "-"}</td>
                     <td>${serv?.nombre || "Desconocido"}</td>
                     <td>${ag?.fecha_estimada || "-"}</td>
@@ -656,13 +656,19 @@
                         <button class="btn-proforma" onclick="cancelarRevision(${r.id_revision})">
                             Cancelar
                         </button>
-                        <button class="btn-proforma" onclick="reagendarRevision(${r.id_revision}, ${servicioId ?? 'null'})">
-                            Reagendar
-                        </button>
+                         <button class="btn-proforma"
+                            onclick="editarRevision(${r.id_revision})">
+                            Editar
+                         </button>
                     </td>
                 </tr>
             `);
         }
+    }
+
+
+        function editarRevision(idRevision) {
+        window.location.href = `/Servicios/Edit/${idRevision}`;
     }
 
 
