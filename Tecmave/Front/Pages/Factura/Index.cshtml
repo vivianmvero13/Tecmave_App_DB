@@ -4,62 +4,82 @@
     ViewData["Title"] = "Facturas";
 }
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+
 <section class="section">
     <div class="container grid cols-1">
         <div class="card">
             <div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
                 <h3 style="margin:0">Listado de Facturas</h3>
-                <div class="fx-actions" style="display:flex;flex-wrap:wrap;gap:.5rem;">
-                    <button id="btnAbrirModalCrear" class="btn">Generar factura</button>
-                    <button id="btnExportVista" class="btn btn-primary">Exportar vista actual</button>
-                    <button id="btnNotificarPendientes" class="btn btn-secondary">Notificar pendientes</button>
-                </div>
 
+                <!-- 1) Acciones uno al lado del otro (sin wrap) -->
+                <div class="fx-actions" style="display:flex;flex-wrap:nowrap;gap:.5rem;align-items:center;justify-content:flex-end;">
+                    <button id="btnAbrirModalCrear" class="btn">Generar factura</button>
+                </div>
             </div>
 
             <!-- FILTROS -->
-            <div class="form-row" style="display:flex;flex-wrap:wrap;gap:1rem;margin-top:1rem;">
-                <div>
-                    <label>Número de factura</label>
-                    <input id="filtroNumero" class="input" placeholder="Ej: 1024" />
-                </div>
-                <div>
-                    <label>Buscar por cliente</label>
-                    <input id="filtroNombre" class="input" placeholder="Ingrese nombre del cliente..." />
-                </div>
-                <div>
-                    <label>Estado</label>
-                    <select id="filtroEstado" class="input">
-                        <option value="">Todos</option>
+            <div class="row g-3 align-items-end mt-3">
+                <!-- Filtro por estado -->
+                <div class="col-md-3">
+                    <label for="filtroEstado" class="form-label">Filtrar por estado</label>
+                    <select id="filtroEstado" class="form-select">
+                        <option value="">(Todos)</option>
                         <option value="Pagada">Pagada</option>
                         <option value="Pendiente">Pendiente</option>
                         <option value="Anulada">Anulada</option>
                     </select>
                 </div>
-                <div>
-                    <label>Desde</label>
-                    <input id="filtroDesde" type="date" class="input" />
+
+                <!-- Buscar y Rango de Fechas -->
+                <div class="col-md-5">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-6">
+                            <label for="filtroGlobal" class="form-label">Buscar</label>
+                            <input id="filtroGlobal" class="form-control" placeholder="Buscar en todas las columnas…" />
+                        </div>
+
+                        <div class="col-6">
+                            <label for="filtroRango" class="form-label">Rango de fechas</label>
+                            <div class="cal-wrap">
+                                <span class="cal-ico" aria-hidden="true">📅</span>
+                                <input id="filtroRango" class="form-control cal-input" placeholder="Seleccionar rango..." />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label>Hasta</label>
-                    <input id="filtroHasta" type="date" class="input" />
-                </div>
-                <div style="display:flex;align-items:flex-end;">
-                    <button id="btnFiltrar" class="btn btn-primary">Filtrar</button>
+
+                <!-- Botón LIMPIAR -->
+                <div class="col-md-2" style="display:flex;align-items:flex-end;">
+                    <button id="btnClearAll" class="btn btn-outline-secondary" type="button" style="width:100%;">Limpiar</button>
                 </div>
             </div>
+
 
             <!-- Estado de carga -->
             <div id="estadoCarga" class="muted" style="margin: .75rem 0;">Cargando…</div>
 
             <!-- TABLA -->
+            <div class="table-header">
+                <div></div>
+
+                <div class="table-actions">
+                    <button id="btnExportVista" class="icon-action" type="button" title="Exportar vista actual">
+                        <img src="/assets/img/export.png" alt="Exportar" />
+                    </button>
+
+                    <button id="btnNotificarPendientes" class="icon-action" type="button" title="Notificar pendientes">
+                        <img src="/assets/img/notification.png" alt="Notificar" />
+                    </button>
+                </div>
+            </div>
+
             <div class="table-wrapper">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>ID Factura</th>
+                            <th>ID </th>
                             <th>Cliente</th>
-                            <th>Correo</th>
                             <th>Teléfono</th>
                             <th>Fecha emisión</th>
                             <th>Método pago</th>
@@ -391,9 +411,254 @@
         line-height: 1;
         cursor: pointer
     }
+
+    /* Filtros alineados uno al lado del otro */
+    .row.g-3 {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px; /* Espaciado entre filtros */
+    }
+
+    .col-md-3, .col-md-5, .col-md-2 {
+        margin-bottom: 1rem;
+    }
+
+    /* 4) Mini calendario como "hint" dentro del input */
+    .cal-wrap {
+        position: relative;
+    }
+
+    .cal-ico {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18px;
+        opacity: 0.7;
+        pointer-events: none;
+    }
+
+    .cal-input {
+        padding-left: 34px;
+    }
+
+    /* 5) Limpiar todos los filtros con un solo botón */
+    #btnClearAll {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px; /* Separación entre la cabecera y la tabla */
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end; /* Asegura que los botones estén a la derecha */
+        width: 200px; /* Limita el ancho de la caja de botones para no ocupar todo el espacio */
+    }
+
+    button.icon-action {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        outline: none !important;
+    }
+
+        button.icon-action:hover,
+        button.icon-action:focus,
+        button.icon-action:active {
+            background: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        /* Tamaño del ícono */
+        button.icon-action img {
+            width: 25px;
+            height: 25px;
+            display: block;
+        }
+
+
+
+    /* 4) Mini calendario como “hint” dentro del input */
+    .cal-wrap {
+        position: relative;
+        width: 100%;
+    }
+
+    .cal-ico {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        opacity: .7;
+        pointer-events: none;
+    }
+
+    .cal-input {
+        padding-left: 34px;
+    }
+
+    .icon-action {
+        all: unset;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+        .icon-action img {
+            width: 30px;
+            height: 30px;
+            display: block;
+        }
+    /* ===== FIX FLATPICKR HEADER ===== */
+    .flatpickr-calendar {
+        z-index: 9999;
+    }
+
+    .flatpickr-months {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 8px;
+    }
+
+    .flatpickr-month {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 34px;
+    }
+
+    .flatpickr-prev-month,
+    .flatpickr-next-month {
+        position: static;
+        height: 28px;
+        padding: 4px;
+    }
+
+    .flatpickr-current-month {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        line-height: 1;
+    }
+
+    /* Mes */
+    .flatpickr-monthDropdown-months {
+        font-size: 13px;
+        padding: 2px 6px;
+        height: 26px;
+    }
+
+    /* Año */
+    .flatpickr-current-month input.cur-year {
+        font-size: 13px;
+        height: 26px;
+        padding: 2px 6px;
+    }
+
+    /* Evita que el calendario se tape */
+    .flatpickr-innerContainer {
+        padding-top: 4px;
+    }
+    /* ===== FLATPICKR COMPACT FIX (MES / AÑO) ===== */
+
+    .flatpickr-calendar {
+        font-size: 13px;
+    }
+
+    .flatpickr-months {
+        display: flex;
+        align-items: center;
+        height: 36px;
+        padding: 4px 6px;
+    }
+
+    .flatpickr-month {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 28px;
+    }
+
+    /* Flechas */
+    .flatpickr-prev-month,
+    .flatpickr-next-month {
+        position: static;
+        padding: 0 6px;
+        height: 24px;
+        line-height: 24px;
+    }
+
+    /* Contenedor mes + año */
+    .flatpickr-current-month {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        height: 24px;
+    }
+
+    /* SELECT del mes */
+    .flatpickr-monthDropdown-months {
+        font-size: 12px;
+        height: 22px;
+        padding: 0 4px;
+        border-radius: 4px;
+    }
+
+    /* INPUT del año */
+    .flatpickr-current-month input.cur-year {
+        font-size: 12px;
+        height: 22px;
+        padding: 0 4px;
+        border-radius: 4px;
+    }
+
+    /* Evita que el calendario se corte */
+    .flatpickr-innerContainer {
+        padding-top: 6px;
+    }
+
+    /* Quita márgenes raros */
+    .flatpickr-weekdays,
+    .flatpickr-days {
+        margin-top: 2px;
+    }
+
+    /* ===== FLATPICKR: MES Y AÑO MISMO TAMAÑO ===== */
+    .flatpickr-monthDropdown-months,
+    .flatpickr-current-month input.cur-year {
+        font-size: 12px !important;
+        height: 22px !important;
+        line-height: 22px !important;
+        padding: 0 4px !important;
+        border-radius: 4px;
+    }
+
 </style>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 
@@ -406,6 +671,15 @@
         let USUARIOS = [];
         let SERVICIOS = [];
         let facturaSeleccionada = null;
+
+        let rangeStart = null;
+        let rangeEnd = null;
+        let fpRange = null;
+
+        function debounce(fn, d = 200) {
+            let t;
+            return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), d); };
+        }
 
         function badgeEstado(est) {
             const e = (est || '').toLowerCase();
@@ -421,7 +695,6 @@
 
             const nombre = (u.nombre || u.Nombre || '').toString().trim();
             const ap = (u.apellidos || u.Apellidos || u.apellido || u.Apellido || '').toString().trim();
-
             return (nombre + ' ' + ap).trim() || String(u.email || u.Email || id || '');
         }
 
@@ -453,7 +726,10 @@
             return new Date(d.getFullYear(), d.getMonth(), d.getDate());
         }
 
-        // ✅ FIXES NECESARIOS: carga independiente + normalizar objeto->array
+        function getSearchText() {
+            return ($("#filtroGlobal").val() || "").toString().toLowerCase().trim();
+        }
+
         function cargarTodo() {
             $("#estadoCarga").text("Cargando…");
 
@@ -470,7 +746,7 @@
 
                     llenarCombosClientes();
                     renderTabla();
-                    $("#estadoCarga").text(FACTURAS.length ? "Listo" : "No hay facturas.");
+                    $("#estadoCarga").text(FACTURAS.length ? "Facturas cargadas correctamente" : "No hay facturas.");
                     cargarServicios();
                 })
                 .fail(function (xhr, textStatus, errorThrown) {
@@ -481,7 +757,7 @@
                         USUARIOS = [];
                         llenarCombosClientes();
                         renderTabla();
-                        $("#estadoCarga").text(FACTURAS.length ? "Listo (sin usuarios)" : "No hay facturas.");
+                        $("#estadoCarga").text(FACTURAS.length ? "Facturas cargadas correctamente (sin usuarios)" : "No hay facturas.");
                         cargarServicios();
                     }).fail(function (x2, t2, e2) {
                         console.error("FACTURAS también falló:", x2?.status, t2, e2, x2?.responseText);
@@ -532,36 +808,37 @@
         }
 
         function pasaFiltros(f) {
-            const num = ($("#filtroNumero").val() || "").trim();
-            const nombreFiltro = ($("#filtroNombre").val() || "").toLowerCase().trim();
-            const estadoFiltro = $("#filtroEstado").val();
-            const desde = $("#filtroDesde").val();
-            const hasta = $("#filtroHasta").val();
+            const q = getSearchText();
+            const estadoFiltro = ($("#filtroEstado").val() || "").toString();
 
             const id = f.id_factura ?? f.id ?? f.Id;
             const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
-            const nombreCliente = String(nombreClientePorId(clienteId) ?? '').toLowerCase();
 
-            if (num && String(id) !== num) return false;
-            if (nombreFiltro && !nombreCliente.includes(nombreFiltro)) return false;
+            const cliente = nombreClientePorId(clienteId);
+            const correo = correoClientePorId(clienteId);
+            const tel = telefonoClientePorId(clienteId);
 
-            const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? '').toString();
+            const fechaVal = f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision;
+            const fechaTxt = safeFecha(fechaVal);
+            const fecha = parseDateOnly(fechaVal);
+
+            const metodo = (f.metodo_pago ?? f.metodoPago ?? f.MetodoPago ?? '').toString();
+            const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? 'Pendiente').toString();
+            const total = formatCRC(f.total ?? f.Total ?? 0);
+
             if (estadoFiltro && estado !== estadoFiltro) return false;
 
-            if (desde || hasta) {
-                const fechaVal = f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision;
-                const fecha = parseDateOnly(fechaVal);
+            if (rangeStart || rangeEnd) {
                 if (!fecha) return false;
-
-                if (desde) {
-                    const d = parseDateOnly(desde);
-                    if (fecha < d) return false;
-                }
-                if (hasta) {
-                    const h = parseDateOnly(hasta);
-                    if (fecha > h) return false;
-                }
+                if (rangeStart && fecha < rangeStart) return false;
+                if (rangeEnd && fecha > rangeEnd) return false;
             }
+
+            if (q) {
+                const haystack = [id, cliente, correo, tel, fechaTxt, metodo, estado, total].join(' ').toLowerCase();
+                if (!haystack.includes(q)) return false;
+            }
+
             return true;
         }
 
@@ -585,9 +862,8 @@
                 const fila = `
                     <tr>
                         <td>${id ?? ''}</td>
-                        <td>${cliente ?? ''}</td>
-                        <td>${correo ?? ''}</td>
-                        <td>${tel ?? ''}</td>
+                        <td>${cliente ?? 'Eliminado'}</td>
+                        <td>${tel ?? 'Eliminado'}</td>
                         <td>${fecha}</td>
                         <td>${metodo}</td>
                         <td>${badgeEstado(estado)}</td>
@@ -637,9 +913,7 @@
                 success: function () {
                     FACTURAS = FACTURAS.map(x => {
                         const xid = x.id_factura ?? x.id ?? x.Id;
-                        if (Number(xid) === Number(facturaSeleccionada.id)) {
-                            return { ...x, estado_pago: nuevo };
-                        }
+                        if (Number(xid) === Number(facturaSeleccionada.id)) return { ...x, estado_pago: nuevo };
                         return x;
                     });
                     renderTabla();
@@ -660,9 +934,7 @@
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({}),
-                success: function () {
-                    alert(`Factura enviada al correo del cliente.`);
-                },
+                success: function () { alert(`Factura enviada al correo del cliente.`); },
                 error: function (xhr) {
                     console.error("Error al enviar factura por correo", xhr?.status, xhr?.responseText);
                     alert("No se pudo enviar la factura por correo.");
@@ -676,10 +948,7 @@
             const fecha = $("#crear_fecha").val();
             const total = Number($("#crear_total").val());
 
-            if (!clienteId || total <= 0) {
-                alert("Debe seleccionar un cliente y un total mayor a 0.");
-                return;
-            }
+            if (!clienteId || total <= 0) { alert("Debe seleccionar un cliente y un total mayor a 0."); return; }
 
             const body = {
                 cliente_id: clienteId,
@@ -714,10 +983,7 @@
             const servicioId = Number($("#auto_servicio").val());
             const metodo = $("#auto_metodo").val();
 
-            if (!clienteId || !servicioId) {
-                alert("Debe seleccionar un cliente y un servicio.");
-                return;
-            }
+            if (!clienteId || !servicioId) { alert("Debe seleccionar un cliente y un servicio."); return; }
 
             const body = { cliente_id: clienteId, servicio_id: servicioId, metodo_pago: metodo };
 
@@ -738,10 +1004,6 @@
                 }
             });
         }
-
-        // ==========================
-        // ✅ NUEVO: Exportar vista actual (por filtros) + Notificar pendientes (por vista)
-        // ==========================
 
         function exportarPdf(facturas) {
             try {
@@ -777,10 +1039,7 @@
 
         function exportarVistaActualPdf() {
             const listaFiltrada = FACTURAS.filter(pasaFiltros);
-            if (!listaFiltrada.length) {
-                alert("No hay facturas para exportar con los filtros actuales.");
-                return;
-            }
+            if (!listaFiltrada.length) { alert("No hay facturas para exportar con los filtros actuales."); return; }
             exportarPdf(listaFiltrada);
         }
 
@@ -791,10 +1050,7 @@
                 return est === "pendiente";
             });
 
-            if (!pendientes.length) {
-                alert("No hay facturas pendientes en la vista actual.");
-                return;
-            }
+            if (!pendientes.length) { alert("No hay facturas pendientes en la vista actual."); return; }
 
             const $btn = $("#btnNotificarPendientes");
             $btn.prop("disabled", true).text("Notificando...");
@@ -819,6 +1075,54 @@
 
             $btn.prop("disabled", false).text("Notificar pendientes");
             alert(`Notificaciones enviadas: ${ok}\nErrores: ${err}\nTotal pendientes: ${pendientes.length}`);
+        }
+
+        function initRangePicker() {
+            const el = document.getElementById('filtroRango');
+            if (!el) return;
+
+            fpRange = flatpickr(el, {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                allowInput: false,
+                showMonths: 1,
+                onClose: function (selectedDates) {
+                    if (!selectedDates || !selectedDates.length) {
+                        rangeStart = null;
+                        rangeEnd = null;
+                        renderTabla();
+                        return;
+                    }
+
+                    const d1 = selectedDates[0]
+                        ? new Date(selectedDates[0].getFullYear(), selectedDates[0].getMonth(), selectedDates[0].getDate())
+                        : null;
+
+                    const d2raw = selectedDates[1] || selectedDates[0];
+                    const d2 = d2raw
+                        ? new Date(d2raw.getFullYear(), d2raw.getMonth(), d2raw.getDate())
+                        : null;
+
+                    if (d1 && d2 && d2 < d1) { rangeStart = d2; rangeEnd = d1; }
+                    else { rangeStart = d1; rangeEnd = d2; }
+
+                    renderTabla();
+                }
+            });
+        }
+
+        function clearAllFilters() {
+            $("#filtroEstado").val("");
+            $("#filtroGlobal").val("");
+
+            rangeStart = null;
+            rangeEnd = null;
+
+            if (fpRange) fpRange.clear();
+            $("#filtroRango").val("");
+
+            renderTabla();
+            $("#filtroGlobal").focus();
         }
 
         // ===== EVENTOS =====
@@ -847,16 +1151,21 @@
         $("#btnCrearFactura").on("click", crearFacturaManual);
         $("#btnCrearAuto").on("click", crearFacturaAuto);
 
-        $("#btnFiltrar").on("click", function () { renderTabla(); });
-
-        // ✅ NUEVOS BOTONES
         $("#btnExportVista").on("click", exportarVistaActualPdf);
         $("#btnNotificarPendientes").on("click", notificarPendientesVistaActual);
 
-        // Inicio
+        const refreshDebounced = debounce(() => renderTabla(), 180);
+
+        $("#filtroEstado").on("change", function () { renderTabla(); });
+
+        $("#filtroGlobal").on("input", function () { refreshDebounced(); });
+        $("#filtroGlobal").on("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } });
+
+        $("#btnClearAll").on("click", clearAllFilters);
+
         $(document).ready(function () {
+            initRangePicker();
             cargarTodo();
         });
     </script>
-
 }
