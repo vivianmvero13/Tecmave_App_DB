@@ -7,47 +7,47 @@
 
 <h1>Administrar Agendamientos</h1>
 
-<!-- Filtros -->
-<div class="row g-3 align-items-end mt-3">
-    <div class="col-12 col-md-4">
+<!-- FILTROS -->
+<div class="row g-3 align-items-end mt-3 ag-filtros">
+    <div class="col-md-3">
         <label for="estadoFilter" class="form-label">Filtrar por estado</label>
         <select id="estadoFilter" class="form-select">
             <option value="">(Todos)</option>
         </select>
     </div>
 
-    <div class="col-12 col-md-8">
+    <div class="col-md-7">
         <label for="searchAg" class="form-label">Buscar</label>
         <div class="input-group">
-            <input id="searchAg"
-                   class="form-control"
+            <input id="searchAg" class="form-control"
                    placeholder="Buscar por cliente, placa, estado…" />
-            <button id="clearSearchAg"
-                    class="btn btn-outline-secondary"
-                    type="button">
-                Limpiar
+            <button id="clearSearchAg" class="btn btn-danger" type="button">
+                LIMPIAR
             </button>
         </div>
     </div>
 </div>
 
-<!-- Barra superior -->
-<div class="d-flex justify-content-between align-items-center mt-3">
-    <small id="agResultsBadge" class="text-muted">
-        Mostrando 0 de 0
-    </small>
 
-    <div class="d-flex gap-2">
-        <button id="exportAgBtn"
-                class="btn btn-orange btn-sm"
-                type="button">
-            <i class="fa-solid fa-file-excel"></i> Exportar
+
+
+<!-- Exportar -->
+
+<div class="table-header mt-2">
+    <small id="agResultsBadge" class="text-muted">Mostrando 0 de 0</small>
+
+    <div class="table-actions">
+        <button id="exportAgBtn" class="icon-action" type="button" title="Exportar vista actual">
+            <img src="/assets/img/export.png" alt="Exportar" />
         </button>
     </div>
 </div>
 
+
+
 <!-- Tabla -->
 <div class="table-responsive mt-2">
+
     <table class="table align-middle">
         <thead>
             <tr>
@@ -173,6 +173,51 @@
     /* opcional: que ambos ocupen el mismo ancho */
     .ag-action-btn {
         flex: 1 1 auto;
+    }
+
+    button.icon-action {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        outline: none !important;
+    }
+
+        button.icon-action:hover,
+        button.icon-action:focus,
+        button.icon-action:active {
+            background: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        /* Tamaño del ícono */
+        button.icon-action img {
+            width: 25px;
+            height: 25px;
+            display: block;
+        }
+    /* === EXACTO como Facturas: fuerza el layout aunque bootstrap esté pisado === */
+    .ag-filtros.row.g-3 {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+    }
+
+    .table-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 12px;
+    }
+
+    .table-actions {
+        display: flex !important;
+        gap: 10px !important;
+        justify-content: flex-end !important;
+        width: 120px; /* ajustá si querés más espacio */
     }
 
 </style>

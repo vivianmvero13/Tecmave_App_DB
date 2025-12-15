@@ -17,14 +17,18 @@
     </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mt-3">
+<!-- Header tabla: badge izquierda + acciones derecha -->
+<div class="table-header mt-2">
     <small id="resultsBadge" class="text-muted">Mostrando 0 de 0</small>
-    <div class="d-flex gap-2">
-        <button id="exportBtn" class="btn btn-orange btn-sm" type="button">
-            <i class="fa-solid fa-file-excel"></i> Exportar
+
+    <div class="table-actions">
+        <button id="registrarBtn" class="icon-action" type="button" title="Registrar nuevo vehículo"
+                onclick="location.href='/Vehiculos/Crear'">
+            <img src="/assets/img/add.png" alt="Registrar nuevo vehiculo" />
         </button>
-        <button id="registrarBtn" class="btn btn-orange btn-sm" type="button" onclick="location.href='/Vehiculos/Crear'">
-            <i class="fa-solid fa-plus"></i> Registrar
+
+        <button id="exportBtn" class="icon-action" type="button" title="Exportar vista actual">
+            <img src="/assets/img/export.png" alt="Exportar" />
         </button>
     </div>
 </div>
@@ -59,6 +63,7 @@
             <option value="50">50</option>
         </select>
     </div>
+
     <nav aria-label="Paginación vehículos" class="vehiculos-pagination-nav">
         <ul class="pagination pagination-sm mb-0 d-flex flex-row align-items-center gap-2"
             style="list-style:none; margin:0; padding:0;">
@@ -76,7 +81,8 @@
 </div>
 
 <!-- Modal estilo SweetAlert2 (reutilizable) -->
-<div id="appModal" class="swal2-container" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
+<div id="appModal" class="swal2-container" aria-hidden="true" role="dialog" aria-modal="true"
+     aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
     <div class="swal2-backdrop" data-close="1"></div>
     <div class="swal2-popup" role="document" tabindex="-1">
         <button class="swal2-close" type="button" aria-label="Cerrar" data-close="1">×</button>
@@ -91,7 +97,6 @@
         <div class="swal2-actions">
             <button id="modalCancel" class="btn btn-secondary" type="button" data-close="1" style="display:none">Cancelar</button>
             <button id="modalConfirm" class="btn btn-orange" type="button">Aceptar</button>
-
         </div>
     </div>
 </div>
@@ -154,10 +159,6 @@
         position: absolute !important;
         top: 12px !important;
         right: 14px !important;
-        left: auto !important;
-        bottom: auto !important;
-        justify-self: end;
-        align-self: start;
         border: 0;
         background: transparent;
         font-size: 26px;
@@ -248,6 +249,48 @@
         border-radius: 8px;
         cursor: pointer;
     }
+
+    /* Header tabla: badge izquierda + botones derecha */
+    .table-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 12px;
+        width: 100%;
+    }
+
+    .table-actions {
+        display: flex !important;
+        gap: 10px !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+    }
+
+    /* Botón icono */
+    button.icon-action {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        outline: none !important;
+        cursor: pointer;
+    }
+
+        button.icon-action:hover,
+        button.icon-action:focus,
+        button.icon-action:active {
+            background: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        button.icon-action img {
+            width: 25px;
+            height: 25px;
+            display: block;
+        }
 </style>
 
 <script>
@@ -260,6 +303,8 @@
     const $tableBody = document.getElementById('vehiculosTable');
     const $search    = document.getElementById('localSearch');
     const $clear     = document.getElementById('clearSearch');
+
+    // ✅ IDs correctos
     const $badge     = document.getElementById('resultsBadge');
     const $export    = document.getElementById('exportBtn');
 
@@ -334,7 +379,7 @@
             bodyText = '',
             kind = 'info',
             confirmText = 'Aceptar',
-            cancelText = null,     // si viene null no se muestra
+            cancelText = null,
             onConfirmCb = null,
             onCloseCb = null
         }){
@@ -354,13 +399,9 @@
             onConfirm = (typeof onConfirmCb === 'function') ? onConfirmCb : null;
             onClose   = (typeof onCloseCb === 'function') ? onCloseCb : null;
 
-            // reset listeners
             btnConfirm.onclick = async () => {
-                try {
-                    if (onConfirm) await onConfirm();
-                } finally {
-                    hide();
-                }
+                try { if (onConfirm) await onConfirm(); }
+                finally { hide(); }
             };
 
             root.classList.add('show');
@@ -390,14 +431,7 @@
         });
 
         function confirm({ titleText, bodyText, kind='warn', confirmText='Eliminar', cancelText='Cancelar', onConfirmCb }){
-            show({
-                titleText,
-                bodyText,
-                kind,
-                confirmText,
-                cancelText,
-                onConfirmCb
-            });
+            show({ titleText, bodyText, kind, confirmText, cancelText, onConfirmCb });
         }
 
         return { show, hide, confirm };
@@ -433,7 +467,6 @@
         }
     }
 
-    // ===== Transformación de fila del API a modelo UI =====
     function mapApiRow(r) {
         const idRaw = pick(r, ['id','id_vehiculo','idVehiculo','Id','IdVehiculo']);
         const id    = idRaw !== undefined && idRaw !== null ? Number(idRaw) : null;
@@ -454,7 +487,6 @@
         return { id, placa, anno, marca, modelo, cliente, email };
     }
 
-    // ===== Render paginado =====
     function renderRows(pageRows, total, from, to, page, totalPages) {
         if (!total) {
             $tableBody.innerHTML = `<tr><td colspan="7">Sin resultados</td></tr>`;
@@ -465,34 +497,31 @@
             return;
         }
 
-        if (!pageRows.length) {
-            $tableBody.innerHTML = `<tr><td colspan="7">Sin resultados en esta página</td></tr>`;
-        } else {
-            const html = pageRows.map(r => `
-                <tr>
-                    <td>${escapeHtml(r.placa)}</td>
-                    <td>${escapeHtml(String(r.anno))}</td>
-                    <td>${escapeHtml(r.marca)}</td>
-                    <td>${escapeHtml(r.modelo)}</td>
-                    <td>${escapeHtml(r.cliente)}</td>
-                    <td>${escapeHtml(r.email)}</td>
-                    <td>
-                        <div class="actions-group">
-                            <a class="btn btn-outline-primary"
-                               href="/Vehiculos/Crear?id=${encodeURIComponent(r.id)}">
-                                Ver
-                            </a>
-                            <button type="button"
-                                    class="btn btn-outline-danger"
-                                    onclick="confirmarEliminar(${r.id})">
-                                Eliminar
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-            $tableBody.innerHTML = html;
-        }
+        const html = pageRows.map(r => `
+            <tr>
+                <td>${escapeHtml(r.placa)}</td>
+                <td>${escapeHtml(String(r.anno))}</td>
+                <td>${escapeHtml(r.marca)}</td>
+                <td>${escapeHtml(r.modelo)}</td>
+                <td>${escapeHtml(r.cliente)}</td>
+                <td>${escapeHtml(r.email)}</td>
+                <td>
+                    <div class="actions-group">
+                        <a class="btn btn-outline-primary"
+                           href="/Vehiculos/Crear?id=${encodeURIComponent(r.id)}">
+                            Ver
+                        </a>
+                        <button type="button"
+                                class="btn btn-outline-danger"
+                                onclick="confirmarEliminar(${r.id})">
+                            Eliminar
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        $tableBody.innerHTML = html;
 
         $badge.textContent = `Mostrando ${from}-${to} de ${total}`;
         $pageInfoVeh.textContent = `${page} / ${totalPages}`;
@@ -506,9 +535,8 @@
 
     function applyFilterVeh() {
         const q = $search.value.trim().toLowerCase();
-        if (!q) {
-            filteredRows = [...allRows];
-        } else {
+        if (!q) filteredRows = [...allRows];
+        else {
             filteredRows = allRows.filter(r =>
                 r.placa.toLowerCase().includes(q) ||
                 String(r.anno).toLowerCase().includes(q) ||
@@ -540,63 +568,53 @@
         renderRows(pageRows, total, startIndex + 1, endIndex, currentPageVeh, totalPages);
     }
 
-// ===== Exportar Excel (.xlsx) =====
+    // ===== Exportar Excel (.xlsx) =====
+    function exportExcel() {
+        const rows = (filteredRows && filteredRows.length) ? filteredRows : (allRows || []);
+        if (!rows.length) return;
 
-function exportExcel() {
-    const rows = (filteredRows && filteredRows.length) ? filteredRows : (allRows || []);
-    if (!rows.length) return;
+        const data = rows.map(r => ({
+            "Placa":   r.placa ?? '',
+            "Año":     r.anno ?? '',
+            "Marca":   r.marca ?? '',
+            "Modelo":  r.modelo ?? '',
+            "Cliente": r.cliente ?? '',
+            "Email":   r.email ?? ''
+        }));
 
-    // 1) Datos “bonitos” (orden + nombres de columnas)
-    const data = rows.map(r => ({
-        "Placa":   r.placa ?? '',
-        "Año":     r.anno ?? '',
-        "Marca":   r.marca ?? '',
-        "Modelo":  r.modelo ?? '',
-        "Cliente": r.cliente ?? '',
-        "Email":   r.email ?? ''
-    }));
-
-    // 2) Hoja
-    const ws = XLSX.utils.json_to_sheet(data);
-
-    // 3) Anchos de columna
+        const ws = XLSX.utils.json_to_sheet(data);
 
         const header = ws['!rows'] || [];
-        header[0] = { hpt: 30 }; // Ajustar el alto de la fila del encabezado
+        header[0] = { hpt: 30 };
 
-        // Aplica estilo al encabezado (fila 1)
-        ws['A1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna A
-        ws['B1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna B
-        ws['C1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna C
-        ws['D1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna D
-        ws['E1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna E
-        ws['F1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna F
+        ws['A1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };
+        ws['B1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };
+        ws['C1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };
+        ws['D1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };
+        ws['E1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };
+        ws['F1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };
 
+        ws['!cols'] = [
+            { wch: 12 },
+            { wch: 8  },
+            { wch: 18 },
+            { wch: 22 },
+            { wch: 28 },
+            { wch: 32 }
+        ];
 
-    ws['!cols'] = [
-        { wch: 12 }, // Placa
-        { wch: 8  }, // Año
-        { wch: 18 }, // Marca
-        { wch: 22 }, // Modelo
-        { wch: 28 }, // Cliente
-        { wch: 32 }  // Email
-    ];
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        ws['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
 
-    // 4) Auto-filtro en encabezados
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    ws['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Vehículos');
 
-    // 5) Libro + descarga
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Vehículos');
+        const now = new Date();
+        const pad = n => n.toString().padStart(2, '0');
+        const fname = `vehiculos_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.xlsx`;
 
-    const now = new Date();
-    const pad = n => n.toString().padStart(2, '0');
-    const fname = `vehiculos_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.xlsx`;
-
-    XLSX.writeFile(wb, fname);
-}
-
+        XLSX.writeFile(wb, fname);
+    }
 
     // ===== Eliminar vehículo =====
     async function deleteVehiculo(id) {
@@ -612,6 +630,7 @@ function exportExcel() {
                     const payload = await res.json();
                     if (payload?.message) msg = payload.message;
                 } catch { }
+
                 Modal.show({
                     titleText: 'Error',
                     bodyText: msg,
@@ -640,7 +659,6 @@ function exportExcel() {
         }
     }
 
-    // ===== Confirmar eliminación =====
     function confirmarEliminar(id) {
         Modal.confirm({
             titleText: '¿Eliminar vehículo?',
@@ -648,14 +666,11 @@ function exportExcel() {
             kind: 'warn',
             confirmText: 'Sí, eliminar',
             cancelText: 'Cancelar',
-            onConfirmCb: async () => {
-                await deleteVehiculo(id);
-            }
+            onConfirmCb: async () => { await deleteVehiculo(id); }
         });
     }
     window.confirmarEliminar = confirmarEliminar;
 
-    // ===== Carga principal =====
     async function loadVehiculos() {
         try {
             await Promise.all([loadUsuarios(), loadMarcas()]);
@@ -684,6 +699,7 @@ function exportExcel() {
         }
     }
 
+    // Eventos
     $search.addEventListener('input', () => {
         currentPageVeh = 1;
         refreshVehiculosTable();
@@ -695,9 +711,8 @@ function exportExcel() {
         refreshVehiculosTable();
     });
 
-        $export.addEventListener('click', exportExcel);
+    $export.addEventListener('click', exportExcel);
 
-    // Eventos de paginación
     $pageSizeSelectVeh.addEventListener('change', () => {
         const val = Number($pageSizeSelectVeh.value);
         pageSizeVeh = PAGE_SIZES_VEH.includes(val) ? val : 5;
