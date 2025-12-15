@@ -17,7 +17,6 @@
     </div>
 </section>
 
-<!-- Modal de detalle -->
 <div id="promoDetailModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="detalleTitulo" aria-describedby="detalleDescripcion">
     <div class="modal-backdrop" data-close="1"></div>
     <div class="modal-dialog modal-dialog-wide" role="document">
@@ -77,8 +76,8 @@
     .promo-image-wrapper {
         position: relative;
         width: 100%;
-        padding-top: 56.25%; /* 16:9 */
-        background: #f5f5f5;
+        padding-top: 56.25%;
+        background: #fff;
         overflow: hidden;
     }
 
@@ -87,8 +86,9 @@
             inset: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             display: block;
+            background: #fff;
         }
 
     .promo-image-placeholder {
@@ -124,7 +124,6 @@
         margin: 0;
     }
 
-    /* Modal */
     .modal {
         position: fixed;
         inset: 0;
@@ -178,7 +177,7 @@
     .detalle-imagen-wrapper {
         border-radius: .75rem;
         overflow: hidden;
-        background: #f5f5f5;
+        background: #fff;
         min-height: 200px;
         position: relative;
     }
@@ -187,8 +186,9 @@
             width: 100%;
             height: 100%;
             max-height: 480px;
-            object-fit: cover;
+            object-fit: contain;
             display: block;
+            background: #fff;
         }
 
     .detalle-imagen-placeholder {
@@ -267,7 +267,6 @@
         }
     }
 
-    // Cargar SOLO promos con estado Activo (id_estado = 1)
     async function cargarPromosActivas() {
         showPromoMsg('');
         const grid = document.getElementById('promoGrid');
@@ -279,10 +278,9 @@
             const data = await r.json();
             const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
 
-            // 🔥 FILTRO ÚNICAMENTE POR ESTADO ACTIVO
             promosActivas = list.filter(p => {
                 const estado = Number(p.id_estado ?? p.idEstado ?? p.IdEstado ?? 0);
-                return estado === 1; // solo activas
+                return estado === 1;
             });
 
             if (!promosActivas.length) {
@@ -323,7 +321,6 @@
         }
     }
 
-    // Modal detalle
     const PromoDetalleModal = (() => {
         const root = document.getElementById('promoDetailModal');
         const tituloEl = document.getElementById('detalleTitulo');
