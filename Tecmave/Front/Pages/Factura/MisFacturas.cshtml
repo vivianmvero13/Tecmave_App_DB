@@ -1,0 +1,599 @@
+﻿@page
+@model Front.Pages.Factura.MisFacturasModel
+@{
+    ViewData["Title"] = "Mis facturas";
+}
+
+<!-- Contexto: el PageModel debe setear ClienteId (int) -->
+<div id="facturaContext"
+     data-cliente-id="@(Model.ClienteId?.ToString() ?? "")">
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+
+<section class="section">
+    <div class="container grid cols-1">
+        <div class="card">
+            <div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+                <h3 style="margin:0">Listado de Facturas</h3>
+
+                <!-- Cliente: no acciones -->
+                <div class="fx-actions" style="display:flex;flex-wrap:nowrap;gap:.5rem;align-items:center;justify-content:flex-end;">
+                    <!-- (intencionalmente vacío para mantener estética/espaciado) -->
+                </div>
+            </div>
+
+            <!-- FILTROS -->
+            <div class="row g-3 align-items-end mt-3">
+                <!-- Filtro por estado -->
+                <div class="col-md-3">
+                    <label for="filtroEstado" class="form-label">Filtrar por estado</label>
+                    <select id="filtroEstado" class="form-select">
+                        <option value="">(Todos)</option>
+                        <option value="Pagada">Pagada</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Anulada">Anulada</option>
+                    </select>
+                </div>
+
+                <!-- Buscar y Rango de Fechas -->
+                <div class="col-md-5">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-6">
+                            <label for="filtroGlobal" class="form-label">Buscar</label>
+                            <input id="filtroGlobal" class="form-control" placeholder="Buscar en todas las columnas…" />
+                        </div>
+
+                        <div class="col-6">
+                            <label for="filtroRango" class="form-label">Rango de fechas</label>
+                            <div class="cal-wrap">
+                                <span class="cal-ico" aria-hidden="true">📅</span>
+                                <input id="filtroRango" class="form-control cal-input" placeholder="Seleccionar rango..." />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botón LIMPIAR -->
+                <div class="col-md-2" style="display:flex;align-items:flex-end;">
+                    <button id="btnClearAll" class="btn btn-outline-secondary" type="button" style="width:100%;">Limpiar</button>
+                </div>
+            </div>
+
+            <!-- Estado de carga -->
+            <div id="estadoCarga" class="muted" style="margin: .75rem 0;">Cargando…</div>
+
+            <!-- TABLA -->
+            <div class="table-header">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="pageSizeSelectFact" class="form-label mb-0">Mostrar:</label>
+                            <select id="pageSizeSelectFact" class="form-select form-select-sm" style="width:auto;">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cliente: sin acciones -->
+                <div class="table-actions" style="visibility:hidden">
+                    <button class="icon-action" type="button" title="Exportar vista actual">
+                        <img src="/assets/img/export.png" alt="Exportar" />
+                    </button>
+                    <button class="icon-action" type="button" title="Notificar pendientes">
+                        <img src="/assets/img/notification.png" alt="Notificar" />
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha emisión</th>
+                            <th>Método pago</th>
+                            <th>Estado</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaFacturas"></tbody>
+                </table>
+            </div>
+
+            <div class="subtle">
+                <span id="badge"></span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    body, .table, .table td, .table th, .card, .muted {
+        color: #333;
+    }
+
+    .table-wrapper {
+        overflow: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .table th {
+            background: #f5f5f5;
+        }
+
+        .table th, .table td {
+            padding: 8px 10px;
+            border: 1px solid #e6e6e6;
+        }
+
+    .badge {
+        padding: .15rem .5rem;
+        border-radius: 10px;
+        font-size: .85rem;
+        border: 1px solid #ddd
+    }
+
+        .badge.badge--pendiente {
+            background: #fff6e6;
+            border-color: #ffd699
+        }
+
+        .badge.badge--pagada {
+            background: #eaffea;
+            border-color: #a8f0b0
+        }
+
+        .badge.badge--anulada {
+            background: #ffecec;
+            border-color: #ffb8b8
+        }
+
+    .btn {
+        padding: .35rem .65rem;
+        border: 1px solid #ccc;
+        background: #fafafa;
+        cursor: pointer;
+        border-radius: 6px;
+        font-size: .9rem;
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        border-color: #2f6fda;
+        color: #fff;
+    }
+
+    .btn-secondary {
+        background: #f2f2f2;
+        border-color: #d9d9d9;
+    }
+
+    .btn:disabled {
+        opacity: .6;
+        cursor: not-allowed
+    }
+
+    .card {
+        background: #fff;
+        border: 1px solid #e9e9e9;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 1px 2px rgba(0,0,0,.03)
+    }
+
+    .container {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .muted {
+        color: #666;
+        font-size: .9rem
+    }
+
+    .subtle {
+        margin-top: .75rem;
+        font-size: .85rem;
+        color: #666;
+    }
+
+    /* Filtros alineados */
+    .row.g-3 {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .col-md-3, .col-md-5, .col-md-2 {
+        margin-bottom: 1rem;
+    }
+
+    /* Mini calendario dentro del input */
+    .cal-wrap {
+        position: relative;
+        width: 100%;
+    }
+
+    .cal-ico {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        opacity: .7;
+        pointer-events: none;
+    }
+
+    .cal-input {
+        padding-left: 34px;
+    }
+
+    /* Botón limpiar */
+    #btnClearAll {
+        background-color: #f44336;
+        color: #fff;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        width: 200px;
+    }
+
+    button.icon-action {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        outline: none !important;
+    }
+
+        button.icon-action:hover, button.icon-action:focus, button.icon-action:active {
+            background: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        button.icon-action img {
+            width: 25px;
+            height: 25px;
+            display: block;
+        }
+
+    /* ===== FLATPICKR FIXES (idénticos a tu vista original) ===== */
+    .flatpickr-calendar {
+        z-index: 9999;
+        font-size: 13px;
+    }
+
+    .flatpickr-months {
+        display: flex;
+        align-items: center;
+        height: 36px;
+        padding: 4px 6px;
+    }
+
+    .flatpickr-month {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 28px;
+    }
+
+    .flatpickr-prev-month, .flatpickr-next-month {
+        position: static;
+        padding: 0 6px;
+        height: 24px;
+        line-height: 24px;
+    }
+
+    .flatpickr-current-month {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        height: 24px;
+    }
+
+    .flatpickr-monthDropdown-months {
+        font-size: 12px;
+        height: 22px;
+        padding: 0 4px;
+        border-radius: 4px;
+    }
+
+    .flatpickr-current-month input.cur-year {
+        font-size: 12px;
+        height: 22px;
+        padding: 0 4px;
+        border-radius: 4px;
+    }
+
+    .flatpickr-innerContainer {
+        padding-top: 6px;
+    }
+
+    .flatpickr-weekdays, .flatpickr-days {
+        margin-top: 2px;
+    }
+
+    .flatpickr-monthDropdown-months, .flatpickr-current-month input.cur-year {
+        font-size: 12px !important;
+        height: 22px !important;
+        line-height: 22px !important;
+        padding: 0 4px !important;
+        border-radius: 4px;
+    }
+</style>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <script>
+        const API_BASE = "https://tecmave-api.azurewebsites.net";
+        const API_FACTURAS = `${API_BASE}/facturas`;
+
+        let FACTURAS = [];
+        let pageSizeFact = 10;
+        let currentPageFact = 1;
+
+        let rangeStart = null;
+        let rangeEnd = null;
+        let fpRange = null;
+
+        const ctx = document.getElementById("facturaContext");
+        const clienteIdRaw = (ctx?.dataset?.clienteId ?? "").toString().trim();
+        const isCliente = true;
+
+        function debounce(fn, d = 200) {
+            let t;
+            return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), d); };
+        }
+
+        function badgeEstado(est) {
+            const e = (est || "").toString().toLowerCase().trim();
+            if (e === "pagada") return '<span class="badge badge--pagada">Pagada</span>';
+            if (e === "anulada") return '<span class="badge badge--anulada">Anulada</span>';
+            return '<span class="badge badge--pendiente">Pendiente</span>';
+        }
+
+        function formatCRC(n) {
+            return Number(n || 0).toLocaleString("es-CR", {
+                style: "currency",
+                currency: "CRC",
+                maximumFractionDigits: 0
+            });
+        }
+
+        function safeFecha(v) {
+            if (!v) return "";
+            const d = new Date(v);
+            return isNaN(d) ? "" : d.toLocaleDateString();
+        }
+
+        function parseDateOnly(v) {
+            if (!v) return null;
+            const d = new Date(v);
+            if (isNaN(d)) return null;
+            return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        }
+
+        function getSearchText() {
+            return ($("#filtroGlobal").val() || "").toString().toLowerCase().trim();
+        }
+
+        function pasaFiltros(f) {
+            const q = getSearchText();
+            const estadoFiltro = ($("#filtroEstado").val() || "").toString();
+
+            const id = f.id_factura ?? f.id ?? f.Id;
+
+            const fechaVal = f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision;
+            const fechaTxt = safeFecha(fechaVal);
+            const fecha = parseDateOnly(fechaVal);
+
+            const metodo = (f.metodo_pago ?? f.metodoPago ?? f.MetodoPago ?? "").toString();
+            const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? "Pendiente").toString();
+            const total = formatCRC(f.total ?? f.Total ?? 0);
+
+            if (estadoFiltro && estado !== estadoFiltro) return false;
+
+            if (rangeStart || rangeEnd) {
+                if (!fecha) return false;
+                if (rangeStart && fecha < rangeStart) return false;
+                if (rangeEnd && fecha > rangeEnd) return false;
+            }
+
+            if (q) {
+                const haystack = [id, fechaTxt, metodo, estado, total].join(" ").toLowerCase();
+                if (!haystack.includes(q)) return false;
+            }
+
+            return true;
+        }
+
+        function renderTabla() {
+            const $tb = $("#tablaFacturas");
+            $tb.empty();
+
+            const filtradas = FACTURAS.filter(pasaFiltros);
+            const total = filtradas.length;
+
+            if (!total) {
+                $tb.append(`<tr><td colspan="5">Sin resultados</td></tr>`);
+                $("#badge").text(`0 factura(s)`);
+                return;
+            }
+
+            const totalPages = Math.max(1, Math.ceil(total / pageSizeFact));
+            if (currentPageFact > totalPages) currentPageFact = totalPages;
+
+            const start = (currentPageFact - 1) * pageSizeFact;
+            const end = Math.min(start + pageSizeFact, total);
+
+            filtradas.slice(start, end).forEach(f => {
+                const id = f.id_factura ?? f.id ?? f.Id;
+                const fecha = safeFecha(f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision);
+                const metodo = (f.metodo_pago ?? f.metodoPago ?? f.MetodoPago ?? "").toString();
+                const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? "Pendiente").toString();
+                const totalMonto = f.total ?? f.Total ?? 0;
+
+                $tb.append(`
+                    <tr>
+                        <td>${id ?? ""}</td>
+                        <td>${fecha}</td>
+                        <td>${metodo}</td>
+                        <td>${badgeEstado(estado)}</td>
+                        <td>${formatCRC(totalMonto)}</td>
+                    </tr>
+                `);
+            });
+
+            $("#badge").text(`Mostrando ${start + 1}-${end} de ${total}`);
+        }
+
+        function cargarFacturas() {
+            $("#estadoCarga").text("Cargando…");
+
+            if (!clienteIdRaw) {
+                FACTURAS = [];
+                currentPageFact = 1;
+                renderTabla();
+                $("#estadoCarga").text("No se pudo determinar el cliente actual.");
+                return;
+            }
+
+            $.ajax({ url: API_FACTURAS, method: "GET" })
+                .done(function (data) {
+                    const all = Array.isArray(data) ? data : (data ? [data] : []);
+
+                    FACTURAS = all.filter(f => {
+                        if (f?.cliente_id === null || f?.cliente_id === undefined) return false;
+                        return String(f.cliente_id).trim() === clienteIdRaw;
+                    });
+
+                    currentPageFact = 1;
+                    renderTabla();
+
+                    $("#estadoCarga").text(
+                        FACTURAS.length
+                            ? "Facturas cargadas correctamente"
+                            : "No hay facturas asociadas a su cuenta."
+                    );
+                })
+                .fail(function (xhr, textStatus, errorThrown) {
+                    console.error("Error al cargar facturas:", xhr?.status, textStatus, errorThrown, xhr?.responseText);
+                    FACTURAS = [];
+                    currentPageFact = 1;
+                    renderTabla();
+                    $("#estadoCarga").text("No se pudieron cargar las facturas.");
+                });
+        }
+
+        function initRangePicker() {
+            const el = document.getElementById("filtroRango");
+            if (!el || typeof flatpickr === "undefined") return;
+
+            fpRange = flatpickr(el, {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                allowInput: false,
+                showMonths: 1,
+                onClose: function (selectedDates) {
+                    if (!selectedDates || !selectedDates.length) {
+                        rangeStart = null;
+                        rangeEnd = null;
+                        currentPageFact = 1;
+                        renderTabla();
+                        return;
+                    }
+
+                    const d1 = selectedDates[0]
+                        ? new Date(selectedDates[0].getFullYear(), selectedDates[0].getMonth(), selectedDates[0].getDate())
+                        : null;
+
+                    const d2raw = selectedDates[1] || selectedDates[0];
+                    const d2 = d2raw
+                        ? new Date(d2raw.getFullYear(), d2raw.getMonth(), d2raw.getDate())
+                        : null;
+
+                    if (d1 && d2 && d2 < d1) { rangeStart = d2; rangeEnd = d1; }
+                    else { rangeStart = d1; rangeEnd = d2; }
+
+                    currentPageFact = 1;
+                    renderTabla();
+                }
+            });
+        }
+
+        function clearAllFilters() {
+            $("#filtroEstado").val("");
+            $("#filtroGlobal").val("");
+            currentPageFact = 1;
+
+            rangeStart = null;
+            rangeEnd = null;
+
+            if (fpRange) fpRange.clear();
+            $("#filtroRango").val("");
+
+            renderTabla();
+            $("#filtroGlobal").focus();
+        }
+
+        const refreshDebounced = debounce(() => renderTabla(), 180);
+
+        $("#filtroEstado").on("change", function () {
+            currentPageFact = 1;
+            renderTabla();
+        });
+
+        $("#filtroGlobal").on("input", function () {
+            currentPageFact = 1;
+            refreshDebounced();
+        });
+
+        $("#filtroGlobal").on("keydown", function (e) {
+            if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); }
+        });
+
+        $("#btnClearAll").on("click", clearAllFilters);
+
+        $("#pageSizeSelectFact").on("change", function () {
+            pageSizeFact = Number(this.value) || 10;
+            currentPageFact = 1;
+            renderTabla();
+        });
+
+        $(document).ready(function () {
+            initRangePicker();
+            cargarFacturas();
+        });
+    </script>
+
+}
