@@ -61,7 +61,20 @@
 
             <!-- TABLA -->
             <div class="table-header">
-                <div></div>
+                <div>
+                    <!-- Controles de vista -->
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="pageSizeSelectFact" class="form-label mb-0">Mostrar:</label>
+                            <select id="pageSizeSelectFact" class="form-select form-select-sm" style="width:auto;">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="table-actions">
                     <button id="btnExportVista" class="icon-action" type="button" title="Exportar vista actual">
@@ -672,6 +685,10 @@
         let SERVICIOS = [];
         let facturaSeleccionada = null;
 
+        let pageSizeFact = 10;
+        let currentPageFact = 1;
+
+
         let rangeStart = null;
         let rangeEnd = null;
         let fpRange = null;
@@ -846,18 +863,32 @@
             const $tb = $("#tablaFacturas");
             $tb.empty();
 
-            const lista = FACTURAS.filter(pasaFiltros);
+            const filtradas = FACTURAS.filter(pasaFiltros);
+            const total = filtradas.length;
+
+            if (!total) {
+                $tb.append(`<tr><td colspan="8">Sin resultados</td></tr>`);
+                $("#badge").text(`0 factura(s) mostradas`);
+                return;
+            }
+
+            const totalPages = Math.max(1, Math.ceil(total / pageSizeFact));
+            if (currentPageFact > totalPages) currentPageFact = totalPages;
+
+            const start = (currentPageFact - 1) * pageSizeFact;
+            const end = Math.min(start + pageSizeFact, total);
+
+            const lista = filtradas.slice(start, end);
 
             lista.forEach(f => {
                 const id = f.id_factura ?? f.id ?? f.Id;
                 const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
                 const cliente = nombreClientePorId(clienteId);
-                const correo = correoClientePorId(clienteId);
                 const tel = telefonoClientePorId(clienteId);
                 const fecha = safeFecha(f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision);
                 const metodo = f.metodo_pago ?? f.metodoPago ?? f.MetodoPago ?? '';
                 const estado = f.estado_pago ?? f.estado ?? f.Estado ?? 'Pendiente';
-                const total = f.total ?? f.Total ?? 0;
+                const totalMonto = f.total ?? f.Total ?? 0;
 
                 const fila = `
                     <tr>
@@ -867,7 +898,7 @@
                         <td>${fecha}</td>
                         <td>${metodo}</td>
                         <td>${badgeEstado(estado)}</td>
-                        <td>${formatCRC(total)}</td>
+                        <td>${formatCRC(totalMonto)}</td>
                         <td>
                             <button class="btn danger btn-estado" data-id="${id}" data-estado="${estado}">Estado</button>
                             <button class="btn btn-secondary btn-enviar" data-id="${id}">Enviar</button>
@@ -876,7 +907,7 @@
                 $tb.append(fila);
             });
 
-            $("#badge").text(`${lista.length} factura(s) mostradas`);
+            $("#badge").text(`Mostrando ${start + 1}-${end} de ${total}`);
         }
 
         function abrirModal(id) {
@@ -1105,6 +1136,7 @@
 
                     if (d1 && d2 && d2 < d1) { rangeStart = d2; rangeEnd = d1; }
                     else { rangeStart = d1; rangeEnd = d2; }
+                    currentPageFact = 1;
 
                     renderTabla();
                 }
@@ -1114,6 +1146,7 @@
         function clearAllFilters() {
             $("#filtroEstado").val("");
             $("#filtroGlobal").val("");
+            currentPageFact = 1;
 
             rangeStart = null;
             rangeEnd = null;
@@ -1156,12 +1189,25 @@
 
         const refreshDebounced = debounce(() => renderTabla(), 180);
 
-        $("#filtroEstado").on("change", function () { renderTabla(); });
+        $("#filtroEstado").on("change", function () {
+            currentPageFact = 1;
+            renderTabla();
+        });
 
-        $("#filtroGlobal").on("input", function () { refreshDebounced(); });
+        $("#filtroGlobal").on("input", function () {
+            currentPageFact = 1;
+            refreshDebounced();
+        });
         $("#filtroGlobal").on("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } });
 
         $("#btnClearAll").on("click", clearAllFilters);
+
+                $("#pageSizeSelectFact").on("change", function () {
+            pageSizeFact = Number(this.value) || 10;
+            currentPageFact = 1;
+            renderTabla();
+        });
+
 
         $(document).ready(function () {
             initRangePicker();
