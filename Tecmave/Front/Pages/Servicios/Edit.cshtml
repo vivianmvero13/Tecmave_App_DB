@@ -390,7 +390,7 @@
                ACTUALIZAR AGENDAMIENTO
                ======================= */
             await $.ajax({
-        url: API.AGENDAMIENTO,
+        url: API.AGENDAMIENTO + "/FinalizarProforma",
         method: "PUT",
         contentType: "application/json",
         data: JSON.stringify({

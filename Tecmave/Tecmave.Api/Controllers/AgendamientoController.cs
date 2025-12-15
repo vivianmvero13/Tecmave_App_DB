@@ -78,11 +78,27 @@ namespace Tecmave.Api.Controllers
             );
         }
 
+        
         // ========= PUT =========
         [HttpPut]
-        public IActionResult UpdateAgendamiento([FromBody] AgendamientoUpdateDto dto)
+        public IActionResult UpdateAgendamiento(AgendamientoModel agendamientoModel)
         {
-            if (!_agendamientoService.UpdateAgendamiento(dto))
+            if (!_agendamientoService.UpdateAgendamiento(agendamientoModel))
+            {
+                return NotFound(new
+                {
+                    mensaje = "El agendamiento no fue encontrado"
+                });
+            }
+
+            return NoContent();
+        }
+
+
+        [HttpPut("Proforma")]
+        public IActionResult UpdateAgendamientoEditProforma([FromBody] AgendamientoUpdateDto dto)
+        {
+            if (!_agendamientoService.UpdateAgendamientoServicios(dto))
             {
                 return NotFound(new
                 {
