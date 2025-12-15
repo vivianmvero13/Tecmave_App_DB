@@ -76,6 +76,8 @@
     const VEH_URL   = `${API_BASE}/Vehiculos`;
     const USERS_URL = `${API_BASE}/api/usuarios`;
     const EST_URL   = `${API_BASE}/Estados`;
+    const FACT_URL  = `${API_BASE}/facturas`;
+
 
     let allAgendamientos = [];
     let vehById   = {};
@@ -261,6 +263,54 @@
         }
     }
 
+       async function generarFacturaDesdeAg(agId){
+        const ag = allAgendamientos.find(x => Number(x.id_agendamiento) === Number(agId));
+        if(!ag){
+            alert('No se encontró el agendamiento.');
+            return;
+        }
+
+        const clienteId = Number(ag.cliente_id);
+        const costoRaw  = ag.costo_mantenimiento ?? ag.costo;
+
+        if(!clienteId){
+            alert('Este agendamiento no tiene cliente_id.');
+            return;
+        }
+
+        const total = Number(costoRaw);
+        if(!costoRaw || isNaN(total) || total <= 0){
+            alert('No se puede generar la factura: el costo está vacío o es 0.\nPrimero actualizá el costo del mantenimiento.');
+            return;
+        }
+
+        const fechaBase = ag.fecha_estimada || ag.fecha_agregada || new Date().toISOString();
+
+        const body = {
+            cliente_id: clienteId,
+            fecha_emision: new Date(fechaBase).toISOString(),
+            total: total,
+            metodo_pago: "Sin definir",
+            estado_pago: "Pendiente"
+        };
+
+        try{
+            const created = await $.ajax({
+                url: FACT_URL,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(body)
+            });
+
+            alert(`Factura generada ✅\nID: ${created?.id_factura ?? created?.id ?? '(sin id)'}`);
+
+        }catch(err){
+            console.error(err);
+            alert("No se pudo generar la factura desde este agendamiento.");
+        }
+    }
+
+
     window.restoreAgEstado = function(agId){
         const ag = allAgendamientos.find(x => Number(x.id_agendamiento) === Number(agId));
         if(!ag) return;
@@ -302,14 +352,21 @@
                     <td>${selectHtml}</td>
                     <td>${fechaEntregaHtml}</td>
                     <td>${costoHtml}</td>
-                    <td>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <a class="btn btn-primary"
-                               href="/Mantenimientos/Editar/${a.id_agendamiento}">
-                                Editar
-                            </a>
-                        </div>
-                    </td>
+                       <td>
+      <div class="btn-group btn-group-sm" role="group">
+        <a class="btn btn-primary"
+           href="/Mantenimientos/Editar/${a.id_agendamiento}">
+          Editar
+        </a>
+
+        <button class="btn btn-success btn-gen-factura"
+                type="button"
+                data-id="${a.id_agendamiento}">
+          Generar factura
+        </button>
+      </div>
+    </td>
+
                 </tr>
             `);
         });
@@ -444,6 +501,11 @@
             $('#agTable').html(`<tr><td colspan="8" class="text-danger">Error cargando datos.</td></tr>`);
         }
     }
+        $(document).on('click', '.btn-gen-factura', function () {
+        const agId = Number($(this).data('id'));
+        generarFacturaDesdeAg(agId);
+    });
+
 
     $(function(){
         loadAllData();

@@ -50,7 +50,7 @@ namespace Tecmave.Api.Services
                 cliente_id = clienteId,
                 fecha_emision = System.DateTime.UtcNow,
                 total = servicio.precio,
-                metodo_pago = string.IsNullOrWhiteSpace(metodoPago) ? "Pendiente" : metodoPago,
+                metodo_pago = string.IsNullOrWhiteSpace(metodoPago) ? "Sin definir" : metodoPago,
                 estado_pago = "Pendiente"
             };
             _context.factura.Add(factura);

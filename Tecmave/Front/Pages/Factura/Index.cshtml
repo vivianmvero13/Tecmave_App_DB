@@ -10,14 +10,11 @@
             <div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
                 <h3 style="margin:0">Listado de Facturas</h3>
                 <div class="fx-actions" style="display:flex;flex-wrap:wrap;gap:.5rem;">
-                    <button id="btnExportMes" class="btn btn-primary">Exportar mes</button>
-                    <button id="btnExportCliente" class="btn btn-primary">Exportar por cliente</button>
-                    <button id="btnExportPendientes" class="btn btn-secondary">Exportar pendientes</button>
-                    <button id="btnEnviarRecordatorios" class="btn">Enviar recordatorios</button>
                     <button id="btnAbrirModalCrear" class="btn">Generar factura</button>
-                    <button id="btnAbrirModalAuto" class="btn">Generar desde servicio</button>
-                    <button id="btnPdf" class="btn">Exportar PDF</button>
+                    <button id="btnExportVista" class="btn btn-primary">Exportar vista actual</button>
+                    <button id="btnNotificarPendientes" class="btn btn-secondary">Notificar pendientes</button>
                 </div>
+
             </div>
 
             <!-- FILTROS -->
@@ -135,9 +132,7 @@
                     </div>
                     <div>
                         <label>Servicio</label>
-                        <select id="auto_servicio" class="input">
-                            <!-- Puedes llenar este select desde tu API de servicios si lo deseas -->
-                        </select>
+                        <select id="auto_servicio" class="input"></select>
                     </div>
                     <div>
                         <label>Método de pago</label>
@@ -310,7 +305,6 @@
         display: none !important;
     }
 
-    /* Modal genérico */
     .modal {
         position: fixed;
         inset: 0;
@@ -354,7 +348,6 @@
         cursor: pointer
     }
 
-    /* Modal pequeño (cambiar estado) */
     .modal__backdrop {
         position: fixed;
         inset: 0;
@@ -401,23 +394,19 @@
 </style>
 
 @section Scripts {
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-    <!-- jsPDF + autoTable -->
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 
     <script>
         const API_FACTURAS  = "https://tecmave-api.azurewebsites.net/facturas";
         const API_USUARIOS  = "https://tecmave-api.azurewebsites.net/api/usuarios";
-        const API_SERVICIOS = "https://tecmave-api.azurewebsites.net/servicios"; // si en tu API es /api/servicios, cámbialo aquí
+        const API_SERVICIOS = "https://tecmave-api.azurewebsites.net/servicios";
 
         let FACTURAS = [];
         let USUARIOS = [];
         let SERVICIOS = [];
         let facturaSeleccionada = null;
 
-        // ===== HELPERS =====
         function badgeEstado(est) {
             const e = (est || '').toLowerCase();
             if (e === 'pagada') return '<span class="badge badge--pagada">Pagada</span>';
@@ -428,10 +417,12 @@
         function nombreClientePorId(id) {
             if (id == null) return '';
             const u = USUARIOS.find(x => Number(x.id) === Number(id) || Number(x.Id) === Number(id));
-            if (!u) return id ?? '';
+            if (!u) return String(id ?? '');
+
             const nombre = (u.nombre || u.Nombre || '').toString().trim();
             const ap = (u.apellidos || u.Apellidos || u.apellido || u.Apellido || '').toString().trim();
-            return (nombre + ' ' + ap).trim() || (u.email || u.Email || id);
+
+            return (nombre + ' ' + ap).trim() || String(u.email || u.Email || id || '');
         }
 
         function correoClientePorId(id) {
@@ -462,84 +453,84 @@
             return new Date(d.getFullYear(), d.getMonth(), d.getDate());
         }
 
-        // ===== CARGA INICIAL =====
+        // ✅ FIXES NECESARIOS: carga independiente + normalizar objeto->array
         function cargarTodo() {
             $("#estadoCarga").text("Cargando…");
-            const g1 = $.ajax({ url: API_FACTURAS, method: 'GET', xhrFields: { withCredentials: true } });
-            const g2 = $.ajax({ url: API_USUARIOS, method: 'GET', xhrFields: { withCredentials: true } });
 
-            $.when(g1, g2).done((r1, r2) => {
-                FACTURAS = Array.isArray(r1[0]) ? r1[0] : [];
-                USUARIOS = Array.isArray(r2[0]) ? r2[0] : [];
+            const pFact = $.ajax({ url: API_FACTURAS, method: "GET" });
+            const pUsers = $.ajax({ url: API_USUARIOS, method: "GET" });
 
-                console.log("FACTURAS:", FACTURAS);
-                console.log("USUARIOS:", USUARIOS);
+            $.when(pFact, pUsers)
+                .done((r1, r2) => {
+                    const factData = r1[0];
+                    const userData = r2[0];
 
-                llenarCombosClientes();
-                renderTabla();
-                $("#estadoCarga").text(FACTURAS.length ? "Listo" : "No hay facturas.");
+                    FACTURAS = Array.isArray(factData) ? factData : (factData ? [factData] : []);
+                    USUARIOS = Array.isArray(userData) ? userData : (userData ? [userData] : []);
 
-                // cargar servicios después de usuarios (para llenar combo auto_servicio)
-                cargarServicios();
-            }).fail((jq1, jq2) => {
-                console.error("Error al cargar:", jq1?.status, jq1?.responseText);
-                $("#estadoCarga").text("No se pudieron cargar los datos.");
-            });
-        }
+                    llenarCombosClientes();
+                    renderTabla();
+                    $("#estadoCarga").text(FACTURAS.length ? "Listo" : "No hay facturas.");
+                    cargarServicios();
+                })
+                .fail(function (xhr, textStatus, errorThrown) {
+                    console.error("Error al cargar (cuando):", xhr?.status, textStatus, errorThrown, xhr?.responseText);
 
-        // ===== CARGAR SERVICIOS (para "Generar desde servicio") =====
-        function cargarServicios() {
-            $.ajax({
-                url: API_SERVICIOS,
-                method: 'GET',
-                xhrFields: { withCredentials: true }
-            }).done(function (data) {
-                SERVICIOS = Array.isArray(data) ? data : [];
-                console.log("SERVICIOS:", SERVICIOS);
-
-                const $sel = $("#auto_servicio");
-                $sel.empty();
-
-                if (!SERVICIOS.length) {
-                    $sel.append('<option value="">(No hay servicios)</option>');
-                    return;
-                }
-
-                SERVICIOS.forEach(s => {
-                    const id = s.id_servicio ?? s.id ?? s.Id;
-                    const nombre = (s.nombre || s.Nombre || s.descripcion || s.Descripcion || `Servicio ${id}`).toString();
-                    $sel.append(`<option value="${id}">${nombre}</option>`);
+                    pFact.done(function (factData) {
+                        FACTURAS = Array.isArray(factData) ? factData : (factData ? [factData] : []);
+                        USUARIOS = [];
+                        llenarCombosClientes();
+                        renderTabla();
+                        $("#estadoCarga").text(FACTURAS.length ? "Listo (sin usuarios)" : "No hay facturas.");
+                        cargarServicios();
+                    }).fail(function (x2, t2, e2) {
+                        console.error("FACTURAS también falló:", x2?.status, t2, e2, x2?.responseText);
+                        $("#estadoCarga").text("No se pudieron cargar los datos.");
+                    });
                 });
-            }).fail(function (xhr) {
-                console.error("Error al cargar servicios:", xhr?.status, xhr?.responseText);
-                const $sel = $("#auto_servicio");
-                $sel.empty();
-                $sel.append('<option value="">(Error al cargar servicios)</option>');
-            });
         }
 
-        // ===== COMBOS CLIENTES =====
+        function cargarServicios() {
+            $.ajax({ url: API_SERVICIOS, method: "GET" })
+                .done(function (data) {
+                    SERVICIOS = Array.isArray(data) ? data : (data ? [data] : []);
+                    const $sel = $("#auto_servicio");
+                    $sel.empty();
+
+                    if (!SERVICIOS.length) {
+                        $sel.append('<option value="">(No hay servicios)</option>');
+                        return;
+                    }
+
+                    SERVICIOS.forEach(s => {
+                        const id = s.id_servicio ?? s.id ?? s.Id;
+                        const nombre = (s.nombre || s.Nombre || s.descripcion || s.Descripcion || `Servicio ${id}`).toString();
+                        $sel.append(`<option value="${id}">${nombre}</option>`);
+                    });
+                })
+                .fail(function (xhr) {
+                    console.error("Error al cargar servicios:", xhr?.status, xhr?.responseText);
+                    const $sel = $("#auto_servicio");
+                    $sel.empty().append('<option value="">(Error al cargar servicios)</option>');
+                });
+        }
+
         function llenarCombosClientes() {
-            const $selExport = $("#selClienteExport");
             const $crear = $("#crear_cliente");
             const $auto = $("#auto_cliente");
 
-            $selExport.empty();
             $crear.empty();
             $auto.empty();
 
-            $selExport.append('<option value="">(Todos)</option>');
             USUARIOS.forEach(u => {
                 const id = u.id ?? u.Id;
                 const nombre = nombreClientePorId(id);
                 const opt = `<option value="${id}">${nombre}</option>`;
-                $selExport.append(opt);
                 $crear.append(opt);
                 $auto.append(opt);
             });
         }
 
-        // ===== FILTROS =====
         function pasaFiltros(f) {
             const num = ($("#filtroNumero").val() || "").trim();
             const nombreFiltro = ($("#filtroNombre").val() || "").toLowerCase().trim();
@@ -549,7 +540,7 @@
 
             const id = f.id_factura ?? f.id ?? f.Id;
             const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
-            const nombreCliente = nombreClientePorId(clienteId).toLowerCase();
+            const nombreCliente = String(nombreClientePorId(clienteId) ?? '').toLowerCase();
 
             if (num && String(id) !== num) return false;
             if (nombreFiltro && !nombreCliente.includes(nombreFiltro)) return false;
@@ -571,11 +562,9 @@
                     if (fecha > h) return false;
                 }
             }
-
             return true;
         }
 
-        // ===== RENDER TABLA =====
         function renderTabla() {
             const $tb = $("#tablaFacturas");
             $tb.empty();
@@ -614,7 +603,6 @@
             $("#badge").text(`${lista.length} factura(s) mostradas`);
         }
 
-        // ===== MODALES GENÉRICOS =====
         function abrirModal(id) {
             const $m = $("#" + id);
             $m.removeClass("hidden").css("display", "flex");
@@ -625,7 +613,6 @@
             $m.addClass("hidden").hide();
         }
 
-        // ===== MODAL ESTADO =====
         function abrirModalEstado(idFactura, estadoActual) {
             facturaSeleccionada = { id: idFactura };
             $("#ddlEstado").val(estadoActual || "Pendiente");
@@ -647,7 +634,6 @@
                 method: 'PUT',
                 contentType: 'application/json',
                 data: JSON.stringify({ estado: nuevo }),
-                xhrFields: { withCredentials: true },
                 success: function () {
                     FACTURAS = FACTURAS.map(x => {
                         const xid = x.id_factura ?? x.id ?? x.Id;
@@ -666,7 +652,6 @@
             });
         }
 
-        // ===== ENVIAR FACTURA POR EMAIL (botón "Enviar") =====
         function enviarFacturaEmail(idFactura) {
             const url = `${API_FACTURAS}/${idFactura}/enviar-email`;
 
@@ -674,10 +659,8 @@
                 url: url,
                 method: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({}), // body vacío => el API busca el email del cliente en la BD
-                xhrFields: { withCredentials: true },
-                success: function (res) {
-                    console.log("Correo enviado:", res);
+                data: JSON.stringify({}),
+                success: function () {
                     alert(`Factura enviada al correo del cliente.`);
                 },
                 error: function (xhr) {
@@ -687,7 +670,6 @@
             });
         }
 
-        // ===== CREAR FACTURA MANUAL =====
         function crearFacturaManual() {
             const clienteId = Number($("#crear_cliente").val());
             const metodo = $("#crear_metodo").val();
@@ -712,7 +694,6 @@
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(body),
-                xhrFields: { withCredentials: true },
                 success: function (created) {
                     FACTURAS.push(created);
                     renderTabla();
@@ -728,7 +709,6 @@
             });
         }
 
-        // ===== CREAR FACTURA AUTOMÁTICA DESDE SERVICIO =====
         function crearFacturaAuto() {
             const clienteId = Number($("#auto_cliente").val());
             const servicioId = Number($("#auto_servicio").val());
@@ -739,18 +719,13 @@
                 return;
             }
 
-            const body = {
-                cliente_id: clienteId,
-                servicio_id: servicioId,
-                metodo_pago: metodo
-            };
+            const body = { cliente_id: clienteId, servicio_id: servicioId, metodo_pago: metodo };
 
             $.ajax({
                 url: `${API_FACTURAS}/generar-automatico`,
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(body),
-                xhrFields: { withCredentials: true },
                 success: function (created) {
                     FACTURAS.push(created);
                     renderTabla();
@@ -764,30 +739,12 @@
             });
         }
 
-        // ===== ENVIAR RECORDATORIOS PENDIENTES =====
-        function enviarRecordatorios() {
-            $.ajax({
-                url: `${API_FACTURAS}/recordatorios/pendientes`,
-                method: 'POST',
-                contentType: 'application/json',
-                xhrFields: { withCredentials: true },
-                success: function (res) {
-                    console.log("Recordatorios:", res);
-                    alert(`Recordatorios enviados: ${res.enviados}\nSin correo: ${res.sin_email}\nErrores: ${res.errores}`);
-                },
-                error: function (xhr) {
-                    console.error("Error al enviar recordatorios", xhr?.status, xhr?.responseText);
-                    alert("No se pudieron enviar los recordatorios.");
-                }
-            });
-        }
+        // ==========================
+        // ✅ NUEVO: Exportar vista actual (por filtros) + Notificar pendientes (por vista)
+        // ==========================
 
-        // ===== EXPORTAR PDF (general & variantes) =====
         function exportarPdf(facturas) {
             try {
-                const { jsPDF } = window.jspdf || {};
-                if (!jsPDF || !window.jspdf?.jsPDF) { alert('Falta jsPDF'); return; }
-
                 const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
                 doc.setFontSize(14);
                 doc.text('Listado de Facturas', 40, 40);
@@ -798,12 +755,11 @@
                     const cliente = nombreClientePorId(clienteId);
                     const fecha = safeFecha(f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision);
                     const total = formatCRC(f.total ?? f.Total ?? 0);
-                    const estado = f.estado_pago ?? f.estado ?? f.Estado ?? '';
-                    const metodo = f.metodo_pago ?? f.metodoPago ?? f.MetodoPago ?? '';
+                    const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? '').toString();
+                    const metodo = (f.metodo_pago ?? f.metodoPago ?? f.MetodoPago ?? '').toString();
                     return [id, fecha, cliente, total, metodo, estado];
                 });
 
-                if (!doc.autoTable) { alert('Falta autoTable'); return; }
                 doc.autoTable({
                     head: [['Id', 'Fecha', 'Cliente', 'Total', 'Método', 'Estado']],
                     body,
@@ -811,7 +767,7 @@
                     styles: { fontSize: 9 }
                 });
 
-                const name = `facturas_${new Date().toISOString().replace(/[:.]/g, '-')}.pdf`;
+                const name = `facturas_vista_${new Date().toISOString().replace(/[:.]/g, '-')}.pdf`;
                 doc.save(name);
             } catch (e) {
                 console.error(e);
@@ -819,55 +775,50 @@
             }
         }
 
-        function exportarMes() {
-            const mes = $("#filtroMesExport").val(); // yyyy-MM
-            if (!mes) {
-                alert("Seleccione un mes.");
+        function exportarVistaActualPdf() {
+            const listaFiltrada = FACTURAS.filter(pasaFiltros);
+            if (!listaFiltrada.length) {
+                alert("No hay facturas para exportar con los filtros actuales.");
                 return;
             }
-            const [year, month] = mes.split("-").map(Number);
-
-            const lista = FACTURAS.filter(f => {
-                const fv = f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision;
-                const d = new Date(fv);
-                if (isNaN(d)) return false;
-                return d.getFullYear() === year && (d.getMonth() + 1) === month;
-            });
-
-            if (!lista.length) {
-                alert("No hay facturas en ese mes.");
-                return;
-            }
-            exportarPdf(lista);
+            exportarPdf(listaFiltrada);
         }
 
-        function exportarPorCliente() {
-            const idSel = $("#selClienteExport").val();
-            if (!idSel) {
-                alert("Seleccione un cliente.");
-                return;
-            }
-            const lista = FACTURAS.filter(f => {
-                const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
-                return Number(clienteId) === Number(idSel);
+        async function notificarPendientesVistaActual() {
+            const visibles = FACTURAS.filter(pasaFiltros);
+            const pendientes = visibles.filter(f => {
+                const est = (f.estado_pago ?? f.estado ?? f.Estado ?? '').toString().toLowerCase();
+                return est === "pendiente";
             });
-            if (!lista.length) {
-                alert("Ese cliente no tiene facturas.");
-                return;
-            }
-            exportarPdf(lista);
-        }
 
-        function exportarPendientes() {
-            const lista = FACTURAS.filter(f => {
-                const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? '').toLowerCase();
-                return estado === 'pendiente';
-            });
-            if (!lista.length) {
-                alert("No hay facturas pendientes.");
+            if (!pendientes.length) {
+                alert("No hay facturas pendientes en la vista actual.");
                 return;
             }
-            exportarPdf(lista);
+
+            const $btn = $("#btnNotificarPendientes");
+            $btn.prop("disabled", true).text("Notificando...");
+
+            let ok = 0, err = 0;
+
+            for (const f of pendientes) {
+                const id = f.id_factura ?? f.id ?? f.Id;
+                try {
+                    await $.ajax({
+                        url: `${API_FACTURAS}/${id}/enviar-email`,
+                        method: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({})
+                    });
+                    ok++;
+                } catch (e) {
+                    err++;
+                    console.error("Fallo notificando factura:", id, e);
+                }
+            }
+
+            $btn.prop("disabled", false).text("Notificar pendientes");
+            alert(`Notificaciones enviadas: ${ok}\nErrores: ${err}\nTotal pendientes: ${pendientes.length}`);
         }
 
         // ===== EVENTOS =====
@@ -895,21 +846,17 @@
 
         $("#btnCrearFactura").on("click", crearFacturaManual);
         $("#btnCrearAuto").on("click", crearFacturaAuto);
-        $("#btnEnviarRecordatorios").on("click", enviarRecordatorios);
 
-        $("#btnFiltrar").on("click", function () {
-            renderTabla();
-        });
+        $("#btnFiltrar").on("click", function () { renderTabla(); });
 
-        $("#btnPdf").on("click", function () {
-            const listaFiltrada = FACTURAS.filter(pasaFiltros);
-            exportarPdf(listaFiltrada);
-        });
+        // ✅ NUEVOS BOTONES
+        $("#btnExportVista").on("click", exportarVistaActualPdf);
+        $("#btnNotificarPendientes").on("click", notificarPendientesVistaActual);
 
         // Inicio
         $(document).ready(function () {
             cargarTodo();
         });
     </script>
-}
 
+}
