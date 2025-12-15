@@ -183,6 +183,21 @@
         border-color: #9dc1ff;
         color: #0b57d0;
     }
+
+    .btn {
+        height: 40px; 
+        padding: 0 16px;
+        font-size: 0.95rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+    }
+        .btn > * {
+            line-height: 1;
+        }
+
 </style>
 
 @section Scripts {
@@ -295,7 +310,7 @@
                 if (e.target?.dataset?.close === '1') hide();
             });
 
-            function confirm({ titleText, bodyText, kind='warn', confirmText='Aceptar', cancelText='Cancelar', onConfirmCb }){
+            function confirm({ titleText, bodyText, kind='warn', confirmText='Aceptar', onConfirmCb }){
                 show({ titleText, bodyText, kind, confirmText, cancelText, onConfirmCb });
             }
 

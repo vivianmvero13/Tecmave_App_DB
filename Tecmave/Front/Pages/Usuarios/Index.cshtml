@@ -566,51 +566,66 @@
         }
 
         // ---------- EXPORTAR CSV ----------
-        function csvEscape(val) {
-            const s = (val ?? '').toString();
-            if (/[",\n\r;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-            return s;
-        }
-
-        function buildCsv(rows) {
-            const headers = ['Username', 'Email', 'Teléfono', 'Estado', 'Rol'];
-            const lines = [headers.join(',')];
-            rows.forEach(u => {
-                const rol = (u.roles && u.roles.length) ? u.roles.join(' | ') : '(SIN ROL)';
-                const estadoText = formatEstado(u.estado);
-                lines.push([
-                    csvEscape(u.userNameNorm || U(u.userName)),
-                    csvEscape(u.email || ''),
-                    csvEscape(u.phoneNumber || ''),
-                    csvEscape(estadoText),
-                    csvEscape(rol)
-                ].join(','));
-            });
-            return '\uFEFF' + lines.join('\r\n');
-        }
-
         window.exportToExcel = function () {
-            const rows = applyFilters(); // ✅ exporta SOLO activos (por el filtro)
+            const rows = applyFilters(); // ya filtra SOLO activos
             if (!rows.length) {
-                Modal.show({ titleText:'Sin datos', bodyText:'No hay datos para exportar.', kind:'info', confirmText:'Aceptar' });
+                Modal.show({
+                    titleText: 'Sin datos',
+                    bodyText: 'No hay datos para exportar.',
+                    kind: 'info',
+                    confirmText: 'Aceptar'
+                });
                 return;
             }
 
-            const csv = buildCsv(rows);
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            //Convertir a objeto plano (columnas bonitas)
+            const data = rows.map(u => ({
+                "Username": u.userNameNorm || U(u.userName),
+                "Email": u.email || '',
+                "Teléfono": u.phoneNumber || '',
+                "Estado": formatEstado(u.estado),
+                "Rol": (u.roles && u.roles.length) ? u.roles.join(' | ') : '(SIN ROL)'
+            }));
 
+            //Crear hoja
+            const ws = XLSX.utils.json_to_sheet(data);
+
+            //  Estilos básicos (anchos de columna)
+            const header = ws['!rows'] || [];
+        header[0] = { hpt: 30 }; // Ajustar el alto de la fila del encabezado
+
+        // Aplica estilo al encabezado (fila 1)
+        ws['A1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna A
+        ws['B1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna B
+        ws['C1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna C
+        ws['D1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna D
+        ws['E1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna E
+
+            ws['!cols'] = [
+                { wch: 20 }, // Username
+                { wch: 30 }, // Email
+                { wch: 18 }, // Teléfono
+                { wch: 15 }, // Estado
+                { wch: 25 }  // Rol
+            ];
+
+            //Activar filtros en encabezados
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            ws['!autofilter'] = {
+                ref: XLSX.utils.encode_range(range)
+            };
+
+            //Crear libro
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Usuarios');
+
+            //Nombre del archivo
             const now = new Date();
             const pad = n => n.toString().padStart(2, '0');
-            const fname = `usuarios_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+            const fname = `Usuarios_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.xlsx`;
 
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fname;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
+            //Descargar Excel real
+            XLSX.writeFile(wb, fname);
         };
 
         // ---------- DESACTIVAR USUARIO (soft delete) ----------

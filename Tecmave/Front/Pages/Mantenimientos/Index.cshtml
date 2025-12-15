@@ -569,27 +569,96 @@
         return '\uFEFF' + lines.join('\r\n');
     }
 
-    window.exportAgToExcel = function(){
+        // ===== Exportar Agendamientos a Excel (.xlsx) =====
+    window.exportAgToExcel = function () {
         const rows = applyAgFilters();
-        if (!rows.length){
+        if (!rows.length) {
             alert('No hay datos para exportar.');
             return;
         }
-        const csv = buildAgCsv(rows);
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+        // 1️⃣ Datos limpios y estéticos
+        const data = rows.map(a => {
+            const u = userById[a.cliente_id];
+            const v = vehById[a.vehiculo_id];
+            const e = estadosById[a.id_estado];
+
+            const cliente = buildClienteName(u);
+            const placa   = v?.placa ?? v?.Placa ?? '';
+            const modelo  = v?.modelo ?? v?.Modelo ?? '';
+            const vehiculo = modelo ? `${placa} - ${modelo}` : placa;
+
+            const estadoNombre = e?.nombre ?? e?.Nombre ?? '';
+
+            const fechaBase = formatFecha(a.fecha_estimada || a.fecha_agregada);
+            const fechaEntregaRaw = a.fecha_estimada_entrega ?? a.fecha_estimada;
+            const costoRaw = a.costo_mantenimiento ?? a.costo;
+
+            const code = getEstadoCode(a);
+            const needsUpdate = (code === 9 || code === 10);
+
+            const fechaEntrega = fechaEntregaRaw
+                ? formatFecha(fechaEntregaRaw)
+                : (needsUpdate ? 'Se debe actualizar' : 'Aún no hay datos');
+
+            const costo = (costoRaw == null || costoRaw === '')
+                ? (needsUpdate ? 'Se debe actualizar' : 'Aún no hay datos')
+                : Number(costoRaw);
+
+            return {
+                "Fecha": fechaBase,
+                "Hora": formatHora(a.hora_llegada),
+                "Cliente": cliente,
+                "Vehículo": vehiculo,
+                "Estado": estadoNombre,
+                "Fecha entrega": fechaEntrega,
+                "Costo": (typeof costo === 'number')
+                    ? costo.toLocaleString('es-CR', { style: 'currency', currency: 'CRC' })
+                    : costo
+            };
+        });
+
+        // Crear hoja
+        const ws = XLSX.utils.json_to_sheet(data);
+
+        const header = ws['!rows'] || [];
+    header[0] = { hpt: 30 }; // Ajustar el alto de la fila del encabezado
+
+    // Aplica estilo al encabezado (fila 1)
+    ws['A1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna A (Fecha)
+    ws['B1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna B (Hora)
+    ws['C1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna C (Cliente)
+    ws['D1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna D (Vehículo)
+    ws['E1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna E (Estado)
+    ws['F1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna F (Fecha entrega)
+    ws['G1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna G (Costo)
+
+    // 4️⃣ Anchos de columna
+    ws['!cols'] = [
+        { wch: 12 }, // Fecha
+        { wch: 8  }, // Hora
+        { wch: 28 }, // Cliente
+        { wch: 28 }, // Vehículo
+        { wch: 18 }, // Estado
+        { wch: 18 }, // Fecha entrega
+        { wch: 16 }  // Costo
+    ];
+
+        // Autofiltro
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        ws['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
+
+        // Libro + descarga
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Agendamientos');
 
         const now = new Date();
-        const pad = n => n.toString().padStart(2,'0');
-        const fname = `agendamientos_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+        const pad = n => n.toString().padStart(2, '0');
+        const fname =
+            `agendamientos_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_` +
+            `${pad(now.getHours())}${pad(now.getMinutes())}.xlsx`;
 
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fname;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+        XLSX.writeFile(wb, fname);
     };
 
     async function loadAllData(){
