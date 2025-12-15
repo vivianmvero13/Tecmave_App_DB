@@ -7,32 +7,47 @@
 
 <h1>Administrar Agendamientos</h1>
 
-<div class="row g-3 align-items-end mt-3">
-    <div class="col-12 col-md-4">
+<!-- FILTROS -->
+<div class="row g-3 align-items-end mt-3 ag-filtros">
+    <div class="col-md-3">
         <label for="estadoFilter" class="form-label">Filtrar por estado</label>
         <select id="estadoFilter" class="form-select">
             <option value="">(Todos)</option>
         </select>
     </div>
-    <div class="col-12 col-md-8">
+
+    <div class="col-md-7">
         <label for="searchAg" class="form-label">Buscar</label>
         <div class="input-group">
-            <input id="searchAg" class="form-control" placeholder="Buscar por cliente, placa, estado…" />
-            <button id="clearSearchAg" class="btn btn-outline-secondary" type="button">Limpiar</button>
+            <input id="searchAg" class="form-control"
+                   placeholder="Buscar por cliente, placa, estado…" />
+            <button id="clearSearchAg" class="btn btn-danger" type="button">
+                LIMPIAR
+            </button>
         </div>
     </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mt-3">
+
+
+
+<!-- Exportar -->
+
+<div class="table-header mt-2">
     <small id="agResultsBadge" class="text-muted">Mostrando 0 de 0</small>
-    <div class="d-flex gap-2">
-        <button id="exportAgBtn" class="btn btn-orange btn-sm" type="button">
-            <i class="fa-solid fa-file-excel"></i> Exportar
+
+    <div class="table-actions">
+        <button id="exportAgBtn" class="icon-action" type="button" title="Exportar vista actual">
+            <img src="/assets/img/export.png" alt="Exportar" />
         </button>
     </div>
 </div>
 
+
+
+<!-- Tabla -->
 <div class="table-responsive mt-2">
+
     <table class="table align-middle">
         <thead>
             <tr>
@@ -41,15 +56,47 @@
                 <th>Cliente</th>
                 <th>Vehículo</th>
                 <th>Estado</th>
-                <th>Fecha de Entrega</th>
+                <th>Fecha Entrega</th>
                 <th>Costo</th>
                 <th style="width:180px;">Acciones</th>
             </tr>
         </thead>
         <tbody id="agTable">
-            <tr><td colspan="8">Cargando agendamientos…</td></tr>
+            <tr>
+                <td colspan="8">Cargando agendamientos…</td>
+            </tr>
         </tbody>
     </table>
+</div>
+
+<!-- Paginación (MISMO PATRÓN QUE VEHÍCULOS) -->
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <div class="d-flex align-items-center gap-2">
+        <label for="pageSizeAg" class="form-label mb-0">Mostrar:</label>
+        <select id="pageSizeAg"
+                class="form-select form-select-sm"
+                style="width:auto;">
+            <option value="5" selected>5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+        </select>
+    </div>
+
+    <nav class="ag-pagination-nav" aria-label="Paginación agendamientos">
+        <ul class="pagination pagination-sm mb-0 d-flex align-items-center gap-2"
+            style="list-style:none; margin:0; padding:0;">
+            <li class="page-item" id="prevAg" style="list-style:none;">
+                <button class="page-link" type="button" aria-label="Anterior">&laquo;</button>
+            </li>
+            <li class="page-item disabled" style="list-style:none;">
+                <span class="page-link" id="agPageInfo">1 / 1</span>
+            </li>
+            <li class="page-item" id="nextAg" style="list-style:none;">
+                <button class="page-link" type="button" aria-label="Siguiente">&raquo;</button>
+            </li>
+        </ul>
+    </nav>
 </div>
 
 <style>
@@ -68,6 +115,111 @@
         padding: .25rem .5rem;
         border-radius: .5rem;
     }
+
+    /* Paginación estilo Vehículos (flechas centradas) */
+    .ag-pagination-nav .pagination {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: .5rem !important;
+    }
+
+    .ag-pagination-nav .page-item {
+        list-style: none !important;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Flechas: mismo “cuadro” y centrado perfecto */
+    .ag-pagination-nav button.page-link {
+        width: 34px;
+        height: 34px;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    /* El label “1 / 1” */
+    .ag-pagination-nav span.page-link {
+        height: 34px;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 .75rem !important;
+        border-radius: 8px;
+    }
+
+    .ag-actions {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: nowrap;
+        align-items: stretch; /* misma altura */
+    }
+
+    .ag-action-btn {
+        display: inline-flex; /* centra texto vertical/horizontal */
+        align-items: center;
+        justify-content: center;
+        min-height: 34px; /* igual a tus flechas/paginación */
+        padding: .25rem .6rem; /* consistente */
+        white-space: nowrap;
+    }
+
+    /* opcional: que ambos ocupen el mismo ancho */
+    .ag-action-btn {
+        flex: 1 1 auto;
+    }
+
+    button.icon-action {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        outline: none !important;
+    }
+
+        button.icon-action:hover,
+        button.icon-action:focus,
+        button.icon-action:active {
+            background: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        /* Tamaño del ícono */
+        button.icon-action img {
+            width: 25px;
+            height: 25px;
+            display: block;
+        }
+    /* === EXACTO como Facturas: fuerza el layout aunque bootstrap esté pisado === */
+    .ag-filtros.row.g-3 {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+    }
+
+    .table-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 12px;
+    }
+
+    .table-actions {
+        display: flex !important;
+        gap: 10px !important;
+        justify-content: flex-end !important;
+        width: 120px; /* ajustá si querés más espacio */
+    }
+
 </style>
 
 <script>
@@ -76,6 +228,7 @@
     const VEH_URL   = `${API_BASE}/Vehiculos`;
     const USERS_URL = `${API_BASE}/api/usuarios`;
     const EST_URL   = `${API_BASE}/Estados`;
+    const FACT_URL  = `${API_BASE}/facturas`;
 
     let allAgendamientos = [];
     let vehById   = {};
@@ -90,6 +243,44 @@
         .replaceAll('>','&gt;')
         .replaceAll('"','&quot;')
         .replaceAll("'",'&#39;');
+
+    // ===== Paginación (Mantenimientos) =====
+    const PAGE_SIZES_AG = [5, 10, 20, 50];
+    let pageSizeAg = 5;
+    let currentPageAg = 1;
+
+    function refreshAgTablePaged() {
+        const rows = applyAgFilters();
+        const total = rows.length;
+
+        if (!total) {
+            renderAgTable([]);
+            $('#agResultsBadge').text(`Mostrando 0 de 0`);
+            $('#agPageInfo').text('0 / 0');
+            $('#prevAg').addClass('disabled');
+            $('#nextAg').addClass('disabled');
+            return;
+        }
+
+        const totalPages = Math.max(1, Math.ceil(total / pageSizeAg));
+        if (currentPageAg > totalPages) currentPageAg = totalPages;
+        if (currentPageAg < 1) currentPageAg = 1;
+
+        const start = (currentPageAg - 1) * pageSizeAg;
+        const end = Math.min(start + pageSizeAg, total);
+        const pageRows = rows.slice(start, end);
+
+        renderAgTable(pageRows);
+
+        $('#agResultsBadge').text(`Mostrando ${start + 1}-${end} de ${total}`);
+        $('#agPageInfo').text(`${currentPageAg} / ${totalPages}`);
+
+        if (currentPageAg <= 1) $('#prevAg').addClass('disabled');
+        else $('#prevAg').removeClass('disabled');
+
+        if (currentPageAg >= totalPages) $('#nextAg').addClass('disabled');
+        else $('#nextAg').removeClass('disabled');
+    }
 
     function debounce(fn, d=250){
         let t;
@@ -177,13 +368,12 @@
         return e?.id_estado ?? ag.id_estado;
     }
 
-    // HTML para fecha de entrega (con mensajes estéticos)
     function formatFechaEntregaHtml(ag){
         const raw = ag.fecha_estimada_entrega ?? ag.fecha_estimada_entrega_raw ?? ag.fecha_estimada;
         const code = getEstadoCode(ag);
 
         if(!raw){
-            const needsUpdate = (code === 9 || code === 10); // Finalizado / Entregado
+            const needsUpdate = (code === 9 || code === 10);
             const text = needsUpdate ? 'Se debe actualizar' : 'Aún no hay datos';
             const cls  = needsUpdate ? 'badge bg-warning text-dark' : 'badge bg-secondary';
             return `<span class="${cls}">${esc(text)}</span>`;
@@ -192,7 +382,6 @@
         return esc(formatFecha(raw));
     }
 
-    // HTML para costo (con mensajes estéticos)
     function formatCostoHtml(ag){
         const raw = ag.costo_mantenimiento ?? ag.costo;
         const code = getEstadoCode(ag);
@@ -209,7 +398,6 @@
             return esc(String(raw));
         }
 
-        // Formato moneda CR
         const formatted = num.toLocaleString('es-CR', {
             style: 'currency',
             currency: 'CRC'
@@ -226,7 +414,7 @@
         }
 
         const oldVal = ag.id_estado;
-        ag.id_estado = newEstadoId; // optimista
+        ag.id_estado = newEstadoId;
 
         const $sel = $(selectEl);
         $sel.prop('disabled', true);
@@ -239,7 +427,6 @@
             fecha_estimada:           ag.fecha_estimada,
             hora_llegada:             ag.hora_llegada,
             id_estado:                newEstadoId,
-            // nuevos campos (si existen en el backend los tomará, si no, se ignoran)
             fecha_estimada_entrega:   ag.fecha_estimada_entrega ?? null,
             costo_mantenimiento:      ag.costo_mantenimiento ?? null
         };
@@ -261,6 +448,53 @@
         }
     }
 
+    async function generarFacturaDesdeAg(agId){
+        const ag = allAgendamientos.find(x => Number(x.id_agendamiento) === Number(agId));
+        if(!ag){
+            alert('No se encontró el agendamiento.');
+            return;
+        }
+
+        const clienteId = Number(ag.cliente_id);
+        const costoRaw  = ag.costo_mantenimiento ?? ag.costo;
+
+        if(!clienteId){
+            alert('Este agendamiento no tiene cliente_id.');
+            return;
+        }
+
+        const total = Number(costoRaw);
+        if(!costoRaw || isNaN(total) || total <= 0){
+            alert('No se puede generar la factura: el costo está vacío o es 0.\nPrimero actualizá el costo del mantenimiento.');
+            return;
+        }
+
+        const fechaBase = ag.fecha_estimada || ag.fecha_agregada || new Date().toISOString();
+
+        const body = {
+            cliente_id: clienteId,
+            fecha_emision: new Date(fechaBase).toISOString(),
+            total: total,
+            metodo_pago: "Sin definir",
+            estado_pago: "Pendiente"
+        };
+
+        try{
+            const created = await $.ajax({
+                url: FACT_URL,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(body)
+            });
+
+            alert(`Factura generada\nID: ${created?.id_factura ?? created?.id ?? '(sin id)'}`);
+
+        }catch(err){
+            console.error(err);
+            alert("No se pudo generar la factura desde este agendamiento.");
+        }
+    }
+
     window.restoreAgEstado = function(agId){
         const ag = allAgendamientos.find(x => Number(x.id_agendamiento) === Number(agId));
         if(!ag) return;
@@ -274,7 +508,7 @@
 
         if(!rows.length){
             $tb.html(`<tr><td colspan="8" class="text-muted">No hay agendamientos.</td></tr>`);
-            $('#agResultsBadge').text(`Mostrando 0 de ${allAgendamientos.length}`);
+            // OJO: acá no tocamos el badge, porque el badge lo controla refreshAgTablePaged()
             return;
         }
 
@@ -303,18 +537,23 @@
                     <td>${fechaEntregaHtml}</td>
                     <td>${costoHtml}</td>
                     <td>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <a class="btn btn-primary"
-                               href="/Mantenimientos/Editar/${a.id_agendamiento}">
-                                Editar
-                            </a>
-                        </div>
+                            <div class="ag-actions">
+      <a class="btn btn-primary btn-sm ag-action-btn"
+         href="/Mantenimientos/Editar/${a.id_agendamiento}">
+        Editar
+      </a>
+
+      <button class="btn btn-success btn-sm ag-action-btn btn-gen-factura"
+              type="button"
+              data-id="${a.id_agendamiento}">
+        Generar factura
+      </button>
+    </div>
+
                     </td>
                 </tr>
             `);
         });
-
-        $('#agResultsBadge').text(`Mostrando ${rows.length} de ${allAgendamientos.length}`);
 
         $('.estado-select').off('change').on('change', function(){
             const agId = Number($(this).data('id'));
@@ -323,7 +562,6 @@
         });
     }
 
-    // ---------- EXPORTAR A CSV ----------
     function csvEscape(val){
         const s = (val ?? '').toString();
         if (/[",\n\r;]/.test(s)) {
@@ -376,27 +614,96 @@
         return '\uFEFF' + lines.join('\r\n');
     }
 
-    window.exportAgToExcel = function(){
+        // ===== Exportar Agendamientos a Excel (.xlsx) =====
+    window.exportAgToExcel = function () {
         const rows = applyAgFilters();
-        if (!rows.length){
+        if (!rows.length) {
             alert('No hay datos para exportar.');
             return;
         }
-        const csv = buildAgCsv(rows);
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+        // 1️⃣ Datos limpios y estéticos
+        const data = rows.map(a => {
+            const u = userById[a.cliente_id];
+            const v = vehById[a.vehiculo_id];
+            const e = estadosById[a.id_estado];
+
+            const cliente = buildClienteName(u);
+            const placa   = v?.placa ?? v?.Placa ?? '';
+            const modelo  = v?.modelo ?? v?.Modelo ?? '';
+            const vehiculo = modelo ? `${placa} - ${modelo}` : placa;
+
+            const estadoNombre = e?.nombre ?? e?.Nombre ?? '';
+
+            const fechaBase = formatFecha(a.fecha_estimada || a.fecha_agregada);
+            const fechaEntregaRaw = a.fecha_estimada_entrega ?? a.fecha_estimada;
+            const costoRaw = a.costo_mantenimiento ?? a.costo;
+
+            const code = getEstadoCode(a);
+            const needsUpdate = (code === 9 || code === 10);
+
+            const fechaEntrega = fechaEntregaRaw
+                ? formatFecha(fechaEntregaRaw)
+                : (needsUpdate ? 'Se debe actualizar' : 'Aún no hay datos');
+
+            const costo = (costoRaw == null || costoRaw === '')
+                ? (needsUpdate ? 'Se debe actualizar' : 'Aún no hay datos')
+                : Number(costoRaw);
+
+            return {
+                "Fecha": fechaBase,
+                "Hora": formatHora(a.hora_llegada),
+                "Cliente": cliente,
+                "Vehículo": vehiculo,
+                "Estado": estadoNombre,
+                "Fecha entrega": fechaEntrega,
+                "Costo": (typeof costo === 'number')
+                    ? costo.toLocaleString('es-CR', { style: 'currency', currency: 'CRC' })
+                    : costo
+            };
+        });
+
+        // Crear hoja
+        const ws = XLSX.utils.json_to_sheet(data);
+
+        const header = ws['!rows'] || [];
+    header[0] = { hpt: 30 }; // Ajustar el alto de la fila del encabezado
+
+    // Aplica estilo al encabezado (fila 1)
+    ws['A1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna A (Fecha)
+    ws['B1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna B (Hora)
+    ws['C1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna C (Cliente)
+    ws['D1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna D (Vehículo)
+    ws['E1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna E (Estado)
+    ws['F1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna F (Fecha entrega)
+    ws['G1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };  // Columna G (Costo)
+
+    // 4️⃣ Anchos de columna
+    ws['!cols'] = [
+        { wch: 12 }, // Fecha
+        { wch: 8  }, // Hora
+        { wch: 28 }, // Cliente
+        { wch: 28 }, // Vehículo
+        { wch: 18 }, // Estado
+        { wch: 18 }, // Fecha entrega
+        { wch: 16 }  // Costo
+    ];
+
+        // Autofiltro
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        ws['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
+
+        // Libro + descarga
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Agendamientos');
 
         const now = new Date();
-        const pad = n => n.toString().padStart(2,'0');
-        const fname = `agendamientos_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+        const pad = n => n.toString().padStart(2, '0');
+        const fname =
+            `agendamientos_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_` +
+            `${pad(now.getHours())}${pad(now.getMinutes())}.xlsx`;
 
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fname;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+        XLSX.writeFile(wb, fname);
     };
 
     async function loadAllData(){
@@ -438,30 +745,75 @@
             });
 
             loadEstadosFilter();
-            renderAgTable(applyAgFilters());
+
+            // CAMBIO: al cargar todo, arrancamos paginado
+            currentPageAg = 1;
+            refreshAgTablePaged();
+
         }catch(e){
             console.error(e);
             $('#agTable').html(`<tr><td colspan="8" class="text-danger">Error cargando datos.</td></tr>`);
+            $('#agResultsBadge').text(`Mostrando 0 de 0`);
+            $('#agPageInfo').text('0 / 0');
+            $('#prevAg').addClass('disabled');
+            $('#nextAg').addClass('disabled');
         }
     }
+
+    $(document).on('click', '.btn-gen-factura', function () {
+        const agId = Number($(this).data('id'));
+        generarFacturaDesdeAg(agId);
+    });
 
     $(function(){
         loadAllData();
 
-        $('#estadoFilter').on('change', () => renderAgTable(applyAgFilters()));
-        $('#searchAg').on('input', debounce(()=>renderAgTable(applyAgFilters()), 200));
+        // CAMBIO: filtros usan paginado
+        $('#estadoFilter').on('change', () => {
+            currentPageAg = 1;
+            refreshAgTablePaged();
+        });
+
+        $('#searchAg').on('input', debounce(() => {
+            currentPageAg = 1;
+            refreshAgTablePaged();
+        }, 200));
+
         $('#searchAg').on('keydown', e => {
             if(e.key === 'Enter'){
                 e.preventDefault();
                 e.currentTarget.blur();
             }
         });
+
         $('#clearSearchAg').on('click', () => {
             $('#searchAg').val('');
-            renderAgTable(applyAgFilters());
+            currentPageAg = 1;
+            refreshAgTablePaged();
             $('#searchAg').focus();
         });
 
         $('#exportAgBtn').on('click', () => window.exportAgToExcel());
+
+        // CAMBIO: select "Mostrar"
+        $('#pageSizeAg').on('change', function () {
+            const val = Number($(this).val());
+            pageSizeAg = PAGE_SIZES_AG.includes(val) ? val : 5;
+            currentPageAg = 1;
+            refreshAgTablePaged();
+        });
+
+        // CAMBIO: flechas
+        $('#prevAg button').on('click', function () {
+            if ($('#prevAg').hasClass('disabled')) return;
+            currentPageAg--;
+            refreshAgTablePaged();
+        });
+
+        $('#nextAg button').on('click', function () {
+            if ($('#nextAg').hasClass('disabled')) return;
+            currentPageAg++;
+            refreshAgTablePaged();
+        });
     });
 </script>

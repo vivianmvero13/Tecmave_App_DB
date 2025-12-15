@@ -79,22 +79,29 @@
         </div>
 
         <div class="mt-4 d-flex gap-2">
-            <button id="guardarBtn" class="btn btn-orange" type="button">Guardar</button>
             <a class="btn btn-secondary" asp-page="/Promociones/Index">Volver</a>
+            <button id="guardarBtn" class="btn btn-orange" type="button">Guardar</button>
         </div>
     </div>
 </section>
 
-<!-- Modal reutilizable -->
-<div id="appModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
-    <div class="modal-backdrop" data-close="1"></div>
-    <div class="modal-dialog" role="document">
-        <button class="modal-close" type="button" aria-label="Cerrar" data-close="1">×</button>
-        <div class="modal-icon" id="modalIcon">✓</div>
-        <h3 id="modalTitle">Título</h3>
-        <p id="modalBody">Mensaje…</p>
-        <div class="modal-actions">
-            <button id="modalPrimary" class="btn btn-orange" type="button" data-close="1">Aceptar</button>
+<!-- MODAL (MISMA ESTÉTICA QUE EL ANTERIOR) -->
+<div id="appModal" class="swal2-container" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
+    <div class="swal2-backdrop" data-close="1"></div>
+
+    <div class="swal2-popup" role="document" tabindex="-1">
+        <button class="swal2-close" type="button" aria-label="Cerrar" data-close="1">×</button>
+
+        <div class="swal2-icon warn" id="modalIconWrap" aria-hidden="true">
+            <span class="swal2-icon-content" id="modalIcon">!</span>
+        </div>
+
+        <h2 class="swal2-title" id="modalTitle">Título</h2>
+
+        <div class="swal2-html-container" id="modalBody">Mensaje…</div>
+
+        <div class="swal2-actions">
+            <button id="modalPrimary" class="btn btn-red" type="button" data-close="1">Aceptar</button>
         </div>
     </div>
 </div>
@@ -116,8 +123,10 @@
         background: #dc3545 !important;
         border: 1px solid #dc3545 !important;
         color: #fff !important;
-        padding: .3rem .8rem;
-        border-radius: .25rem
+        padding: .45rem 1.15rem;
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
     }
 
         .btn-red:hover {
@@ -170,63 +179,147 @@
             border-bottom: 1px solid #eee
         }
 
-    /* Modal */
-    .modal {
+    /* ================= MODAL SWEETALERT STYLE ================= */
+    .swal2-container {
         position: fixed;
         inset: 0;
-        z-index: 1000;
-        display: none
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
     }
 
-        .modal.show {
-            display: block
+        .swal2-container.show {
+            display: flex !important;
         }
 
-    .modal-backdrop {
+    .swal2-backdrop {
         position: absolute;
         inset: 0;
-        background: rgba(0,0,0,.45)
+        background: rgba(0, 0, 0, .45);
     }
 
-    .modal-dialog {
+    .swal2-popup {
         position: relative;
-        max-width: 480px;
-        margin: 8vh auto 0;
+        z-index: 1;
+        width: min(520px, 92vw);
         background: #fff;
-        border-radius: .75rem;
-        padding: 1.25rem;
-        box-shadow: 0 10px 35px rgba(0,0,0,.25)
+        border-radius: 16px;
+        padding: 26px 22px 20px;
+        box-shadow: 0 18px 55px rgba(0,0,0,.30);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        box-sizing: border-box;
+        text-align: center;
     }
 
-    .modal-close {
-        position: absolute;
-        right: .5rem;
-        top: .5rem;
-        border: 0;
-        background: transparent;
-        font-size: 1.5rem;
+    #appModal .swal2-close {
+        position: absolute !important;
+        top: 12px !important;
+        right: 12px !important;
+        left: auto !important;
+        bottom: auto !important;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        border: none;
+        background: #dc3545;
+        color: #fff;
+        font-size: 22px;
         line-height: 1;
         cursor: pointer;
-        color: #888
-    }
-
-    .modal-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 999px;
-        margin: .25rem 0 .5rem;
-        display: grid;
-        place-content: center;
-        background: #e7f6ec;
-        color: #2e7d32;
-        font-weight: 700
-    }
-
-    .modal-actions {
+        box-shadow: 0 10px 25px rgba(220,53,69,.35);
         display: flex;
-        justify-content: flex-end;
-        gap: .5rem;
-        margin-top: 1rem
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+
+    .swal2-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        margin: 6px 0 2px;
+        border: 4px solid transparent;
+        box-sizing: border-box;
+    }
+
+    .swal2-icon-content {
+        font-size: 42px;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    #appModal .swal2-title {
+        position: relative;
+        padding-bottom: .5rem;
+        margin-bottom: 0;
+    }
+
+        #appModal .swal2-title::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+    .swal2-title-underline {
+        width: 64px;
+        height: 4px;
+        border-radius: 999px;
+        background: #dc3545;
+        margin-top: 2px;
+        margin-bottom: 2px;
+    }
+
+    .swal2-html-container {
+        margin: 0;
+        font-size: 1rem;
+        color: #4b5563;
+        text-align: center;
+        max-width: 440px;
+    }
+
+    .swal2-actions {
+        margin-top: 12px;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .swal2-icon.warn {
+        background: #fff4e5;
+        border-color: #f8bb86;
+        color: #a15c00;
+    }
+
+    .swal2-icon.ok {
+        background: #e7f6ec;
+        border-color: #a5dc86;
+        color: #2e7d32;
+    }
+
+    .swal2-icon.error {
+        background: #fdecea;
+        border-color: #f27474;
+        color: #b3261e;
+    }
+
+    .swal2-icon.info {
+        background: #e7f1ff;
+        border-color: #9dc1ff;
+        color: #0b57d0;
     }
 </style>
 
@@ -263,10 +356,9 @@
 
     function parseInputDate(id){
       const val = (document.getElementById(id).value || '').trim();
-      return val; // API espera 'yyyy-MM-dd' (DateOnly)
+      return val;
     }
 
-    // Traducción de estado
     function estadoLabel(cod){
       const n = Number(cod);
       if (n === 1) return "Activa";
@@ -274,42 +366,59 @@
       return `Estado ${cod ?? "—"}`;
     }
 
-    // Modal utilitario
     const Modal = (() => {
       const root = document.getElementById('appModal');
       const title = document.getElementById('modalTitle');
       const body = document.getElementById('modalBody');
       const icon = document.getElementById('modalIcon');
+      const iconWrap = document.getElementById('modalIconWrap');
+      const btnPrimary = document.getElementById('modalPrimary');
       let onClose = null;
 
       function setKind(kind){
+        iconWrap.classList.remove('warn','ok','error','info');
         const map = {
-          ok:   {bg:'#e7f6ec', color:'#2e7d32', text:'✓'},
-          warn: {bg:'#fff4e5', color:'#a15c00', text:'!'},
-          error:{bg:'#fdecea', color:'#b3261e', text:'!'},
-          info: {bg:'#e7f1ff', color:'#0b57d0', text:'ℹ'}
+          ok:   { cls:'ok',   text:'✓' },
+          warn: { cls:'warn', text:'!' },
+          error:{ cls:'error',text:'!' },
+          info: { cls:'info', text:'ℹ' }
         };
         const k = map[kind] || map.info;
-        icon.style.background = k.bg; icon.style.color = k.color; icon.textContent = k.text;
+        iconWrap.classList.add(k.cls);
+        icon.textContent = k.text;
       }
 
-      function show({ titleText='Información', bodyText='', onCloseCb=null, kind='ok' }){
-        setKind(kind); title.textContent = titleText; body.textContent = bodyText;
+      function show({ titleText='Información', bodyText='', onCloseCb=null, kind='info' }){
+        setKind(kind);
+        title.textContent = titleText;
+        body.textContent = bodyText;
+
         onClose = typeof onCloseCb === 'function' ? onCloseCb : null;
-        root.classList.add('show'); root.style.display = 'block'; root.setAttribute('aria-hidden','false');
+
+        root.classList.add('show');
+        root.style.display = 'flex';
+        root.setAttribute('aria-hidden','false');
+
+        setTimeout(() => btnPrimary?.focus(), 0);
         document.addEventListener('keydown', escListener);
       }
+
       function hide(){
-        root.classList.remove('show'); root.style.display = 'none'; root.setAttribute('aria-hidden','true');
+        root.classList.remove('show');
+        root.style.display = 'none';
+        root.setAttribute('aria-hidden','true');
         document.removeEventListener('keydown', escListener);
+
         if (onClose) { const cb = onClose; onClose = null; try { cb(); } catch {} }
       }
+
       function escListener(e){ if (e.key === 'Escape') hide(); }
+
       root.addEventListener('click', (e) => { if (e.target?.dataset?.close === '1') hide(); });
+
       return { show, hide };
     })();
 
-    // Listado
     function cargarListado(){
       const tb = document.getElementById('listaDatos');
       fetch(URL_PROMOCIONES, { credentials: 'include' })
@@ -317,6 +426,7 @@
         .then(data => {
           const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
           if (!list.length) { tb.innerHTML = '<tr><td colspan="4">Sin datos…</td></tr>'; return; }
+
           tb.innerHTML = list.map(p => {
             const id    = p.id_promocion ?? p.id ?? p.Id;
             const tit   = p.titulo ?? p.Titulo ?? '';
@@ -346,7 +456,6 @@
         });
     }
 
-    // Form helpers
     function getFormData(){
       const titulo = (document.getElementById('tituloInput').value || '').trim();
       const descripcion = (document.getElementById('descripcionInput').value || '').trim();
@@ -358,19 +467,11 @@
       if(!titulo) return { ok:false, msg:'El título es requerido.' };
       if(!fecha_inicio) return { ok:false, msg:'La fecha de inicio es requerida.' };
       if(!fecha_fin) return { ok:false, msg:'La fecha de fin es requerida.' };
-
       if (fecha_inicio > fecha_fin) return { ok:false, msg:'La fecha de inicio no puede ser mayor a la fecha fin.' };
 
       return {
         ok:true,
-        payload: {
-          titulo,
-          descripcion,
-          fecha_inicio,
-          fecha_fin,
-          id_estado,
-          imagen_url
-        }
+        payload: { titulo, descripcion, fecha_inicio, fecha_fin, id_estado, imagen_url }
       };
     }
 
@@ -439,7 +540,8 @@
       const btn = document.getElementById('modalPrimary');
       const prevText = btn.textContent;
       const prevClose = btn.getAttribute('data-close');
-      btn.textContent = 'Eliminar';
+
+      btn.textContent = 'Sí, ELIMINAR';
       btn.removeAttribute('data-close');
 
       const handler = async () => {
@@ -452,6 +554,7 @@
       };
 
       btn.addEventListener('click', handler, { once:true });
+
       Modal.show({
         titleText: 'Confirmar eliminación',
         bodyText: '¿Desea eliminar esta promoción?',
@@ -534,7 +637,6 @@
         catch (e) { console.error(e); showMsg('Error al cargar la promoción.'); setModoCrear(); }
       }
 
-      // Manejo de subida de archivo de imagen
       const fileInput = document.getElementById('imagenFileInput');
       if (fileInput) {
         fileInput.addEventListener('change', async (e) => {

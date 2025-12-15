@@ -58,12 +58,33 @@
             </div>
         </div>
 
-        <div class="mt-4 d-flex gap-2">
-            <button id="btnSave" type="submit" class="btn btn-primary">Guardar</button>
+        <div class="mt-4 ag-actions">
             <a class="btn btn-secondary" asp-page="/Mantenimientos/Index">Volver</a>
+            <button id="btnSave" type="submit" class="btn btn-primary">Guardar</button>
         </div>
+
     </form>
 </div>
+
+<style>
+    <style >
+    .ag-actions {
+        display: flex;
+        gap: .5rem;
+        align-items: stretch; /* fuerza misma altura */
+    }
+
+    .ag-actions .btn {
+        min-height: 44px; /* ajustá a gusto (40/44/48) */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: .5rem 1rem;
+    }
+</style>
+
+
+</style>
 
 @section Scripts {
     <script src="~/lib/jquery/jquery.min.js"></script>

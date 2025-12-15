@@ -14,6 +14,7 @@
             <option value="">(Todos)</option>
         </select>
     </div>
+
     <div class="col-12 col-md-8">
         <label for="localSearch" class="form-label">Buscar</label>
         <div class="input-group">
@@ -23,12 +24,20 @@
     </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mt-3">
+<!-- Barra única: badge izquierda + acciones derecha -->
+<div class="table-header mt-3">
     <small id="resultsBadge" class="text-muted">Mostrando 0 de 0</small>
-    <div class="d-flex gap-2">
-        <a id="manageRolesBtn" class="btn btn-royal btn-sm" href="/Roles">Administrar Roles</a>
-        <button id="exportBtn" class="btn btn-orange btn-sm" type="button">
-            <i class="fa-solid fa-file-excel"></i> Exportar
+
+    <div class="table-actions
+
+        <!-- Icono Roles (opcional, si lo querés igual que Vehículos) -->
+        <button class="icon-action" type="button" title="Administrar roles" onclick="location.href='/Roles'">
+            <img src="/assets/img/role.png" alt="Administrar roles" />
+        </button>
+
+        <!-- Icono Export (opcional, si lo querés igual que Vehículos) -->
+        <button class="icon-action" type="button" title="Exportar vista actual" onclick="document.getElementById('exportBtn').click()">
+            <img src="/assets/img/export.png" alt="Exportar" />
         </button>
     </div>
 </div>
@@ -81,7 +90,8 @@
 </div>
 
 <!-- Modal estilo SweetAlert2 (reutilizable) -->
-<div id="appModal" class="swal2-container" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
+<div id="appModal" class="swal2-container" aria-hidden="true" role="dialog" aria-modal="true"
+     aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
     <div class="swal2-backdrop" data-close="1"></div>
     <div class="swal2-popup" role="document" tabindex="-1">
         <button class="swal2-close" type="button" aria-label="Cerrar" data-close="1">×</button>
@@ -118,8 +128,8 @@
     }
 
     /* ============================
-               Modal estilo SweetAlert2
-               ============================ */
+           Modal estilo SweetAlert2
+           ============================ */
     .swal2-container {
         position: fixed;
         inset: 0;
@@ -244,6 +254,50 @@
         border-radius: 8px;
         cursor: pointer;
     }
+
+    /* Header tabla: badge izquierda + acciones derecha (igual que Vehículos) */
+    .table-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 12px;
+        width: 100%;
+        gap: 12px;
+    }
+
+    .table-actions {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 10px !important;
+        flex-wrap: nowrap;
+    }
+
+    /* Icon buttons */
+    button.icon-action {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        outline: none !important;
+        cursor: pointer;
+    }
+
+        button.icon-action:hover,
+        button.icon-action:focus,
+        button.icon-action:active {
+            background: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        button.icon-action img {
+            width: 25px;
+            height: 25px;
+            display: block;
+        }
 </style>
 
 @section Scripts {
@@ -405,13 +459,13 @@
             }
         }
 
-        // ✅ Por seguridad: aquí también filtramos SOLO Activos (Estado=1)
+        // ✅ SOLO ACTIVOS (Estado=1)
         function applyFilters() {
             const selected = $('#roleFilter').val();
             const q = getSearchText();
 
             return allUsers
-                .filter(u => Number(u.estado) === 1) // ✅ SOLO ACTIVOS
+                .filter(u => Number(u.estado) === 1)
                 .filter(u => {
                     const roles = Array.isArray(u.roles) ? u.roles.map(U) : [];
                     const roleOk = !selected ? true : roles.includes(U(selected));
@@ -565,55 +619,55 @@
             }
         }
 
-        // ---------- EXPORTAR CSV ----------
-        function csvEscape(val) {
-            const s = (val ?? '').toString();
-            if (/[",\n\r;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-            return s;
-        }
-
-        function buildCsv(rows) {
-            const headers = ['Username', 'Email', 'Teléfono', 'Estado', 'Rol'];
-            const lines = [headers.join(',')];
-            rows.forEach(u => {
-                const rol = (u.roles && u.roles.length) ? u.roles.join(' | ') : '(SIN ROL)';
-                const estadoText = formatEstado(u.estado);
-                lines.push([
-                    csvEscape(u.userNameNorm || U(u.userName)),
-                    csvEscape(u.email || ''),
-                    csvEscape(u.phoneNumber || ''),
-                    csvEscape(estadoText),
-                    csvEscape(rol)
-                ].join(','));
-            });
-            return '\uFEFF' + lines.join('\r\n');
-        }
-
+        // ---------- EXPORTAR EXCEL ----------
         window.exportToExcel = function () {
-            const rows = applyFilters(); // ✅ exporta SOLO activos (por el filtro)
+            const rows = applyFilters();
             if (!rows.length) {
                 Modal.show({ titleText:'Sin datos', bodyText:'No hay datos para exportar.', kind:'info', confirmText:'Aceptar' });
                 return;
             }
 
-            const csv = buildCsv(rows);
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const data = rows.map(u => ({
+                "Username": u.userNameNorm || U(u.userName),
+                "Email": u.email || '',
+                "Teléfono": u.phoneNumber || '',
+                "Estado": formatEstado(u.estado),
+                "Rol": (u.roles && u.roles.length) ? u.roles.join(' | ') : '(SIN ROL)'
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+
+            const header = ws['!rows'] || [];
+            header[0] = { hpt: 30 };
+
+            ws['A1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };
+            ws['B1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };
+            ws['C1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };
+            ws['D1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };
+            ws['E1'].s = { fill: { fgColor: { rgb: "FF0000" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };
+
+            ws['!cols'] = [
+                { wch: 20 },
+                { wch: 30 },
+                { wch: 18 },
+                { wch: 15 },
+                { wch: 25 }
+            ];
+
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            ws['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Usuarios');
 
             const now = new Date();
             const pad = n => n.toString().padStart(2, '0');
-            const fname = `usuarios_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+            const fname = `Usuarios_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.xlsx`;
 
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fname;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
+            XLSX.writeFile(wb, fname);
         };
 
-        // ---------- DESACTIVAR USUARIO (soft delete) ----------
+        // ---------- DESACTIVAR USUARIO ----------
         async function desactivarUsuario(userId) {
             Modal.confirm({
                 titleText: '¿Desactivar usuario?',

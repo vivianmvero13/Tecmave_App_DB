@@ -53,8 +53,8 @@
 
     .promo-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 1.25rem;
+        grid-template-columns: repeat(3, 1fr); /* Ajuste a 3 columnas por fila */
+        gap: 1.5rem; /* Ajusta el espacio entre las tarjetas */
     }
 
     .promo-card {
@@ -87,7 +87,7 @@
             inset: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain; /* Ajustar imagen a su tamaño */
             display: block;
         }
 
@@ -112,14 +112,14 @@
     }
 
     .promo-card-title {
-        font-size: 1rem;
+        font-size: 1.1rem; /* Aumento el tamaño de la fuente */
         font-weight: 600;
         margin: 0;
         color: #222;
     }
 
     .promo-card-periodo {
-        font-size: .8rem;
+        font-size: .9rem;
         color: #777;
         margin: 0;
     }
@@ -187,7 +187,7 @@
             width: 100%;
             height: 100%;
             max-height: 480px;
-            object-fit: cover;
+            object-fit: contain;
             display: block;
         }
 
@@ -267,7 +267,6 @@
         }
     }
 
-    // Cargar SOLO promos con estado Activo (id_estado = 1)
     async function cargarPromosActivas() {
         showPromoMsg('');
         const grid = document.getElementById('promoGrid');
@@ -279,10 +278,9 @@
             const data = await r.json();
             const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
 
-            // 🔥 FILTRO ÚNICAMENTE POR ESTADO ACTIVO
             promosActivas = list.filter(p => {
                 const estado = Number(p.id_estado ?? p.idEstado ?? p.IdEstado ?? 0);
-                return estado === 1; // solo activas
+                return estado === 1;
             });
 
             if (!promosActivas.length) {
@@ -323,7 +321,6 @@
         }
     }
 
-    // Modal detalle
     const PromoDetalleModal = (() => {
         const root = document.getElementById('promoDetailModal');
         const tituloEl = document.getElementById('detalleTitulo');

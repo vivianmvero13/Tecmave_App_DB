@@ -4,65 +4,95 @@
     ViewData["Title"] = "Facturas";
 }
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+
 <section class="section">
     <div class="container grid cols-1">
         <div class="card">
             <div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
                 <h3 style="margin:0">Listado de Facturas</h3>
-                <div class="fx-actions" style="display:flex;flex-wrap:wrap;gap:.5rem;">
-                    <button id="btnExportMes" class="btn btn-primary">Exportar mes</button>
-                    <button id="btnExportCliente" class="btn btn-primary">Exportar por cliente</button>
-                    <button id="btnExportPendientes" class="btn btn-secondary">Exportar pendientes</button>
-                    <button id="btnEnviarRecordatorios" class="btn">Enviar recordatorios</button>
+
+                <!-- 1) Acciones uno al lado del otro (sin wrap) -->
+                <div class="fx-actions" style="display:flex;flex-wrap:nowrap;gap:.5rem;align-items:center;justify-content:flex-end;">
                     <button id="btnAbrirModalCrear" class="btn">Generar factura</button>
-                    <button id="btnAbrirModalAuto" class="btn">Generar desde servicio</button>
-                    <button id="btnPdf" class="btn">Exportar PDF</button>
                 </div>
             </div>
 
             <!-- FILTROS -->
-            <div class="form-row" style="display:flex;flex-wrap:wrap;gap:1rem;margin-top:1rem;">
-                <div>
-                    <label>Número de factura</label>
-                    <input id="filtroNumero" class="input" placeholder="Ej: 1024" />
-                </div>
-                <div>
-                    <label>Buscar por cliente</label>
-                    <input id="filtroNombre" class="input" placeholder="Ingrese nombre del cliente..." />
-                </div>
-                <div>
-                    <label>Estado</label>
-                    <select id="filtroEstado" class="input">
-                        <option value="">Todos</option>
+            <div class="row g-3 align-items-end mt-3">
+                <!-- Filtro por estado -->
+                <div class="col-md-3">
+                    <label for="filtroEstado" class="form-label">Filtrar por estado</label>
+                    <select id="filtroEstado" class="form-select">
+                        <option value="">(Todos)</option>
                         <option value="Pagada">Pagada</option>
                         <option value="Pendiente">Pendiente</option>
                         <option value="Anulada">Anulada</option>
                     </select>
                 </div>
-                <div>
-                    <label>Desde</label>
-                    <input id="filtroDesde" type="date" class="input" />
+
+                <!-- Buscar y Rango de Fechas -->
+                <div class="col-md-5">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-6">
+                            <label for="filtroGlobal" class="form-label">Buscar</label>
+                            <input id="filtroGlobal" class="form-control" placeholder="Buscar en todas las columnas…" />
+                        </div>
+
+                        <div class="col-6">
+                            <label for="filtroRango" class="form-label">Rango de fechas</label>
+                            <div class="cal-wrap">
+                                <span class="cal-ico" aria-hidden="true">📅</span>
+                                <input id="filtroRango" class="form-control cal-input" placeholder="Seleccionar rango..." />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label>Hasta</label>
-                    <input id="filtroHasta" type="date" class="input" />
-                </div>
-                <div style="display:flex;align-items:flex-end;">
-                    <button id="btnFiltrar" class="btn btn-primary">Filtrar</button>
+
+                <!-- Botón LIMPIAR -->
+                <div class="col-md-2" style="display:flex;align-items:flex-end;">
+                    <button id="btnClearAll" class="btn btn-outline-secondary" type="button" style="width:100%;">Limpiar</button>
                 </div>
             </div>
+
 
             <!-- Estado de carga -->
             <div id="estadoCarga" class="muted" style="margin: .75rem 0;">Cargando…</div>
 
             <!-- TABLA -->
+            <div class="table-header">
+                <div>
+                    <!-- Controles de vista -->
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="pageSizeSelectFact" class="form-label mb-0">Mostrar:</label>
+                            <select id="pageSizeSelectFact" class="form-select form-select-sm" style="width:auto;">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-actions">
+                    <button id="btnExportVista" class="icon-action" type="button" title="Exportar vista actual">
+                        <img src="/assets/img/export.png" alt="Exportar" />
+                    </button>
+
+                    <button id="btnNotificarPendientes" class="icon-action" type="button" title="Notificar pendientes">
+                        <img src="/assets/img/notification.png" alt="Notificar" />
+                    </button>
+                </div>
+            </div>
+
             <div class="table-wrapper">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>ID Factura</th>
+                            <th>ID </th>
                             <th>Cliente</th>
-                            <th>Correo</th>
                             <th>Teléfono</th>
                             <th>Fecha emisión</th>
                             <th>Método pago</th>
@@ -135,9 +165,7 @@
                     </div>
                     <div>
                         <label>Servicio</label>
-                        <select id="auto_servicio" class="input">
-                            <!-- Puedes llenar este select desde tu API de servicios si lo deseas -->
-                        </select>
+                        <select id="auto_servicio" class="input"></select>
                     </div>
                     <div>
                         <label>Método de pago</label>
@@ -310,7 +338,6 @@
         display: none !important;
     }
 
-    /* Modal genérico */
     .modal {
         position: fixed;
         inset: 0;
@@ -354,7 +381,6 @@
         cursor: pointer
     }
 
-    /* Modal pequeño (cambiar estado) */
     .modal__backdrop {
         position: fixed;
         inset: 0;
@@ -398,26 +424,280 @@
         line-height: 1;
         cursor: pointer
     }
+
+    /* Filtros alineados uno al lado del otro */
+    .row.g-3 {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px; /* Espaciado entre filtros */
+    }
+
+    .col-md-3, .col-md-5, .col-md-2 {
+        margin-bottom: 1rem;
+    }
+
+    /* 4) Mini calendario como "hint" dentro del input */
+    .cal-wrap {
+        position: relative;
+    }
+
+    .cal-ico {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18px;
+        opacity: 0.7;
+        pointer-events: none;
+    }
+
+    .cal-input {
+        padding-left: 34px;
+    }
+
+    /* 5) Limpiar todos los filtros con un solo botón */
+    #btnClearAll {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px; /* Separación entre la cabecera y la tabla */
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end; /* Asegura que los botones estén a la derecha */
+        width: 200px; /* Limita el ancho de la caja de botones para no ocupar todo el espacio */
+    }
+
+    button.icon-action {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        outline: none !important;
+    }
+
+        button.icon-action:hover,
+        button.icon-action:focus,
+        button.icon-action:active {
+            background: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        /* Tamaño del ícono */
+        button.icon-action img {
+            width: 25px;
+            height: 25px;
+            display: block;
+        }
+
+
+
+    /* 4) Mini calendario como “hint” dentro del input */
+    .cal-wrap {
+        position: relative;
+        width: 100%;
+    }
+
+    .cal-ico {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        opacity: .7;
+        pointer-events: none;
+    }
+
+    .cal-input {
+        padding-left: 34px;
+    }
+
+    .icon-action {
+        all: unset;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+        .icon-action img {
+            width: 30px;
+            height: 30px;
+            display: block;
+        }
+    /* ===== FIX FLATPICKR HEADER ===== */
+    .flatpickr-calendar {
+        z-index: 9999;
+    }
+
+    .flatpickr-months {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 8px;
+    }
+
+    .flatpickr-month {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 34px;
+    }
+
+    .flatpickr-prev-month,
+    .flatpickr-next-month {
+        position: static;
+        height: 28px;
+        padding: 4px;
+    }
+
+    .flatpickr-current-month {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        line-height: 1;
+    }
+
+    /* Mes */
+    .flatpickr-monthDropdown-months {
+        font-size: 13px;
+        padding: 2px 6px;
+        height: 26px;
+    }
+
+    /* Año */
+    .flatpickr-current-month input.cur-year {
+        font-size: 13px;
+        height: 26px;
+        padding: 2px 6px;
+    }
+
+    /* Evita que el calendario se tape */
+    .flatpickr-innerContainer {
+        padding-top: 4px;
+    }
+    /* ===== FLATPICKR COMPACT FIX (MES / AÑO) ===== */
+
+    .flatpickr-calendar {
+        font-size: 13px;
+    }
+
+    .flatpickr-months {
+        display: flex;
+        align-items: center;
+        height: 36px;
+        padding: 4px 6px;
+    }
+
+    .flatpickr-month {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 28px;
+    }
+
+    /* Flechas */
+    .flatpickr-prev-month,
+    .flatpickr-next-month {
+        position: static;
+        padding: 0 6px;
+        height: 24px;
+        line-height: 24px;
+    }
+
+    /* Contenedor mes + año */
+    .flatpickr-current-month {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        height: 24px;
+    }
+
+    /* SELECT del mes */
+    .flatpickr-monthDropdown-months {
+        font-size: 12px;
+        height: 22px;
+        padding: 0 4px;
+        border-radius: 4px;
+    }
+
+    /* INPUT del año */
+    .flatpickr-current-month input.cur-year {
+        font-size: 12px;
+        height: 22px;
+        padding: 0 4px;
+        border-radius: 4px;
+    }
+
+    /* Evita que el calendario se corte */
+    .flatpickr-innerContainer {
+        padding-top: 6px;
+    }
+
+    /* Quita márgenes raros */
+    .flatpickr-weekdays,
+    .flatpickr-days {
+        margin-top: 2px;
+    }
+
+    /* ===== FLATPICKR: MES Y AÑO MISMO TAMAÑO ===== */
+    .flatpickr-monthDropdown-months,
+    .flatpickr-current-month input.cur-year {
+        font-size: 12px !important;
+        height: 22px !important;
+        line-height: 22px !important;
+        padding: 0 4px !important;
+        border-radius: 4px;
+    }
+
 </style>
 
 @section Scripts {
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-    <!-- jsPDF + autoTable -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 
     <script>
         const API_FACTURAS  = "https://tecmave-api.azurewebsites.net/facturas";
         const API_USUARIOS  = "https://tecmave-api.azurewebsites.net/api/usuarios";
-        const API_SERVICIOS = "https://tecmave-api.azurewebsites.net/servicios"; // si en tu API es /api/servicios, cámbialo aquí
+        const API_SERVICIOS = "https://tecmave-api.azurewebsites.net/servicios";
 
         let FACTURAS = [];
         let USUARIOS = [];
         let SERVICIOS = [];
         let facturaSeleccionada = null;
 
-        // ===== HELPERS =====
+        let pageSizeFact = 10;
+        let currentPageFact = 1;
+
+
+        let rangeStart = null;
+        let rangeEnd = null;
+        let fpRange = null;
+
+        function debounce(fn, d = 200) {
+            let t;
+            return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), d); };
+        }
+
         function badgeEstado(est) {
             const e = (est || '').toLowerCase();
             if (e === 'pagada') return '<span class="badge badge--pagada">Pagada</span>';
@@ -428,10 +708,11 @@
         function nombreClientePorId(id) {
             if (id == null) return '';
             const u = USUARIOS.find(x => Number(x.id) === Number(id) || Number(x.Id) === Number(id));
-            if (!u) return id ?? '';
+            if (!u) return String(id ?? '');
+
             const nombre = (u.nombre || u.Nombre || '').toString().trim();
             const ap = (u.apellidos || u.Apellidos || u.apellido || u.Apellido || '').toString().trim();
-            return (nombre + ' ' + ap).trim() || (u.email || u.Email || id);
+            return (nombre + ' ' + ap).trim() || String(u.email || u.Email || id || '');
         }
 
         function correoClientePorId(id) {
@@ -462,147 +743,162 @@
             return new Date(d.getFullYear(), d.getMonth(), d.getDate());
         }
 
-        // ===== CARGA INICIAL =====
+        function getSearchText() {
+            return ($("#filtroGlobal").val() || "").toString().toLowerCase().trim();
+        }
+
         function cargarTodo() {
             $("#estadoCarga").text("Cargando…");
-            const g1 = $.ajax({ url: API_FACTURAS, method: 'GET', xhrFields: { withCredentials: true } });
-            const g2 = $.ajax({ url: API_USUARIOS, method: 'GET', xhrFields: { withCredentials: true } });
 
-            $.when(g1, g2).done((r1, r2) => {
-                FACTURAS = Array.isArray(r1[0]) ? r1[0] : [];
-                USUARIOS = Array.isArray(r2[0]) ? r2[0] : [];
+            const pFact = $.ajax({ url: API_FACTURAS, method: "GET" });
+            const pUsers = $.ajax({ url: API_USUARIOS, method: "GET" });
 
-                console.log("FACTURAS:", FACTURAS);
-                console.log("USUARIOS:", USUARIOS);
+            $.when(pFact, pUsers)
+                .done((r1, r2) => {
+                    const factData = r1[0];
+                    const userData = r2[0];
 
-                llenarCombosClientes();
-                renderTabla();
-                $("#estadoCarga").text(FACTURAS.length ? "Listo" : "No hay facturas.");
+                    FACTURAS = Array.isArray(factData) ? factData : (factData ? [factData] : []);
+                    USUARIOS = Array.isArray(userData) ? userData : (userData ? [userData] : []);
 
-                // cargar servicios después de usuarios (para llenar combo auto_servicio)
-                cargarServicios();
-            }).fail((jq1, jq2) => {
-                console.error("Error al cargar:", jq1?.status, jq1?.responseText);
-                $("#estadoCarga").text("No se pudieron cargar los datos.");
-            });
-        }
+                    llenarCombosClientes();
+                    renderTabla();
+                    $("#estadoCarga").text(FACTURAS.length ? "Facturas cargadas correctamente" : "No hay facturas.");
+                    cargarServicios();
+                })
+                .fail(function (xhr, textStatus, errorThrown) {
+                    console.error("Error al cargar (cuando):", xhr?.status, textStatus, errorThrown, xhr?.responseText);
 
-        // ===== CARGAR SERVICIOS (para "Generar desde servicio") =====
-        function cargarServicios() {
-            $.ajax({
-                url: API_SERVICIOS,
-                method: 'GET',
-                xhrFields: { withCredentials: true }
-            }).done(function (data) {
-                SERVICIOS = Array.isArray(data) ? data : [];
-                console.log("SERVICIOS:", SERVICIOS);
-
-                const $sel = $("#auto_servicio");
-                $sel.empty();
-
-                if (!SERVICIOS.length) {
-                    $sel.append('<option value="">(No hay servicios)</option>');
-                    return;
-                }
-
-                SERVICIOS.forEach(s => {
-                    const id = s.id_servicio ?? s.id ?? s.Id;
-                    const nombre = (s.nombre || s.Nombre || s.descripcion || s.Descripcion || `Servicio ${id}`).toString();
-                    $sel.append(`<option value="${id}">${nombre}</option>`);
+                    pFact.done(function (factData) {
+                        FACTURAS = Array.isArray(factData) ? factData : (factData ? [factData] : []);
+                        USUARIOS = [];
+                        llenarCombosClientes();
+                        renderTabla();
+                        $("#estadoCarga").text(FACTURAS.length ? "Facturas cargadas correctamente (sin usuarios)" : "No hay facturas.");
+                        cargarServicios();
+                    }).fail(function (x2, t2, e2) {
+                        console.error("FACTURAS también falló:", x2?.status, t2, e2, x2?.responseText);
+                        $("#estadoCarga").text("No se pudieron cargar los datos.");
+                    });
                 });
-            }).fail(function (xhr) {
-                console.error("Error al cargar servicios:", xhr?.status, xhr?.responseText);
-                const $sel = $("#auto_servicio");
-                $sel.empty();
-                $sel.append('<option value="">(Error al cargar servicios)</option>');
-            });
         }
 
-        // ===== COMBOS CLIENTES =====
+        function cargarServicios() {
+            $.ajax({ url: API_SERVICIOS, method: "GET" })
+                .done(function (data) {
+                    SERVICIOS = Array.isArray(data) ? data : (data ? [data] : []);
+                    const $sel = $("#auto_servicio");
+                    $sel.empty();
+
+                    if (!SERVICIOS.length) {
+                        $sel.append('<option value="">(No hay servicios)</option>');
+                        return;
+                    }
+
+                    SERVICIOS.forEach(s => {
+                        const id = s.id_servicio ?? s.id ?? s.Id;
+                        const nombre = (s.nombre || s.Nombre || s.descripcion || s.Descripcion || `Servicio ${id}`).toString();
+                        $sel.append(`<option value="${id}">${nombre}</option>`);
+                    });
+                })
+                .fail(function (xhr) {
+                    console.error("Error al cargar servicios:", xhr?.status, xhr?.responseText);
+                    const $sel = $("#auto_servicio");
+                    $sel.empty().append('<option value="">(Error al cargar servicios)</option>');
+                });
+        }
+
         function llenarCombosClientes() {
-            const $selExport = $("#selClienteExport");
             const $crear = $("#crear_cliente");
             const $auto = $("#auto_cliente");
 
-            $selExport.empty();
             $crear.empty();
             $auto.empty();
 
-            $selExport.append('<option value="">(Todos)</option>');
             USUARIOS.forEach(u => {
                 const id = u.id ?? u.Id;
                 const nombre = nombreClientePorId(id);
                 const opt = `<option value="${id}">${nombre}</option>`;
-                $selExport.append(opt);
                 $crear.append(opt);
                 $auto.append(opt);
             });
         }
 
-        // ===== FILTROS =====
         function pasaFiltros(f) {
-            const num = ($("#filtroNumero").val() || "").trim();
-            const nombreFiltro = ($("#filtroNombre").val() || "").toLowerCase().trim();
-            const estadoFiltro = $("#filtroEstado").val();
-            const desde = $("#filtroDesde").val();
-            const hasta = $("#filtroHasta").val();
+            const q = getSearchText();
+            const estadoFiltro = ($("#filtroEstado").val() || "").toString();
 
             const id = f.id_factura ?? f.id ?? f.Id;
             const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
-            const nombreCliente = nombreClientePorId(clienteId).toLowerCase();
 
-            if (num && String(id) !== num) return false;
-            if (nombreFiltro && !nombreCliente.includes(nombreFiltro)) return false;
+            const cliente = nombreClientePorId(clienteId);
+            const correo = correoClientePorId(clienteId);
+            const tel = telefonoClientePorId(clienteId);
 
-            const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? '').toString();
+            const fechaVal = f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision;
+            const fechaTxt = safeFecha(fechaVal);
+            const fecha = parseDateOnly(fechaVal);
+
+            const metodo = (f.metodo_pago ?? f.metodoPago ?? f.MetodoPago ?? '').toString();
+            const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? 'Pendiente').toString();
+            const total = formatCRC(f.total ?? f.Total ?? 0);
+
             if (estadoFiltro && estado !== estadoFiltro) return false;
 
-            if (desde || hasta) {
-                const fechaVal = f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision;
-                const fecha = parseDateOnly(fechaVal);
+            if (rangeStart || rangeEnd) {
                 if (!fecha) return false;
+                if (rangeStart && fecha < rangeStart) return false;
+                if (rangeEnd && fecha > rangeEnd) return false;
+            }
 
-                if (desde) {
-                    const d = parseDateOnly(desde);
-                    if (fecha < d) return false;
-                }
-                if (hasta) {
-                    const h = parseDateOnly(hasta);
-                    if (fecha > h) return false;
-                }
+            if (q) {
+                const haystack = [id, cliente, correo, tel, fechaTxt, metodo, estado, total].join(' ').toLowerCase();
+                if (!haystack.includes(q)) return false;
             }
 
             return true;
         }
 
-        // ===== RENDER TABLA =====
         function renderTabla() {
             const $tb = $("#tablaFacturas");
             $tb.empty();
 
-            const lista = FACTURAS.filter(pasaFiltros);
+            const filtradas = FACTURAS.filter(pasaFiltros);
+            const total = filtradas.length;
+
+            if (!total) {
+                $tb.append(`<tr><td colspan="8">Sin resultados</td></tr>`);
+                $("#badge").text(`0 factura(s) mostradas`);
+                return;
+            }
+
+            const totalPages = Math.max(1, Math.ceil(total / pageSizeFact));
+            if (currentPageFact > totalPages) currentPageFact = totalPages;
+
+            const start = (currentPageFact - 1) * pageSizeFact;
+            const end = Math.min(start + pageSizeFact, total);
+
+            const lista = filtradas.slice(start, end);
 
             lista.forEach(f => {
                 const id = f.id_factura ?? f.id ?? f.Id;
                 const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
                 const cliente = nombreClientePorId(clienteId);
-                const correo = correoClientePorId(clienteId);
                 const tel = telefonoClientePorId(clienteId);
                 const fecha = safeFecha(f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision);
                 const metodo = f.metodo_pago ?? f.metodoPago ?? f.MetodoPago ?? '';
                 const estado = f.estado_pago ?? f.estado ?? f.Estado ?? 'Pendiente';
-                const total = f.total ?? f.Total ?? 0;
+                const totalMonto = f.total ?? f.Total ?? 0;
 
                 const fila = `
                     <tr>
                         <td>${id ?? ''}</td>
-                        <td>${cliente ?? ''}</td>
-                        <td>${correo ?? ''}</td>
-                        <td>${tel ?? ''}</td>
+                        <td>${cliente ?? 'Eliminado'}</td>
+                        <td>${tel ?? 'Eliminado'}</td>
                         <td>${fecha}</td>
                         <td>${metodo}</td>
                         <td>${badgeEstado(estado)}</td>
-                        <td>${formatCRC(total)}</td>
+                        <td>${formatCRC(totalMonto)}</td>
                         <td>
                             <button class="btn danger btn-estado" data-id="${id}" data-estado="${estado}">Estado</button>
                             <button class="btn btn-secondary btn-enviar" data-id="${id}">Enviar</button>
@@ -611,10 +907,9 @@
                 $tb.append(fila);
             });
 
-            $("#badge").text(`${lista.length} factura(s) mostradas`);
+            $("#badge").text(`Mostrando ${start + 1}-${end} de ${total}`);
         }
 
-        // ===== MODALES GENÉRICOS =====
         function abrirModal(id) {
             const $m = $("#" + id);
             $m.removeClass("hidden").css("display", "flex");
@@ -625,7 +920,6 @@
             $m.addClass("hidden").hide();
         }
 
-        // ===== MODAL ESTADO =====
         function abrirModalEstado(idFactura, estadoActual) {
             facturaSeleccionada = { id: idFactura };
             $("#ddlEstado").val(estadoActual || "Pendiente");
@@ -647,13 +941,10 @@
                 method: 'PUT',
                 contentType: 'application/json',
                 data: JSON.stringify({ estado: nuevo }),
-                xhrFields: { withCredentials: true },
                 success: function () {
                     FACTURAS = FACTURAS.map(x => {
                         const xid = x.id_factura ?? x.id ?? x.Id;
-                        if (Number(xid) === Number(facturaSeleccionada.id)) {
-                            return { ...x, estado_pago: nuevo };
-                        }
+                        if (Number(xid) === Number(facturaSeleccionada.id)) return { ...x, estado_pago: nuevo };
                         return x;
                     });
                     renderTabla();
@@ -666,7 +957,6 @@
             });
         }
 
-        // ===== ENVIAR FACTURA POR EMAIL (botón "Enviar") =====
         function enviarFacturaEmail(idFactura) {
             const url = `${API_FACTURAS}/${idFactura}/enviar-email`;
 
@@ -674,12 +964,8 @@
                 url: url,
                 method: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({}), // body vacío => el API busca el email del cliente en la BD
-                xhrFields: { withCredentials: true },
-                success: function (res) {
-                    console.log("Correo enviado:", res);
-                    alert(`Factura enviada al correo del cliente.`);
-                },
+                data: JSON.stringify({}),
+                success: function () { alert(`Factura enviada al correo del cliente.`); },
                 error: function (xhr) {
                     console.error("Error al enviar factura por correo", xhr?.status, xhr?.responseText);
                     alert("No se pudo enviar la factura por correo.");
@@ -687,17 +973,13 @@
             });
         }
 
-        // ===== CREAR FACTURA MANUAL =====
         function crearFacturaManual() {
             const clienteId = Number($("#crear_cliente").val());
             const metodo = $("#crear_metodo").val();
             const fecha = $("#crear_fecha").val();
             const total = Number($("#crear_total").val());
 
-            if (!clienteId || total <= 0) {
-                alert("Debe seleccionar un cliente y un total mayor a 0.");
-                return;
-            }
+            if (!clienteId || total <= 0) { alert("Debe seleccionar un cliente y un total mayor a 0."); return; }
 
             const body = {
                 cliente_id: clienteId,
@@ -712,7 +994,6 @@
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(body),
-                xhrFields: { withCredentials: true },
                 success: function (created) {
                     FACTURAS.push(created);
                     renderTabla();
@@ -728,29 +1009,20 @@
             });
         }
 
-        // ===== CREAR FACTURA AUTOMÁTICA DESDE SERVICIO =====
         function crearFacturaAuto() {
             const clienteId = Number($("#auto_cliente").val());
             const servicioId = Number($("#auto_servicio").val());
             const metodo = $("#auto_metodo").val();
 
-            if (!clienteId || !servicioId) {
-                alert("Debe seleccionar un cliente y un servicio.");
-                return;
-            }
+            if (!clienteId || !servicioId) { alert("Debe seleccionar un cliente y un servicio."); return; }
 
-            const body = {
-                cliente_id: clienteId,
-                servicio_id: servicioId,
-                metodo_pago: metodo
-            };
+            const body = { cliente_id: clienteId, servicio_id: servicioId, metodo_pago: metodo };
 
             $.ajax({
                 url: `${API_FACTURAS}/generar-automatico`,
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(body),
-                xhrFields: { withCredentials: true },
                 success: function (created) {
                     FACTURAS.push(created);
                     renderTabla();
@@ -764,30 +1036,8 @@
             });
         }
 
-        // ===== ENVIAR RECORDATORIOS PENDIENTES =====
-        function enviarRecordatorios() {
-            $.ajax({
-                url: `${API_FACTURAS}/recordatorios/pendientes`,
-                method: 'POST',
-                contentType: 'application/json',
-                xhrFields: { withCredentials: true },
-                success: function (res) {
-                    console.log("Recordatorios:", res);
-                    alert(`Recordatorios enviados: ${res.enviados}\nSin correo: ${res.sin_email}\nErrores: ${res.errores}`);
-                },
-                error: function (xhr) {
-                    console.error("Error al enviar recordatorios", xhr?.status, xhr?.responseText);
-                    alert("No se pudieron enviar los recordatorios.");
-                }
-            });
-        }
-
-        // ===== EXPORTAR PDF (general & variantes) =====
         function exportarPdf(facturas) {
             try {
-                const { jsPDF } = window.jspdf || {};
-                if (!jsPDF || !window.jspdf?.jsPDF) { alert('Falta jsPDF'); return; }
-
                 const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
                 doc.setFontSize(14);
                 doc.text('Listado de Facturas', 40, 40);
@@ -798,12 +1048,11 @@
                     const cliente = nombreClientePorId(clienteId);
                     const fecha = safeFecha(f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision);
                     const total = formatCRC(f.total ?? f.Total ?? 0);
-                    const estado = f.estado_pago ?? f.estado ?? f.Estado ?? '';
-                    const metodo = f.metodo_pago ?? f.metodoPago ?? f.MetodoPago ?? '';
+                    const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? '').toString();
+                    const metodo = (f.metodo_pago ?? f.metodoPago ?? f.MetodoPago ?? '').toString();
                     return [id, fecha, cliente, total, metodo, estado];
                 });
 
-                if (!doc.autoTable) { alert('Falta autoTable'); return; }
                 doc.autoTable({
                     head: [['Id', 'Fecha', 'Cliente', 'Total', 'Método', 'Estado']],
                     body,
@@ -811,7 +1060,7 @@
                     styles: { fontSize: 9 }
                 });
 
-                const name = `facturas_${new Date().toISOString().replace(/[:.]/g, '-')}.pdf`;
+                const name = `facturas_vista_${new Date().toISOString().replace(/[:.]/g, '-')}.pdf`;
                 doc.save(name);
             } catch (e) {
                 console.error(e);
@@ -819,55 +1068,94 @@
             }
         }
 
-        function exportarMes() {
-            const mes = $("#filtroMesExport").val(); // yyyy-MM
-            if (!mes) {
-                alert("Seleccione un mes.");
-                return;
-            }
-            const [year, month] = mes.split("-").map(Number);
-
-            const lista = FACTURAS.filter(f => {
-                const fv = f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision;
-                const d = new Date(fv);
-                if (isNaN(d)) return false;
-                return d.getFullYear() === year && (d.getMonth() + 1) === month;
-            });
-
-            if (!lista.length) {
-                alert("No hay facturas en ese mes.");
-                return;
-            }
-            exportarPdf(lista);
+        function exportarVistaActualPdf() {
+            const listaFiltrada = FACTURAS.filter(pasaFiltros);
+            if (!listaFiltrada.length) { alert("No hay facturas para exportar con los filtros actuales."); return; }
+            exportarPdf(listaFiltrada);
         }
 
-        function exportarPorCliente() {
-            const idSel = $("#selClienteExport").val();
-            if (!idSel) {
-                alert("Seleccione un cliente.");
-                return;
-            }
-            const lista = FACTURAS.filter(f => {
-                const clienteId = f.cliente_id ?? f.ClienteId ?? f.clienteId;
-                return Number(clienteId) === Number(idSel);
+        async function notificarPendientesVistaActual() {
+            const visibles = FACTURAS.filter(pasaFiltros);
+            const pendientes = visibles.filter(f => {
+                const est = (f.estado_pago ?? f.estado ?? f.Estado ?? '').toString().toLowerCase();
+                return est === "pendiente";
             });
-            if (!lista.length) {
-                alert("Ese cliente no tiene facturas.");
-                return;
+
+            if (!pendientes.length) { alert("No hay facturas pendientes en la vista actual."); return; }
+
+            const $btn = $("#btnNotificarPendientes");
+            $btn.prop("disabled", true).text("Notificando...");
+
+            let ok = 0, err = 0;
+
+            for (const f of pendientes) {
+                const id = f.id_factura ?? f.id ?? f.Id;
+                try {
+                    await $.ajax({
+                        url: `${API_FACTURAS}/${id}/enviar-email`,
+                        method: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({})
+                    });
+                    ok++;
+                } catch (e) {
+                    err++;
+                    console.error("Fallo notificando factura:", id, e);
+                }
             }
-            exportarPdf(lista);
+
+            $btn.prop("disabled", false).text("Notificar pendientes");
+            alert(`Notificaciones enviadas: ${ok}\nErrores: ${err}\nTotal pendientes: ${pendientes.length}`);
         }
 
-        function exportarPendientes() {
-            const lista = FACTURAS.filter(f => {
-                const estado = (f.estado_pago ?? f.estado ?? f.Estado ?? '').toLowerCase();
-                return estado === 'pendiente';
+        function initRangePicker() {
+            const el = document.getElementById('filtroRango');
+            if (!el) return;
+
+            fpRange = flatpickr(el, {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                allowInput: false,
+                showMonths: 1,
+                onClose: function (selectedDates) {
+                    if (!selectedDates || !selectedDates.length) {
+                        rangeStart = null;
+                        rangeEnd = null;
+                        renderTabla();
+                        return;
+                    }
+
+                    const d1 = selectedDates[0]
+                        ? new Date(selectedDates[0].getFullYear(), selectedDates[0].getMonth(), selectedDates[0].getDate())
+                        : null;
+
+                    const d2raw = selectedDates[1] || selectedDates[0];
+                    const d2 = d2raw
+                        ? new Date(d2raw.getFullYear(), d2raw.getMonth(), d2raw.getDate())
+                        : null;
+
+                    if (d1 && d2 && d2 < d1) { rangeStart = d2; rangeEnd = d1; }
+                    else { rangeStart = d1; rangeEnd = d2; }
+                    currentPageFact = 1;
+
+                    renderTabla();
+                }
             });
-            if (!lista.length) {
-                alert("No hay facturas pendientes.");
-                return;
-            }
-            exportarPdf(lista);
+        }
+
+        function clearAllFilters() {
+            $("#filtroEstado").val("");
+            $("#filtroGlobal").val("");
+            currentPageFact = 1;
+
+            rangeStart = null;
+            rangeEnd = null;
+
+            if (fpRange) fpRange.clear();
+            $("#filtroRango").val("");
+
+            renderTabla();
+            $("#filtroGlobal").focus();
         }
 
         // ===== EVENTOS =====
@@ -895,21 +1183,35 @@
 
         $("#btnCrearFactura").on("click", crearFacturaManual);
         $("#btnCrearAuto").on("click", crearFacturaAuto);
-        $("#btnEnviarRecordatorios").on("click", enviarRecordatorios);
 
-        $("#btnFiltrar").on("click", function () {
+        $("#btnExportVista").on("click", exportarVistaActualPdf);
+        $("#btnNotificarPendientes").on("click", notificarPendientesVistaActual);
+
+        const refreshDebounced = debounce(() => renderTabla(), 180);
+
+        $("#filtroEstado").on("change", function () {
+            currentPageFact = 1;
             renderTabla();
         });
 
-        $("#btnPdf").on("click", function () {
-            const listaFiltrada = FACTURAS.filter(pasaFiltros);
-            exportarPdf(listaFiltrada);
+        $("#filtroGlobal").on("input", function () {
+            currentPageFact = 1;
+            refreshDebounced();
+        });
+        $("#filtroGlobal").on("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } });
+
+        $("#btnClearAll").on("click", clearAllFilters);
+
+                $("#pageSizeSelectFact").on("change", function () {
+            pageSizeFact = Number(this.value) || 10;
+            currentPageFact = 1;
+            renderTabla();
         });
 
-        // Inicio
+
         $(document).ready(function () {
+            initRangePicker();
             cargarTodo();
         });
     </script>
 }
-

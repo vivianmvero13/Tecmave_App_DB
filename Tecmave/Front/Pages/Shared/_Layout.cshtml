@@ -42,6 +42,7 @@
     <script src="~/lib/jquery/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="~/css/adminDashboard.css" />
 </head>
 <body data-user-id="@(currentUser?.Id)"
@@ -66,6 +67,7 @@
                     <a asp-page="/Vehiculos/Crear"><i class="fa-solid fa-car-side"></i> Mis vehículos</a>
                     <a asp-page="/Promociones/NuestrasPromociones"><i class="fa-solid fa-tags"></i> Promociones</a>
                     <a asp-page="/Colaboradores/MisMantenimientos"><i class="fa-solid fa-clipboard-list"></i> Mis mantenimientos</a>
+                    <a asp-page="/Factura/MisFacturas"><i class="fa-solid fa-clipboard-list"></i> Mis facturas</a>
                 }
 
                 @if (isAdmin)
@@ -79,7 +81,7 @@
                         <a asp-page="/Mantenimientos/Index"><i class="fa-solid fa-user-group"></i> Mantenimientos</a>
                         <a asp-page="/Revisiones/Index"><i class="fa-solid fa-id-badge"></i> Revisiones</a>
                         <a asp-page="/Colaboradores/Index"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
-                        <a asp-page="/Factura/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Factura</a>
+                        <a asp-page="/Factura/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación</a>
                         <a asp-page="/Planillas/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Planillas</a>
                         <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Auditoría</a>
                     </nav>
