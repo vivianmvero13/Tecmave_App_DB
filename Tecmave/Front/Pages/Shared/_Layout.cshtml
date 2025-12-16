@@ -95,10 +95,15 @@
 <nav class="nav">
     @if (SignInManager.IsSignedIn(User) && currentUser != null)
     {
-        <a asp-page="/Usuarios/Editar" asp-route-id="@currentUser.Id">
-            <i class="fa-regular fa-circle-user"></i> Administrar perfil
-        </a>
-        <a id="logout-btn" asp-page="#"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
+                    <a id="logout-btn" asp-page="#"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
+
+                    @if (!isAdmin)
+                    {
+                        <a asp-page="/Usuarios/Editar" asp-route-id="@currentUser.Id">
+                            <i class="fa-regular fa-circle-user"></i> Administrar perfil
+                        </a>
+                    }
+                    
     }
     else
     {
