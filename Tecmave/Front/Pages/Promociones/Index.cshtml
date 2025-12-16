@@ -1,83 +1,1105 @@
 ﻿@page "/Promociones"
 @model Front.Pages.Promociones.PromocionesIndexModel
+@using System.Text.Json
 @{
     ViewData["Title"] = "Promociones";
+    Layout = "_Layout";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Promociones</h2>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 
-    <a asp-page="/Promociones/Crear" class="btn btn-success">
-        <i class="fa-solid fa-plus"></i> Gestionar promociones
-    </a>
+<h1>Promociones</h1>
+
+<!-- Token global para que JS lo lea (y poder inyectarlo en forms dinámicos) -->
+<form id="antiForgeryHost" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+<!-- FILTROS PROMOCIONES (uno a la par del otro) -->
+<div class="row g-3 align-items-end mt-3 promo-filtros">
+    <div class="col-12 col-md-3">
+        <label for="estadoFilter" class="form-label">Estado</label>
+        <select id="estadoFilter" class="form-select">
+            <option value="">(Todos)</option>
+            <option value="1">Activa</option>
+            <option value="2">Pendiente</option>
+            <option value="3">Inactiva</option>
+        </select>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <label for="fechaRange" class="form-label">Periodo</label>
+
+        <!-- Igual que Crear: input visual + calendario -->
+        <div class="cal-wrap">
+            <span class="cal-ico" aria-hidden="true">📅</span>
+            <input id="fechaRange" class="form-control cal-input" placeholder="Seleccionar rango..." />
+        </div>
+
+        <!-- Inputs reales (ocultos) para el filtro -->
+        <input id="inicioFilter" type="date" style="display:none;" />
+        <input id="finFilter" type="date" style="display:none;" />
+    </div>
+
+    <div class="col-12 col-md-5">
+        <label for="searchPromo" class="form-label">Buscar</label>
+        <div class="input-group">
+            <input id="searchPromo"
+                   class="form-control"
+                   placeholder="Buscar por título, descripción, estado o fechas…" />
+            <button id="clearSearchPromo" class="btn btn-danger" type="button">
+                LIMPIAR
+            </button>
+        </div>
+    </div>
 </div>
 
-@if (TempData["Mensaje"] != null)
-{
-    <div class="alert alert-success" role="alert">
-        @TempData["Mensaje"]
+<!-- Header tabla: badge izquierda + acciones derecha -->
+<div class="table-header mt-2">
+    <small id="promoResultsBadge" class="text-muted">Mostrando 0 de 0</small>
+
+    <div class="table-actions">
+        <button id="registrarPromoBtn" class="icon-action" type="button" title="Registrar nueva promoción"
+                onclick="location.href='/Promociones/Crear'">
+            <img src="/assets/img/add.png" alt="Registrar nueva promoción" />
+        </button>
+
+        <button id="exportPromoBtn" class="icon-action" type="button" title="Exportar vista actual">
+            <img src="/assets/img/export.png" alt="Exportar" />
+        </button>
     </div>
-}
+</div>
 
-<table class="table align-middle">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Título</th>
-            <th>Descripción</th>
-            <th>Fecha de Inicio</th>
-            <th>Fecha de Fin</th>
-            <th>Imagen</th>
-            <th style="width: 220px;">Acciones</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @if (Model.Promociones == null || !Model.Promociones.Any())
-        {
+<!-- Tabla -->
+<div class="table-responsive mt-2">
+    <table class="table align-middle">
+        <thead>
             <tr>
-                <td colspan="7" class="text-center">
-                    No hay promociones registradas.
-                </td>
+                <th style="width:120px;">Título</th>
+                <th style="width:300px;">Descripción</th>
+                <th style="width:120px;">Estado</th>
+                <th style="width:190px;">Periodo</th>
+                <th style="width:120px;">Imagen</th>
+                <th style="width:270px;">Acciones</th>
             </tr>
-        }
-        else
-        {
-            @foreach (var promo in Model.Promociones)
-            {
-                var tieneImagen = !string.IsNullOrWhiteSpace(promo.imagen_url);
+        </thead>
+        <tbody id="promoTable">
+            <tr>
+                <td colspan="6" class="text-muted">Cargando promociones…</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
-                <tr>
-                    <td>@promo.id_promocion</td>
-                    <td>@promo.titulo</td>
-                    <td>@promo.descripcion</td>
-                    <td>@promo.fecha_inicio.ToShortDateString()</td>
-                    <td>@promo.fecha_fin.ToShortDateString()</td>
-                    <td>
-                        @if (tieneImagen)
-                        {
-                            <a href="@promo.imagen_url"
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               class="btn btn-outline-secondary btn-sm">
-                                Ver archivo
-                            </a>
-                        }
-                        else
-                        {
-                            <span class="text-muted small">Sin archivo</span>
-                        }
-                    </td>
-                    <td>
-                        <form method="post" asp-page-handler="EnviarPromo" class="d-inline">
-                            <input type="hidden" name="idPromocion" value="@promo.id_promocion" />
-                            <button type="submit" class="btn btn-primary btn-sm me-1">
-                                Enviar a suscritos
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-            }
+<!-- Controles de paginación -->
+<div class="d-flex justify-content-between align-items-center mt-2">
+    <div class="d-flex align-items-center gap-2">
+        <label for="pageSizePromo" class="form-label mb-0">Mostrar:</label>
+        <select id="pageSizePromo" class="form-select form-select-sm" style="width:auto;">
+            <option value="5" selected>5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+        </select>
+    </div>
+
+    <nav class="promo-pagination-nav" aria-label="Paginación promociones">
+        <ul class="pagination pagination-sm mb-0 d-flex align-items-center gap-2"
+            style="list-style:none; margin:0; padding:0;">
+            <li class="page-item" id="prevPromo" style="list-style:none;">
+                <button class="page-link" type="button" aria-label="Anterior">&laquo;</button>
+            </li>
+            <li class="page-item disabled" style="list-style:none;">
+                <span class="page-link" id="promoPageInfo">1 / 1</span>
+            </li>
+            <li class="page-item" id="nextPromo" style="list-style:none;">
+                <button class="page-link" type="button" aria-label="Siguiente">&raquo;</button>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<!-- MODAL estilo SweetAlert -->
+<div id="appModal" class="swal2-container" aria-hidden="true" role="dialog" aria-modal="true"
+     aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
+    <div class="swal2-backdrop" data-close="1"></div>
+
+    <div class="swal2-popup" role="document" tabindex="-1">
+        <button class="swal2-close" type="button" aria-label="Cerrar" data-close="1">×</button>
+
+        <div class="swal2-icon" id="modalIconWrap" aria-hidden="true">
+            <span class="swal2-icon-content" id="modalIcon">!</span>
+        </div>
+
+        <h2 class="swal2-title" id="modalTitle">Título</h2>
+        <div class="swal2-html-container" id="modalBody">Mensaje…</div>
+
+        <div class="swal2-actions" style="margin-top:12px;display:flex;gap:10px;justify-content:center;width:100%;">
+            <button id="modalCancel" type="button" class="btn btn-secondary" data-close="1">Cancelar</button>
+            <button id="modalConfirm" type="button" class="btn btn-red">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ===== Filtros en línea (misma lógica que Facturas/Mantenimientos) ===== */
+    .promo-filtros.row.g-3 {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+    }
+
+    /* mini calendario dentro del input */
+    .cal-wrap {
+        position: relative;
+        width: 100%;
+    }
+
+    .cal-ico {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18px;
+        opacity: .7;
+        pointer-events: none;
+    }
+
+    .cal-input {
+        padding-left: 34px;
+    }
+
+    .acciones-wrap {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+    }
+
+    .link-ver-imagen {
+        color: var(--primary, #0d6efd);
+        text-decoration: underline;
+        font-weight: 400;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+        .link-ver-imagen:hover {
+            color: var(--primary-dark, #0a58ca);
+            text-decoration: none;
         }
-    </tbody>
-</table>
+
+    .btn-icon {
+        width: 25px !important;
+        height: 25px !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: var(--primary, #dc3545) !important;
+        border-radius: 999px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        line-height: 0 !important;
+        box-shadow: 0 6px 16px rgba(220,53,69,.25) !important;
+        position: relative;
+    }
+
+        .btn-icon img {
+            width: 16px !important;
+            height: 16px !important;
+            display: block !important;
+            filter: brightness(0) invert(1) !important;
+        }
+
+        .btn-icon:hover {
+            background: var(--primary-dark, #b92b3a) !important;
+        }
+
+    .btn-red {
+        background: #dc3545 !important;
+        border: 1px solid #dc3545 !important;
+        color: #fff !important;
+        padding: .3rem .8rem;
+        border-radius: .25rem;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+        .btn-red:hover {
+            background: #b92b3a !important;
+        }
+
+    .btn-icon.is-sending {
+        opacity: .75 !important;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+    }
+
+        .btn-icon.is-sending img {
+            opacity: .35 !important;
+        }
+
+        .btn-icon.is-sending::after {
+            content: "";
+            width: 14px;
+            height: 14px;
+            border-radius: 999px;
+            border: 2px solid rgba(255,255,255,.55);
+            border-top-color: rgba(255,255,255,1);
+            position: absolute;
+            inset: 0;
+            margin: auto;
+            animation: spin 0.8s linear infinite;
+        }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Header tabla igual que Vehículos */
+    .table-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 12px;
+        width: 100%;
+    }
+
+    .table-actions {
+        display: flex !important;
+        gap: 10px !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+    }
+
+    button.icon-action {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        outline: none !important;
+        cursor: pointer;
+    }
+
+        button.icon-action:hover,
+        button.icon-action:focus,
+        button.icon-action:active {
+            background: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
+        button.icon-action img {
+            width: 25px;
+            height: 25px;
+            display: block;
+        }
+
+    /* Paginación estilo Vehículos/Mantenimientos */
+    .promo-pagination-nav .pagination {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: .5rem !important;
+    }
+
+    .promo-pagination-nav .page-item {
+        list-style: none !important;
+        display: flex;
+        align-items: center;
+    }
+
+    .promo-pagination-nav button.page-link {
+        width: 34px;
+        height: 34px;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .promo-pagination-nav span.page-link {
+        height: 34px;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 .75rem !important;
+        border-radius: 8px;
+    }
+
+    /* Modal SweetAlert style */
+    .swal2-container {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+    }
+
+        .swal2-container.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+    .swal2-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, .45);
+    }
+
+    .swal2-popup {
+        position: relative;
+        z-index: 1;
+        width: min(520px, 92vw);
+        background: #fff;
+        border-radius: 16px;
+        padding: 22px 22px 18px;
+        box-shadow: 0 18px 55px rgba(0,0,0,.30);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        box-sizing: border-box;
+        text-align: center;
+    }
+
+    .swal2-close {
+        position: absolute !important;
+        top: 12px !important;
+        right: 12px !important;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        border: none;
+        background: #dc3545;
+        color: #fff;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+        box-shadow: 0 10px 25px rgba(220,53,69,.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .swal2-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        margin: 6px 0 2px;
+        border: 4px solid transparent;
+        box-sizing: border-box;
+    }
+
+    .swal2-icon-content {
+        font-size: 32px;
+        font-weight: 800;
+        line-height: 1;
+        display: block;
+        transform: translateY(-1px);
+    }
+
+    .swal2-html-container {
+        margin: 0;
+        font-size: 1rem;
+        color: #4b5563;
+        text-align: center;
+        max-width: 440px;
+        white-space: pre-wrap;
+    }
+
+    .swal2-icon.warn {
+        background: #fff4e5;
+        border-color: #f8bb86;
+        color: #a15c00;
+    }
+
+    .swal2-icon.ok {
+        background: #e7f6ec;
+        border-color: #a5dc86;
+        color: #2e7d32;
+    }
+
+    .swal2-icon.error {
+        background: #fdecea;
+        border-color: #f27474;
+        color: #b3261e;
+    }
+
+    .swal2-icon.info {
+        background: #e7f1ff;
+        border-color: #9dc1ff;
+        color: #0b57d0;
+    }
+
+    .frm-notificar {
+        display: inline-flex;
+    }
+
+
+
+
+
+
+
+    /* FLATPICKR (compact) para que no se "rompa" el header */
+    .flatpickr-calendar {
+        z-index: 9999;
+        font-size: 13px;
+    }
+    /* ===== FLATPICKR COMPACT FIX (MES / AÑO) ===== */
+    .flatpickr-calendar {
+        font-size: 13px;
+    }
+
+    .flatpickr-months {
+        display: flex;
+        align-items: center;
+        height: 36px;
+        padding: 4px 6px;
+    }
+
+    .flatpickr-month {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 28px;
+    }
+
+    .flatpickr-prev-month,
+    .flatpickr-next-month {
+        position: static;
+        padding: 0 6px;
+        height: 24px;
+        line-height: 24px;
+    }
+
+    .flatpickr-current-month {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0;
+        height: 24px;
+    }
+
+        /* Mes + Año mismo tamaño */
+        .flatpickr-monthDropdown-months,
+        .flatpickr-current-month input.cur-year {
+            font-size: 12px !important;
+            height: 22px !important;
+            line-height: 22px !important;
+            padding: 0 4px !important;
+            border-radius: 4px;
+        }
+
+    .flatpickr-innerContainer {
+        padding-top: 6px;
+    }
+
+    .flatpickr-weekdays, .flatpickr-days {
+        margin-top: 2px;
+    }
+
+</style>
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <script>
+        const API_BASE = "https://tecmave-api.azurewebsites.net";
+        const URL_PROMOCIONES = `${API_BASE}/promociones`;
+
+        // Datos iniciales desde el servidor (sin pedir de nuevo al API)
+        // NOTA: esto debe serializar bien el model que estás usando en Front
+        let ALL_PROMOS = @Html.Raw(JsonSerializer.Serialize(
+                    Model.Promociones ?? new List<Tecmave.Front.Models.PromocionesModel>()
+            ));
+
+    // ===== Utils =====
+    const esc = s => String(s ?? '')
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#39;");
+
+        function toISODateOnly(d){
+            return String(d ?? '').substring(0, 10); // YYYY-MM-DD
+        }
+
+        function estadoTxt(id){
+            if (String(id) === '1') return 'Activa';
+            if (String(id) === '2') return 'Pendiente';
+            return 'Inactiva';
+        }
+
+        function debounce(fn, d=250){
+            let t;
+            return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), d); };
+        }
+
+        function dateOnlyToDate(val){
+            const iso = toISODateOnly(val);
+            if(!iso) return null;
+            const [y,m,dd] = iso.split('-').map(Number);
+            if(!y || !m || !dd) return null;
+            return new Date(y, m-1, dd, 0,0,0,0);
+        }
+
+        function parseHiddenDate(id){
+            const v = (document.getElementById(id).value || '').trim();
+            if(!v) return null;
+            const [y,m,dd] = v.split('-').map(Number);
+            if(!y || !m || !dd) return null;
+            return new Date(y, m-1, dd, 0,0,0,0);
+        }
+
+        // ===== Modal =====
+        const Modal = (() => {
+            const root = document.getElementById('appModal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            const icon = document.getElementById('modalIcon');
+            const iconWrap = document.getElementById('modalIconWrap');
+            const btnConfirm = document.getElementById('modalConfirm');
+            const actions = root.querySelector('.swal2-actions');
+
+            let onConfirm = null;
+
+            function setKind(kind) {
+                iconWrap.classList.remove('warn', 'ok', 'error', 'info');
+                const map = {
+                    ok:   { cls: 'ok',   text: '✓' },
+                    warn: { cls: 'warn', text: '!' },
+                    error:{ cls: 'error',text: '!' },
+                    info: { cls: 'info', text: 'ℹ' }
+                };
+                const k = map[kind] || map.info;
+                iconWrap.classList.add(k.cls);
+                icon.textContent = k.text;
+            }
+
+            function show({ titleText='Información', bodyText='', kind='info', onConfirmCb=null, showActions=true, confirmText='Confirmar' }) {
+                setKind(kind);
+                title.textContent = titleText;
+                body.textContent = bodyText;
+
+                actions.style.display = showActions ? 'flex' : 'none';
+                btnConfirm.textContent = confirmText;
+
+                onConfirm = (typeof onConfirmCb === 'function') ? onConfirmCb : null;
+
+                btnConfirm.onclick = null;
+                btnConfirm.onclick = () => {
+                    const cb = onConfirm;
+                    hide();
+                    if (cb) cb();
+                };
+
+                root.classList.add('show');
+                root.style.display = 'flex';
+                root.setAttribute('aria-hidden', 'false');
+
+                document.addEventListener('keydown', escListener);
+                setTimeout(() => btnConfirm?.focus(), 0);
+            }
+
+            function hide() {
+                root.classList.remove('show');
+                root.style.display = 'none';
+                root.setAttribute('aria-hidden', 'true');
+                document.removeEventListener('keydown', escListener);
+                onConfirm = null;
+                btnConfirm.onclick = null;
+            }
+
+            function escListener(e) { if (e.key === 'Escape') hide(); }
+
+            root.addEventListener('click', (e) => {
+                if (e.target?.dataset?.close === '1') hide();
+            });
+
+            return { show, hide };
+        })();
+
+        // ===== Flatpickr rango (igual idea que Crear) =====
+        let fpPromoFilter = null;
+
+        function initRangePickerPromoFilter(){
+            const el = document.getElementById('fechaRange');
+            if(!el) return;
+
+            fpPromoFilter = flatpickr(el, {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                allowInput: false,
+                onClose: function(selectedDates){
+                    const inicioEl = document.getElementById('inicioFilter');
+                    const finEl    = document.getElementById('finFilter');
+
+                    if(!selectedDates || !selectedDates.length){
+                        inicioEl.value = '';
+                        finEl.value = '';
+                        currentPage = 1;
+                        refreshPromoPaged();
+                        return;
+                    }
+
+                    const d1 = selectedDates[0];
+                    const d2 = selectedDates[1] || selectedDates[0];
+
+                    const s1 = `${d1.getFullYear()}-${String(d1.getMonth()+1).padStart(2,'0')}-${String(d1.getDate()).padStart(2,'0')}`;
+                    const s2 = `${d2.getFullYear()}-${String(d2.getMonth()+1).padStart(2,'0')}-${String(d2.getDate()).padStart(2,'0')}`;
+
+                    // ordenar si lo elige al revés
+                    if (s2 < s1){
+                        inicioEl.value = s2;
+                        finEl.value = s1;
+                        fpPromoFilter.setDate([s2, s1], true);
+                    } else {
+                        inicioEl.value = s1;
+                        finEl.value = s2;
+                    }
+
+                    currentPage = 1;
+                    refreshPromoPaged();
+                }
+            });
+        }
+
+        // ===== Filtros + Paginación =====
+        const PAGE_SIZES = [5,10,20,50];
+        let pageSize = 5;
+        let currentPage = 1;
+
+        function applyPromoFilters(){
+            const estado = document.getElementById('estadoFilter').value;
+            const q = (document.getElementById('searchPromo').value || '').trim().toLowerCase();
+
+            const desde = parseHiddenDate('inicioFilter');
+            const hasta = parseHiddenDate('finFilter');
+
+            return (ALL_PROMOS || []).filter(p => {
+                const est = String(p.id_estado ?? '');
+                if(estado && est !== String(estado)) return false;
+
+                // rango CONTENIDO (promo dentro del rango)
+                // inicio >= desde  &&  fin <= hasta
+                        // rango "ocurre en el rango" (OVERLAP)
+        // Mostrar si la promo se cruza con [desde, hasta]
+        // Regla: (fin >= desde) && (inicio <= hasta)
+        const fi = dateOnlyToDate(p.fecha_inicio);
+        const ff = dateOnlyToDate(p.fecha_fin);
+
+        // Si solo hay desde: mostrar promos cuyo fin sea >= desde
+        if (desde && ff && ff < desde) return false;
+
+        // Si solo hay hasta: mostrar promos cuyo inicio sea <= hasta
+        if (hasta && fi && fi > hasta) return false;
+
+        // Si hay ambos: mostrar solo si se cruzan
+        if (desde && hasta && fi && ff) {
+          if (ff < desde || fi > hasta) return false;
+        }
+
+
+                if(!q) return true;
+
+                const eTxt = estadoTxt(p.id_estado);
+                const fiTxt = toISODateOnly(p.fecha_inicio);
+                const ffTxt = toISODateOnly(p.fecha_fin);
+                const periodo = `${fiTxt} - ${ffTxt}`;
+
+                const haystack = [
+                    p.id_promocion,
+                    p.titulo,
+                    p.descripcion,
+                    eTxt,
+                    periodo,
+                    (p.imagen_url ?? '')
+                ].join(' ').toLowerCase();
+
+                return haystack.includes(q);
+            });
+        }
+
+        function getAntiForgeryToken(){
+            const el = document.querySelector('#antiForgeryHost input[name="__RequestVerificationToken"]')
+                   || document.querySelector('input[name="__RequestVerificationToken"]');
+            return el ? el.value : '';
+        }
+
+        function renderPromoTable(rows){
+            const tb = document.getElementById('promoTable');
+
+            if(!rows.length){
+                tb.innerHTML = `<tr><td colspan="6" class="text-muted">No hay promociones.</td></tr>`;
+                return;
+            }
+
+            tb.innerHTML = rows.map(p => {
+                const img = (p.imagen_url || '').trim();
+                const tieneImagen = !!img;
+
+                const eTxt = estadoTxt(p.id_estado);
+                const periodo = `${toISODateOnly(p.fecha_inicio)} - ${toISODateOnly(p.fecha_fin)}`;
+
+                const imgHtml = tieneImagen
+                    ? `<a href="${esc(img)}" target="_blank" rel="noopener noreferrer" class="link-ver-imagen">Ver imagen</a>`
+                    : `<span class="text-muted small">Sin archivo</span>`;
+
+                const token = esc(getAntiForgeryToken());
+
+                        return `
+        <tr>
+          <td>${esc(p.titulo)}</td>
+          <td>${esc(p.descripcion)}</td>
+          <td>${esc(eTxt)}</td>
+          <td>${esc(periodo)}</td>
+          <td>${imgHtml}</td>
+          <td>
+            <div class="acciones-wrap">
+              <form method="post"
+                    action="/Promociones?handler=EnviarPromo"
+                    class="frm-notificar m-0 p-0">
+                <input type="hidden" name="idPromocion" value="${esc(p.id_promocion)}" />
+                <input type="hidden" name="__RequestVerificationToken" value="${token}" />
+                <button type="button"
+                        class="btn-icon"
+                        onclick="confirmarNotificar(this)"
+                        aria-label="Notificar suscritos">
+                  <img src="/assets/img/notification.png" alt="Notificar suscritos" />
+                </button>
+              </form>
+
+              <a href="/Promociones/Crear?id=${encodeURIComponent(p.id_promocion)}"
+                 class="btn btn-outline-primary btn-sm">
+                Editar
+              </a>
+
+              <button type="button"
+                      class="btn btn-red btn-sm"
+                      onclick="confirmarEliminar(${Number(p.id_promocion)})">
+                Eliminar
+              </button>
+            </div>
+          </td>
+        </tr>`;
+
+            }).join('');
+        }
+
+        function refreshPromoPaged(){
+            const rows = applyPromoFilters();
+            const total = rows.length;
+
+            const badge = document.getElementById('promoResultsBadge');
+            const pageInfo = document.getElementById('promoPageInfo');
+            const prevLi = document.getElementById('prevPromo');
+            const nextLi = document.getElementById('nextPromo');
+
+            if(!total){
+                renderPromoTable([]);
+                badge.textContent = 'Mostrando 0 de 0';
+                pageInfo.textContent = '0 / 0';
+                prevLi.classList.add('disabled');
+                nextLi.classList.add('disabled');
+                return;
+            }
+
+            const totalPages = Math.max(1, Math.ceil(total / pageSize));
+            if(currentPage > totalPages) currentPage = totalPages;
+            if(currentPage < 1) currentPage = 1;
+
+            const start = (currentPage - 1) * pageSize;
+            const end = Math.min(start + pageSize, total);
+            const pageRows = rows.slice(start, end);
+
+            renderPromoTable(pageRows);
+
+            badge.textContent = `Mostrando ${start + 1}-${end} de ${total}`;
+            pageInfo.textContent = `${currentPage} / ${totalPages}`;
+
+            if(currentPage <= 1) prevLi.classList.add('disabled'); else prevLi.classList.remove('disabled');
+            if(currentPage >= totalPages) nextLi.classList.add('disabled'); else nextLi.classList.remove('disabled');
+        }
+
+        function clearFilters(){
+            document.getElementById('estadoFilter').value = '';
+            document.getElementById('inicioFilter').value = '';
+            document.getElementById('finFilter').value = '';
+            document.getElementById('searchPromo').value = '';
+
+            if (fpPromoFilter) fpPromoFilter.clear();
+            const fr = document.getElementById('fechaRange');
+            if (fr) fr.value = '';
+
+            currentPage = 1;
+            refreshPromoPaged();
+        }
+
+        // ===== Export Excel (vista filtrada actual, sin paginar) =====
+        function exportPromoToExcel(){
+            const rows = applyPromoFilters();
+            if(!rows.length){
+                Modal.show({ titleText:'Sin datos', bodyText:'No hay datos para exportar.', kind:'info', showActions:false });
+                return;
+            }
+
+            const data = rows.map(p => ({
+                "ID": p.id_promocion ?? '',
+                "Título": p.titulo ?? '',
+                "Descripción": p.descripcion ?? '',
+                "Estado": estadoTxt(p.id_estado),
+                "Fecha inicio": toISODateOnly(p.fecha_inicio),
+                "Fecha fin": toISODateOnly(p.fecha_fin),
+                "Imagen": (p.imagen_url ?? '')
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+
+            const header = ws['!rows'] || [];
+            header[0] = { hpt: 30 };
+            ws['!rows'] = header;
+
+            const hdrCells = ['A1','B1','C1','D1','E1','F1','G1'];
+            hdrCells.forEach(c => {
+                if(!ws[c]) return;
+                ws[c].s = {
+                    fill: { fgColor: { rgb: "FF0000" } },
+                    font: { color: { rgb: "FFFFFF" }, bold: true }
+                };
+            });
+
+            ws['!cols'] = [
+                { wch: 8  },
+                { wch: 28 },
+                { wch: 40 },
+                { wch: 14 },
+                { wch: 14 },
+                { wch: 14 },
+                { wch: 40 }
+            ];
+
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            ws['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Promociones');
+
+            const now = new Date();
+            const pad = n => n.toString().padStart(2,'0');
+            const fname = `promociones_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.xlsx`;
+
+            XLSX.writeFile(wb, fname);
+        }
+
+        // ===== Helpers notificar (se quedan igual) =====
+        async function postFormAsFetch(form) {
+            const fd = new FormData(form);
+
+            const token = form.querySelector('input[name="__RequestVerificationToken"]')?.value
+                       || document.querySelector('#antiForgeryHost input[name="__RequestVerificationToken"]')?.value;
+
+            const headers = { 'X-Requested-With': 'XMLHttpRequest' };
+            if (token) headers['RequestVerificationToken'] = token;
+
+            const resp = await fetch(form.action, {
+                method: 'POST',
+                body: fd,
+                credentials: 'include',
+                headers
+            });
+
+            const ct = (resp.headers.get('content-type') || '').toLowerCase();
+            if (ct.includes('application/json')) {
+                const json = await resp.json().catch(() => null);
+                return { resp, json, text: '' };
+            }
+
+            const text = await resp.text().catch(() => '');
+            return { resp, json: null, text };
+        }
+
+        function extraerMensajeDesdeHtml(html) {
+            if (!html) return '';
+            try {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const danger = doc.querySelector('.alert.alert-danger');
+                if (danger?.textContent) return danger.textContent.trim();
+                const ok = doc.querySelector('.alert.alert-success');
+                if (ok?.textContent) return ok.textContent.trim();
+                return '';
+            } catch { return ''; }
+        }
+
+        window.confirmarNotificar = function(btn) {
+            const form = btn.closest('form');
+            if (!form) return;
+
+            if (btn.classList.contains('is-sending')) return;
+
+            Modal.show({
+                titleText: '¿Notificar a todos los usuarios?',
+                bodyText: 'Se enviará un correo a los usuarios suscritos con esta promoción.',
+                kind: 'warn',
+                onConfirmCb: async () => {
+                    btn.classList.add('is-sending');
+
+                    Modal.show({
+                        titleText: 'Enviando…',
+                        bodyText: 'En este momento se están enviando los correos a suscritos. Por favor espere.',
+                        kind: 'info',
+                        showActions: false
+                    });
+
+                    try {
+                        const { resp, json, text } = await postFormAsFetch(form);
+
+                        if (!resp.ok) {
+                            const msg =
+                                (json && (json.error || json.message || json.mensaje)) ||
+                                extraerMensajeDesdeHtml(text) ||
+                                'Ocurrió un error al enviar la notificación.';
+                            Modal.show({ titleText: 'Error', bodyText: msg, kind: 'error', showActions: false });
+                            return;
+                        }
+
+                        const okMsg =
+                            (json && (json.mensaje || json.message)) ||
+                            extraerMensajeDesdeHtml(text) ||
+                            'Solicitud procesada.';
+
+                        const msgLower = String(okMsg || '').toLowerCase();
+                        const esNoEnvio =
+                            msgLower.includes('no se envi') ||
+                            msgLower.includes('no se envio') ||
+                            msgLower.includes('no se envió') ||
+                            msgLower.includes('ya se haya enviado') ||
+                            msgLower.includes('notificados anteriormente') ||
+                            msgLower.includes('no hay usuarios suscritos');
+
+                        Modal.show({
+                            titleText: esNoEnvio ? 'No se enviaron correos' : 'Listo',
+                            bodyText: String(okMsg),
+                            kind: esNoEnvio ? 'warn' : 'ok',
+                            showActions: false
+                        });
+
+                    } catch (e) {
+                        console.error(e);
+                        Modal.show({ titleText: 'Error', bodyText: 'Error inesperado al enviar la notificación.', kind: 'error', showActions: false });
+                    } finally {
+                        btn.classList.remove('is-sending');
+                    }
+                }
+            });
+        };
+
+        // ===== Eliminar =====
+        window.confirmarEliminar = function(idPromocion){
+            Modal.show({
+                titleText: '¿Eliminar promoción?',
+                bodyText: 'Esta acción no se puede revertir.',
+                kind: 'warn',
+                onConfirmCb: async () => {
+                    if (!idPromocion || Number(idPromocion) <= 0) return;
+
+                    try {
+                        const resp = await fetch(`${URL_PROMOCIONES}/${encodeURIComponent(idPromocion)}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                        });
+
+                        if (!resp.ok) {
+                            let msg = 'Error al eliminar la promoción.';
+                            try {
+                                const ct = (resp.headers.get('content-type') || '').toLowerCase();
+                                if (ct.includes('application/json')) {
+                                    const payload = await resp.json();
+                                    msg = payload?.message || payload?.mensaje || msg;
+                                } else {
+                                    const text = await resp.text();
+                                    if (text) msg = text;
+                                }
+                            } catch { }
+                            Modal.show({ titleText: 'Error', bodyText: msg, kind: 'error', showActions: false });
+                            return;
+                        }
+
+                        const idx = (ALL_PROMOS || []).findIndex(p => Number(p.id_promocion) === Number(idPromocion));
+                        if (idx >= 0) ALL_PROMOS.splice(idx, 1);
+
+                        currentPage = 1;
+                        refreshPromoPaged();
+
+                        Modal.show({ titleText:'Eliminado', bodyText:'Promoción eliminada correctamente.', kind:'ok', showActions:false });
+                    } catch (e) {
+                        console.error(e);
+                        Modal.show({ titleText: 'Error', bodyText: 'Error inesperado al eliminar.', kind: 'error', showActions: false });
+                    }
+                }
+            });
+        };
+
+        // ===== Init =====
+        document.addEventListener('DOMContentLoaded', () => {
+            initRangePickerPromoFilter();
+
+            currentPage = 1;
+            refreshPromoPaged();
+
+            document.getElementById('estadoFilter').addEventListener('change', () => {
+                currentPage = 1;
+                refreshPromoPaged();
+            });
+
+            document.getElementById('searchPromo').addEventListener('input', debounce(() => {
+                currentPage = 1;
+                refreshPromoPaged();
+            }, 200));
+
+            document.getElementById('clearSearchPromo').addEventListener('click', () => {
+                clearFilters();
+                document.getElementById('searchPromo').focus();
+            });
+
+            document.getElementById('exportPromoBtn').addEventListener('click', exportPromoToExcel);
+
+            document.getElementById('pageSizePromo').addEventListener('change', (e) => {
+                const val = Number(e.target.value);
+                pageSize = PAGE_SIZES.includes(val) ? val : 5;
+                currentPage = 1;
+                refreshPromoPaged();
+            });
+
+            document.querySelector('#prevPromo button').addEventListener('click', () => {
+                if (document.getElementById('prevPromo').classList.contains('disabled')) return;
+                currentPage--;
+                refreshPromoPaged();
+            });
+
+            document.querySelector('#nextPromo button').addEventListener('click', () => {
+                if (document.getElementById('nextPromo').classList.contains('disabled')) return;
+                currentPage++;
+                refreshPromoPaged();
+            });
+        });
+    </script>
+}

@@ -2,12 +2,18 @@
 @model Front.Pages.Mantenimientos.EditarModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Editar agendamiento / mantenimiento";
+    ViewData["Title"] = "Editar mantenimiento";
 }
 
-<h1 class="mb-4">Editar agendamiento / mantenimiento</h1>
+<h1 class="mb-4">Editar mantenimiento</h1>
 
 <div class="card p-4">
+    <a asp-page="/Mantenimientos/Index"
+       class="btn-back btn-back-top"
+       title="Volver"
+       aria-label="Volver">
+        <img src="/assets/img/back.png" alt="Volver" />
+    </a>
     <form id="frmAg">
         <input type="hidden" id="id_ag" />
         <input type="hidden" id="cliente_id" />
@@ -59,7 +65,6 @@
         </div>
 
         <div class="mt-4 ag-actions">
-            <a class="btn btn-secondary" asp-page="/Mantenimientos/Index">Volver</a>
             <button id="btnSave" type="submit" class="btn btn-primary">Guardar</button>
         </div>
 
@@ -81,6 +86,46 @@
         justify-content: center;
         padding: .5rem 1rem;
     }
+
+    .card {
+        position: relative;
+    }
+
+    /* Botón volver flotante */
+    a.btn-back {
+        position: absolute !important;
+        top: 16px !important;
+        right: 16px !important;
+        left: auto !important; /* 🔴 CLAVE */
+        margin: 0 !important; /* 🔴 CLAVE */
+
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 10px !important;
+        background: var(--primary) !important;
+        border: 1px solid var(--primary) !important;
+        color: #fff !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        text-decoration: none !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,.15) !important;
+        z-index: 20;
+    }
+
+        a.btn-back:hover {
+            background: var(--primary-dark) !important;
+            border-color: var(--primary-dark) !important;
+        }
+
+        /* Ícono */
+        a.btn-back img {
+            width: 25px;
+            height: 25px;
+            display: block;
+        }
+
 </style>
 
 

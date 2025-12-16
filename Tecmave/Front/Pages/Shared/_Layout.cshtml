@@ -88,35 +88,28 @@
                 }
             </nav>
 
-            <div class="subtle">Cuenta</div>
-            <nav class="nav">
-                @if (SignInManager.IsSignedIn(User) && currentUser != null)
-                {
-                    <a asp-page="/Usuarios/Editar" asp-route-id="@currentUser.Id">
-                        <i class="fa-regular fa-circle-user"></i> Administrar perfil
-                    </a>
+            
+<div class="subtle">Cuenta</div>
+<nav class="nav">
+    @if (SignInManager.IsSignedIn(User) && currentUser != null)
+    {
+                    <a id="logout-btn" asp-page="#"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</a>
 
-                    <!-- FORMULARIO OCULTO DE LOGOUT -->
-                    <form id="logout-form"
-                          method="post"
-                          asp-page="/Account/Logout"
-                          asp-route-returnUrl="/"
-                          style="display:none;">
-                    </form>
-
-
-                    <!-- BOTÓN QUE EJECUTA EL LOGOUT -->
-                    <a href="#" id="logout-btn">
-                        <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
-                    </a>
-                }
-                else
-                {
-                    <a id="login-link" asp-page="/Account/Login">
-                        <i class="fa-regular fa-circle-user"></i> Iniciar sesión
-                    </a>
-                }
-            </nav>
+                    @if (!isAdmin)
+                    {
+                        <a asp-page="/Usuarios/Editar" asp-route-id="@currentUser.Id">
+                            <i class="fa-regular fa-circle-user"></i> Administrar perfil
+                        </a>
+                    }
+                    
+    }
+    else
+    {
+        <a id="login-link" asp-page="/Account/Login">
+            <i class="fa-regular fa-circle-user"></i> Iniciar sesión
+        </a>
+    }
+</nav>
         </aside>
 
         <header class="topbar">

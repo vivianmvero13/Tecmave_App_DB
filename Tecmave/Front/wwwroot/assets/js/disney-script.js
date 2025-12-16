@@ -177,5 +177,5 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar navegación activa
     updateActiveNav();
 
-    console.log('Tecmave - Sitio cargado con todas las correcciones ✅');
+    console.log('Tecmave - Sitio cargado con todas las correcciones');
 });
