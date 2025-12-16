@@ -3,10 +3,22 @@
 @{
     ViewData["Title"] = "Registrar vehículo";
     var esCliente = User.IsInRole("Cliente");
+    var isAdmin = User.Identity?.IsAuthenticated == true && User.IsInRole("Admin");
+    var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0";
+
 }
 
 <section class="section">
     <div class="container grid cols-2">
+        @if (isAdmin)
+        {
+            <a asp-page="/Vehiculos/Index"
+               class="btn-back btn-back-top"
+               title="Volver"
+               aria-label="Volver">
+                <img src="/assets/img/back.png" alt="Volver" />
+            </a>
+        }
         <div class="card">
             <h3 id="formTitle">Registrar vehículo</h3>
 
@@ -69,11 +81,7 @@
         </div>
 
         <div class="mt-4 d-flex gap-2">
-            @if (!esCliente)
-            {
-                <a class="btn btn-secondary" asp-page="/Vehiculos/Index">Volver</a>
-            }
-            <button id="guardarBtn" class="btn btn-orange" type="button">Guardar</button>
+            <button id="guardarBtn" class="btn" type="button">Guardar</button>
         </div>
     </div>
 </section>
@@ -335,6 +343,47 @@
     .mt-4 .btn, .mt-4 .btn-secondary, .mt-4 .btn-orange {
         width: auto; /* Evitar que los botones se expandan a tamaño completo */
     }
+
+    /* El contenedor general es el contexto del botón */
+    .container.grid {
+        position: relative !important;
+    }
+
+
+    /* Botón volver flotante */
+    a.btn-back {
+        position: absolute !important;
+        top: 16px !important;
+        right: 16px !important;
+        left: auto !important; /* 🔴 CLAVE */
+        margin: 0 !important; /* 🔴 CLAVE */
+
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 10px !important;
+        background: var(--primary) !important;
+        border: 1px solid var(--primary) !important;
+        color: #fff !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        text-decoration: none !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,.15) !important;
+        z-index: 20;
+    }
+
+        a.btn-back:hover {
+            background: var(--primary-dark) !important;
+            border-color: var(--primary-dark) !important;
+        }
+
+        /* Ícono */
+        a.btn-back img {
+            width: 25px;
+            height: 25px;
+            display: block;
+        }
 </style>
 
 
@@ -698,6 +747,8 @@
 
         setModoEditar(Number(v.id_vehiculo ?? v.id ?? v.Id ?? id));
     }
+        document.body.dataset.userId = '@userId';
+    document.body.dataset.isAdmin = '@isAdmin.ToString().ToLower()';
 
     document.addEventListener('DOMContentLoaded', async () => {
         setModoCrear();

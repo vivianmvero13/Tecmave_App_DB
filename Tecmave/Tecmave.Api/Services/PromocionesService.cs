@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Net; 
+using System.Net;
 
 namespace Tecmave.Api.Services
 {
@@ -68,41 +68,34 @@ namespace Tecmave.Api.Services
 
         public async Task<int> EnviarPromocionMasivoPorPromoAsync(int idPromocion)
         {
-            var hoy = DateOnly.FromDateTime(DateTime.Now);
-
             var promo = await _context.promociones
-                .FirstOrDefaultAsync(p =>
-                    p.id_promocion == idPromocion &&
-                    p.fecha_inicio <= hoy &&
-                    p.fecha_fin >= hoy);
+                .FirstOrDefaultAsync(p => p.id_promocion == idPromocion);
 
             if (promo == null)
-                return 0;
+                return -1; // no existe
 
             var usuarios = await _context.usuarios
                 .Where(u => u.NotificacionesActivadas && !string.IsNullOrEmpty(u.Email))
                 .ToListAsync();
 
             if (!usuarios.Any())
-                return 0;
+                return -2; // no hay suscritos
 
             int totalEnviadas = 0;
 
-            // Sanitizar texto básico
             string tituloSafe = WebUtility.HtmlEncode(promo.titulo ?? string.Empty);
             string descSafe = WebUtility.HtmlEncode(promo.descripcion ?? string.Empty);
 
-            // Si hay URL de imagen, la agregamos al HTML
             string imagenHtml = string.Empty;
             if (!string.IsNullOrWhiteSpace(promo.imagen_url))
             {
                 var imgUrlSafe = WebUtility.HtmlEncode(promo.imagen_url);
                 imagenHtml = $@"
-                    <div style=""margin: 16px 0;"">
-                        <img src=""{imgUrlSafe}""
-                             alt=""{tituloSafe}""
-                             style=""max-width:100%;height:auto;border-radius:8px;display:block;margin:0 auto;"" />
-                    </div>";
+            <div style=""margin: 16px 0;"">
+                <img src=""{imgUrlSafe}""
+                     alt=""{tituloSafe}""
+                     style=""max-width:100%;height:auto;border-radius:8px;display:block;margin:0 auto;"" />
+            </div>";
             }
 
             foreach (var usuario in usuarios)
@@ -128,6 +121,8 @@ namespace Tecmave.Api.Services
       {imagenHtml}
 
       <p style=""margin-top:16px;"">
+        <b>Válida desde:</b> {promo.fecha_inicio:dd/MM/yyyy}
+        <br />
         <b>Válida hasta:</b> {promo.fecha_fin:dd/MM/yyyy}
       </p>
 
@@ -151,6 +146,9 @@ namespace Tecmave.Api.Services
 
                 totalEnviadas++;
             }
+
+            if (totalEnviadas == 0)
+                return 0; // existía promo y usuarios, pero ya estaba enviado a todos
 
             await _context.SaveChangesAsync();
             return totalEnviadas;

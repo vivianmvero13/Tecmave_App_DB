@@ -87,15 +87,17 @@ namespace Tecmave.Api.Controllers
         {
             var cantidad = await _promocionesService.EnviarPromocionMasivoPorPromoAsync(idPromocion);
 
+            if (cantidad == -1)
+                return NotFound(new { mensaje = "La promoción no existe." });
+
+            if (cantidad == -2)
+                return Ok(new { mensaje = "No se enviaron correos porque no hay usuarios suscritos." });
+
             if (cantidad == 0)
-            {
-                return Ok(new
-                {
-                    mensaje = "No se enviaron correos. Puede que no haya usuarios suscritos, la promoción no esté activa o ya se haya enviado a todos."
-                });
-            }
+                return Ok(new { mensaje = "No se enviaron correos porque ya se había enviado a todos los suscritos." });
 
             return Ok(new { mensaje = $"Se enviaron {cantidad} correos para la promoción {idPromocion}." });
         }
+
     }
 }

@@ -19,7 +19,6 @@ namespace Front.Pages.Promociones
             _httpClientFactory = httpClientFactory;
         }
 
-        // OJO: lista del modelo de API, NO de IndexModel
         public List<PromocionesModel> Promociones { get; set; } = new();
 
         public async Task OnGetAsync()
@@ -27,7 +26,7 @@ namespace Front.Pages.Promociones
             var client = _httpClientFactory.CreateClient();
 
             Promociones = await client.GetFromJsonAsync<List<PromocionesModel>>(
-                              "https://tecmave-api.azurewebsites.net/Promociones")
+                              "https://tecmave-api.azurewebsites.net/promociones")
                           ?? new List<PromocionesModel>();
         }
 
@@ -36,26 +35,28 @@ namespace Front.Pages.Promociones
             var client = _httpClientFactory.CreateClient();
 
             var response = await client.PostAsync(
-                $"https://tecmave-api.azurewebsites.net/Promociones/enviar-promo/{idPromocion}",
-                null);
+                $"https://tecmave-api.azurewebsites.net/promociones/enviar-promo/{idPromocion}",
+                null
+            );
 
-            string mensaje = "Promoción enviada.";
+            string mensaje = "Solicitud procesada.";
 
-            if (response.IsSuccessStatusCode)
+            if (response.Content.Headers.ContentType?.MediaType?.ToLower().Contains("application/json") == true)
             {
                 var info = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-                if (info != null && info.TryGetValue("mensaje", out var msg))
+
+                if (info != null && info.TryGetValue("mensaje", out var msg) && !string.IsNullOrWhiteSpace(msg))
                 {
                     mensaje = msg;
                 }
             }
             else
             {
-                mensaje = "Ocurrió un error al enviar la promoción.";
+                mensaje = await response.Content.ReadAsStringAsync();
             }
 
-            TempData["Mensaje"] = mensaje;
-            return RedirectToPage();
+            return new JsonResult(new { mensaje, ok = response.IsSuccessStatusCode });
         }
+
     }
 }

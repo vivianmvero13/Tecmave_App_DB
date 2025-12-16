@@ -395,7 +395,7 @@
             });
           });
 
-          // ✅ Solo si Admin y existe el div, pedimos roles
+          // Solo si Admin y existe el div, pedimos roles
           if (IS_ADMIN && document.getElementById('RolesReadOnly')) {
             $.getJSON(`${API}/api/usuarios/${USER_ID}/roles`, function (roles) {
               const html = (roles && roles.length)

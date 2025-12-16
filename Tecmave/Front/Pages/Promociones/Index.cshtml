@@ -8,7 +8,7 @@
     <h2>Promociones</h2>
 
     <a asp-page="/Promociones/Crear" class="btn btn-success">
-        <i class="fa-solid fa-plus"></i> Gestionar promociones
+        <i class="fa-solid fa-plus"></i> Nueva Promoción
     </a>
 </div>
 
@@ -19,14 +19,21 @@
     </div>
 }
 
+@if (TempData["MensajeError"] != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @TempData["MensajeError"]
+    </div>
+}
+
 <table class="table align-middle">
     <thead>
         <tr>
             <th>ID</th>
             <th>Título</th>
             <th>Descripción</th>
-            <th>Fecha de Inicio</th>
-            <th>Fecha de Fin</th>
+            <th>Estado</th>
+            <th>Periodo</th>
             <th>Imagen</th>
             <th style="width: 220px;">Acciones</th>
         </tr>
@@ -47,20 +54,30 @@
             {
                 var tieneImagen = !string.IsNullOrWhiteSpace(promo.imagen_url);
 
+                string estadoTxt =
+                promo.id_estado == 1 ? "Activa" :
+                promo.id_estado == 2 ? "Pendiente" :
+                "Inactiva";
+
                 <tr>
                     <td>@promo.id_promocion</td>
                     <td>@promo.titulo</td>
                     <td>@promo.descripcion</td>
-                    <td>@promo.fecha_inicio.ToShortDateString()</td>
-                    <td>@promo.fecha_fin.ToShortDateString()</td>
+
+                    <td>@estadoTxt</td>
+
+                    <td>
+                        @promo.fecha_inicio.ToShortDateString() - @promo.fecha_fin.ToShortDateString()
+                    </td>
+
                     <td>
                         @if (tieneImagen)
                         {
                             <a href="@promo.imagen_url"
                                target="_blank"
                                rel="noopener noreferrer"
-                               class="btn btn-outline-secondary btn-sm">
-                                Ver archivo
+                               class="link-ver-imagen">
+                                Ver imagen
                             </a>
                         }
                         else
@@ -68,16 +85,486 @@
                             <span class="text-muted small">Sin archivo</span>
                         }
                     </td>
+
                     <td>
-                        <form method="post" asp-page-handler="EnviarPromo" class="d-inline">
+                        <form method="post"
+                              asp-page-handler="EnviarPromo"
+                              class="d-inline frm-notificar">
                             <input type="hidden" name="idPromocion" value="@promo.id_promocion" />
-                            <button type="submit" class="btn btn-primary btn-sm me-1">
-                                Enviar a suscritos
+                            <button type="button"
+                                    class="btn-icon"
+                                    onclick="confirmarNotificar(this)"
+                                    aria-label="Notificar suscritos">
+                                <img src="/assets/img/notification.png" alt="Notificar suscritos" />
                             </button>
                         </form>
+
+                        <div class="acciones-wrap">
+                            <a asp-page="/Promociones/Crear"
+                               asp-route-id="@promo.id_promocion"
+                               class="btn btn-outline-primary btn-sm">
+                                Editar
+                            </a>
+
+                            <button type="button"
+                                    class="btn btn-red btn-sm"
+                                    onclick="confirmarEliminar(@promo.id_promocion)">
+                                Eliminar
+                            </button>
+                        </div>
                     </td>
                 </tr>
             }
         }
     </tbody>
 </table>
+
+<div id="appModal" class="swal2-container" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
+    <div class="swal2-backdrop" data-close="1"></div>
+
+    <div class="swal2-popup" role="document" tabindex="-1">
+        <button class="swal2-close" type="button" aria-label="Cerrar" data-close="1">×</button>
+
+        <div class="swal2-icon" id="modalIconWrap" aria-hidden="true">
+            <span class="swal2-icon-content" id="modalIcon">!</span>
+        </div>
+
+        <h2 class="swal2-title" id="modalTitle">Título</h2>
+        <div class="swal2-html-container" id="modalBody">Mensaje…</div>
+
+        <div class="swal2-actions" style="margin-top:12px;display:flex;gap:10px;justify-content:center;width:100%;">
+            <button id="modalCancel" type="button" class="btn btn-secondary" data-close="1">Cancelar</button>
+            <button id="modalConfirm" type="button" class="btn btn-red">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .acciones-wrap {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+    }
+
+    .link-ver-imagen {
+        color: var(--primary, #0d6efd);
+        text-decoration: underline;
+        font-weight: 400;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+        .link-ver-imagen:hover {
+            color: var(--primary-dark, #0a58ca);
+            text-decoration: none;
+        }
+
+    .btn-icon {
+        width: 25px !important;
+        height: 25px !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: var(--primary, #dc3545) !important;
+        border-radius: 999px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        line-height: 0 !important;
+        box-shadow: 0 6px 16px rgba(220,53,69,.25) !important;
+        position: relative;
+    }
+
+        .btn-icon img {
+            width: 16px !important;
+            height: 16px !important;
+            display: block !important;
+            filter: brightness(0) invert(1) !important;
+        }
+
+        .btn-icon:hover {
+            background: var(--primary-dark, #b92b3a) !important;
+        }
+
+    .btn-red {
+        background: #dc3545 !important;
+        border: 1px solid #dc3545 !important;
+        color: #fff !important;
+        padding: .3rem .8rem;
+        border-radius: .25rem;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+        .btn-red:hover {
+            background: #b92b3a !important;
+        }
+
+    .btn-icon.is-sending {
+        opacity: .75 !important;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+    }
+
+        .btn-icon.is-sending img {
+            opacity: .35 !important;
+        }
+
+        .btn-icon.is-sending::after {
+            content: "";
+            width: 14px;
+            height: 14px;
+            border-radius: 999px;
+            border: 2px solid rgba(255,255,255,.55);
+            border-top-color: rgba(255,255,255,1);
+            position: absolute;
+            inset: 0;
+            margin: auto;
+            animation: spin 0.8s linear infinite;
+        }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .swal2-container {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+    }
+
+        .swal2-container.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+    .swal2-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, .45);
+    }
+
+    .swal2-popup {
+        position: relative;
+        z-index: 1;
+        width: min(520px, 92vw);
+        background: #fff;
+        border-radius: 16px;
+        padding: 22px 22px 18px;
+        box-shadow: 0 18px 55px rgba(0,0,0,.30);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        box-sizing: border-box;
+        text-align: center;
+    }
+
+    .swal2-close {
+        position: absolute !important;
+        top: 12px !important;
+        right: 12px !important;
+        left: auto !important;
+        bottom: auto !important;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        border: none;
+        background: #dc3545;
+        color: #fff;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+        box-shadow: 0 10px 25px rgba(220,53,69,.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .swal2-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        margin: 6px 0 2px;
+        border: 4px solid transparent;
+        box-sizing: border-box;
+    }
+
+    .swal2-icon-content {
+        font-size: 42px;
+        font-weight: 800;
+        line-height: 1;
+        display: block;
+        transform: translateY(-1px);
+    }
+
+    #appModal .swal2-title {
+        position: relative;
+        padding-bottom: .5rem;
+        margin-bottom: 0;
+    }
+
+        #appModal .swal2-title::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+    .swal2-html-container {
+        margin: 0;
+        font-size: 1rem;
+        color: #4b5563;
+        text-align: center;
+        max-width: 440px;
+        white-space: pre-wrap;
+    }
+
+    .swal2-icon.warn {
+        background: #fff4e5;
+        border-color: #f8bb86;
+        color: #a15c00;
+    }
+
+    .swal2-icon.ok {
+        background: #e7f6ec;
+        border-color: #a5dc86;
+        color: #2e7d32;
+    }
+
+    .swal2-icon.error {
+        background: #fdecea;
+        border-color: #f27474;
+        color: #b3261e;
+    }
+
+    .swal2-icon.info {
+        background: #e7f1ff;
+        border-color: #9dc1ff;
+        color: #0b57d0;
+    }
+</style>
+
+@section scripts {
+    <script>
+        const API_BASE = "https://tecmave-api.azurewebsites.net";
+        const URL_PROMOCIONES = `${API_BASE}/promociones`;
+
+        const Modal = (() => {
+            const root = document.getElementById('appModal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            const icon = document.getElementById('modalIcon');
+            const iconWrap = document.getElementById('modalIconWrap');
+            const btnConfirm = document.getElementById('modalConfirm');
+            const actions = root.querySelector('.swal2-actions');
+
+            let onConfirm = null;
+
+            function setKind(kind) {
+                iconWrap.classList.remove('warn', 'ok', 'error', 'info');
+                const map = {
+                    ok:   { cls: 'ok',   text: '✓' },
+                    warn: { cls: 'warn', text: '!' },
+                    error:{ cls: 'error',text: '!' },
+                    info: { cls: 'info', text: 'ℹ' }
+                };
+                const k = map[kind] || map.info;
+                iconWrap.classList.add(k.cls);
+                icon.textContent = k.text;
+            }
+
+            function show({ titleText='Información', bodyText='', kind='info', onConfirmCb=null, showActions=true, confirmText='Confirmar' }) {
+                setKind(kind);
+                title.textContent = titleText;
+                body.textContent = bodyText;
+
+                actions.style.display = showActions ? 'flex' : 'none';
+                btnConfirm.textContent = confirmText;
+
+                onConfirm = (typeof onConfirmCb === 'function') ? onConfirmCb : null;
+
+                btnConfirm.onclick = null;
+                btnConfirm.onclick = () => {
+                    const cb = onConfirm;
+                    hide();
+                    if (cb) cb();
+                };
+
+                root.classList.add('show');
+                root.style.display = 'flex';
+                root.setAttribute('aria-hidden', 'false');
+
+                document.addEventListener('keydown', escListener);
+                setTimeout(() => btnConfirm?.focus(), 0);
+            }
+
+            function hide() {
+                root.classList.remove('show');
+                root.style.display = 'none';
+                root.setAttribute('aria-hidden', 'true');
+                document.removeEventListener('keydown', escListener);
+                onConfirm = null;
+                btnConfirm.onclick = null;
+            }
+
+            function escListener(e) { if (e.key === 'Escape') hide(); }
+
+            root.addEventListener('click', (e) => {
+                if (e.target?.dataset?.close === '1') hide();
+            });
+
+            return { show, hide };
+        })();
+
+        function confirmarEliminar(idPromocion) {
+            Modal.show({
+                titleText: '¿Eliminar promoción?',
+                bodyText: 'Esta acción no se puede revertir.',
+                kind: 'warn',
+                onConfirmCb: async () => {
+                    if (!idPromocion || Number(idPromocion) <= 0) return;
+
+                    try {
+                        const resp = await fetch(`${URL_PROMOCIONES}/${encodeURIComponent(idPromocion)}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                        });
+
+        if (!resp.ok || (json && json.ok === false)) {
+                                    let msg = 'Error al eliminar la promoción.';
+                            try { msg = (await resp.json())?.message || msg; } catch { }
+                            Modal.show({ titleText: 'Error', bodyText: msg, kind: 'error', showActions: false });
+                            return;
+                        }
+
+                        window.location.reload();
+                    } catch (e) {
+                        console.error(e);
+                        Modal.show({ titleText: 'Error', bodyText: 'Error inesperado al eliminar.', kind: 'error', showActions: false });
+                    }
+                }
+            });
+        }
+
+        async function postFormAsFetch(form) {
+            const fd = new FormData(form);
+
+            const token = form.querySelector('input[name="__RequestVerificationToken"]')?.value
+                       || document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+            const headers = { 'X-Requested-With': 'XMLHttpRequest' };
+            if (token) headers['RequestVerificationToken'] = token;
+
+            const resp = await fetch(form.action, {
+                method: 'POST',
+                body: fd,
+                credentials: 'include',
+                headers
+            });
+
+            const ct = (resp.headers.get('content-type') || '').toLowerCase();
+            if (ct.includes('application/json')) {
+                const json = await resp.json().catch(() => null);
+                return { resp, json, text: '' };
+            }
+
+            const text = await resp.text().catch(() => '');
+            return { resp, json: null, text };
+        }
+
+        function extraerMensajeDesdeHtml(html) {
+            if (!html) return '';
+            try {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const danger = doc.querySelector('.alert.alert-danger');
+                if (danger?.textContent) return danger.textContent.trim();
+                const ok = doc.querySelector('.alert.alert-success');
+                if (ok?.textContent) return ok.textContent.trim();
+                return '';
+            } catch { return ''; }
+        }
+
+        function confirmarNotificar(btn) {
+            const form = btn.closest('form');
+            if (!form) return;
+
+            if (btn.classList.contains('is-sending')) return;
+
+            Modal.show({
+                titleText: '¿Notificar a todos los usuarios?',
+                bodyText: 'Se enviará un correo a los usuarios suscritos con esta promoción.',
+                kind: 'warn',
+                onConfirmCb: async () => {
+                    btn.classList.add('is-sending');
+
+                    Modal.show({
+                        titleText: 'Enviando…',
+                        bodyText: 'En este momento se están enviando los correos a suscritos. Por favor espere.',
+                        kind: 'info',
+                        showActions: false
+                    });
+
+                    try {
+                        const { resp, json, text } = await postFormAsFetch(form);
+
+                        if (!resp.ok) {
+                            const msg =
+                                (json && (json.error || json.message || json.mensaje)) ||
+                                extraerMensajeDesdeHtml(text) ||
+                                'Ocurrió un error al enviar la notificación.';
+                            Modal.show({ titleText: 'Error', bodyText: msg, kind: 'error', showActions: false });
+                            return;
+                        }
+
+                            const okMsg =
+        (json && (json.mensaje || json.message)) ||
+        extraerMensajeDesdeHtml(text) ||
+        'Solicitud procesada.';
+
+
+                        const msgLower = String(okMsg || '').toLowerCase();
+                        const esNoEnvio =
+                            msgLower.includes('no se envi') ||
+                            msgLower.includes('no se envio') ||
+                            msgLower.includes('no se envió ningún') ||
+                            msgLower.includes('no se envio ningun') ||
+                            msgLower.includes('ya se haya enviado') ||
+                            msgLower.includes('notificados anteriormente') ||
+                            msgLower.includes('no haya usuarios suscritos') ||
+                            msgLower.includes('promoción no esté activa') ||
+                            msgLower.includes('promocion no este activa');
+
+                        Modal.show({
+                            titleText: esNoEnvio ? 'No se enviaron correos' : 'Listo',
+                            bodyText: String(okMsg),
+                            kind: esNoEnvio ? 'warn' : 'ok',
+                            showActions: false
+                        });
+
+                    } catch (e) {
+                        console.error(e);
+                        Modal.show({ titleText: 'Error', bodyText: 'Error inesperado al enviar la notificación.', kind: 'error', showActions: false });
+                    } finally {
+                        btn.classList.remove('is-sending');
+                    }
+                }
+            });
+        }
+    </script>
+}

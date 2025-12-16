@@ -307,7 +307,7 @@
 @section Scripts {
     <script src="~/lib/jquery/jquery.min.js"></script>
     <script>
-        // ✅ importante para cookies cross-domain con jQuery
+        // importante para cookies cross-domain con jQuery
         $.ajaxSetup({ xhrFields: { withCredentials: true } });
 
         const API_BASE  = '@(Model?.ApiBase ?? "https://tecmave-api.azurewebsites.net")';
@@ -463,7 +463,7 @@
             }
         }
 
-        // ✅ SOLO ACTIVOS (Estado=1)
+        // SOLO ACTIVOS (Estado=1)
         function applyFilters() {
             const selected = $('#roleFilter').val();
             const q = getSearchText();
