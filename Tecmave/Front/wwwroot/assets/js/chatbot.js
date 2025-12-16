@@ -44,8 +44,8 @@
 
 We are here to help you immediately.
 
-• We can coordinate a tow truck
-• We can give you quick mechanical support
+• ✅ We can coordinate a tow truck
+• ✅ We can give you quick mechanical support
 • 📍 Our workshop is in Alto de Guadalupe, San José
 
 Would you like us to contact you?`,
@@ -58,8 +58,8 @@ Would you like us to contact you?`,
 
 Estamos aquí para ayudarte de inmediato.
 
-• Coordinamos grúa
-• Te damos soporte mecánico rápido
+• ✅ Coordinamos grúa
+• ✅ Te damos soporte mecánico rápido
 • 📍 Estamos en Alto de Guadalupe, San José
 
 ¿Quieres que te contactemos?`,
