@@ -29,19 +29,22 @@
     <small id="resultsBadge" class="text-muted">Mostrando 0 de 0</small>
 
     <div class="table-actions">
-        <!-- Administrar Roles (texto) -->
-        <a id="manageRolesBtn" class="btn btn-royal btn-sm" href="/Roles">Administrar Roles</a>
-
-        <!-- Export (texto) -->
-        <button id="exportBtn" class="btn btn-orange btn-sm" type="button" title="Exportar usuarios activos">
-            <i class="fa-solid fa-file-excel"></i> Exportar
-        </button>
-
-        <!-- Icono Roles (opcional, si lo querés igual que Vehículos) -->
-        <button class="icon-action" type="button" title="Administrar roles" onclick="location.href='/Roles'">
+        <button class="icon-action"
+                type="button"
+                title="Administrar roles"
+                onclick="location.href='/Roles/Index'">
             <img src="/assets/img/role.png" alt="Administrar roles" />
         </button>
+
+        <button class="icon-action"
+                type="button"
+                title="Exportar vista actual"
+                onclick="document.getElementById('exportBtn').click()">
+            <img src="/assets/img/export.png" alt="Exportar" />
+        </button>
+    </div>
 </div>
+
 
 <div class="table-responsive mt-2">
     <table class="table align-middle">

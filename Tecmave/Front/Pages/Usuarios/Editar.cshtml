@@ -3,50 +3,74 @@
 @{
     Layout = "_Layout";
     ViewData["Title"] = "Editar usuario";
+
+    var isAdmin = User.Identity?.IsAuthenticated == true && User.IsInRole("Admin");
 }
 
 <h1 class="mb-4">Editar usuario</h1>
 
 <div class="card p-4">
+
+    <!-- Botón volver (flotante arriba derecha, SOLO admin) -->
+    @if (isAdmin)
+    {
+        <a asp-page="/Usuarios/Index"
+           class="btn-back btn-back-top"
+           title="Volver"
+           aria-label="Volver">
+            <img src="/assets/img/back.png" alt="Volver" />
+        </a>
+    }
+
     <form id="frmUser">
+
         <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px;">
             <div>
                 <label class="form-label">Nombre</label>
                 <input id="nombre" class="form-control" />
             </div>
+
             <div>
                 <label class="form-label">Apellidos</label>
                 <input id="apellidos" class="form-control" />
             </div>
+
             <div>
                 <label class="form-label">Email</label>
                 <input id="Email" type="email" class="form-control" />
             </div>
+
             <div>
                 <label class="form-label">Teléfono</label>
                 <input id="PhoneNumber" class="form-control" />
             </div>
 
-            <div style="grid-column:1/-1">
-                <label class="form-label">Roles asignados</label>
-                <div id="RolesReadOnly"></div>
-                <small class="text-muted">
-                    Los roles se administran desde la pantalla de
-                    <a href="/Roles/Index">Roles</a> o el listado de usuarios.
-                </small>
-            </div>
+            @if (isAdmin)
+            {
+                <div style="grid-column:1/-1">
+                    <label class="form-label">Roles asignados</label>
+                    <div id="RolesReadOnly"></div>
+                    <small class="text-muted">
+                        Los roles se administran desde la pantalla de
+                        <a href="/Roles/Index">Roles</a> o el listado de usuarios.
+                    </small>
+                </div>
+            }
         </div>
 
-        <div class="mt-4 d-flex gap-2">
-            <a class="btn btn-secondary" asp-page="/Usuarios/Index">Volver</a>
-            <button id="btnSave" type="submit" class="btn btn-primary">Guardar</button>
-
+        <!-- Botón guardar ABAJO -->
+        <div class="mt-4 d-flex justify-content-end">
+            <button id="btnSave" type="submit" class="btn btn-primary">
+                Guardar
+            </button>
         </div>
+
     </form>
 </div>
 
 <!-- Modal estilo SweetAlert2 (reutilizable) -->
-<div id="appModal" class="swal2-container" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
+<div id="appModal" class="swal2-container" aria-hidden="true" role="dialog" aria-modal="true"
+     aria-labelledby="modalTitle" aria-describedby="modalBody" style="display:none">
     <div class="swal2-backdrop" data-close="1"></div>
     <div class="swal2-popup" role="document" tabindex="-1">
         <button class="swal2-close" type="button" aria-label="Cerrar" data-close="1">×</button>
@@ -59,12 +83,11 @@
         <div class="swal2-html-container" id="modalBody">Mensaje…</div>
 
         <div class="swal2-actions">
-            <button id="modalCancel" class="btn btn-secondary" type="button" data-close="1" style="display:none">Cancelar</button>
-            <button id="modalConfirm" class="btn btn-orange" type="button" data-close="1">Aceptar</button>
-
+            <button id="modalConfirm" class="btn btn-success" type="button" data-close="1">Aceptar</button>
         </div>
     </div>
 </div>
+
 
 <style>
     .btn-orange {
@@ -185,7 +208,7 @@
     }
 
     .btn {
-        height: 40px; 
+        height: 40px;
         padding: 0 16px;
         font-size: 0.95rem;
         line-height: 1;
@@ -194,9 +217,50 @@
         justify-content: center;
         border-radius: 8px;
     }
+
         .btn > * {
             line-height: 1;
         }
+
+    .card {
+        position: relative;
+    }
+
+    /* Botón volver flotante */
+    a.btn-back {
+        position: absolute !important;
+        top: 16px !important;
+        right: 16px !important;
+        left: auto !important; /* 🔴 CLAVE */
+        margin: 0 !important; /* 🔴 CLAVE */
+
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 10px !important;
+        background: var(--primary) !important;
+        border: 1px solid var(--primary) !important;
+        color: #fff !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        text-decoration: none !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,.15) !important;
+        z-index: 20;
+    }
+
+        a.btn-back:hover {
+            background: var(--primary-dark) !important;
+            border-color: var(--primary-dark) !important;
+        }
+
+        /* Ícono */
+        a.btn-back img {
+            width: 25px;
+            height: 25px;
+            display: block;
+        }
+
 
 </style>
 
@@ -205,8 +269,8 @@
     <script>
         const API = '@(Model?.ApiBase ?? "https://tecmave-api.azurewebsites.net")';
         const USER_ID = @Model.Id;
+        const IS_ADMIN = @isAdmin.ToString().ToLower();
 
-        // ✅ cookies cross-domain (si tu API usa Identity cookie)
         $.ajaxSetup({ xhrFields: { withCredentials: true } });
 
         function escapeHtml(s){
@@ -224,7 +288,6 @@
           return `<span class="badge" style="background:#eef1f5;color:#333;border:1px solid #d9dee5;margin-right:6px;">${escapeHtml(t)}</span>`;
         }
 
-        /* =================== Modal helpers (SweetAlert2-like) =================== */
         const Modal = (() => {
             const root     = document.getElementById('appModal');
             const title    = document.getElementById('modalTitle');
@@ -263,7 +326,6 @@
                 setKind(kind);
                 title.textContent = titleText;
 
-                // ✅ si mandan HTML (roles badges), lo usamos; si no, texto plano
                 if (bodyHtml != null) body.innerHTML = bodyHtml;
                 else body.textContent = bodyText;
 
@@ -310,11 +372,7 @@
                 if (e.target?.dataset?.close === '1') hide();
             });
 
-            function confirm({ titleText, bodyText, kind='warn', confirmText='Aceptar', onConfirmCb }){
-                show({ titleText, bodyText, kind, confirmText, cancelText, onConfirmCb });
-            }
-
-            return { show, hide, confirm };
+            return { show, hide };
         })();
 
         $(function () {
@@ -337,16 +395,18 @@
             });
           });
 
-          $.getJSON(`${API}/api/usuarios/${USER_ID}/roles`, function (roles) {
-            const html = (roles && roles.length)
-              ? roles.map(r => badge(r)).join(' ')
-              : '<span class="text-muted">(sin rol)</span>';
-            $('#RolesReadOnly').html(html);
-          }).fail(()=> $('#RolesReadOnly').html('<span class="text-muted">(error)</span>'));
+          // ✅ Solo si Admin y existe el div, pedimos roles
+          if (IS_ADMIN && document.getElementById('RolesReadOnly')) {
+            $.getJSON(`${API}/api/usuarios/${USER_ID}/roles`, function (roles) {
+              const html = (roles && roles.length)
+                ? roles.map(r => badge(r)).join(' ')
+                : '<span class="text-muted">(sin rol)</span>';
+              $('#RolesReadOnly').html(html);
+            }).fail(()=> $('#RolesReadOnly').html('<span class="text-muted">(error)</span>'));
+          }
         }
 
         function extractIdentityErrors(err) {
-            // puede venir como [{code, description}] o como objeto
             const resp = err?.responseJSON;
             if (!resp) return null;
 
@@ -367,7 +427,6 @@
           e.preventDefault();
           $('#btnSave').prop('disabled', true);
 
-          // ✅ IMPORTANTE: manda propiedades como las espera tu UpdateUserDto
           const payload = {
             nombre: $('#nombre').val(),
             apellidos: $('#apellidos').val(),
@@ -392,8 +451,7 @@
           } catch (err) {
             console.error(err);
 
-            let msg = extractIdentityErrors(err) || 'No se pudo guardar el usuario.';
-
+            const msg = extractIdentityErrors(err) || 'No se pudo guardar el usuario.';
             Modal.show({
               titleText: 'Error',
               bodyText: msg,
