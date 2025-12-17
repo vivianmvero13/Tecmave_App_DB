@@ -52,9 +52,7 @@
             servicesTitle: `🔧 **SERVICIOS TECMAVE**`,
             fallback:
                 `🤝 **Gracias por tu mensaje.**\n\n` +
-                `Para ayudarte más rápido, elige una opción del menú o cuéntame:\n` +
-                `• ¿Qué vehículo tienes?\n` +
-                `• ¿Qué síntoma presenta?\n`
+                `Para ayudarte más rápido, elige una opción del menú:\n`
         },
         en: {
             assistantName: 'TECMAVE Assistant',
@@ -519,7 +517,7 @@
 
         return s;
     }
-
+    o cuéntame:
     // ====== Welcome ======
     setTimeout(() => {
         const res = getResponseByIntent('MENU');
