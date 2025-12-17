@@ -11,25 +11,32 @@ namespace Tecmave.Api.Controllers
     {
         private readonly ColaboradoresService _ColaboradoresService;
         private readonly UserAdminService _userService;
-        public ColaboradoresController(ColaboradoresService ColaboradoresService, UserAdminService userService)
+
+        public ColaboradoresController(
+            ColaboradoresService ColaboradoresService,
+            UserAdminService userService)
         {
             _ColaboradoresService = ColaboradoresService;
             _userService = userService;
         }
 
+      
         [HttpGet("buscar")]
-        public ActionResult<IEnumerable<object>> BuscarColaboradores([FromQuery] string? nombre, [FromQuery] int? estado)
+        public ActionResult<IEnumerable<object>> BuscarColaboradores(
+            [FromQuery] string? nombre,
+            [FromQuery] int? estado)
         {
             var colaboradores = _ColaboradoresService.GetColaboradoresModel();
 
-            if(!string.IsNullOrEmpty(nombre))
+            if (!string.IsNullOrEmpty(nombre))
             {
                 colaboradores = colaboradores
                     .Where(c =>
                     {
                         var usuario = _userService.GetByIdAsync(c.id_usuario).Result;
-                        return usuario != null && !string.IsNullOrEmpty(usuario.Nombre) &&
-                       usuario.Nombre.Contains(nombre, StringComparison.OrdinalIgnoreCase);
+                        return usuario != null &&
+                               usuario.Nombre != null &&
+                               usuario.Nombre.Contains(nombre, StringComparison.OrdinalIgnoreCase);
                     })
                     .ToList();
             }
@@ -48,6 +55,7 @@ namespace Tecmave.Api.Controllers
             var resultado = colaboradores.Select(c =>
             {
                 var u = _userService.GetByIdAsync(c.id_usuario).Result;
+
                 return new
                 {
                     c.id_colaborador,
@@ -57,73 +65,84 @@ namespace Tecmave.Api.Controllers
                     c.fecha_contratacion,
                     Estado = u?.Estado,
                     Rol = u != null ? string.Join(", ", _userService.GetRolesAsync(u.Id).Result) : "Sin rol"
-
                 };
             });
 
             return Ok(resultado);
         }
 
-        //Apis GET, POST, PUT   y DELETE
+        // ───────────────────────────────────────────────
+        // GET GENERAL
+        // ───────────────────────────────────────────────
+
         [HttpGet]
         public ActionResult<IEnumerable<ColaboradoresModel>> GetColaboradoresModel()
         {
             return _ColaboradoresService.GetColaboradoresModel();
         }
 
+        // ───────────────────────────────────────────────
+        // GET POR ID
+        // ───────────────────────────────────────────────
+
         [HttpGet("{id}")]
         public ActionResult<ColaboradoresModel> GetById(int id)
         {
-            return _ColaboradoresService.GetByid_colaborador(id);
+            var col = _ColaboradoresService.GetByid_colaborador(id);
+
+            if (col == null)
+                return NotFound();
+
+            return Ok(col);
         }
 
-        //Apis POST
+        // ───────────────────────────────────────────────
+        // POST
+        // ───────────────────────────────────────────────
+
         [HttpPost]
         public async Task<ActionResult<ColaboradoresModel>> AddColaboradores([FromBody] Colaborador dto)
         {
-
             var newColaboradoresModel = await _ColaboradoresService.AddColaboradoresAsync(dto);
 
-            return
-                CreatedAtAction(
-                    nameof(GetById),
-                    new { id = newColaboradoresModel.id_colaborador},
-                    newColaboradoresModel
-                );
-            
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = newColaboradoresModel.id_colaborador },
+                newColaboradoresModel
+            );
         }
 
-        //APIS PUT
-        [HttpPut]
-        public async Task<IActionResult> UpdateColaboradores([FromBody] ColaboradoresModel ColaboradoresModel, [FromQuery] string rol)
-        {
 
-            bool actualizado = await _ColaboradoresService.UpdateColaboradoresAsync(ColaboradoresModel, rol);
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateColaboradores(
+            int id,
+            [FromBody] ColaboradoresModel model)
+        {
+            model.id_colaborador = id; // Asegurar ID correcto
+
+            var actualizado = await _ColaboradoresService.UpdateColaboradoresAsync(model);
 
             if (!actualizado)
-            {
                 return NotFound(new { mensaje = "El colaborador no se encontró en el sistema" });
-            }
 
             return NoContent();
-
         }
 
-        //APIS DELETE
+
+        // ───────────────────────────────────────────────
+        // DELETE
+        // ───────────────────────────────────────────────
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteColaboradoresModel(int id)
         {
-
-            bool eliminado = await _ColaboradoresService.DeleteColaboradoresAsync(id);
+            var eliminado = await _ColaboradoresService.DeleteColaboradoresAsync(id);
 
             if (!eliminado)
-            {
-                return NotFound(new { mensaje = "El colaborador no fue encontrado en el sistema " });
-            }
+                return NotFound(new { mensaje = "El colaborador no fue encontrado en el sistema" });
 
             return NoContent();
-
         }
-
     }
 }

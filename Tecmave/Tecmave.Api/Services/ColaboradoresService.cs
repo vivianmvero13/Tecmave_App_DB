@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using Tecmave.Api.Data;
 using Tecmave.Api.Models;
 using Tecmave.Api.Models.Dto;
@@ -9,7 +9,6 @@ namespace Tecmave.Api.Services
 {
     public class ColaboradoresService
     {
-
         private readonly AppDbContext _context;
         private readonly UserManager<Usuario> _userManager;
 
@@ -19,17 +18,25 @@ namespace Tecmave.Api.Services
             _userManager = userManager;
         }
 
-        //Aca necesitamos el modelo de datos para el almacenamiento temporal
-        private readonly List<ColaboradoresModel> _canton = new List<ColaboradoresModel>();
-        private int _nextid_colaborador = 1;
+        private bool ValidarCedula(string cedula)
+        {
+            return Regex.IsMatch(cedula, @"^\d{9}$");
+        }
 
+        private bool ValidarTelefono(string tel)
+        {
+            return Regex.IsMatch(tel, @"^\d{8}$");
+        }
 
-        //funcion de obtener cantons
+        private bool ValidarEmail(string email)
+        {
+            return Regex.IsMatch(email, @"^[^@]+@[^@]+\.[a-zA-Z]{2,}$");
+        }
+
         public List<ColaboradoresModel> GetColaboradoresModel()
         {
             return _context.colaboradores.ToList();
         }
-
 
         public ColaboradoresModel GetByid_colaborador(int id)
         {
@@ -38,6 +45,9 @@ namespace Tecmave.Api.Services
 
         public async Task<ColaboradoresModel> AddColaboradoresAsync(Colaborador dto)
         {
+            if (!ValidarCedula(dto.Cedula)) throw new Exception("Cédula inválida");
+            if (!ValidarTelefono(dto.Telefono)) throw new Exception("Teléfono inválido");
+            if (!ValidarEmail(dto.Email)) throw new Exception("Correo inválido");
 
             var usuario = new Usuario
             {
@@ -45,27 +55,20 @@ namespace Tecmave.Api.Services
                 Cedula = dto.Cedula,
                 Nombre = dto.Nombre,
                 Apellido = dto.Apellido,
-                UserName = dto.UserName,
+                UserName = dto.Email,
                 Email = dto.Email,
                 Estado = 1,
                 PhoneNumber = dto.Telefono
-
             };
 
             var resultado = await _userManager.CreateAsync(usuario, "123Abc!");
             if (!resultado.Succeeded)
             {
-                throw new Exception("Error al crear el usuario: " +
-                    string.Join(", ", resultado.Errors.Select(e => e.Description)));
+                throw new Exception(string.Join(", ", resultado.Errors.Select(e => e.Description)));
             }
 
-            
-            if (!string.IsNullOrEmpty(dto.Rol))
-            {
-                await _userManager.AddToRoleAsync(usuario, dto.Rol);
-            }
+            await _userManager.AddToRoleAsync(usuario, "Colaborador");
 
-            
             dto.Colaboradores.id_usuario = usuario.Id;
 
             _context.colaboradores.Add(dto.Colaboradores);
@@ -74,8 +77,7 @@ namespace Tecmave.Api.Services
             return dto.Colaboradores;
         }
 
-
-        public async Task<bool> UpdateColaboradoresAsync(ColaboradoresModel colaborador, string Rolnuevo)
+        public async Task<bool> UpdateColaboradoresAsync(ColaboradoresModel colaborador)
         {
             var entidad = _context.colaboradores.FirstOrDefault(p => p.id_colaborador == colaborador.id_colaborador);
             if (entidad == null) return false;
@@ -84,78 +86,22 @@ namespace Tecmave.Api.Services
             entidad.salario = colaborador.salario;
             entidad.fecha_contratacion = colaborador.fecha_contratacion;
 
-            var usuario = await _userManager.FindByIdAsync(colaborador.id_usuario.ToString());
-            if (usuario != null && !string.IsNullOrEmpty(Rolnuevo))
-            {
-                var rolesActuales = await _userManager.GetRolesAsync(usuario);
-                string oldRole = rolesActuales.FirstOrDefault();
-
-                if (oldRole != Rolnuevo)
-                {
-                    if (!string.IsNullOrEmpty(oldRole))
-                    {
-                        await _userManager.RemoveFromRoleAsync(usuario, oldRole);
-                    }
-
-                    await _userManager.AddToRoleAsync(usuario, Rolnuevo);
-
-                    _context.role_change_audit.Add(new RoleChangeAudit
-                    {
-                        TargetUserId = usuario.Id,
-                        TargetUserName = usuario.UserName,
-                        PreviousRole = oldRole,
-                        NewRole = Rolnuevo,
-                        ChangedByUserName = "Administrador",
-                        ChangedAtUtc = DateTime.UtcNow,
-                        Action = "Cambio de rol"
-                    });
-                }
-            }
-
             _context.SaveChanges();
             return true;
-
         }
 
         public async Task<bool> DeleteColaboradoresAsync(int id)
         {
-            var entidad = await _context.colaboradores
-                .FirstOrDefaultAsync(c => c.id_colaborador == id);
+            var entidad = await _context.colaboradores.FirstOrDefaultAsync(c => c.id_colaborador == id);
+            if (entidad == null) return false;
 
-            if (entidad == null)
-                return false;
-
-            // 1. Eliminar colaborador primero
             _context.colaboradores.Remove(entidad);
             await _context.SaveChangesAsync();
 
-            // 2. Luego eliminar usuario Identity
             var usuario = await _userManager.FindByIdAsync(entidad.id_usuario.ToString());
-
-            if (usuario != null)
-            {
-                var result = await _userManager.DeleteAsync(usuario);
-
-                if (!result.Succeeded)
-                    return false;
-
-                _context.role_change_audit.Add(new RoleChangeAudit
-                {
-                    TargetUserId = usuario.Id,
-                    TargetUserName = usuario.UserName,
-                    PreviousRole = null,
-                    NewRole = null,
-                    ChangedByUserName = "Administrador",
-                    ChangedAtUtc = DateTime.UtcNow,
-                    Action = "Deleteuser"
-                });
-
-                await _context.SaveChangesAsync();
-            }
+            if (usuario != null) await _userManager.DeleteAsync(usuario);
 
             return true;
         }
-
-
     }
 }
