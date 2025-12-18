@@ -1,0 +1,158 @@
+﻿@page
+@model Front.Pages.Planillas.CrearModel
+@{
+    ViewData["Title"] = "Nueva Planilla";
+}
+
+<section class="section">
+    <div class="container">
+
+        <div class="card">
+            <h3>Nueva Planilla</h3>
+
+            <div class="form-row">
+                <div>
+                    <label>Colaborador</label>
+                    <select id="colaborador_id" class="input"></select>
+                </div>
+                <div>
+                    <label>Periodo Inicio</label>
+                    <input id="periodo_inicio" type="date" class="input" />
+                </div>
+                <div>
+                    <label>Periodo Fin</label>
+                    <input id="periodo_fin" type="date" class="input" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label>Horas Trabajadas</label>
+                    <input id="horas_trabajadas" type="number" class="input" step="0.01">
+                </div>
+                <div>
+                    <label>Valor Hora</label>
+                    <input id="valor_hora" type="number" class="input" step="0.01">
+                </div>
+                <div>
+                    <label>Total Salario</label>
+                    <input id="total_salario" type="number" class="input" readonly />
+                </div>
+            </div>
+
+            <div class="form-row">
+                
+                <div>
+                    <label>Neto Pagar</label>
+                    <input id="neto_pagar" type="number" class="input" readonly />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label>Estado</label>
+                    <select id="estado" class="input"></select>
+                </div>
+                <div>
+                    <label>Observaciones</label>
+                    <input id="observaciones" type="text" class="input" />
+                </div>
+            </div>
+            <button id="btnAgregarPlanilla" class="primary">
+                Guardar Planilla
+            </button>
+
+            <a href="/Planillas" class="btn secondary mt-2">
+                Volver
+            </a>
+        </div>
+
+    </div>
+</section>
+
+<script>
+    const API_PLANILLA = "http://localhost:7096/api/Planillas";
+    const API_ESTADOS = "http://localhost:7096/Estados";
+    const API_USUARIOS = "http://localhost:7096/api/usuarios";
+    const API_COLABORADOR = "http://localhost:7096/Colaboradores";
+
+    let cacheUsuarios = {};
+    let cacheColaboradores = {};
+
+    $(document).ready(function () {
+        cargarUsuarios()
+            .then(() => cargarColaboradores())
+            .then(() => cargarEstados());
+
+        $("#horas_trabajadas, #valor_hora").on("input", calcularTotal);
+
+        $("#btnAgregarPlanilla").on("click", agregarPlanilla);
+    });
+
+    function cargarUsuarios() {
+        return $.get(API_USUARIOS, u => {
+            u.forEach(x => cacheUsuarios[x.id] = x);
+        });
+    }
+
+    function cargarColaboradores() {
+        return $.get(API_COLABORADOR, c => {
+            $("#colaborador_id").empty().append(`<option value="">Seleccione...</option>`);
+            c.forEach(x => {
+                cacheColaboradores[x.id_colaborador] = x;
+                const u = cacheUsuarios[x.id_usuario];
+                const ap = u?.apellidos ?? "";
+                $("#colaborador_id").append(
+                    `<option value="${x.id_colaborador}">${u.nombre} ${ap}</option>`
+                );
+            });
+        });
+    }
+
+    function cargarEstados() {
+        return $.get(API_ESTADOS, e => {
+            $("#estado").empty();
+            e.filter(x => x.id_estado === 2 || x.id_estado === 11)
+             .forEach(x => $("#estado").append(`<option>${x.nombre}</option>`));
+        });
+    }
+
+        function calcularTotal() {
+        const h = +$("#horas_trabajadas").val() || 0;
+        const v = +$("#valor_hora").val() || 0;
+
+        const total = h * v;
+        $("#total_salario").val(total);
+        $("#neto_pagar").val(total); // neto = total directamente
+    }
+
+   
+
+    function agregarPlanilla() {
+
+        const dto = {
+            colaborador_id: +$("#colaborador_id").val(),
+            periodo_inicio: $("#periodo_inicio").val(),
+            periodo_fin: $("#periodo_fin").val(),
+            horas_trabajadas: +$("#horas_trabajadas").val(),
+            valor_hora: +$("#valor_hora").val(),
+            total_salario: +$("#total_salario").val(),
+            neto_pagar: +$("#neto_pagar").val(),
+            fecha_generada: new Date().toISOString(),
+            estado: $("#estado").val(),
+            observaciones: $("#observaciones").val()
+        };
+
+        $.ajax({
+            url: API_PLANILLA,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(dto),
+            success: () => {
+                alert("Planilla creada");
+                location.href = "/Planillas";
+            },
+            error: () => alert("Error al crear planilla")
+        });
+    }
+</script>

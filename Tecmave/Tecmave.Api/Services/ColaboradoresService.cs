@@ -75,46 +75,37 @@ namespace Tecmave.Api.Services
         }
 
 
-        public async Task<bool> UpdateColaboradoresAsync(ColaboradoresModel colaborador, string Rolnuevo)
+        public async Task<bool> UpdateColaboradorAsync(EditarColaboradorDto dto)
         {
-            var entidad = _context.colaboradores.FirstOrDefault(p => p.id_colaborador == colaborador.id_colaborador);
-            if (entidad == null) return false;
+            
+            var colaborador = await _context.colaboradores
+                .FirstOrDefaultAsync(c => c.id_colaborador == dto.IdColaborador);
 
-            entidad.puesto = colaborador.puesto;
-            entidad.salario = colaborador.salario;
-            entidad.fecha_contratacion = colaborador.fecha_contratacion;
+            if (colaborador == null)
+                return false;
 
-            var usuario = await _userManager.FindByIdAsync(colaborador.id_usuario.ToString());
-            if (usuario != null && !string.IsNullOrEmpty(Rolnuevo))
-            {
-                var rolesActuales = await _userManager.GetRolesAsync(usuario);
-                string oldRole = rolesActuales.FirstOrDefault();
+            colaborador.puesto = dto.Puesto;
+            colaborador.salario = dto.Salario;
+            colaborador.fecha_contratacion = DateOnly.FromDateTime(dto.FechaContratacion);
 
-                if (oldRole != Rolnuevo)
-                {
-                    if (!string.IsNullOrEmpty(oldRole))
-                    {
-                        await _userManager.RemoveFromRoleAsync(usuario, oldRole);
-                    }
 
-                    await _userManager.AddToRoleAsync(usuario, Rolnuevo);
+            var usuario = await _userManager.FindByIdAsync(dto.IdUsuario.ToString());
+            if (usuario == null)
+                return false;
 
-                    _context.role_change_audit.Add(new RoleChangeAudit
-                    {
-                        TargetUserId = usuario.Id,
-                        TargetUserName = usuario.UserName,
-                        PreviousRole = oldRole,
-                        NewRole = Rolnuevo,
-                        ChangedByUserName = "Administrador",
-                        ChangedAtUtc = DateTime.UtcNow,
-                        Action = "Cambio de rol"
-                    });
-                }
-            }
+            usuario.Nombre = dto.Nombre;
+            usuario.Apellido = dto.Apellido;
+            usuario.Cedula = dto.Cedula;
+           
 
-            _context.SaveChanges();
+            var userUpdate = await _userManager.UpdateAsync(usuario);
+            if (!userUpdate.Succeeded)
+                return false;
+
+         
+
+            await _context.SaveChangesAsync();
             return true;
-
         }
 
         public async Task<bool> DeleteColaboradoresAsync(int id)

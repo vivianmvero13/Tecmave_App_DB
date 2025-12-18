@@ -1,0 +1,213 @@
+﻿@page
+@model Front.Pages.Colaboradores.CrearModel
+@{
+    ViewData["Title"] = "Crear Colaborador";
+}
+
+<section class="section">
+    <div class="container">
+
+        <h3>Crear colaborador</h3>
+        <div class="form-row">
+            <div>
+                <label>Nombre</label>
+                <input class="input" id="nombre" type="text" />
+            </div>
+            <div>
+                <label>Apellido</label>
+                <input class="input" id="apellido" type="text" />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label>Cédula</label>
+                <input class="input" id="cedula" type="text" />
+                <small id="cedulaHelp" style="color:red;"></small>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label>Dirección</label>
+                <input class="input" id="direccion" type="text" />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label>Teléfono</label>
+                <input class="input" id="telefono" type="text" />
+                <small id="telefonoHelp" style="color:red;"></small>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label>Email</label>
+                <input class="input" id="email" type="email" />
+            </div>
+            <div>
+                <label>Username</label>
+                <input class="input" id="UserName" type="text" />
+            </div>
+        </div>
+
+        <!-- ROL OCULTO - SIEMPRE COLABORADOR -->
+        <input type="hidden" id="rol" value="Colaborador" />
+
+        <hr />
+
+        <div class="form-row">
+            <div>
+                <label>Puesto</label>
+                <input class="input" id="puesto" type="text" />
+            </div>
+            <div>
+                <label>Costo por hora</label>
+                <input class="input" id="salario" type="number" step="0.01" />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label>Fecha Contratación</label>
+                <input class="input" id="fecha_contratacion" type="date" />
+            </div>
+        </div>
+
+        <button id="btnAgregarUsuarioColaborador">Crear Usuario y Colaborador</button>
+
+
+        <a href="/Colaboradores" class="btn btn-secondary mt-2">
+            Volver
+        </a>
+
+    </div>
+</section>
+
+<script>
+    const API_COLABORADOR = "http://localhost:7096/colaboradores";
+
+    function crearColaborador() {
+
+        const costoHora = parseFloat($("#salario").val());
+        let salarioMensual = 0;
+
+        if (!isNaN(costoHora) && costoHora > 0) {
+            const hoy = new Date();
+            const diasMes = new Date(
+                hoy.getFullYear(),
+                hoy.getMonth() + 1,
+                0
+            ).getDate();
+
+            salarioMensual = costoHora * 8 * diasMes;
+        }
+
+        const dto = {
+            nombre: $("#nombre").val(),
+            apellido: $("#apellido").val(),
+            cedula: $("#cedula").val(),
+            direccion: $("#direccion").val(),
+            telefono: $("#telefono").val(),
+            email: $("#email").val(),
+            user_name: $("#UserName").val(),
+            rol: "Colaborador",
+
+            colaboradores: {
+                puesto: $("#puesto").val(),
+                salario: salarioMensual,
+                fecha_contratacion: $("#fecha_contratacion").val()
+            }
+        };
+
+        $.ajax({
+            url: API_COLABORADOR,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(dto),
+            success: () => {
+                alert("Colaborador creado correctamente");
+                window.location.href = "/Colaboradores";
+            },
+            error: (xhr) => {
+                console.error(xhr);
+                alert(xhr.responseText || "Error al crear colaborador");
+            }
+        });
+    }
+
+    // BOTÓN
+    $(document).ready(function () {
+        $("#btnAgregarUsuarioColaborador").on("click", function (e) {
+            e.preventDefault();
+            crearColaborador();
+        });
+    });
+
+    const cedulaInput = $("#cedula");
+    const telefonoInput = $("#telefono");
+    
+
+    const cedulaHelp = $("#cedulaHelp");
+    const telefonoHelp = $("#telefonoHelp");
+   
+
+    const btnCrear = $("#btnAgregarUsuarioColaborador");
+
+    // Regex Costa Rica
+    const cedulaRegex = /^[1-8]\d{8}$/;
+    const telefonoRegex = /^[24678]\d{7}$/;
+    
+
+    // Evitar letras
+    cedulaInput.on("input", function () {
+        this.value = this.value.replace(/\D/g, "");
+    });
+
+    telefonoInput.on("input", function () {
+        this.value = this.value.replace(/\D/g, "");
+    });
+
+    // Validar cédula
+    cedulaInput.on("input", function () {
+        const val = cedulaInput.val().trim();
+
+        if (!cedulaRegex.test(val)) {
+            cedulaHelp.text("Cédula inválida. Debe tener 9 dígitos y empezar de 1 a 8.");
+            cedulaInput.data("valid", false);
+        } else {
+            cedulaHelp.text("");
+            cedulaInput.data("valid", true);
+        }
+        validarFormulario();
+    });
+
+    // Validar teléfono
+    telefonoInput.on("input", function () {
+        const val = telefonoInput.val().trim();
+
+        if (!telefonoRegex.test(val)) {
+            telefonoHelp.text("Teléfono inválido. 8 dígitos, inicia con 2, 6, 7 u 8.");
+            telefonoInput.data("valid", false);
+        } else {
+            telefonoHelp.text("");
+            telefonoInput.data("valid", true);
+        }
+        validarFormulario();
+    });
+
+  
+
+    // Deshabilitar botón al inicio
+    btnCrear.prop("disabled", true);
+
+    function validarFormulario() {
+        const cedulaOk = cedulaInput.data("valid") === true;
+        const telOk = telefonoInput.data("valid") === true;
+        
+
+        btnCrear.prop("disabled", !(cedulaOk && telOk));
+    }
+</script>

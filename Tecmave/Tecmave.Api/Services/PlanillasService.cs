@@ -31,10 +31,7 @@ namespace Tecmave.Api.Services
 
         public PlanillasModel AddPlanillas(PlanillasModel PlanillasModel)
         {
-            if (PlanillasModel.neto_pagar == 0)
-            {
-                PlanillasModel.neto_pagar = PlanillasModel.total_salario - PlanillasModel.deducciones;
-            }
+         
             _context.planillas.Add(PlanillasModel);
             _context.SaveChanges();
             return PlanillasModel;
@@ -53,7 +50,6 @@ namespace Tecmave.Api.Services
             entidad.horas_trabajadas = PlanillasModel.horas_trabajadas;
             entidad.valor_hora = PlanillasModel.valor_hora;
             entidad.total_salario = PlanillasModel.total_salario;
-            entidad.deducciones = PlanillasModel.deducciones;
             entidad.neto_pagar = PlanillasModel.neto_pagar;
             entidad.estado = PlanillasModel.estado;
             entidad.observaciones = PlanillasModel.observaciones;
@@ -92,7 +88,7 @@ namespace Tecmave.Api.Services
 
             planilla.horas_trabajadas += horas_extra;
             planilla.total_salario = planilla.horas_trabajadas * planilla.valor_hora;
-            planilla.neto_pagar = planilla.total_salario - planilla.deducciones;
+            
             _context.SaveChanges();
             return planilla;
         }

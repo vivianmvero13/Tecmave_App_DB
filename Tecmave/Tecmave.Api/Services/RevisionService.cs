@@ -91,6 +91,7 @@ namespace Tecmave.Api.Services
             entidad.fecha_estimada_entrega = dto.fecha_estimada_entrega;
             entidad.fecha_entrega_final = dto.fecha_entrega_final;
             entidad.notas_taller = dto.notas_taller;
+            entidad.id_colaborador = dto.id_colaborador;
 
             _context.SaveChanges();
             return true;

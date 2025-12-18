@@ -650,9 +650,10 @@
                     <td>${ag?.hora_llegada || "-"}</td>
                     <td>${estado?.nombre || "-"}</td>
                     <td>
-                        <button class="btn-proforma" onclick="verProforma(${r.id_revision})">
-                            Ver Proforma
-                        </button>
+                             <button class="btn-proforma"
+                            onclick="detalleRevision(${r.id_revision})">
+                            Detalle
+                         </button>
                         <button class="btn-proforma" onclick="cancelarRevision(${r.id_revision})">
                             Cancelar
                         </button>
@@ -671,248 +672,17 @@
         window.location.href = `/Servicios/Edit/${idRevision}`;
     }
 
-
-    /* =================================================================================
-       PROFORMA
-       ================================================================================= */
-    function verProforma(id) {
-        $.get(`${API.REVISION}/Detalle/${id}`, function (d) {
-
-            ultimaProforma = {
-                idRevision: id,
-                vehiculo: d.vehiculo,
-                servicio: d.servicio,
-                tipoServicio: d.tipo_servicio,
-                agendamiento: d.agendamiento,
-                pertenencias: d.pertenencias || [],
-                trabajos: d.trabajos || []
-            };
-
-
-            const veh = d.vehiculo;
-            const s = d.servicio;
-            const t = d.tipo_servicio;
-            const ag = d.agendamiento;
-
-            let html = `
-                <h2>Proforma Detallada</h2>
-
-                <h3>Vehículo</h3>
-                <p>${veh.placa} - ${veh.modelo} (${veh.id_marca})</p>
-
-                <h3>Servicio</h3>
-                <p>${s?.nombre || "No registrado"}</p>
-                <small>${t?.nombre || "-"}</small>
-
-                <h3>Fecha y Hora</h3>
-                <p>${ag.fecha_estimada} ${ag.hora_llegada}</p>
-
-                <h3>Pertenencias</h3>
-            `;
-
-            if (d.pertenencias.length === 0) {
-                html += `<p>No registradas.</p>`;
-            } else {
-                html += `<ul>`;
-                d.pertenencias.forEach(p => html += `<li>${p.nombre} — ${p.presente ? "Sí" : "No"}</li>`);
-                html += `</ul>`;
-            }
-
-            html += `<h3>Trabajos</h3>`;
-
-            if (d.trabajos.length === 0) {
-                html += `<p>No se han registrado trabajos.</p>`;
-            } else {
-                html += `<ul>`;
-                d.trabajos.forEach(t2 => html += `<li>${t2.nombre}</li>`);
-                html += `</ul>`;
-            }
-
-            $("#proformaContent").html(html);
-            $("#modalProforma").show();
-        });
+      function detalleRevision(idRevision) {
+        window.location.href = `/Servicios/Detalle/${idRevision}`;
     }
+
+    
 
     function cerrarModal() {
         document.getElementById("modalProforma").style.display = "none";
     }
 
-    async function descargarPDF() {
-
-        if (!ultimaProforma) {
-            alert("No hay datos cargados para exportar.");
-            return;
-        }
-
-        const { jsPDF } = window.jspdf;
-
-        const doc = new jsPDF({
-            unit: "mm",
-            format: "a4"
-        });
-
-        const pageWidth = doc.internal.pageSize.getWidth();
-        let y = 12;
-
-        const v = ultimaProforma.vehiculo || {};
-        const s = ultimaProforma.servicio || {};
-        const ts = ultimaProforma.tipoServicio || {};
-        const ag = ultimaProforma.agendamiento || {};
-        const pertenencias = ultimaProforma.pertenencias || [];
-        const trabajos = ultimaProforma.trabajos || [];
-
-        /* ========================================================
-           ENCABEZADO
-           ======================================================== */
-        doc.setFillColor(26, 26, 26);
-        doc.rect(0, 0, pageWidth, 20, "F");
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.setTextColor(255, 255, 255);
-        doc.text("Innovación Tecmave — Proforma de Servicio", 10, 12);
-
-        doc.setFontSize(10);
-        doc.text(`N.º ${ultimaProforma.idRevision}`, pageWidth - 10, 12, { align: "right" });
-        doc.text(`Fecha: ${new Date().toLocaleDateString()}`, pageWidth - 10, 17, { align: "right" });
-
-        // Reset texto
-        doc.setTextColor(0, 0, 0);
-
-        y = 30;
-
-        /* ========================================================
-           DATOS DEL VEHÍCULO
-           ======================================================== */
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.text("Datos del vehículo", 10, y);
-        y += 6;
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.text(`Placa: ${v.placa || "-"}`, 10, y);
-        doc.text(`Modelo: ${v.modelo || "-"}`, 80, y);
-        y += 5;
-
-        doc.text(`Marca ID: ${v.id_marca || "-"}`, 10, y);
-        y += 10;
-
-        /* ========================================================
-           DETALLE DEL SERVICIO
-           ======================================================== */
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.text("Detalle del servicio", 10, y);
-        y += 6;
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.text(`Tipo de servicio: ${ts?.nombre || "-"}`, 10, y);
-        y += 5;
-
-        doc.text(`Servicio seleccionado: ${s?.nombre || "-"}`, 10, y);
-        y += 10;
-
-        /* ========================================================
-           FECHA Y HORA
-           ======================================================== */
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.text("Fecha y hora de revisión", 10, y);
-        y += 6;
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.text(`Fecha: ${ag?.fecha_estimada || "-"}`, 10, y);
-        doc.text(`Hora: ${ag?.hora_llegada || "-"}`, 80, y);
-        y += 10;
-
-        /* ========================================================
-           PERTENENCIAS
-           ======================================================== */
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.text("Pertenencias registradas", 10, y);
-        y += 7;
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-
-        if (pertenencias.length === 0) {
-            doc.text("No registradas.", 10, y);
-            y += 10;
-        } else {
-
-            // Encabezado tabla
-            doc.setFillColor(230, 230, 230);
-            doc.rect(10, y, 80, 6, "F");
-            doc.rect(90, y, 30, 6, "F");
-            doc.setFont("helvetica", "bold");
-            doc.text("Pertenencia", 12, y + 4);
-            doc.text("Presente", 92, y + 4);
-            y += 8;
-
-            doc.setFont("helvetica", "normal");
-
-            pertenencias.forEach(p => {
-                if (y > 265) {
-                    doc.addPage();
-                    y = 20;
-                }
-                doc.text(p.nombre || "-", 12, y);
-                doc.text(p.presente ? "Sí" : "No", 92, y);
-                y += 6;
-            });
-
-            y += 10;
-        }
-
-        /* ========================================================
-           TRABAJOS
-           ======================================================== */
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.text("Trabajos registrados", 10, y);
-        y += 7;
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-
-        if (trabajos.length === 0) {
-            doc.text("No se han registrado trabajos.", 10, y);
-            y += 10;
-        } else {
-            trabajos.forEach(t => {
-                if (y > 270) {
-                    doc.addPage();
-                    y = 20;
-                }
-                doc.text(`• ${t.nombre}`, 12, y);
-                y += 5;
-            });
-            y += 10;
-        }
-
-        /* ========================================================
-           FIRMA
-           ======================================================== */
-        if (y > 260) {
-            doc.addPage();
-            y = 40;
-        }
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.text("__________________________________", 10, y);
-        y += 5;
-        doc.text("Firma del cliente", 10, y);
-
-        /* ========================================================
-           EXPORTAR
-           ======================================================== */
-        doc.save(`Proforma_${ultimaProforma.idRevision}.pdf`);
-    }
+    
 
     function togglePertenencias() {
         const body = document.getElementById("pertenencias-container");
@@ -997,8 +767,7 @@
                 data: JSON.stringify(payload)
             });
 
-            // 2) Actualizamos caches locales para que la tabla cambie inmediatamente
-            // actualizar cacheAgendamientos
+            
             const idx = cacheAgendamientos.findIndex(x => x.id_agendamiento === ag.id_agendamiento);
             if (idx !== -1) {
                 cacheAgendamientos[idx].id_estado = payload.id_estado;
@@ -1081,7 +850,6 @@
             const horaStr = ag.hora_llegada ? ag.hora_llegada.substring(0, 5) : "";
 
             if (horaStr) {
-                // Si la hora actual no está en la lista (por restricciones), la agregamos
                 if ($("#hora option[value='" + horaStr + "']").length === 0) {
                     $("#hora").append(`<option value="${horaStr}">${horaStr}</option>`);
                 }
@@ -1089,10 +857,9 @@
             }
         }
 
-        // 4) Limpiar pertenencias (para que el usuario las marque nuevamente si quiere)
         $("#pertenencias input[type='checkbox']").prop("checked", false);
 
-        // 5) Llevar al usuario al formulario
+        
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
 </script>

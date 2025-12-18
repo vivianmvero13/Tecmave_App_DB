@@ -20,5 +20,7 @@
         public DateTime? fecha_entrega_final { get; set; }
 
         public string? notas_taller { get; set; }
+
+        public int? id_colaborador { get; set; }
     }
 }

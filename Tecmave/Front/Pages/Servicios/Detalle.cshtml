@@ -1,0 +1,318 @@
+﻿@page "{id:int}"
+@model Front.Pages.Servicios.DetalleModel
+
+@{
+    ViewData["Title"] = "Detalle de Proforma";
+}
+
+<style>
+    .card {
+        background: #1a1a1a;
+        padding: 1.5rem;
+        border-radius: 12px;
+        color: #ddd;
+        max-width: 1100px;
+        margin: 0 auto 1.5rem auto;
+    }
+
+    h3 {
+        color: #000 !important;
+        margin-bottom: 1rem;
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: .5rem;
+    }
+
+    .label {
+        font-size: .85rem;
+        color: #aaa;
+    }
+
+    .value {
+        font-weight: 500;
+        margin-bottom: .5rem;
+    }
+
+    ul {
+        padding-left: 1.2rem;
+    }
+
+    .badge {
+        display: inline-block;
+        background: #333;
+        padding: .25rem .6rem;
+        border-radius: 6px;
+        margin-right: .4rem;
+        margin-bottom: .4rem;
+        font-size: .85rem;
+    }
+
+    .back {
+        margin-top: 1rem;
+        display: inline-block;
+        color: #5a9cff;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .terminos {
+        width: 100%;
+        min-height: 220px;
+        max-height: 260px;
+        resize: none;
+        overflow-y: auto;
+        background: #111;
+        border: 1px solid #333;
+        border-radius: 10px;
+        padding: 1rem;
+        color: #e0e0e0;
+        font-size: .9rem;
+        line-height: 1.5;
+        font-family: inherit;
+    }
+
+        .terminos:focus {
+            outline: none;
+            border-color: #5a9cff;
+        }
+</style>
+
+<section class="section">
+    <div class="container">
+
+        <!-- REVISION -->
+        <div class="card">
+            <h3>Información de la revisión</h3>
+            <div class="grid-2">
+               
+                <div>
+                    <div class="label">Fecha de ingreso</div>
+                    <div class="value" id="fecha_ingreso"></div>
+                </div>
+                <div>
+                    <div class="label">Vehículo</div>
+                    <div class="value" id="vehiculo"></div>
+                </div>
+                <div>
+                    <div class="label">Kilometraje</div>
+                    <div class="value" id="kilometraje"></div>
+                </div>
+            </div>
+        </div>
+
+       
+        <div class="card">
+            <h3>Estado del vehículo</h3>
+            <div class="grid-2">
+                <div>
+                    <div class="label">Nivel de combustible</div>
+                    <div class="value" id="nivel_combustible"></div>
+                </div>
+                <div>
+                    <div class="label">Condición</div>
+                    <div class="value" id="condicion"></div>
+                </div>
+            </div>
+
+            <div class="label">Golpes detectados</div>
+            <div id="golpes"></div>
+        </div>
+
+        
+        <div class="card">
+            <h3>Pertenencias entregadas</h3>
+            <ul id="pertenencias"></ul>
+        </div>
+
+        
+        <div class="card">
+            <h3>Trabajos realizados</h3>
+            <ul id="trabajos"></ul>
+        </div>
+
+        
+        <div class="card">
+            <h3>Servicio facturado</h3>
+            <div class="grid-2">
+                <div>
+                    <div class="label">Tipo de servicio</div>
+                    <div class="value" id="tipo_servicio"></div>
+                </div>
+                <div>
+                    <div class="label">Servicio</div>
+                    <div class="value" id="servicio"></div>
+                </div>
+                <div>
+                    <div class="label">Costo final</div>
+                    <div class="value" id="costo"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FECHAS -->
+        <div class="card">
+            <h3>Fechas</h3>
+            <div class="grid-2">
+                <div>
+                    <div class="label">Hora de llegada</div>
+                    <div class="value" id="hora"></div>
+                </div>
+                <div>
+                    <div class="label">Fecha estimada de entrega</div>
+                    <div class="value" id="fecha_estimada"></div>
+                </div>
+                <div>
+                    <div class="label">Fecha entrega final</div>
+                    <div class="value" id="fecha_final"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOTAS -->
+        <div class="card">
+            <h3>Diagnostico del taller</h3>
+            <div id="notas"></div>
+        </div>
+
+       
+
+        <div class="card">
+            <h3>Términos y condiciones del servicio</h3>
+
+            <textarea class="terminos" readonly>
+        1. La presente autorización expresa que siendo el propietario o actuando como representante del mismo, estoy
+        en condiciones de autorizar los servicios anotados, así como el reemplazo de las piezas que fueran
+        pertinentes para la ejecución de los mismos.
+
+        2. Acepto las condiciones siguientes:
+        A) Toda reparación o servicio será cancelado el valor de la factura correspondiente de contado, al recibir el
+        trabajo.
+        B) Exonero a INNOVACION TECMAVE y su personal de toda responsabilidad por pérdida, robo, incendio
+        o accidentes y de los riesgos que están fuera de control.
+        C) Autorizo al personal de INNOVACION TECMAVE para que mi vehículo pueda ser probado en la vía
+        pública.
+        D) Cuando sea requerido por INNOVACION TECMAVE me comprometo a adelantar el 50% del costo de la
+        reparación.
+
+        3. El vehículo deberá ser retirado de nuestras instalaciones a más tardar máximo 48 horas siguiente del aviso de retiro
+        del mismo. Fuera de este plazo corre por cuenta del cliente los costos de bodegaje a razón de $10 diarios.
+        Así mismo, con base al artículo 1195 del Código Civil, se ejercerá el derecho de retención del bien hasta el
+        pago de los servicios prestados y el bodegaje.
+
+        4. La garantía que por este medio otorga INNOVACION TECMAVE es únicamente sobre la mano de obra y los
+        repuestos vendidos por nuestra empresa por un plazo de 30 días naturales.
+
+        5. Una vez concluido el trabajo correspondiente y transcurridos noventa (90) días calendario sin que el
+        vehículo haya sido retirado con la cancelación de la factura respectiva, INNOVACION TECMAVE ejercerá
+        derecho de retención conforme a la legislación vigente, constituyéndose este documento como título
+        ejecutivo.
+
+        6. INNOVACION TECMAVE no se hace responsable por rayones o golpes si el vehículo ingresa sucio o mojado.
+
+        7. INNOVACION TECMAVE no se hace responsable por sistemas de alarma ni sistemas de audio, los cuales
+        deben ser desactivados previo al ingreso del vehículo.
+    </textarea>
+        </div>
+
+        <a href="/Servicios" class="btn btn-secondary">
+            Cancelar
+        </a>
+    </div>
+
+   
+</section>
+
+<div id="loadingOverlay" style="display:none;">
+    <div class="modal">
+        <div class="modal-content">
+            <p>Cargando, por favor espere un momento...</p>
+        </div>
+    </div>
+</div>
+<script>
+const API_BASE = "http://localhost:7096";
+const API = {
+    REVISION: `${API_BASE}/Revision`,
+    AGENDAMIENTO: `${API_BASE}/Agendamiento`,
+    VEHICULO: `${API_BASE}/Vehiculos`,
+    PERT: `${API_BASE}/api/RevisionPertenencias`,
+    TRAB: `${API_BASE}/api/RevisionTrabajos`,
+    SERV_REV: `${API_BASE}/ServiciosRevision`,
+    SERVICIOS: `${API_BASE}/Servicios`,
+    TIPOS: `${API_BASE}/TipoServicios`
+};
+
+     function mostrarLoading() { $("#loadingOverlay").show(); }
+     function ocultarLoading() { $("#loadingOverlay").hide(); }
+
+
+    const revisionId = @Model.RevisionId;
+
+$(async function () {
+    if (!revisionId) return alert("RevisionId no recibido");
+            mostrarLoading();
+      try {
+    const revision = await $.get(`${API.REVISION}/${revisionId}`);
+    const vehiculo = await $.get(`${API.VEHICULO}/${revision.vehiculo_id}`);
+    const ag = await $.get(`${API.AGENDAMIENTO}/${revision.id_agendamiento}`);
+    const servRev = await $.get(`${API.SERV_REV}/ByRevision/${revisionId}`);
+    const servicios = await $.get(API.SERVICIOS);
+    const tipos = await $.get(API.TIPOS);
+
+    const servicio = servicios.find(x => x.id_servicio === servRev.servicio_id);
+    const tipo = tipos.find(x => x.id_tipo_servicio === servicio.tipo_servicio_id);
+
+    
+    $("#fecha_ingreso").text(revision.fecha_ingreso?.substring(0,10));
+    $("#vehiculo").text(`${vehiculo.placa} - ${vehiculo.modelo}`);
+    $("#kilometraje").text(revision.kilometraje ?? "—");
+    $("#nivel_combustible").text(revision.nivel_combustible ?? "—");
+
+    const golpes = [];
+    if (revision.golpes_delantera) golpes.push("Delantera");
+    if (revision.golpes_trasera) golpes.push("Trasera");
+    if (revision.golpes_izquierda) golpes.push("Izquierda");
+    if (revision.golpes_derecha) golpes.push("Derecha");
+    if (revision.golpes_arriba) golpes.push("Arriba");
+
+    $("#golpes").html(golpes.length
+        ? golpes.map(g => `<span class="badge">${g}</span>`).join("")
+        : "Sin golpes registrados");
+
+    const condicion = [];
+    if (revision.vehiculo_sucio) condicion.push("Vehículo sucio");
+    if (revision.vehiculo_mojado) condicion.push("Vehículo mojado");
+    $("#condicion").text(condicion.join(", ") || "Normal");
+
+    $("#tipo_servicio").text(tipo.nombre);
+    $("#servicio").text(servicio.nombre);
+    $("#costo").text(`₡ ${servRev.costo_final.toFixed(2)}`);
+
+    $("#hora").text(ag.hora_llegada?.substring(0,5));
+    $("#fecha_estimada").text(ag.fecha_estimada_entrega?.substring(0,10) ?? "—");
+    $("#fecha_final").text(ag.fecha_entrega_final?.substring(0,10) ?? "—");
+
+    $("#notas").text(revision.notas_taller || "Sin observaciones");
+
+    const pertenencias = await $.get(`${API.PERT}/GetByIdRevision/${revisionId}`);
+    pertenencias.forEach(p => $("#pertenencias").append(`<li>${p.nombre}</li>`));
+
+    const trabajos = await $.get(`${API.TRAB}/GetByIdRevision/${revisionId}`);
+    trabajos.forEach(t => $("#trabajos").append(`<li>${t.nombre}</li>`));
+        } catch (err) {
+            console.error(err);
+            alert("Error cargando la información de la revisión");
+        } finally {
+            ocultarLoading();
+        }
+});
+</script>

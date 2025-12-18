@@ -4,207 +4,111 @@
     ViewData["Title"] = "Planillas";
 }
 
-
 <section class="section">
-    <div class="container grid cols-2">
+    <div class="container">
 
-        <!-- FORM NUEVA PLANILLA -->
         <div class="card">
-            <h3>Nueva Planilla</h3>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h3>Lista de Planillas</h3>
+                <a href="/Planillas/Crear" class="btn primary">
+                    Nueva Planilla
+                </a>
+            </div>
 
-            <div class="form-row">
+            <div class="form-row mb-2">
                 <div>
-                    <label>Colaborador</label>
-                    <select id="colaborador_id" class="input"></select>
-                </div>
-                <div>
-                    <label>Periodo Inicio</label>
-                    <input id="periodo_inicio" type="date" class="input" />
-                </div>
-                <div>
-                    <label>Periodo Fin</label>
-                    <input id="periodo_fin" type="date" class="input" />
+                    <label>Buscar colaborador</label>
+                    <input id="filtroNombre"
+                           class="input"
+                           placeholder="Nombre o apellido" />
                 </div>
             </div>
 
-            <div class="form-row">
-                <div>
-                    <label>Horas Trabajadas</label>
-                    <input id="horas_trabajadas" type="number" class="input" step="0.01">
-                </div>
-                <div>
-                    <label>Valor Hora</label>
-                    <input id="valor_hora" type="number" class="input" step="0.01">
-                </div>
-                <div>
-                    <label>Total Salario</label>
-                    <input id="total_salario" type="number" class="input" readonly />
-                </div>
+            <div class="table-responsive mt-2">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Colaborador</th>
+                            <th>Periodo</th>
+                            <th>Neto Pagar</th>
+                            <th>Estado</th>
+                            <th style="width:200px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
 
-            <div class="form-row">
-                <div>
-                    <label>Deducciones</label>
-                    <input id="deducciones" type="number" class="input" step="0.01">
-                </div>
-                <div>
-                    <label>Neto Pagar</label>
-                    <input id="neto_pagar" type="number" class="input" readonly />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div>
-                    <label>Estado</label>
-                    <select id="estado" class="input"></select>
-                </div>
-                <div>
-                    <label>Observaciones</label>
-                    <input id="observaciones" type="text" class="input" />
-                </div>
-            </div>
-
-            <button id="btnAgregarPlanilla" class="primary">Agregar</button>
-        </div>
-
-
-        <!-- TABLA -->
-        <div class="card">
-            <h3>Lista de Planillas</h3>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Colaborador</th>
-                        <th>Periodo</th>
-                        <th>Neto Pagar</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
         </div>
 
     </div>
 </section>
 
 <script>
-    const API_PLANILLA = "https://tecmave-api.azurewebsites.net/api/Planillas";
-    const API_ESTADOS = "https://tecmave-api.azurewebsites.net/Estados";
-    const API_USUARIOS = "https://tecmave-api.azurewebsites.net/api/usuarios";
-    const API_COLABORADOR = "https://tecmave-api.azurewebsites.net/Colaboradores";
+    const API_PLANILLA = "http://localhost:7096/api/Planillas";
+    const API_USUARIOS = "http://localhost:7096/api/usuarios";
+    const API_COLABORADOR = "http://localhost:7096/Colaboradores";
 
-    // caches
-    let cacheUsuarios = {};       // key: userId -> user object
-    let cacheColaboradores = {};  // key: id_colaborador -> colaborador object
+    let cacheUsuarios = {};
+    let cacheColaboradores = {};
+    let todasLasPlanillas = [];
 
     $(document).ready(function () {
-        // cargar usuarios -> luego colaboradores -> luego planillas
+        $("#filtroNombre").on("input", aplicarFiltroNombre);
         cargarUsuarios()
             .then(() => cargarColaboradores())
-            .then(() => cargarEstados())
             .then(() => cargarPlanillas());
-
-        $("#horas_trabajadas, #valor_hora").on("input", calcularTotal);
-        $("#deducciones").on("input", calcularNeto);
-
-        $("#btnAgregarPlanilla").on("click", agregarPlanilla);
     });
 
-    // ---------- Cargar usuarios (y poblar cacheUsuarios)
     function cargarUsuarios() {
         return $.get(API_USUARIOS, function (usuarios) {
-            // guardamos usuarios en cache con varias claves por seguridad
             usuarios.forEach(u => {
-                // distintas APIs pueden usar "id" o "id_usuario" como nombre del campo
-                const key = u.id ?? u.id_usuario ?? u.userId ?? u.usuarioId;
+                const key = u.id ?? u.id_usuario;
                 cacheUsuarios[key] = u;
             });
         });
     }
 
-    // ---------- Cargar colaboradores (solo colaboradores) y llenar el select
     function cargarColaboradores() {
         return $.get(API_COLABORADOR, function (colabs) {
-            $("#colaborador_id").empty().append(`<option value="">Seleccione...</option>`);
-
             colabs.forEach(c => {
-                // guarda en cache
                 cacheColaboradores[c.id_colaborador] = c;
-
-                // intenta obtener el usuario asociado por id_usuario
-                const userKey = c.id_usuario ?? c.idUsuario ?? c.usuario_id ?? c.usuarioId;
-                const usuario = cacheUsuarios[userKey];
-
-                let displayName;
-                if (usuario) {
-                    // varios posibles nombres en la respuesta: apellidos o apellido
-                    const apellidos = usuario.apellidos ?? usuario.apellido ?? "";
-                    displayName = `${usuario.nombre} ${apellidos}`.trim();
-                } else {
-                    // fallback: mostrar identificador del colaborador
-                    displayName = `Colaborador ${c.id_colaborador}`;
-                }
-
-                $("#colaborador_id").append(
-                    `<option value="${c.id_colaborador}">${displayName}</option>`
-                );
             });
         });
     }
 
-    // ---------- Cargar estados (solo Pendiente (2) y Cancelado (11))
-    function cargarEstados() {
-        return $.get(API_ESTADOS, function (estados) {
-            $("#estado").empty();
-            (estados || [])
-                .filter(e => e.id_estado === 2 || e.id_estado === 11)
-                .forEach(e => {
-                    $("#estado").append(`<option value="${e.nombre}">${e.nombre}</option>`);
-                });
-        });
-    }
-
-    // ---------- Cargar planillas y mostrar nombre del colaborador (usando colaborador->usuario)
     function cargarPlanillas() {
         $.get(API_PLANILLA, function (data) {
+            todasLasPlanillas = data;
             $("table tbody").empty();
 
             data.forEach(p => {
-                // p.colaborador_id contiene el id_colaborador
-                const colaborador = cacheColaboradores[p.colaborador_id];
-                let nombreUsuario = "Desconocido";
+                const col = cacheColaboradores[p.colaborador_id];
+                let nombre = "Desconocido";
 
-                if (colaborador) {
-                    const userKey = colaborador.id_usuario ?? colaborador.idUsuario ?? colaborador.usuario_id;
-                    const usuario = cacheUsuarios[userKey];
-                    if (usuario) {
-                        const apellidos = usuario.apellidos ?? usuario.apellido ?? "";
-                        nombreUsuario = `${usuario.nombre} ${apellidos}`.trim();
-                    } else {
-                        nombreUsuario = `Colaborador ${colaborador.id_colaborador}`;
-                    }
-                } else {
-                    // fallback: si por alguna razón no tenemos el colaborador en cache,
-                    // intentar usar directamente p.colaborador_id como user id (caso raro)
-                    const usuarioFallback = cacheUsuarios[p.colaborador_id];
-                    if (usuarioFallback) {
-                        const apellidos = usuarioFallback.apellidos ?? usuarioFallback.apellido ?? "";
-                        nombreUsuario = `${usuarioFallback.nombre} ${apellidos}`.trim();
+                if (col) {
+                    const user = cacheUsuarios[col.id_usuario];
+                    if (user) {
+                        const ap = user.apellidos ?? user.apellido ?? "";
+                        nombre = `${user.nombre} ${ap}`.trim();
                     }
                 }
 
                 $("table tbody").append(`
                     <tr>
                         <td>${p.id}</td>
-                        <td>${nombreUsuario}</td>
+                        <td>${nombre}</td>
                         <td>${p.periodo_inicio} – ${p.periodo_fin}</td>
                         <td>${p.neto_pagar}</td>
                         <td>${p.estado}</td>
                         <td>
-                            <a href="/Planillas/Editar/${p.id}" class="btn btn-sm btn-secondary">Editar</a>
-                            <button class="btn primary" onclick="eliminarPlanilla(${p.id})">Eliminar</button>
+                            <a href="/Planillas/Editar/${p.id}" class="btn btn-sm btn-secondary">
+                                Editar
+                            </a>
+                            <button class="btn danger" onclick="eliminarPlanilla(${p.id})">
+                                Eliminar
+                            </button>
                         </td>
                     </tr>
                 `);
@@ -212,85 +116,71 @@
         });
     }
 
-    // ---------- Cálculos
-    function calcularTotal() {
-        const h = parseFloat($("#horas_trabajadas").val()) || 0;
-        const v = parseFloat($("#valor_hora").val()) || 0;
-        $("#total_salario").val(h * v);
-        calcularNeto();
-    }
+        function renderTabla(planillas) {
+        $("table tbody").empty();
 
-        function calcularNeto() {
-        const total = parseFloat($("#total_salario").val()) || 0;
-        const dedPorcentaje = parseFloat($("#deducciones").val()) || 0;
+        if (!planillas.length) {
+            $("table tbody").append(`
+                <tr>
+                    <td colspan="6">No hay resultados</td>
+                </tr>
+            `);
+            return;
+        }
 
-        const deduccionCalculada = total * dedPorcentaje; // porcentaje de deducción
-        $("#neto_pagar").val(total - deduccionCalculada);
-    }
+        planillas.forEach(p => {
+            const colaborador = cacheColaboradores[p.colaborador_id];
+            let nombreUsuario = "Desconocido";
 
-    // ---------- Agregar planilla
-    function agregarPlanilla() {
-
-    // Validación de periodo: máximo 1 día de diferencia
-    const inicioStr = $("#periodo_inicio").val();
-    const finStr = $("#periodo_fin").val();
-
-    if (!inicioStr || !finStr) {
-        alert("Debe indicar el periodo de inicio y fin.");
-        return;
-    }
-
-    const inicio = new Date(inicioStr);
-    const fin = new Date(finStr);
-
-    if (isNaN(inicio.getTime()) || isNaN(fin.getTime())) {
-        alert("Fechas inválidas. Verifique el formato.");
-        return;
-    }
-
-    if (fin < inicio) {
-        alert("La fecha de fin no puede ser menor que la fecha de inicio.");
-        return;
-    }
-
-    const diffMs = fin.getTime() - inicio.getTime();
-    const maxDiff = 24 * 60 * 60 * 1000; 
-
-    if (diffMs < maxDiff) {
-        alert("El periodo debe de ser mayor a 1 día.");
-        return;
-    }
-        const nuevo = {
-            id: 0,
-            colaborador_id: parseInt($("#colaborador_id").val()),
-            periodo_inicio: $("#periodo_inicio").val(),
-            periodo_fin: $("#periodo_fin").val(),
-            horas_trabajadas: parseFloat($("#horas_trabajadas").val()) || 0,
-            valor_hora: parseFloat($("#valor_hora").val()) || 0,
-            total_salario: parseFloat($("#total_salario").val()) || 0,
-            deducciones: parseFloat($("#deducciones").val()) || 0,
-            neto_pagar: parseFloat($("#neto_pagar").val()) || 0,
-            fecha_generada: new Date().toISOString(),
-            estado: $("#estado").val(),
-            observaciones: $("#observaciones").val()
-        };
-
-        $.ajax({
-            url: API_PLANILLA,
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(nuevo),
-            success: function () {
-                alert("Planilla agregada!");
-                // recargar planillas y limpiar formulario
-                cargarPlanillas();
-                limpiarForm();
-            },
-            error: function (err) {
-                console.log("ERROR agregarPlanilla:", err);
-                alert("Error: No se pudo agregar. Revisa la consola.");
+            if (colaborador) {
+                const userKey = colaborador.id_usuario;
+                const usuario = cacheUsuarios[userKey];
+                if (usuario) {
+                    const apellidos = usuario.apellidos ?? usuario.apellido ?? "";
+                    nombreUsuario = `${usuario.nombre} ${apellidos}`.trim();
+                }
             }
+
+            $("table tbody").append(`
+                <tr>
+                    <td>${p.id}</td>
+                    <td>${nombreUsuario}</td>
+                    <td>${p.periodo_inicio} – ${p.periodo_fin}</td>
+                    <td>${p.neto_pagar}</td>
+                    <td>${p.estado}</td>
+                    <td>
+                        <a href="/Planillas/Editar/${p.id}" class="btn btn-sm btn-secondary">
+                            Editar
+                        </a>
+                        <button class="btn danger" onclick="eliminarPlanilla(${p.id})">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+            `);
         });
+    }
+
+        function aplicarFiltroNombre() {
+        const texto = $("#filtroNombre").val().toLowerCase();
+
+        if (!texto) {
+            renderTabla(todasLasPlanillas);
+            return;
+        }
+
+        const filtradas = todasLasPlanillas.filter(p => {
+            const col = cacheColaboradores[p.colaborador_id];
+            if (!col) return false;
+
+            const u = cacheUsuarios[col.id_usuario];
+            if (!u) return false;
+
+            const nombre = `${u.nombre} ${u.apellidos ?? u.apellido ?? ""}`.toLowerCase();
+            return nombre.includes(texto);
+        });
+
+        renderTabla(filtradas);
     }
 
     function eliminarPlanilla(id) {
@@ -299,27 +189,8 @@
         $.ajax({
             url: `${API_PLANILLA}/${id}`,
             method: "DELETE",
-            success: function () {
-                alert("Planilla eliminada");
-                cargarPlanillas();
-            },
-            error: function (err) {
-                console.log("ERROR eliminarPlanilla:", err);
-                alert("No se pudo eliminar.");
-            }
+            success: () => cargarPlanillas(),
+            error: () => alert("No se pudo eliminar")
         });
-    }
-
-    function limpiarForm() {
-        $("#colaborador_id").val("");
-        $("#periodo_inicio").val("");
-        $("#periodo_fin").val("");
-        $("#horas_trabajadas").val("");
-        $("#valor_hora").val("");
-        $("#total_salario").val("");
-        $("#deducciones").val("");
-        $("#neto_pagar").val("");
-        $("#estado").val("");
-        $("#observaciones").val("");
     }
 </script>

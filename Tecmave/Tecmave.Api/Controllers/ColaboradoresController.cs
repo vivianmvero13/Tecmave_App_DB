@@ -94,11 +94,11 @@ namespace Tecmave.Api.Controllers
         }
 
         //APIS PUT
-        [HttpPut]
-        public async Task<IActionResult> UpdateColaboradores([FromBody] ColaboradoresModel ColaboradoresModel, [FromQuery] string rol)
+        [HttpPut("editar-completo")]
+        public async Task<IActionResult> UpdateColaboradores([FromBody] EditarColaboradorDto dto)
         {
 
-            bool actualizado = await _ColaboradoresService.UpdateColaboradoresAsync(ColaboradoresModel, rol);
+            bool actualizado = await _ColaboradoresService.UpdateColaboradorAsync(dto);
 
             if (!actualizado)
             {

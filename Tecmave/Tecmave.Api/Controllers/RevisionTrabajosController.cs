@@ -50,13 +50,7 @@ namespace Tecmave.Api.Controllers
         public ActionResult<IEnumerable<RevisionTrabajosModel>> GetByIdRevision(int id_revision)
         {
             var revisionTrabajoss = _revisionTrabajoService.GetTrabajosByRevisionId(id_revision);
-            if (revisionTrabajoss == null)
-            {
-                return NotFound(new
-                {
-                    mensaje = "La revisión no existe"
-                });
-            }
+          
 
             return Ok(revisionTrabajoss); // puede venir vacío
         }

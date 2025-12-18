@@ -13,7 +13,7 @@ namespace Tecmave.Api.Models
         public decimal horas_trabajadas { get; set; }
         public decimal valor_hora { get; set; }
         public decimal total_salario { get; set; }
-        public decimal deducciones { get; set; }
+        
         public decimal neto_pagar { get; set; }
         public DateTime fecha_generada { get; set; }
         public string estado { get; set; }

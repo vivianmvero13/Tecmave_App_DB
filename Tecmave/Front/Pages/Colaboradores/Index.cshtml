@@ -1,103 +1,45 @@
 ﻿@page
 @model Front.Pages.Colaboradores.IndexModel
 @{
-    ViewData["Title"] = "Gestión de Colaboradores";
+    ViewData["Title"] = "Colaboradores";
 }
 
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <section class="section">
-    <div class="container grid cols-2">
+    <div class="container">
 
-        <!-- Formulario de nuevo colaborador + usuario -->
-        <div class="card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
             <h3>Colaboradores</h3>
 
-            <div class="form-row">
-                <div>
-                    <label>Nombre</label>
-                    <input class="input" id="nombre" type="text" />
-                </div>
-                <div>
-                    <label>Apellido</label>
-                    <input class="input" id="apellido" type="text" />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div>
-                    <label>Cédula</label>
-                    <input class="input" id="cedula" type="text" />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div>
-                    <label>Dirección</label>
-                    <input class="input" id="direccion" type="text" />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div>
-                    <label>Teléfono</label>
-                    <input class="input" id="telefono" type="text" />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div>
-                    <label>Email</label>
-                    <input class="input" id="email" type="email" />
-                </div>
-                <div>
-                    <label>Username</label>
-                    <input class="input" id="UserName" type="text" />
-                </div>
-            </div>
-
-            <!-- ROL OCULTO - SIEMPRE COLABORADOR -->
-            <input type="hidden" id="rol" value="Colaborador" />
-
-            <hr />
-
-            <div class="form-row">
-                <div>
-                    <label>Puesto</label>
-                    <input class="input" id="puesto" type="text" />
-                </div>
-                <div>
-                    <label>Costo por hora</label>
-                    <input class="input" id="salario" type="number" step="0.01" />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div>
-                    <label>Fecha Contratación</label>
-                    <input class="input" id="fecha_contratacion" type="date" />
-                </div>
-            </div>
-
-            <button id="btnAgregarUsuarioColaborador">Crear Usuario y Colaborador</button>
+            <a href="/Colaboradores/Crear" class="btn btn-primary">
+                + Nuevo colaborador
+            </a>
         </div>
 
-        <!-- Tabla de colaboradores -->
-        <div class="card">
-            <h3>Lista de Colaboradores</h3>
-            <table class="table">
+        <!-- FILTRO -->
+        <input type="text"
+               id="filtroNombre"
+               class="input mb-2"
+               placeholder="Buscar por nombre..." />
+
+        <!-- TABLA -->
+        <div class="table-responsive mt-2">
+            <table class="table align-middle">
                 <thead>
                     <tr>
-                        <th>Usuario</th>
+                        <th>ID</th>
+                        <th>Nombre</th>
                         <th>Cédula</th>
                         <th>Puesto</th>
                         <th>Salario</th>
                         <th>Fecha</th>
-                        <th>Acciones</th>
+                        <th style="width:160px;">Acciones</th>
                     </tr>
                 </thead>
-                <tbody></tbody>
+                <tbody id="tablaColaboradores">
+                    <tr>
+                        <td colspan="7">Cargando colaboradores…</td>
+                    </tr>
+                </tbody>
             </table>
         </div>
 
@@ -105,144 +47,84 @@
 </section>
 
 <script>
-    const API_COLABORADOR = "https://tecmave-api.azurewebsites.net/colaboradores";
-    const API_USUARIOS = "https://tecmave-api.azurewebsites.net/api/usuarios";
+    const API_COLABORADOR = "http://localhost:7096/colaboradores";
+    const API_USUARIOS = "http://localhost:7096/api/usuarios";
 
-    let cacheUsuarios = {};
+    let colaboradores = [];
+    let usuarios = {};
 
-    // ============================
-    //       CARGAR USUARIOS
-    // ============================
-    function cargarUsuarios() {
-        return $.get(API_USUARIOS, function (usuarios) {
-            cacheUsuarios = {};
-            usuarios.forEach(u => cacheUsuarios[u.id] = u);
-        }).fail(() => {
-            Swal.fire("Error", "No se pudieron cargar los usuarios", "error");
+    async function cargarDatos() {
+
+        const [colabs, users] = await Promise.all([
+            $.get(API_COLABORADOR),
+            $.get(API_USUARIOS)
+        ]);
+
+        usuarios = {};
+        users.forEach(u => usuarios[u.id] = u);
+
+        colaboradores = colabs;
+
+        renderTabla(colaboradores);
+    }
+
+    function renderTabla(data) {
+
+        const tbody = $("#tablaColaboradores");
+        tbody.empty();
+
+        if (data.length === 0) {
+            tbody.append(`<tr><td colspan="7">No hay colaboradores</td></tr>`);
+            return;
+        }
+
+        data.forEach(c => {
+            const u = usuarios[c.id_usuario];
+
+            tbody.append(`
+                <tr>
+                    <td>${c.id_colaborador}</td>
+                    <td>${u ? `${u.nombre} ${u.apellidos}` : "N/A"}</td>
+                    <td>${u?.cedula ?? "N/A"}</td>
+                    <td>${c.puesto}</td>
+                    <td>${c.salario}</td>
+                    <td>${c.fecha_contratacion}</td>
+                    <td>
+                     <a href="/Colaboradores/Edit/${c.id_colaborador}"
+                            class="btn btn-warning btn-sm me-1">
+                            Editar
+                     </a>
+                        <button class="btn btn-danger btn-sm"
+                            onclick="eliminar(${c.id_colaborador})">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+            `);
         });
     }
 
-    // ============================
-    //     CARGAR COLABORADORES
-    // ============================
-    function cargarColaboradores() {
-        $.get(API_COLABORADOR, function (data) {
+    $("#filtroNombre").on("keyup", function () {
+        const texto = $(this).val().toLowerCase();
 
-            $("table tbody").empty();
-
-            data.forEach(c => {
-                const u = cacheUsuarios[c.id_usuario];
-
-                $("table tbody").append(`
-                    <tr>
-                        <td>${u ? `${u.nombre} ${u.apellidos}` : "Desconocido"}</td>
-                        <td>${u ? u.cedula : "N/A"}</td>
-                        <td>${c.puesto}</td>
-                        <td>${c.salario}</td>
-                        <td>${c.fecha_contratacion}</td>
-                        <td>
-                            <button class="danger" onclick="eliminarColaborador(${c.id_colaborador})">
-                                Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                `);
-            });
-
-        }).fail(() => {
-            Swal.fire("Error", "No se pudieron cargar los colaboradores", "error");
+        const filtrados = colaboradores.filter(c => {
+            const u = usuarios[c.id_usuario];
+            if (!u) return false;
+            return `${u.nombre} ${u.apellidos}`.toLowerCase().includes(texto);
         });
-    }
 
-    // ============================
-    //      ELIMINAR COLABORADOR
-    // ============================
-    function eliminarColaborador(id) {
-        Swal.fire({
-            title: "¿Eliminar colaborador?",
-            text: "Esta acción no se puede revertir.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Sí, eliminar",
-            cancelButtonText: "Cancelar",
-            confirmButtonColor: "#d33"
-        }).then(result => {
-            if (!result.isConfirmed) return;
+        renderTabla(filtrados);
+    });
 
-            $.ajax({
-                url: `${API_COLABORADOR}/${id}`,
-                method: "DELETE",
-                success: () => {
-                    Swal.fire("Eliminado", "El colaborador fue eliminado", "success");
-                    cargarUsuarios().then(() => cargarColaboradores());
-                },
-                error: (xhr) => {
-                    Swal.fire("Error", xhr.responseText, "error");
-                }
-            });
-        });
-    }
-
-    // ============================
-    //    AGREGAR USUARIO + COLAB
-    // ============================
-    function agregarUsuarioColaborador() {
-        const dto = {
-            nombre: $("#nombre").val(),
-            apellido: $("#apellido").val(),
-            cedula: $("#cedula").val(),
-            direccion: $("#direccion").val(),
-            telefono: $("#telefono").val(),
-            user_name: $("#UserName").val(),
-            email: $("#email").val(),
-            rol: $("#rol").val(),  // SIEMPRE "Colaborador"
-
-            colaboradores: {
-                puesto: $("#puesto").val(),
-                salario: (function () {
-                    const costoHora = parseFloat($("#salario").val());
-                    if (isNaN(costoHora) || costoHora <= 0) return 0;
-                    const hoy = new Date();
-                    const diasMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
-                    return costoHora * 8 * diasMes;
-                })(),
-                fecha_contratacion: $("#fecha_contratacion").val()
-            }
-        };
+    function eliminar(id) {
+        if (!confirm("¿Eliminar colaborador?")) return;
 
         $.ajax({
-            url: API_COLABORADOR,
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(dto),
-            success: () => {
-
-                limpiarFormulario();
-
-                // REFRESCAR USUARIOS Y LUEGO COLABORADORES
-                cargarUsuarios().then(() => cargarColaboradores());
-            },
-            error: (xhr) => {
-                Swal.fire("Error", xhr.responseText, "error");
-            }
+            url: `${API_COLABORADOR}/${id}`,
+            method: "DELETE",
+            success: cargarDatos
         });
     }
 
-    // ============================
-    //     LIMPIAR FORMULARIO
-    // ============================
-    function limpiarFormulario() {
-        $("#nombre, #apellido, #cedula, #direccion, #telefono, #UserName, #email, #puesto, #salario, #fecha_contratacion").val("");
-        $("#rol").val("Colaborador"); // Mantener valor por defecto
-    }
-
-    // ============================
-    //       DOCUMENT READY
-    // ============================
-    $(document).ready(function () {
-
-        cargarUsuarios().then(() => cargarColaboradores());
-
-        $("#btnAgregarUsuarioColaborador").on("click", agregarUsuarioColaborador);
-    });
+    $(document).ready(cargarDatos);
 </script>

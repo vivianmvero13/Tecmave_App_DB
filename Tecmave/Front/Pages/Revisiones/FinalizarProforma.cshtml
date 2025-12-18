@@ -231,6 +231,13 @@
             </div>
 
             <div>
+                <label>Colaborador</label>
+                <select id="colaborador_id" class="input">
+                    <option value="">Seleccione un colaborador</option>
+                </select>
+            </div>
+
+            <div>
                 <label>Notas del taller</label>
                 <textarea id="notas_taller" rows="4" class="input"></textarea>
             </div>
@@ -270,7 +277,9 @@
         VEHICULO:      `${API_BASE}/Vehiculos`,
         SERVICIOS:     `${API_BASE}/Servicios`,
         ESTADOS:       `${API_BASE}/Estados`,
-        TIPO_SERVICIO: `${API_BASE}/TipoServicios`
+        TIPO_SERVICIO: `${API_BASE}/TipoServicios`,
+        COLABORADORES: `${API_BASE}/Colaboradores`,
+        USUARIOS:      `${API_BASE}/api/usuarios`
     };
 
     const revisionId = new URLSearchParams(window.location.search).get("revisionId");
@@ -411,7 +420,12 @@
 
         /* ========= TIPOS Y SERVICIOS (CLAVE) ========= */
         await cargarTipos();       
-        await cargarServicios();   
+        await cargarServicios(); 
+        await cargarColaboradores();
+
+         if (revision.id_colaborador) {
+        $("#colaborador_id").val(revision.id_colaborador);
+    }
 
         /* ========= SERVICIO DE LA REVISION ========= */
         servicioRevision = await $.get(`${API.SERV_REV}/ByRevision/${revisionId}`);
@@ -423,17 +437,70 @@
             return;
         }
 
-        $("#tipo_servicio_id").val(servicio.tipo_servicio_id);
-        filtrarServicios();                      // 🔥 llena servicios
-        $("#servicio_id").val(servicio.id_servicio);
+            filtrarTiposPorServicio(servicioRevision.servicio_id);
+            filtrarServicios();
+        $("#servicio_id").val(servicioRevision.servicio_id);
+
         $("#costo_final").val(servicioRevision.costo_final);
 
         /* ========= CHECKLISTS ========= */
         await cargarPertenencias();
         await cargarTrabajos();
     }
+      /* =======================
+       COLABORADORES
+    ======================= */
 
-   
+
+        async function cargarColaboradores() {
+        $("#colaborador_id").html(`<option value="">Seleccione un colaborador</option>`);
+
+        const [colaboradores, usuarios] = await Promise.all([
+            $.get(API.COLABORADORES),
+            $.get(API.USUARIOS)
+        ]);
+
+        // Mapa rápido de usuarios por id
+        const usuariosMap = {};
+        usuarios.forEach(u => {
+            usuariosMap[u.id] = u;
+        });
+
+        colaboradores.forEach(c => {
+            const usuario = usuariosMap[c.id_usuario];
+            if (!usuario) return;
+
+            const nombreCompleto =
+                `${usuario.nombre ?? ""} ${usuario.apellido ?? ""}`.trim();
+
+            $("#colaborador_id").append(`
+                <option value="${c.id_colaborador}">
+                    ${nombreCompleto}
+                </option>
+            `);
+        });
+    }
+    /* =======================
+       FILTRAR SERVICIOS
+    ======================= */
+
+        function filtrarTiposPorServicio(servicioId) {
+        const servicio = cacheServicios[servicioId];
+        if (!servicio) return;
+
+        $("#tipo_servicio_id").html("");
+
+        const tipo = cacheTipos[servicio.tipo_servicio_id];
+        if (!tipo) return;
+
+        $("#tipo_servicio_id").append(`
+            <option value="${tipo.id_tipo_servicio}">
+                ${tipo.nombre}
+            </option>
+        `);
+
+        $("#tipo_servicio_id").val(tipo.id_tipo_servicio);
+    }
 
     /* =======================
        PERTENENCIAS
@@ -495,6 +562,77 @@
             `);
         });
     }
+         async function guardarTrabajos() {
+
+        const actuales = $("#listaTrabajos input:checked")
+            .map(function () {
+                return $(this).val();
+            })
+            .get();
+
+        const originales = trabajosOriginales.map(t => t.nombre);
+
+        const agregar = actuales.filter(n => !originales.includes(n));
+        const quitar  = originales.filter(n => !actuales.includes(n));
+
+        // ➕ AGREGAR
+        for (const nombre of agregar) {
+            await $.ajax({
+                url: API.TRAB,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    revision_id: revisionId,
+                    nombre: nombre
+                })
+            });
+        }
+
+        // ➖ QUITAR
+        for (const nombre of quitar) {
+            await $.ajax({
+                url: `${API.TRAB}/Por-revision?revisionId=${revisionId}&nombre=${encodeURIComponent(nombre)}`,
+                method: "DELETE"
+            });
+        }
+    }
+
+
+            async function guardarPertenencias() {
+
+        const actuales = $("#listaPertenencias input:checked")
+            .map(function () {
+                return $(this).val();
+            })
+            .get();
+
+        const originales = pertenenciasOriginales.map(p => p.nombre);
+
+        const agregar = actuales.filter(n => !originales.includes(n));
+        const quitar  = originales.filter(n => !actuales.includes(n));
+
+        // ➕ AGREGAR
+        for (const nombre of agregar) {
+            await $.ajax({
+                url: API.PERT,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    revision_id: revisionId,
+                    nombre: nombre
+                })
+            });
+        }
+
+        // ➖ QUITAR
+        for (const nombre of quitar) {
+            await $.ajax({
+                url: `${API.PERT}/Por-revision?revisionId=${revisionId}&nombre=${encodeURIComponent(nombre)}`,
+                method: "DELETE"
+            });
+        }
+    }
+    
 
     /* =======================
        GUARDAR
@@ -523,7 +661,8 @@
                     golpes_arriba: $("#golpes_arriba").is(":checked"),
                     vehiculo_sucio: $("#vehiculo_sucio").is(":checked"),
                     vehiculo_mojado: $("#vehiculo_mojado").is(":checked"),
-                    notas_taller: $("#notas_taller").val()
+                    notas_taller: $("#notas_taller").val(),
+                    id_colaborador: $("#colaborador_id").val() || null,
                 })
             });
 
@@ -552,6 +691,9 @@
                 costo_final: parseFloat($("#costo_final").val()) || 0
             })
         });
+
+            await guardarPertenencias();
+            await guardarTrabajos();
 
             alert("Proforma finalizada correctamente");
             location.href = "/Revisiones";

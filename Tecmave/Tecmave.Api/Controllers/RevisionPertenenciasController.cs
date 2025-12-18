@@ -30,19 +30,11 @@ namespace Tecmave.Api.Controllers
             return _revisionPertenenciaService.GetById(id);
         }
 
-        [HttpGet("GetByIdRevision/{id_Revision}")]
+        [HttpGet("GetByIdRevision/{id_revision}")]
         public ActionResult<IEnumerable<RevisionPertenenciasModel>> GetByIdRevision(int id_revision)
         {
             var revisionPertenencias = _revisionPertenenciaService.GetPertenenciasByRevisionId(id_revision);
-            if (revisionPertenencias == null || !revisionPertenencias.Any())
-            {
-                return NotFound(
-                        new
-                        {
-                            mensaje = "No se encontraron pertenencias para a la revision especificada"
-                        }
-                    );
-            }
+           
             return Ok(revisionPertenencias);
         }
 
