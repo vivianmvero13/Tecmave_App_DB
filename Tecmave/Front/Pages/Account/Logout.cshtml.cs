@@ -23,7 +23,7 @@ namespace Front.Pages.Account
                 return LocalRedirect(returnUrl);
             }
 
-            return Redirect("/Account/Login");   // fallback
+            return Redirect("/");   // fallback
         }
     }
 }

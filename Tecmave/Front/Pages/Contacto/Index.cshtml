@@ -5,7 +5,18 @@
 }
 
 <section class="section">
+
+    <div class="container" style="margin-bottom:2rem; text-align:center;">
+        <h2 style="font-size:2rem; font-weight:700; margin-bottom:.3rem;">
+            ¡Puedes contactar con nosotros!
+        </h2>
+        <p style="font-size:1.1rem; color:#555;">
+            Tu comodidad es importante para nosotros. Estamos aquí para ayudarte.
+        </p>
+    </div>
+
     <div class="container grid cols-2">
+
         <div class="card">
             <h3>Escríbenos</h3>
 
@@ -16,7 +27,8 @@
             }
 
             <!-- Resumen de validación del servidor -->
-            @Html.ValidationSummary(excludePropertyErrors: true, message: "", htmlAttributes: new { @class = "text-danger subtle", style = "margin-bottom:.5rem;" })
+            @Html.ValidationSummary(excludePropertyErrors: true, message: "",
+                     htmlAttributes: new { @class = "text-danger subtle", style = "margin-bottom:.5rem;" })
 
             <form method="post">
                 @Html.AntiForgeryToken()

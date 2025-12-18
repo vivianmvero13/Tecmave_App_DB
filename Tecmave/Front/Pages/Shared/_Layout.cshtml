@@ -16,7 +16,6 @@
         }
     }
 
-    // Usar "Admin" como nombre de rol de administrador
     bool isAdmin = roles.Contains("Admin");
     bool isCliente = roles.Contains("Cliente");
 }
@@ -59,9 +58,8 @@
             </div>
             <div class="subtle">Gestión</div>
             <nav class="nav">
-                @* Panel de cliente *@
-                
-@if (isCliente)
+
+                @if (isCliente)
                 {
                     <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
                     <a asp-page="/Home"><i class="fa-solid fa-house"></i> Home</a>
@@ -72,7 +70,7 @@
                     <a asp-page="/Factura/MisFacturas"><i class="fa-solid fa-clipboard-list"></i> Mis facturas</a>
                 }
 
-                @* Bloque de gestión solo visible para Admin *@                @if (isAdmin)
+                @if (isAdmin)
                 {
                     <nav class="nav">
                         <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
@@ -130,27 +128,27 @@
             <partial name="_LoginPartial" />
         </header>
 
-        <main class="main">
+        <main class="main" style="padding-bottom:0;margin-bottom:0;">
             @RenderBody()
         </main>
-    
 
+    </div>
 
-<!-- Modal global para mensajes bonitos -->
-<div id="appFeedbackModal" class="app-modal">
-    <div class="app-modal-dialog">
-        <div class="app-modal-icon" id="appModalIcon">
-            <i class="fa-solid fa-circle-info"></i>
-        </div>
-        <div class="app-modal-content">
-            <h4 class="app-modal-title" id="appModalTitle">Aviso</h4>
-            <p class="app-modal-message" id="appModalMessage"></p>
-            <div class="app-modal-footer">
-                <button type="button" id="appModalClose" class="btn primary">Aceptar</button>
+    <!-- Modal global -->
+    <div id="appFeedbackModal" class="app-modal">
+        <div class="app-modal-dialog">
+            <div class="app-modal-icon" id="appModalIcon">
+                <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <div class="app-modal-content">
+                <h4 class="app-modal-title" id="appModalTitle">Aviso</h4>
+                <p class="app-modal-message" id="appModalMessage"></p>
+                <div class="app-modal-footer">
+                    <button type="button" id="appModalClose" class="btn primary">Aceptar</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <script src="~/js/dashboard.js"></script>
     <script defer src="~/js/global-modal.js"></script>
@@ -211,7 +209,6 @@
         </div>
     </footer>
 
-
     <script src="~/assets/js/dashboard.js"></script>
     <script src="~/assets/js/nav-active.js"></script>
     <script src="~/assets/js/global-features.js"></script>
@@ -245,9 +242,7 @@
     </script>
     <script src="~/assets/js/chatbot.js"></script>
 
-
     <script>
-        // Control del sidebar y overlay, independiente de otros scripts
         document.addEventListener('DOMContentLoaded', function () {
             try {
                 var sidebar = document.querySelector('.sidebar');
@@ -276,7 +271,6 @@
                     overlay.classList.add('active');
                 }
 
-                // Estado inicial: cerrado
                 setClosed();
 
                 document.addEventListener('click', function (ev) {
@@ -298,10 +292,23 @@
         });
     </script>
 
-
     @RenderSection("Scripts", required: false)
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const logoutBtn = document.getElementById("logout-btn");
+            const logoutForm = document.getElementById("logout-form");
+
+            if (logoutBtn && logoutForm) {
+                logoutBtn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    logoutForm.submit();
+                });
+            }
+        });
+    </script>
+
 </body>
 </html>

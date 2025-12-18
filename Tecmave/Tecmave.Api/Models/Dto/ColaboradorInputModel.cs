@@ -2,18 +2,14 @@
 {
     public class ColaboradorInputModel
     {
-        // Datos del usuario
+        public string Cedula { get; set; }
         public string Nombre { get; set; }
         public string Apellido { get; set; }
-        public string UserName { get; set; }
+        public string Telefono { get; set; }
         public string Email { get; set; }
-        public string Rol { get; set; }
-
-        // Datos del colaborador
+        public string Rol { get; set; } = "Colaborador";
         public string Puesto { get; set; }
         public decimal Salario { get; set; }
-
-        // El cliente puede enviarla o se puede asignar automáticamente
         public DateOnly? FechaContratacion { get; set; }
     }
 }
