@@ -118,7 +118,7 @@ namespace Tecmave.Api.Controllers
         [HttpPut("editar-completo")]
         public async Task<IActionResult> UpdateColaboradores([FromBody] EditarColaboradorDto dto)
         {
-            model.id_colaborador = id; // Asegurar ID correcto
+            
 
             bool actualizado = await _ColaboradoresService.UpdateColaboradorAsync(dto);
 

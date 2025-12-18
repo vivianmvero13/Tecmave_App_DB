@@ -84,12 +84,16 @@
             tbody.append(`
                 <tr>
                     <td>${c.id_colaborador}</td>
-                    <td>${u ? `${u.nombre} ${u.apellido}` : "N/A"}</td>
+                    <td>${u ? `${u.nombre} ${u.apellidos}` : "N/A"}</td>
                     <td>${u?.cedula ?? "N/A"}</td>
                     <td>${c.puesto}</td>
                     <td>${c.salario}</td>
                     <td>${c.fecha_contratacion}</td>
                     <td>
+                     <button class="btn btn-sm btn-success editar-colaborador"
+                        data-id="${c.id_colaborador}">
+                    Editar
+                     </button>
                         <button class="btn btn-danger btn-sm"
                             onclick="eliminar(${c.id_colaborador})">
                             Eliminar
@@ -123,4 +127,13 @@
     }
 
     $(document).ready(cargarDatos);
+
+
+        /* ============================
+       NAVEGACIÓN
+    ============================ */
+    $(document).on('click', '.editar-colaborador', function () {
+        const Id = $(this).data('id');
+        window.location.href = `/Colaboradores/Edit?Id=${Id}`;
+    });
 </script>
