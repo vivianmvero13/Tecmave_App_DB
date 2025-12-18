@@ -46,6 +46,14 @@
     </div>
 </section>
 
+<div id="loadingOverlay" style="display:none;">
+    <div class="modal">
+        <div class="modal-content">
+            <p>Cargando, por favor espere un momento...</p>
+        </div>
+    </div>
+</div>
+
 <script>
     const API_COLABORADOR = "https://tecmave-api.azurewebsites.net/colaboradores";
     const API_USUARIOS = "https://tecmave-api.azurewebsites.net/api/usuarios";
@@ -90,10 +98,9 @@
                     <td>${c.salario}</td>
                     <td>${c.fecha_contratacion}</td>
                     <td>
-                     <button class="btn btn-sm btn-success editar-colaborador"
-                        data-id="${c.id_colaborador}">
-                    Editar
-                     </button>
+                        <a href="/Colaboradores/Edit/${c.id_colaborador}" class="btn btn-sm btn-secondary">
+                                 Editar
+                             </a>
                         <button class="btn btn-danger btn-sm"
                             onclick="eliminar(${c.id_colaborador})">
                             Eliminar
@@ -116,24 +123,27 @@
         renderTabla(filtrados);
     });
 
-    function eliminar(id) {
-        if (!confirm("¿Eliminar colaborador?")) return;
+        function eliminar(id) {
+
+        mostrarLoading();
 
         $.ajax({
             url: `${API_COLABORADOR}/${id}`,
             method: "DELETE",
-            success: cargarDatos
+            success: () => {
+                cargarDatos();
+            },
+            error: () => {
+                alert("No se pudo eliminar el colaborador");
+            },
+            complete: () => {
+                ocultarLoading();
+            }
         });
     }
 
     $(document).ready(cargarDatos);
 
-
-        /* ============================
-       NAVEGACIÓN
-    ============================ */
-    $(document).on('click', '.editar-colaborador', function () {
-        const Id = $(this).data('id');
-        window.location.href = `/Colaboradores/Edit?Id=${Id}`;
-    });
+    function mostrarLoading() { $("#loadingOverlay").show(); }
+    function ocultarLoading() { $("#loadingOverlay").hide(); }
 </script>

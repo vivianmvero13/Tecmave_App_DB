@@ -45,6 +45,13 @@
     </div>
 </section>
 
+<div id="loadingOverlay" style="display:none;">
+    <div class="modal">
+        <div class="modal-content">
+            <p>Cargando, por favor espere un momento...</p>
+        </div>
+    </div>
+</div>
 <script>
     const API_PLANILLA = "https://tecmave-api.azurewebsites.net/api/Planillas";
     const API_USUARIOS = "https://tecmave-api.azurewebsites.net/api/usuarios";
@@ -183,14 +190,25 @@
         renderTabla(filtradas);
     }
 
-    function eliminarPlanilla(id) {
-        if (!confirm("¿Eliminar planilla?")) return;
+        function eliminarPlanilla(id) {
+
+        mostrarLoading();
 
         $.ajax({
             url: `${API_PLANILLA}/${id}`,
             method: "DELETE",
-            success: () => cargarPlanillas(),
-            error: () => alert("No se pudo eliminar")
+            success: () => {
+                cargarPlanillas();
+            },
+            error: () => {
+                alert("No se pudo eliminar la planilla");
+            },
+            complete: () => {
+                ocultarLoading();
+            }
         });
     }
+
+    function mostrarLoading() { $("#loadingOverlay").show(); }
+    function ocultarLoading() { $("#loadingOverlay").hide(); }
 </script>
