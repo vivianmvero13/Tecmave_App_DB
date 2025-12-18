@@ -8,7 +8,6 @@
     <div class="container">
 
         <div class="d-flex justify-content-between align-items-center mb-2">
-        <div class="card">
             <h3>Colaboradores</h3>
 
             <a href="/Colaboradores/Crear" class="btn btn-primary">
@@ -16,17 +15,15 @@
             </a>
         </div>
 
-        <!-- FILTRO -->
+        
         <input type="text"
                id="filtroNombre"
                class="input mb-2"
                placeholder="Buscar por nombre..." />
-        <!-- TABLA -->
+
+       
         <div class="table-responsive mt-2">
             <table class="table align-middle">
-        <div class="card">
-            <h3>Lista de Colaboradores</h3>
-            <table class="table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -50,9 +47,12 @@
 </section>
 
 <script>
+    const API_COLABORADOR = "https://tecmave-api.azurewebsites.net/colaboradores";
+    const API_USUARIOS = "https://tecmave-api.azurewebsites.net/api/usuarios";
+
     let colaboradores = [];
     let usuarios = {};
-    const API_USUARIOS = "http://localhost:7096/api/usuarios";
+
     async function cargarDatos() {
 
         const [colabs, users] = await Promise.all([
@@ -66,13 +66,13 @@
         colaboradores = colabs;
 
         renderTabla(colaboradores);
-        }).fail(() => {
-            Swal.fire("Error", "No se pudieron cargar los usuarios", "error");
+    }
+
     function renderTabla(data) {
 
         const tbody = $("#tablaColaboradores");
         tbody.empty();
-    // ============================
+
         if (data.length === 0) {
             tbody.append(`<tr><td colspan="7">No hay colaboradores</td></tr>`);
             return;
@@ -84,16 +84,12 @@
             tbody.append(`
                 <tr>
                     <td>${c.id_colaborador}</td>
-                    <td>${u ? `${u.nombre} ${u.apellidos}` : "N/A"}</td>
+                    <td>${u ? `${u.nombre} ${u.apellido}` : "N/A"}</td>
                     <td>${u?.cedula ?? "N/A"}</td>
                     <td>${c.puesto}</td>
                     <td>${c.salario}</td>
                     <td>${c.fecha_contratacion}</td>
                     <td>
-                     <a href="/Colaboradores/Edit/${c.id_colaborador}"
-                            class="btn btn-warning btn-sm me-1">
-                            Editar
-                     </a>
                         <button class="btn btn-danger btn-sm"
                             onclick="eliminar(${c.id_colaborador})">
                             Eliminar
@@ -102,35 +98,29 @@
                 </tr>
             `);
         });
-        }).fail(() => {
-            Swal.fire("Error", "No se pudieron cargar los colaboradores", "error");
+    }
+
     $("#filtroNombre").on("keyup", function () {
         const texto = $(this).val().toLowerCase();
-            confirmButtonText: "Sí, eliminar",
+
         const filtrados = colaboradores.filter(c => {
             const u = usuarios[c.id_usuario];
             if (!u) return false;
-            return `${u.nombre} ${u.apellidos}`.toLowerCase().includes(texto);
-                },
-                error: (xhr) => {
+            return `${u.nombre} ${u.apellido}`.toLowerCase().includes(texto);
+        });
+
         renderTabla(filtrados);
     });
 
     function eliminar(id) {
         if (!confirm("¿Eliminar colaborador?")) return;
-                    return costoHora * 8 * diasMes;
+
         $.ajax({
             url: `${API_COLABORADOR}/${id}`,
             method: "DELETE",
             success: cargarDatos
-                cargarUsuarios().then(() => cargarColaboradores());
-            },
-    // ============================
+        });
+    }
+
     $(document).ready(cargarDatos);
-</script>    $(document).ready(function () {
-
-        cargarUsuarios().then(() => cargarColaboradores());
-
-        $("#btnAgregarUsuarioColaborador").on("click", agregarUsuarioColaborador);
-    });
 </script>
