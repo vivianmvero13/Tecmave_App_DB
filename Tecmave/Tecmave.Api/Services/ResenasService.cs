@@ -64,27 +64,40 @@ namespace Tecmave.Api.Services
         {
             var data =
                 from r in _context.resenas
+
                 join usr in _context.Users
-                    on r.cliente_id equals usr.Id
+                    on r.cliente_id equals usr.Id into userJoin
+                from usr in userJoin.DefaultIfEmpty()
+
                 join rev in _context.revision
-                    on r.revision_id equals rev.id_revision
+                    on r.revision_id equals rev.id_revision into revJoin
+                from rev in revJoin.DefaultIfEmpty()
+
                 join srvRev in _context.servicios_revision
                     on rev.id_revision equals srvRev.revision_id into srvJoin
                 from srvRev in srvJoin.DefaultIfEmpty()
+
                 join srv in _context.servicios
                     on srvRev.servicio_id equals srv.id_servicio into srv2Join
                 from srv in srv2Join.DefaultIfEmpty()
+
                 select new
                 {
                     r.id_resena,
                     r.calificacion,
                     r.comentario,
-                    usuario = usr.NombreCompleto ?? usr.UserName,
-                    servicio = srv != null ? srv.nombre : "Servicio no registrado"
+                    usuario = usr != null
+                        ? (usr.NombreCompleto ?? usr.UserName)
+                        : "Usuario eliminado",
+
+                    servicio = srv != null
+                        ? srv.nombre
+                        : "Servicio no registrado"
                 };
 
             return data.ToList();
         }
+        
 
         // =====================================================
         // VALIDACIONES
@@ -115,7 +128,7 @@ namespace Tecmave.Api.Services
             if (revision == null) return false;
 
             // Ajustar si cambia, este ID corresponde a "Entregado"
-            const int ESTADO_ENTREGADO = 7;
+            const int ESTADO_ENTREGADO = 9;
 
             return revision.id_estado == ESTADO_ENTREGADO;
         }

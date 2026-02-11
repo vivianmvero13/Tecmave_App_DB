@@ -156,7 +156,7 @@ namespace Tecmave.Api.Controllers
 
             // 2. Obtener revisiones completadas (id_estado = 7)
             var revisiones = _context.revision
-                .Where(r => vehiculos.Contains(r.vehiculo_id) && r.id_estado == 7)
+                .Where(r => vehiculos.Contains(r.vehiculo_id) && r.id_estado == 9)
                 .ToList();
 
             if (!revisiones.Any())

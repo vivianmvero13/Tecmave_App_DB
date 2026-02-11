@@ -42,7 +42,13 @@ namespace Tecmave.Api.Controllers
         [HttpGet("Publicas")]
         public ActionResult GetPublicas()
         {
-            return Ok(_resenasService.GetResenasPublicas());
+           return Ok(_resenasService.GetResenasPublicas());
+        }
+
+        [HttpGet("ExistePorRevision/{revisionId}")]
+        public IActionResult ExistePorRevision(int revisionId)
+        {
+            return Ok(_resenasService.YaTieneResena(revisionId));
         }
 
 
