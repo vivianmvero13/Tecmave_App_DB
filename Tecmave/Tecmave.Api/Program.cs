@@ -50,7 +50,8 @@ builder.Services.AddCors(options =>
             "https://localhost:5173",
             "https://front20251203141905-e8a6bserfthzbtd2.canadacentral-01.azurewebsites.net",
             "https://www.innovaciontecmave.com",
-            "https://innovaciontecmave.com"
+            "https://innovaciontecmave.com",
+            "https://origin-tecmave.somee.com"
 
         )
         .AllowAnyHeader()

@@ -310,7 +310,7 @@
         // importante para cookies cross-domain con jQuery
         $.ajaxSetup({ xhrFields: { withCredentials: true } });
 
-        const API_BASE  = '@(Model?.ApiBase ?? "https://tecmave-api.azurewebsites.net")';
+        const API_BASE  = '@(Model?.ApiBase ?? "http://kaledcrc-001-site1.mtempurl.com")';
         const USERS_URL = `${API_BASE}/api/usuarios`;
         const ROLES_URL = `${API_BASE}/api/roles`;
 
