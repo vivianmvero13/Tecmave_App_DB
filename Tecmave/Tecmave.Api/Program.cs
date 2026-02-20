@@ -42,24 +42,13 @@ builder.Services
 // ======================
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("PermirFrontend", policy => policy
-        .WithOrigins(
-            "http://localhost:7190",
-            "https://localhost:7190",
-            "http://localhost:5173",
-            "https://localhost:5173",
-            "https://front20251203141905-e8a6bserfthzbtd2.canadacentral-01.azurewebsites.net",
-            "https://www.innovaciontecmave.com",
-            "https://innovaciontecmave.com",
-            "https://origin-tecmave.somee.com"
-
-        )
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials()
-        .WithExposedHeaders("Set-Cookie")
-
-    );
+    options.AddPolicy("PermitirFrontend", policy =>
+    {
+        policy.WithOrigins("https://origin-tecmave.somee.com")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
 });
 
 
@@ -106,7 +95,7 @@ app.UseSwaggerUI(c =>
 
 app.UseStaticFiles();
 app.UseHttpsRedirection();
-app.UseCors("PermirFrontend");
+app.UseCors("PermitirFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
