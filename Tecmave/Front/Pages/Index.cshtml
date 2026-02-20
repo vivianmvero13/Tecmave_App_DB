@@ -140,7 +140,7 @@
     // ============================
     // Panel de cliente (resumen)
     // ============================
-    const API_BASE_PANEL        = "http://kaledcrc-001-site1.mtempurl.com";
+    const API_BASE_PANEL        = "https://kaledcrc-001-site1.mtempurl.com";
     const URL_AGENDAMIENTOS_P   = API_BASE_PANEL + "/Agendamiento";
     const URL_VEHICULOS_P       = API_BASE_PANEL + "/vehiculos";
     const URL_PROMOCIONES_P     = API_BASE_PANEL + "/promociones";
@@ -364,9 +364,9 @@
 
 
 
-     const API_RESENA = "http://kaledcrc-001-site1.mtempurl.com/Resenas";
-     const API_RESENA_PUBLICAS = "http://kaledcrc-001-site1.mtempurl.com/Resenas/Publicas";
-     const API_REVISION_COMPLETADAS = "http://kaledcrc-001-site1.mtempurl.com/Revision/Completadas";
+     const API_RESENA = "https://kaledcrc-001-site1.mtempurl.com/Resenas";
+     const API_RESENA_PUBLICAS = "https://kaledcrc-001-site1.mtempurl.com/Resenas/Publicas";
+     const API_REVISION_COMPLETADAS = "https://kaledcrc-001-site1.mtempurl.com/Revision/Completadas";
 
      const username = "@User.Identity.Name";
      const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
@@ -506,7 +506,7 @@
         console.log("Enviando reseña:", data);
 
         $.ajax({
-            url: "http://kaledcrc-001-site1.mtempurl.com/Resenas",
+            url: "https://kaledcrc-001-site1.mtempurl.com/Resenas",
             method: "POST",
             contentType: "application/json",
             data: JSON.stringify(data),

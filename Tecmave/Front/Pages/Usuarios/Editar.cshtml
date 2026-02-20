@@ -267,7 +267,7 @@
 @section Scripts {
     <script src="~/lib/jquery/jquery.min.js"></script>
     <script>
-        const API = '@(Model?.ApiBase ?? "http://kaledcrc-001-site1.mtempurl.com")';
+        const API = '@(Model?.ApiBase ?? "https://kaledcrc-001-site1.mtempurl.com")';
         const USER_ID = @Model.Id;
         const IS_ADMIN = @isAdmin.ToString().ToLower();
 
