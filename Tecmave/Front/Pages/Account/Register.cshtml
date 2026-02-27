@@ -175,7 +175,7 @@
             cedulaHelp.text("Verificando cédula…");
 
             $.ajax({
-                url: `https://tecmave-api.azurewebsites.net/cedula=${cedula}`,
+                url: `https://kaledcrc-001-site1.mtempurl.com/cedula=${cedula}`,
                 method: "GET",
                 success: function (data) {
                     if (data && data.nombre) {

@@ -15,7 +15,7 @@ namespace Front.Pages.Colaboradores
 
         public void OnGet()
         {
-            ApiBase = _cfg.GetSection("Api")["BaseUrl"] ?? "https://tecmave-api.azurewebsites.net";
+            ApiBase = _cfg.GetSection("Api")["BaseUrl"] ?? "https://kaledcrc-001-site1.mtempurl.com";
         }
     }
 }

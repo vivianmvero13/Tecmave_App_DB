@@ -21,7 +21,7 @@ namespace Front.Pages.Promociones
 
         public List<PromocionesModel> Promociones { get; set; } = new();
 
-        private const string API_BASE = "https://tecmave-api.azurewebsites.net";
+        private const string API_BASE = "https://kaledcrc-001-site1.mtempurl.com";
         private static string UrlPromociones => $"{API_BASE}/promociones"; // minúscula, consistente con [Route("promociones")]
 
         public async Task OnGetAsync()
