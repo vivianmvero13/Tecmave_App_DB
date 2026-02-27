@@ -44,13 +44,15 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirFrontend", policy =>
     {
-        policy.WithOrigins("https://http://vivianmvero-001-site1.ntempurl.com")
+        policy.WithOrigins(
+                "http://vivianmvero-001-site1.ntempurl.com",
+                "https://vivianmvero-001-site1.ntempurl.com"
+             )
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
     });
 });
-
 
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
