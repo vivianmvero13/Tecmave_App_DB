@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agendamiento | TECMAVE CR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+  <link rel="stylesheet" href="../assets/css/theme-lighten.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/brand-red-hard.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar"><div class="brand"><img src="../assets/img/tecmave_logo_innovacion.jpg" alt=""><span>Tecmave</span></div><div class="subtle">Gestión</div><nav class="nav"></nav></aside>
+
+    <header class="topbar">
+      <button class="iconbtn" data-toggle-sidebar><i class="fa-solid fa-bars"></i></button>
+      <div id="site-header" class="brand2"><img class="logo-xs" src="../assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave" style="width:20px;height:20px;border-radius:6px;margin-right:6px;"><span>Agendamiento | TECMAVE CR</span></div>
+      <div class="search">
+        <input type="search" placeholder="Buscar clientes, placas, servicios…">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M21 21l-4.3-4.3M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <button class="iconbtn"><i class="fa-regular fa-bell"></i></button>
+      <button class="iconbtn"><i class="fa-regular fa-user"></i> <span id="user-display-name">Admin</span></button>
+    </header>
+
+    <main class="main">
+
+
+
+
+  <main class="container">
+
+<section class="section"><div class="container grid cols-2">
+<div class="card"><h3>Nueva cita</h3>
+<div class="form-row"><div><label>Nombre</label><input class="input" placeholder="Tu nombre"/></div><div><label>Correo</label><input class="input" type="email" placeholder="tucorreo@dominio.com"/></div></div>
+<div class="form-row"><div><label>Fecha</label><input class="input" id="fecha" type="date"/></div><div><label>Hora</label><select class="input" id="hora"><option value="">Selecciona</option><option>08:00</option><option>09:00</option><option>10:00</option><option>11:00</option><option>12:00</option><option>13:00</option><option>14:00</option><option>15:00</option></select></div></div>
+<button onclick="validarAgenda()">Agendar</button>
+</div>
+<div class="card"><h3>Estado del servicio</h3>
+<table class="table"><thead><tr><th>Placa</th><th>Ingreso</th><th>Entrega estimada</th><th>Estado</th></tr></thead><tbody><tr><td>ABC123</td><td>2025-07-25</td><td>2025-07-31</td><td>En proceso</td></tr><tr><td>XYZ987</td><td>2025-07-20</td><td>2025-07-30</td><td>Listo</td></tr></tbody></table>
+<div class="banner" style="margin-top:1rem"><div><strong>Recordatorios:</strong> a 6 meses.</div><button class="secondary" onclick="toast('Recordatorio cada 6 meses (simulación)')">Activar 6 meses</button></div>
+</div>
+</div></section>
+<script>
+function validarAgenda(){{
+  const f = document.getElementById('fecha').value;
+  const h = document.getElementById('hora').value;
+  if(!f || !h) {{ alert('Selecciona fecha y hora'); return; }}
+  toast('Cita agendada (simulación)');
+}}
+</script>
+
+  </main>
+
+
+
+
+
+
+
+
+<script>
+(function(){
+  if (location.hash && location.hash.indexOf('user=') === 1) {
+    try {
+      var raw = decodeURIComponent(location.hash.split('user=')[1].split('&')[0]);
+      var user = JSON.parse(atob(raw));
+      localStorage.setItem('user', JSON.stringify(user));
+      history.replaceState(null, '', location.pathname + location.search);
+    } catch (e) { console.warn('No se pudo decodificar usuario desde hash', e); }
+  }
+  var user = null;
+  try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch(e) {}
+  var nameSpan = document.getElementById('current-user');
+  var loginLink = document.getElementById('fallback-login-link');
+  var logoutBtn = document.getElementById('logout-btn');
+  var adminEls = document.querySelectorAll('.admin-only');
+  var clientEls = document.querySelectorAll('.client-only');
+  if (user) {
+    if (nameSpan) nameSpan.textContent = (user.name || user.email || 'Usuario') + ' (' + user.role + ')';
+    if (loginLink) loginLink.style.display = 'none';
+    if (logoutBtn) {
+      logoutBtn.style.display = 'block';
+      logoutBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        localStorage.removeItem('user');
+        window.location.href = (location.protocol === 'file:' ? '../login.html' : '/login.html');
+      });
+    }
+    if (user.role === 'admin') Array.prototype.forEach.call(clientEls, el=>el.style.display='none');
+    if (user.role === 'cliente') Array.prototype.forEach.call(adminEls, el=>el.style.display='none');
+  } else {
+
+  }
+})();
+</script>
+<script defer src="../assets/js/app.js"></script>
+
+    </main>
+  </div>
+  <script src="../assets/js/dashboard.js"></script>
+  <script defer src="../assets/js/nav-active.js"></script>
+  <script defer src="../assets/js/role-ui.js"></script>
+  <script defer src="../assets/js/carousel-polish.js"></script>
+  <script defer src="../assets/js/app.js"></script>
+  <script defer src="../assets/js/chatbot.js"></script>
+
+</body>
+</html>
