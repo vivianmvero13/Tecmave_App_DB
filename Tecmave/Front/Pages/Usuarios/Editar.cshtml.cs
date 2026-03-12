@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Front.Pages.Usuarios
 {
+    [Authorize(Roles = "Admin")]
     public class EditarModel : PageModel
     {
         private readonly IConfiguration _cfg;

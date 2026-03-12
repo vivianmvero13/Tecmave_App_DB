@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
@@ -5,6 +6,7 @@ using Tecmave.Front.Services;
 
 namespace Front.Pages.Contacto
 {
+    [AllowAnonymous]
     public class IndexModel : PageModel
     {
         private readonly ITecmaveEmailSender _emailSender;

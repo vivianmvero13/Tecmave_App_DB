@@ -1,8 +1,10 @@
-using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Security.Claims;
 
 namespace Front.Pages.Factura
 {
+    [Authorize(Roles = "Admin,Colaborador")]
     public class MisFacturasModel : PageModel
     {
         public bool IsCliente => User.IsInRole("Cliente");
