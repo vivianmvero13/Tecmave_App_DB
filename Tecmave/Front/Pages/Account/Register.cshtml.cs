@@ -81,7 +81,7 @@ namespace Front.Pages.Account
 
 
 
-            return LocalRedirect(ReturnUrl ?? "/");
+            return LocalRedirect(ReturnUrl ?? "/Account/Login");
         }
     }
 }
