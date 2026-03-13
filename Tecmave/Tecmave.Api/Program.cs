@@ -46,7 +46,9 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://www.innovaciontecmave.com",
-                "https://www.innovaciontecmave.com"
+                "https://www.innovaciontecmave.com",
+                "https://vivianmvero-001-site1.ntempurl.com",
+                "http://vivianmvero-001-site1.ntempurl.com"
              )
               .AllowAnyHeader()
               .AllowAnyMethod()
