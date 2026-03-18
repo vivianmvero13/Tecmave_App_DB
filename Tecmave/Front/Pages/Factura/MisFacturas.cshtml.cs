@@ -4,7 +4,7 @@ using System.Security.Claims;
 
 namespace Front.Pages.Factura
 {
-    [Authorize(Roles = "Admin,Colaborador")]
+    [Authorize]
     public class MisFacturasModel : PageModel
     {
         public bool IsCliente => User.IsInRole("Cliente");
