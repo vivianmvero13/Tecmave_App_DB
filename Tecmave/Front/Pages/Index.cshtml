@@ -16,13 +16,9 @@
     }
     else if (!User.IsInRole("Cliente"))
     {
-        // Si NO es cliente (por ejemplo Admin), redirigir al panel/admin
         Response.Redirect("/Estadistica/Index");
     }
 }
-
-
-
 
 <section class="section">
     <h2>Tu taller hoy</h2>
@@ -106,7 +102,7 @@
         <label>Nombre</label>
         <input class="input" id="client-review-name" placeholder="Tu nombre" readonly />
 
-        <label>Servicio</label>
+        <label>Servicio realizado</label>
         <select class="input" id="client-review-service">
             <option value="">Seleccione un servicio</option>
         </select>
@@ -123,11 +119,11 @@
         <label>Comentario</label>
         <textarea class="input" id="client-review-comment" rows="4" placeholder="Comparte tu experiencia..."></textarea>
 
-        <button id="btnEnviarResena" onclick="addClientReview()" style="margin-top:.8rem">Enviar Reseña</button>
+        <button id="btnEnviarResena" type="button" onclick="addClientReview()" style="margin-top:.8rem">
+            Enviar Reseña
+        </button>
     </div>
 </section>
-
-
 
 <section class="section client-only">
     <h2>Reseñas Públicas</h2>
@@ -137,14 +133,24 @@
 </section>
 
 <script>
-    // ============================
-    // Panel de cliente (resumen)
-    // ============================
     const API_BASE_PANEL        = "https://kaledcrc-001-site1.mtempurl.com";
-    const URL_AGENDAMIENTOS_P   = API_BASE_PANEL + "/Agendamiento";
-    const URL_VEHICULOS_P       = API_BASE_PANEL + "/vehiculos";
-    const URL_PROMOCIONES_P     = API_BASE_PANEL + "/promociones";
-    const URL_FACTURAS_P        = API_BASE_PANEL + "/facturas";
+    const URL_AGENDAMIENTOS_P   = `${API_BASE_PANEL}/Agendamiento`;
+    const URL_VEHICULOS_P       = `${API_BASE_PANEL}/vehiculos`;
+    const URL_PROMOCIONES_P     = `${API_BASE_PANEL}/promociones`;
+    const URL_FACTURAS_P        = `${API_BASE_PANEL}/facturas`;
+
+    const API_RESENA            = `${API_BASE_PANEL}/Resenas`;
+    const API_RESENA_PUBLICAS   = `${API_BASE_PANEL}/Resenas/Publicas`;
+    const API_REVISIONES_USER   = `${API_BASE_PANEL}/Revision/Completadas`;
+    const API_SERV_REV          = `${API_BASE_PANEL}/ServiciosRevision`;
+    const API_SERVICIOS         = `${API_BASE_PANEL}/Servicios`;
+    const API_TIPOS             = `${API_BASE_PANEL}/TipoServicios`;
+    const API_VEHICULO          = `${API_BASE_PANEL}/Vehiculos`;
+
+    const ESTADOS_PERMITEN_RESENA = [9, 10];
+
+    const username = "@User.Identity.Name";
+    const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
 
     function formatCRCP(n) {
         const v = Number(n || 0);
@@ -162,6 +168,52 @@
         return new Date(d.getFullYear(), d.getMonth(), d.getDate());
     }
 
+    function getEstadoRevisionId(r) {
+        return Number(r.id_estado ?? r.estado_id ?? r.IdEstado ?? r.EstadoId ?? 0);
+    }
+
+    function getRevisionId(r) {
+        return Number(r.revision_id ?? r.id_revision ?? r.id ?? r.RevisionId ?? 0);
+    }
+
+    function getVehiculoId(r) {
+        return Number(r.vehiculo_id ?? r.id_vehiculo ?? r.vehiculoId ?? r.VehiculoId ?? 0);
+    }
+
+    function getFechaRevision(r) {
+        return r.fecha_ingreso ?? r.fecha ?? r.FechaIngreso ?? r.Fecha ?? "";
+    }
+
+    function safeText(v, fallback = "—") {
+        const text = (v ?? "").toString().trim();
+        return text || fallback;
+    }
+
+    function formatFechaCorta(valor) {
+        const fecha = parseDateOnlyPanel(valor);
+        if (!fecha) return "Sin fecha";
+        return fecha.toLocaleDateString("es-CR");
+    }
+
+    function setReviewFormEnabled(enabled, emptyText = "Seleccione un servicio") {
+        const select = $("#client-review-service");
+
+        if (!enabled) {
+            select.empty().append(`<option value="">${emptyText}</option>`);
+            $("#client-review-comment").val("").prop("disabled", true);
+            $("#client-review-rating").prop("disabled", true);
+            $("#btnEnviarResena").prop("disabled", true);
+            return;
+        }
+
+        $("#client-review-comment").prop("disabled", false);
+        $("#client-review-rating").prop("disabled", false);
+        $("#btnEnviarResena").prop("disabled", false);
+    }
+
+    // ============================
+    // Resumen panel
+    // ============================
     function cargarResumenClientePanel() {
         cargarProximaCitaPanel();
         cargarVehiculosPanel();
@@ -204,8 +256,8 @@
             });
 
             const prox = futuros[0];
-
             const fecha = parseDateOnlyPanel(prox.fecha_estimada);
+
             if (fecha) {
                 const opts = { weekday: "short", day: "2-digit", month: "2-digit" };
                 $("#kpi-proxima-dia").text(fecha.toLocaleDateString("es-CR", opts));
@@ -213,11 +265,7 @@
                 $("#kpi-proxima-dia").text(prox.fecha_estimada || "Próxima cita");
             }
 
-            if (prox.hora_llegada) {
-                $("#kpi-proxima-hora").text(prox.hora_llegada.substring(0,5));
-            } else {
-                $("#kpi-proxima-hora").text("--:--");
-            }
+            $("#kpi-proxima-hora").text(prox.hora_llegada ? prox.hora_llegada.substring(0, 5) : "--:--");
 
             $("#kpi-proxima-estado")
                 .text("Programada")
@@ -240,7 +288,6 @@
 
                 $("#kpi-vehiculos-total").text(propios.length);
 
-                // contar citas futuras asociadas al cliente
                 $.get(URL_AGENDAMIENTOS_P, function (listaAg) {
                     const ags = Array.isArray(listaAg) ? listaAg : [];
                     const delUsuario = ags.filter(a => String(a.cliente_id) === String(userId));
@@ -256,7 +303,7 @@
         });
     }
 
-       function cargarBalanceMesPanel() {
+    function cargarBalanceMesPanel() {
         const hoy = new Date();
         const mesActual = hoy.getMonth();
         const annoActual = hoy.getFullYear();
@@ -281,13 +328,12 @@
                         .toLowerCase()
                         .trim();
 
-                    // SOLO facturas pendientes
-                    if (estado !== "pendiente")
-                        return false;
+                    if (estado !== "pendiente") return false;
 
                     const fechaVal = f.fecha_emision ?? f.fechaEmision ?? f.FechaEmision;
                     const d = parseDateOnlyPanel(fechaVal);
                     if (!d) return false;
+
                     return d.getMonth() === mesActual && d.getFullYear() === annoActual;
                 });
 
@@ -312,7 +358,6 @@
         });
     }
 
-
     function cargarPromosDestacadasPanel() {
         $.ajax({
             url: URL_PROMOCIONES_P,
@@ -323,17 +368,14 @@
                 cont.empty();
 
                 const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
-                const activas = list.filter(p => {
-                    const estado = Number(p.id_estado ?? p.idEstado ?? p.IdEstado ?? 0);
-                    return estado === 1;
-                });
+                const activas = list.filter(p => Number(p.id_estado ?? p.idEstado ?? p.IdEstado ?? 0) === 1);
 
                 const promos = activas
                     .sort((a, b) => {
                         const da = parseDateOnlyPanel(a.fecha_inicio ?? a.fechaInicio ?? a.FechaInicio);
                         const db = parseDateOnlyPanel(b.fecha_inicio ?? b.fechaInicio ?? b.FechaInicio);
                         if (!da || !db) return 0;
-                        return db - da; // más recientes primero
+                        return db - da;
                     })
                     .slice(0, 3);
 
@@ -345,6 +387,7 @@
                 promos.forEach(promo => {
                     const titulo = promo.titulo ?? promo.nombre ?? "Promoción";
                     const descripcion = promo.descripcion ?? "";
+
                     cont.append(`
                         <div class="card promo-card">
                             <h3>${titulo}</h3>
@@ -360,127 +403,197 @@
         });
     }
 
+    // ============================
+    // Reseñas
+    // ============================
+    async function obtenerServicioDetallePorRevision(revisionId, servicios, tipos) {
+        try {
+            const resp = await $.get(`${API_SERV_REV}/ByRevision/${revisionId}`);
+            if (!resp) return null;
 
+            const lista = Array.isArray(resp) ? resp : [resp];
+            if (!lista.length) return null;
 
+            const detalles = lista
+                .map(servRev => {
+                    const servicioId = Number(
+                        servRev.servicio_id ?? servRev.id_servicio ?? servRev.ServicioId ?? 0
+                    );
 
+                    if (!servicioId) return null;
 
-     const API_RESENA = "https://kaledcrc-001-site1.mtempurl.com/Resenas";
-     const API_RESENA_PUBLICAS = "https://kaledcrc-001-site1.mtempurl.com/Resenas/Publicas";
-     const API_REVISION_COMPLETADAS = "https://kaledcrc-001-site1.mtempurl.com/Revision/Completadas";
+                    const servicio = (Array.isArray(servicios) ? servicios : []).find(x =>
+                        Number(x.id_servicio ?? x.IdServicio ?? 0) === servicioId
+                    );
 
-     const username = "@User.Identity.Name";
-     const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
+                    if (!servicio) return null;
 
-     $(document).ready(function () {
-         $("#client-review-name").val(username);
+                    const tipoServicioId = Number(
+                        servicio.tipo_servicio_id ?? servicio.id_tipo_servicio ?? servicio.TipoServicioId ?? 0
+                    );
 
-         // Panel cliente
-         cargarResumenClientePanel();
+                    const tipo = (Array.isArray(tipos) ? tipos : []).find(x =>
+                        Number(x.id_tipo_servicio ?? x.IdTipoServicio ?? 0) === tipoServicioId
+                    );
 
-         // Hooks de navegación
-         $("#btnIrServicios").on("click", function () {
-             window.location.href = "/Servicios/Index";
-         });
-         $("#btnIrContacto").on("click", function () {
-             window.location.href = "/Contacto";
-         });
-         $(document).on("click", ".btn-ver-promo-panel", function () {
-             window.location.href = "/Promociones/NuestrasPromociones";
-         });
+                    return {
+                        servicioRevision: servRev,
+                        servicio,
+                        tipo
+                    };
+                })
+                .filter(x => x !== null);
 
-         // Reseñas
-         cargarRevisionesCompletadas();
-         cargarResenasPublicas();
-     });
+            return detalles.length ? detalles : null;
+        } catch (e) {
+            console.error(`Error obteniendo servicio para revision ${revisionId}:`, e);
+            return null;
+        }
+    }
 
-     // ============================================================
-     // 1. CARGAR REVISIONES COMPLETADAS DEL USUARIO
-     // ============================================================
-     function cargarRevisionesCompletadas() {
+    async function obtenerVehiculoTexto(vehiculoId) {
+        if (!vehiculoId) return "Vehículo";
 
-         $.ajax({
-             url: `${API_REVISION_COMPLETADAS}/${userId}`,
-             method: "GET",
-             success: function (data) {
+        try {
+            const vehiculo = await $.get(`${API_VEHICULO}/${vehiculoId}`);
+            const placa = safeText(vehiculo?.placa, "");
+            const modelo = safeText(vehiculo?.modelo, "");
+            const marca = safeText(vehiculo?.marca, "");
 
-                 const select = $("#client-review-service");
-                 select.empty();
+            const partes = [placa, marca, modelo].filter(x => x);
+            return partes.length ? partes.join(" - ") : "Vehículo";
+        } catch {
+            return "Vehículo";
+        }
+    }
 
-                 if (data.length === 0) {
-                     select.append(`<option value="">No tienes revisiones completadas</option>`);
-                     $("#client-review-comment").prop("disabled", true);
-                     $("#client-review-rating").prop("disabled", true);
-                     $("#btnEnviarResena").prop("disabled", true);
-                     return;
-                 }
+    async function cargarServiciosResenables() {
+        const select = $("#client-review-service");
+        select.empty();
 
-                 $("#client-review-comment").prop("disabled", false);
-                 $("#client-review-rating").prop("disabled", false);
-                 $("#btnEnviarResena").prop("disabled", false);
+        try {
+            const [revisionesRaw, serviciosRaw, tiposRaw] = await Promise.all([
+                $.get(`${API_REVISIONES_USER}/${userId}`),
+                $.get(API_SERVICIOS),
+                $.get(API_TIPOS)
+            ]);
 
-                 select.append(`<option value="">Seleccione un servicio</option>`);
+            const revisiones = Array.isArray(revisionesRaw) ? revisionesRaw : [];
+            const servicios = Array.isArray(serviciosRaw) ? serviciosRaw : [];
+            const tipos = Array.isArray(tiposRaw) ? tiposRaw : [];
 
-                 data.forEach(r => {
-                     select.append(`
-                         <option value="${r.revision_id}">
-                             ${r.servicio_nombre}
-                         </option>
-                     `);
-                 });
+            const revisionesValidas = revisiones.filter(r =>
+                ESTADOS_PERMITEN_RESENA.includes(getEstadoRevisionId(r))
+            );
 
-             },
-             error: function () {
-                 console.error("Error al cargar revisiones completadas");
-             }
-         });
-     }
+            if (!revisionesValidas.length) {
+                setReviewFormEnabled(false, "No tienes servicios finalizados o entregados para reseñar");
+                return;
+            }
 
-     // ============================================================
-     // 2. VALIDAR SI LA REVISION ES COMPLETADA Y ES DEL USUARIO
-     // ============================================================
-     function validarRevisionCompletada(revisionId, callback) {
+            const opciones = [];
 
-         $.ajax({
-             url: `${API_REVISION_COMPLETADAS}/${userId}`,
-             method: "GET",
-             success: function (data) {
-                 const valida = data.some(r => r.revision_id == revisionId);
-                 callback(valida);
-             },
-             error: function () {
-                 callback(false);
-             }
-         });
-     }
+            for (const revision of revisionesValidas) {
+                const revisionId = getRevisionId(revision);
+                if (!revisionId) continue;
 
-     // ============================================================
-     // 3. VALIDAR SI YA EXISTE UNA RESEÑA PARA ESTA REVISION
-     // ============================================================
-         function validarResenaDuplicada(revisionId, callback) {
+                const detallesServicio = await obtenerServicioDetallePorRevision(revisionId, servicios, tipos);
+                if (!detallesServicio || !detallesServicio.length) continue;
+
+                const vehiculoTexto = await obtenerVehiculoTexto(getVehiculoId(revision));
+                const fechaTexto = formatFechaCorta(getFechaRevision(revision));
+
+                for (const detalleServicio of detallesServicio) {
+                    const tipoNombre = safeText(detalleServicio.tipo?.nombre, "Tipo");
+                    const servicioNombre = safeText(detalleServicio.servicio?.nombre, "Servicio");
+
+                    opciones.push({
+                        revisionId,
+                        texto: `${tipoNombre} - ${servicioNombre} | ${vehiculoTexto} | ${fechaTexto}`
+                    });
+                }
+            }
+
+            if (!opciones.length) {
+                setReviewFormEnabled(false, "No tienes servicios realizados válidos para reseñar");
+                return;
+            }
+
+            setReviewFormEnabled(true);
+            select.append(`<option value="">Seleccione un servicio realizado</option>`);
+
+            opciones.forEach(op => {
+                select.append(`<option value="${op.revisionId}">${op.texto}</option>`);
+            });
+
+        } catch (err) {
+            console.error("Error al cargar servicios reseñables:", err);
+            setReviewFormEnabled(false, "No se pudieron cargar los servicios");
+        }
+    }
+
+    async function revisionEsResenable(revisionId) {
+        try {
+            const [revisionesRaw, serviciosRaw, tiposRaw] = await Promise.all([
+                $.get(`${API_REVISIONES_USER}/${userId}`),
+                $.get(API_SERVICIOS),
+                $.get(API_TIPOS)
+            ]);
+
+            const revisiones = Array.isArray(revisionesRaw) ? revisionesRaw : [];
+            const servicios = Array.isArray(serviciosRaw) ? serviciosRaw : [];
+            const tipos = Array.isArray(tiposRaw) ? tiposRaw : [];
+
+            const revision = revisiones.find(r => getRevisionId(r) === Number(revisionId));
+            if (!revision) return false;
+
+            if (!ESTADOS_PERMITEN_RESENA.includes(getEstadoRevisionId(revision))) {
+                return false;
+            }
+
+            const detallesServicio = await obtenerServicioDetallePorRevision(revisionId, servicios, tipos);
+            return !!(detallesServicio && detallesServicio.length > 0);
+        } catch (e) {
+            console.error("Error validando revision reseñable:", e);
+            return false;
+        }
+    }
+
+    function validarResenaDuplicada(revisionId, callback) {
         $.ajax({
             url: `${API_RESENA}/ExistePorRevision/${revisionId}`,
             method: "GET",
-            success: function (existe) {
-                callback(!existe); // true = puede continuar
+            success: function (resp) {
+                let existe = false;
+
+                if (typeof resp === "boolean") {
+                    existe = resp;
+                } else if (Array.isArray(resp)) {
+                    existe = resp.some(x =>
+                        Number(x.revision_id ?? x.revisionId ?? 0) === Number(revisionId)
+                    );
+                } else if (resp && typeof resp === "object") {
+                    existe =
+                        resp.existe === true ||
+                        resp.exists === true ||
+                        Number(resp.revision_id ?? resp.revisionId ?? 0) === Number(revisionId);
+                }
+
+                callback(!existe);
             },
-            error: function () {
+            error: function (xhr) {
+                console.error("Error validando reseña duplicada:", xhr.responseText);
                 callback(false);
             }
         });
     }
 
-
-     // ============================================================
-     // 4. ENVIAR RESEÑA
-     // ============================================================
-         function addClientReview() {
-
+    async function addClientReview() {
         const clienteId = Number("@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value");
         const revisionId = Number($("#client-review-service").val());
         const comentario = $("#client-review-comment").val().trim();
         const calificacion = Number($("#client-review-rating").val());
 
-        
         if (!Number.isInteger(clienteId) || clienteId <= 0) {
             alert("Usuario inválido.");
             return;
@@ -496,67 +609,108 @@
             return;
         }
 
-        const data = {
-            cliente_id: clienteId,
-            revision_id: revisionId,
-            comentario: comentario,
-            calificacion: calificacion
-        };
+        const esResenable = await revisionEsResenable(revisionId);
+        if (!esResenable) {
+            alert("Solo puedes reseñar servicios realmente realizados con estado Finalizado o Entregado.");
+            return;
+        }
 
-        console.log("Enviando reseña:", data);
+        validarResenaDuplicada(revisionId, function (puedeContinuar) {
+            if (!puedeContinuar) {
+                alert("Ya existe una reseña para este servicio.");
+                return;
+            }
 
+            const data = {
+                cliente_id: clienteId,
+                revision_id: revisionId,
+                comentario: comentario,
+                calificacion: calificacion
+            };
+
+            $.ajax({
+                url: API_RESENA,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: () => {
+                    alert("Reseña enviada correctamente.");
+                    $("#client-review-comment").val("");
+                    $("#client-review-rating").val("5.0");
+                    $("#client-review-service").val("");
+
+                    cargarServiciosResenables();
+                    cargarResenasPublicas();
+                },
+                error: (xhr) => {
+                    console.error(xhr.responseText);
+                    alert(xhr.responseText || "Error al enviar la reseña.");
+                }
+            });
+        });
+    }
+
+    function cargarResenasPublicas() {
         $.ajax({
-            url: "https://kaledcrc-001-site1.mtempurl.com/Resenas",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(data),
-            success: () => {
-                alert("Reseña enviada correctamente.");
-                $("#client-review-comment").val("");
+            url: API_RESENA_PUBLICAS,
+            method: "GET",
+            success: function (data) {
+                const reviewsList = $("#client-reviews-list");
+                reviewsList.empty();
+
+                const lista = Array.isArray(data) ? data : [];
+
+                if (!lista.length) {
+                    reviewsList.html(`
+                        <p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">
+                            Aún no hay reseñas. ¡Sé el primero en dejar una!
+                        </p>
+                    `);
+                    return;
+                }
+
+                lista.forEach(review => {
+                    const calificacion = Number(review.calificacion ?? 0);
+                    const estrellasLlenas = Math.max(0, Math.min(5, Math.round(calificacion)));
+                    const estrellas = "★".repeat(estrellasLlenas) + "☆".repeat(5 - estrellasLlenas);
+
+                    reviewsList.append(`
+                        <div class="card">
+                            <strong>${review.usuario ?? "Usuario"}</strong>
+                            <p>${estrellas}</p>
+                            <p style="margin-top:.5rem">${review.comentario ?? ""}</p>
+                            <p style="color:var(--primary);font-weight:bold">${review.servicio ?? "Servicio"}</p>
+                        </div>
+                    `);
+                });
             },
-            error: (xhr) => {
-                console.error(xhr.responseText);
-                alert(xhr.responseText || "Error al enviar la reseña.");
+            error: function () {
+                $("#client-reviews-list").html(`
+                    <p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">
+                        No se pudieron cargar las reseñas públicas.
+                    </p>
+                `);
             }
         });
     }
 
+    $(document).ready(function () {
+        $("#client-review-name").val(username);
 
-     // ============================================================
-     // 5. CARGAR RESEÑAS PÚBLICAS ENRIQUECIDAS
-     // ============================================================
-     function cargarResenasPublicas() {
+        cargarResumenClientePanel();
+        cargarServiciosResenables();
+        cargarResenasPublicas();
 
-         $.ajax({
-             url: API_RESENA_PUBLICAS,
-             method: "GET",
-             success: function (data) {
+        $("#btnIrServicios").on("click", function () {
+            window.location.href = "/Servicios/Index";
+        });
 
-                 const reviewsList = $('#client-reviews-list');
-                 reviewsList.empty();
+        $("#btnIrContacto").on("click", function () {
+            window.location.href = "/Contacto";
+        });
 
-                 if (data.length === 0) {
-                     reviewsList.html(`
-                         <p style="grid-column: 1 / -1; text-align: center; color: var(--muted);">
-                             Aún no hay reseñas. ¡Sé el primero en dejar una!
-                         </p>
-                     `);
-                     return;
-                 }
-
-                 data.forEach(review => {
-
-                     reviewsList.append(`
-                         <div class="card">
-                             <strong>${review.usuario}</strong>
-                             <p>${'★'.repeat(Math.round(review.calificacion))}${'☆'.repeat(5 - Math.round(review.calificacion))}</p>
-                             <p style="margin-top:.5rem">${review.comentario}</p>
-                             <p style="color:var(--primary);font-weight:bold">${review.servicio}</p>
-                         </div>
-                     `);
-                 });
-             }
-         });
-     }
-
+        $(document).on("click", ".btn-ver-promo-panel", function () {
+            window.location.href = "/Promociones/NuestrasPromociones";
+        });
+    });
 </script>
