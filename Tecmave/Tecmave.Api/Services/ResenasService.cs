@@ -127,10 +127,7 @@ namespace Tecmave.Api.Services
             var revision = _context.revision.FirstOrDefault(r => r.id_revision == revisionId);
             if (revision == null) return false;
 
-            // Ajustar si cambia, este ID corresponde a "Entregado"
-            const int ESTADO_ENTREGADO = 9;
-
-            return revision.id_estado == ESTADO_ENTREGADO;
+            return revision.id_estado == 9 || revision.id_estado == 10;
         }
 
         public bool YaTieneResena(int revisionId)
