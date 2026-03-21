@@ -23,7 +23,7 @@ body {
     background: linear-gradient(135deg, var(--bg), var(--bg-secondary)) !important;
     color: var(--text) !important;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    min-height: 100vh;
+    min-height: auto !important;
 }
 
 /* Contenedores principales con transparencia */

@@ -6,7 +6,7 @@
     descripcion:'Taller bonito y cuidado, más de 15 años de experiencia en Costa Rica.',
     tel:'87059379',
     whatsapp:'50687059379',
-    email:'info@tecmave.cr',
+    email:'tecmave@gmail.com',
     direccion:'Bajo de Guadalupe, 25 m norte del cruce.',
     year:new Date().getFullYear()
   };
@@ -36,8 +36,8 @@
                       <img src="/assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave Logo" class="footer-logo">
                       <p class="footer-slogan">${c.descripcion}</p>
                       <div class="footer-v2-socials">
-                         <a href="#"><i class="fab fa-facebook-f"></i></a>
-                         <a href="#"><i class="fab fa-instagram"></i></a>
+                      <a href="https://waze.com/ul?q=Innovaci%C3%B3n%20Tecmave%2C%20Alto%20de%20Guadalupe%2C%2025%20mts%20este%20y%2015%20mts%20sur&navigate=yes"><i class="fab fa-waze"></i></a>
+                         <a href="https://www.facebook.com/itecmave/?locale=es_LA"><i class="fab fa-facebook-f"></i></a>
                          <a href="https://wa.me/${c.whatsapp}"><i class="fab fa-whatsapp"></i></a>
                       </div>
                   </div>

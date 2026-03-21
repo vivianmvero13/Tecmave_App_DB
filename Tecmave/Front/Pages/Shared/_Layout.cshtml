@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Identity
 @using Tecmave.Front.Models
 @inject SignInManager<Usuario> SignInManager
 @inject UserManager<Usuario> UserManager
@@ -31,19 +31,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
 
-    <link rel="stylesheet" href="~/assets/css/styles.css" />
-    <link rel="stylesheet" href="~/assets/css/disney-style.css" />
-    <link rel="stylesheet" href="~/assets/css/dark-theme.css" />
-    <link rel="stylesheet" href="~/assets/css/dashboard.css" />
-    <link rel="stylesheet" href="~/assets/css/theme-lighten.css" />
+    <link rel="stylesheet" href="~/assets/css/styles.css"  asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/disney-style.css"  asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/dark-theme.css"  asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/dashboard.css"  asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/theme-lighten.css"  asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <link rel="stylesheet" href="~/assets/css/brand-red-hard.css" />
+    <link rel="stylesheet" href="~/assets/css/brand-red-hard.css"  asp-append-version="true" />
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="~/lib/jquery/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
-    <link rel="stylesheet" href="~/css/adminDashboard.css" />
+    <link rel="stylesheet" href="~/css/adminDashboard.css"  asp-append-version="true" />
 </head>
 <body data-user-id="@(currentUser?.Id)"
       data-user-name="@(currentUser?.UserName ?? "Usuario")"
@@ -112,7 +112,7 @@
         </aside>
 
         <header class="topbar">
-            <button class="iconbtn" data-toggle-sidebar><i class="fa-solid fa-bars"></i></button>
+            <button id="sidebarToggle" type="button" class="iconbtn" data-toggle-sidebar aria-label="Abrir o cerrar menú"><i class="fa-solid fa-bars"></i></button>
             <div id="site-header" class="brand2">
                 <img class="logo-xs" src="~/assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave"
                      style="width:20px;height:20px;border-radius:6px;margin-right:6px;" />
@@ -149,12 +149,12 @@
         </div>
     </div>
 
-    <script src="~/js/dashboard.js"></script>
-    <script defer src="~/js/global-modal.js"></script>
-    <script defer src="~/js/nav-active.js"></script>
-    <script defer src="~/js/role-ui.js"></script>
-    <script defer src="~/js/carousel-polish.js"></script>
-    <script defer src="~/js/app.js"></script>
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
+    <script defer src="~/js/global-modal.js" asp-append-version="true"></script>
+    <script defer src="~/js/nav-active.js" asp-append-version="true"></script>
+    <script defer src="~/js/role-ui.js" asp-append-version="true"></script>
+    <script defer src="~/js/carousel-polish.js" asp-append-version="true"></script>
+    <script defer src="~/js/app.js" asp-append-version="true"></script>
 
     <footer class="footer-v2" id="site-footer">
         <div class="footer-v2-main">
@@ -164,13 +164,9 @@
                         <img src="~/assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave Logo" class="footer-logo" />
                         <p class="footer-slogan">Simply #1 Real Estate Theme</p>
                         <div class="footer-v2-socials">
-                            <a href="#"><i class="fab fa-facebook-f"></i></a>
-                            <a href="#"><i class="fab fa-twitter"></i></a>
-                            <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                            <a href="#"><i class="fab fa-instagram"></i></a>
-                            <a href="#"><i class="fab fa-pinterest"></i></a>
-                            <a href="#"><i class="fab fa-youtube"></i></a>
-                            <a href="#"><i class="fas fa-rss"></i></a>
+                            <a href="https://waze.com/ul?q=Innovaci%C3%B3n%20Tecmave%2C%20Alto%20de%20Guadalupe%2C%2025%20mts%20este%20y%2015%20mts%20sur&navigate=yes"><i class="fab fa-waze"></i></a>
+                            <a href="https://www.facebook.com/itecmave/?locale=es_LA"><i class="fab fa-facebook-f"></i></a>
+                            <a href="https://wa.me/${c.whatsapp}"><i class="fab fa-whatsapp"></i></a>
                         </div>
                     </div>
                     <div class="footer-col">
@@ -208,11 +204,9 @@
         </div>
     </footer>
 
-    <script src="~/assets/js/dashboard.js"></script>
-    <script src="~/assets/js/nav-active.js"></script>
-    <script src="~/assets/js/global-features.js"></script>
-    <script src="~/assets/js/footer-config.js"></script>
-    <script src="~/assets/js/translator.js"></script>
+    <script src="~/assets/js/global-features.js" asp-append-version="true"></script>
+    <script src="~/assets/js/footer-config.js" asp-append-version="true"></script>
+    <script src="~/assets/js/translator.js" asp-append-version="true"></script>
 
     <script>
         (function () {
@@ -239,12 +233,15 @@
             });
         })();
     </script>
-    <script src="~/assets/js/chatbot.js"></script>
-
+    <script src="~/assets/js/chatbot.js" asp-append-version="true"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            try {
+        (function () {
+            function initTecmaveSidebarFallback() {
+                if (window.__tecmaveSidebarInit) return;
+
                 var sidebar = document.querySelector('.sidebar');
+                var topbar = document.querySelector('.topbar');
+                var root = document.documentElement;
                 if (!sidebar) return;
 
                 var overlay = document.querySelector('.sidebar-overlay');
@@ -254,41 +251,73 @@
                     document.body.appendChild(overlay);
                 }
 
+                function syncShellMetrics() {
+                    if (!topbar) return;
+                    var h = Math.ceil(topbar.getBoundingClientRect().height || 64);
+                    root.style.setProperty('--shell-topbar-h', h + 'px');
+                }
+
                 function setClosed() {
                     sidebar.classList.remove('open');
-                    sidebar.style.transform = 'translateX(-100%)';
-                    sidebar.style.visibility = '';
-                    sidebar.style.opacity = '';
                     overlay.classList.remove('active');
+                    sidebar.setAttribute('aria-hidden', 'true');
                 }
 
                 function setOpen() {
+                    syncShellMetrics();
                     sidebar.classList.add('open');
-                    sidebar.style.transform = 'translateX(0)';
-                    sidebar.style.visibility = 'visible';
-                    sidebar.style.opacity = '1';
                     overlay.classList.add('active');
+                    sidebar.setAttribute('aria-hidden', 'false');
                 }
 
-                setClosed();
+                function toggleSidebar(ev) {
+                    if (ev) {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                    }
+                    if (sidebar.classList.contains('open')) {
+                        setClosed();
+                    } else {
+                        setOpen();
+                    }
+                }
+
+                var directBtn = document.getElementById('sidebarToggle') || document.querySelector('[data-toggle-sidebar]');
+                if (directBtn) {
+                    directBtn.addEventListener('click', toggleSidebar, { passive: false });
+                    directBtn.addEventListener('touchstart', toggleSidebar, { passive: false });
+                }
 
                 document.addEventListener('click', function (ev) {
                     var toggleBtn = ev.target.closest('[data-toggle-sidebar]');
-                    if (toggleBtn) {
-                        ev.preventDefault();
-                        var isOpen = sidebar.classList.contains('open');
-                        if (isOpen) setClosed(); else setOpen();
-                    }
+                    if (toggleBtn) toggleSidebar(ev);
                 });
 
                 overlay.addEventListener('click', function (ev) {
                     ev.preventDefault();
                     setClosed();
                 });
-            } catch (e) {
-                console && console.error && console.error('Error inicializando sidebar:', e);
+
+                document.addEventListener('keydown', function (ev) {
+                    if (ev.key === 'Escape') setClosed();
+                });
+
+                syncShellMetrics();
+                window.addEventListener('resize', syncShellMetrics);
+                window.addEventListener('orientationchange', syncShellMetrics);
+                requestAnimationFrame(syncShellMetrics);
+                setTimeout(syncShellMetrics, 0);
+                setClosed();
+
+                window.__tecmaveSidebarInit = true;
             }
-        });
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initTecmaveSidebarFallback, { once: true });
+            } else {
+                initTecmaveSidebarFallback();
+            }
+        })();
     </script>
 
     @RenderSection("Scripts", required: false)
