@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Front.Pages.Promociones
 {
-    [Authorize(Roles = "Admin,Colaborador")]
+    [Authorize]
     public class NuestrasPromocionesModel : PageModel
     {
         public void OnGet()
