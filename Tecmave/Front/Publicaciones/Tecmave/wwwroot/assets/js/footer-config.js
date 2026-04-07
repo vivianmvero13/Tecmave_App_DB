@@ -7,7 +7,7 @@
     tel:'87059379',
     whatsapp:'50687059379',
     email:'info@tecmave.cr',
-    direccion:'Bajo de Guadalupe, 25 m norte del cruce.',
+    direccion:'Alto de Guadalupe, continuo al EBAIS.',
     year:new Date().getFullYear()
   };
 
