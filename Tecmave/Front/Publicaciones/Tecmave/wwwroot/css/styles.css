@@ -239,18 +239,18 @@ button.primary, .btn.btn-primary { background: var(--primary); }
     margin-bottom: 20px;
 }
 
-.footer-v2-socials {
+. {
     display: flex;
     gap: 10px;
 }
 
-.footer-v2-socials a {
+. a {
     color: #a0a0a0;
     font-size: 1rem;
     transition: color 0.3s;
 }
 
-.footer-v2-socials a:hover {
+. a:hover {
     color: #fff;
 }
 

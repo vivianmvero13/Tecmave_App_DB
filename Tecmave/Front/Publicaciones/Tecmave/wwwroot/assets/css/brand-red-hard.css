@@ -380,11 +380,11 @@ body {
         transform: translateX(5px) !important;
     }
 
-.footer-v2-socials a {
+. a {
     transition: all 0.3s ease !important;
 }
 
-    .footer-v2-socials a:hover {
+    . a:hover {
         color: var(--primary) !important;
         transform: translateY(-3px) scale(1.2) !important;
     }

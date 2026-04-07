@@ -436,19 +436,16 @@ footer,
 }
 
 
-/* FIX interacción sidebar: el botón del topbar siempre debe ser clicable */
-.topbar .iconbtn,
-#sidebarToggle,
-[data-toggle-sidebar]{
-    position:relative !important;
-    z-index:1301 !important;
-    pointer-events:auto !important;
+.topbar {
+    display: flex;
+    align-items: center;
 }
 
-.sidebar-overlay{
-    pointer-events:none !important;
-}
-
-.sidebar-overlay.active{
-    pointer-events:auto !important;
-}
+    .topbar .user-actions,
+    .topbar .topbar-right,
+    .topbar .nav-actions {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }

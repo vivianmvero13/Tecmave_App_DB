@@ -585,18 +585,18 @@ label {
     color: var(--text);
 }
 
-.footer-v2-socials {
+. {
     display: flex;
     gap: 10px;
 }
 
-    .footer-v2-socials a {
+    . a {
         color: var(--text-light);
         font-size: 1rem;
         transition: color 0.3s;
     }
 
-        .footer-v2-socials a:hover {
+        . a:hover {
             color: var(--primary);
         }
 

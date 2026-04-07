@@ -79,18 +79,18 @@ body > img:first-child{ display:none !important }
   color: var(--text) !important; /* Texto claro */
 }
 
-.footer-v2-socials {
+. {
   display: flex !important;
   gap: 10px !important;
 }
 
-.footer-v2-socials a {
+. a {
   color: var(--muted) !important; /* #c9cfdb - Muted */
   font-size: 1rem !important;
   transition: color 0.3s !important;
 }
 
-.footer-v2-socials a:hover {
+. a:hover {
   color: var(--primary) !important; /* #dc2626 - Rojo en hover */
 }
 
