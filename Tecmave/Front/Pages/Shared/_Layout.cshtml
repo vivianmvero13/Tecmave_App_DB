@@ -18,6 +18,7 @@
 
     bool isAdmin = roles.Contains("Admin");
     bool isCliente = roles.Contains("Cliente");
+    bool isColaborador = roles.Contains("Colaborador");
 }
 <!DOCTYPE html>
 <html lang="es" class="@(roles.Contains("Admin") ? "role-admin" : "")">
@@ -48,7 +49,8 @@
 <body data-user-id="@(currentUser?.Id)"
       data-user-name="@(currentUser?.UserName ?? "Usuario")"
       data-is-admin="@(isAdmin.ToString().ToLower())"
-      data-is-cliente="@(isCliente.ToString().ToLower())">
+      data-is-cliente="@(isCliente.ToString().ToLower())"
+      data-is-colaborador="@(isColaborador.ToString().ToLower())">
 
     <div class="app">
         <aside class="sidebar">
@@ -83,6 +85,15 @@
                         <a asp-page="/Factura/Index"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación</a>
                         <a asp-page="/Planillas/Index"><i class="fa-solid fa-file"></i> Planillas</a>
                         <a asp-page="/Estadisticas/Index"><i class="fa-solid fa-chart-line"></i> Auditoría</a>
+                    </nav>
+                }
+                @if (isColaborador)
+                {
+                    <nav class="nav">
+                        <a asp-page="/Index"><i class="fa-solid fa-gauge-high"></i> Panel</a>
+                        <a asp-page="/Home"><i class="fa-solid fa-house"></i> Home</a>   
+                        <a asp-page="/Mantenimientos/Index"><i class="fa-solid fa-user-group"></i> Mantenimientos</a>
+                        <a asp-page="/Revisiones/Index"><i class="fa-solid fa-magnifying-glass"></i> Revisiones</a>                     
                     </nav>
                 }
             </nav>
