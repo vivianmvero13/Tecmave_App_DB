@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Front.Pages.Revisiones
 {
-    [Authorize(Roles = "Colaborador")]
+    [Authorize(Roles = "Colaborador,Admin")]
     public class FinalizarProformaModel : PageModel
     {
         public int RevisionId { get; set; }

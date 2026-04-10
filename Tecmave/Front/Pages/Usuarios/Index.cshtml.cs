@@ -17,7 +17,7 @@ namespace Front.Pages.Usuarios
 
         public void OnGet()
         {
-            ApiBase = _cfg.GetSection("Api")["BaseUrl"] ?? "https://kaledcrc-001-site1.mtempurl.com";
+            ApiBase = _cfg.GetSection("Api")["BaseUrl"] ?? "https://tecmavebacks-001-site1.stempurl.com";
         }
     }
 }
