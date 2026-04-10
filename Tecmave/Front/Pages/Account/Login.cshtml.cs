@@ -37,7 +37,7 @@ namespace Front.Pages.Account
             var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email == Login.Email);
             if (user == null)
             {
-                ErrorMessage = "Error al iniciar sesi�n: correo o contrase�a inv�lidos.";
+                ErrorMessage = "Error al iniciar sesion: correo o contraseña invalidos.";
                 return Page();
             }
 
@@ -50,7 +50,7 @@ namespace Front.Pages.Account
 
             if (!result.Succeeded)
             {
-                ErrorMessage = "Error al iniciar sesi�n: correo o contrase�a inv�lidos.";
+                ErrorMessage = "Error al iniciar sesion: correo o contraseña invalidos.";
                 return Page();
             }
 

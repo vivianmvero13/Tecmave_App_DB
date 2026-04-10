@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 using Tecmave.Api.Services;
 
 namespace Tecmave.Api.Controllers
@@ -49,7 +50,16 @@ namespace Tecmave.Api.Controllers
             string? Cedula
         );
 
-        public record AssignRoleDto([Required] string RoleName, bool ForceReplace = false);
+        public record AssignRoleDto
+        {
+
+            [Required]
+            [JsonPropertyName("roleName")]
+            public string RoleName { get; init; }
+
+            [JsonPropertyName("forceReplace")]
+            public bool ForceReplace { get; init; } = false;
+        }
 
         // -----------------------
         // GET: api/usuarios (SOLO ACTIVOS)
