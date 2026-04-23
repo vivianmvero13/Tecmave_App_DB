@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vehículos | TECMAVE CR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+  <link rel="stylesheet" href="../assets/css/theme-lighten.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/brand-red-hard.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar"><div class="brand"><img src="../assets/img/tecmave_logo_innovacion.jpg" alt=""><span>Tecmave</span></div><div class="subtle">Gestión</div><nav class="nav"></nav></aside>
+
+    <header class="topbar">
+      <button class="iconbtn" data-toggle-sidebar><i class="fa-solid fa-bars"></i></button>
+      <div id="site-header" class="brand2"><img class="logo-xs" src="../assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave" style="width:20px;height:20px;border-radius:6px;margin-right:6px;"><span>Vehículos | TECMAVE CR</span></div>
+      <div class="search">
+        <input type="search" placeholder="Buscar clientes, placas, servicios…">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M21 21l-4.3-4.3M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <button class="iconbtn"><i class="fa-regular fa-bell"></i></button>
+      <button class="iconbtn"><i class="fa-regular fa-user"></i> <span id="user-display-name">Admin</span></button>
+    </header>
+
+    <main class="main">
+
+
+
+
+        <main class="container">
+
+            <section class="section">
+                <div class="container grid" style="gap: 1rem;">
+                    <div class="card">
+                        <h3>Registrar vehículo (HU-1001)</h3>
+                        <div class="form-row"><div><label>Placa</label><input class="input" placeholder="ABC123" /></div><div><label>Marca</label><input class="input" placeholder="Toyota" /></div></div>
+                        <div class="form-row"><div><label>Modelo</label><input class="input" placeholder="Corolla" /></div><div><label>Año</label><input class="input" type="number" placeholder="2020" /></div></div>
+                        <button onclick="toast('Vehículo registrado (simulación)')">Guardar</button>
+                    </div>
+                    <div class="card">
+                        <h3>Estado y detalles (HU-1002 / HU-1003 / HU-1004)</h3>
+
+                        <div id="no-maintenance" class="alert-warning" style="display: none;">
+                            No hay vehículos en mantenimiento actualmente.
+                        </div>
+
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Placa</th>
+                                    <th>Estado</th>
+                                    <th>Ingreso</th>
+                                    <th>Entrega estimada</th>
+                                    <th>Progreso</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="maintenance-body">
+                                <tr>
+                                    <td>ABC123</td>
+                                    <td><span class="badge badge-warning">En proceso</span></td>
+                                    <td>2025-07-25</td>
+                                    <td>2025-07-31</td>
+                                    <td>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 60%;"></div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="secondary" onclick="openMaintenanceModal('ABC123')">Ver detalles</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>PQR987</td>
+                                    <td><span class="badge badge-success">Finalizado</span></td>
+                                    <td>2025-06-10</td>
+                                    <td>2025-06-15</td>
+                                    <td>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 100%;"></div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="secondary" onclick="showNoMaintenance()">Ver detalles</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="maintenanceModal" class="modal" style="display:none;">
+                        <div class="modal-content">
+                            <span class="close" onclick="closeMaintenanceModal()">&times;</span>
+                            <h3>Información general del mantenimiento</h3>
+                            <p><strong>Placa:</strong> <span id="m-placa"></span></p>
+                            <p><strong>Servicio realizado:</strong> <span id="m-servicio"></span></p>
+                            <p><strong>Fecha de ingreso:</strong> <span id="m-ingreso"></span></p>
+                            <p><strong>Fecha estimada de entrega:</strong> <span id="m-entrega"></span></p>
+                            <div>
+                                <label><strong>Progreso:</strong></label>
+                                <div class="progress-bar">
+                                    <div id="m-progreso" class="progress-fill" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+
+
+
+
+
+
+
+
+        <script>
+            (function () {
+                if (location.hash && location.hash.indexOf('user=') === 1) {
+                    try {
+                        var raw = decodeURIComponent(location.hash.split('user=')[1].split('&')[0]);
+                        var user = JSON.parse(atob(raw));
+                        localStorage.setItem('user', JSON.stringify(user));
+                        history.replaceState(null, '', location.pathname + location.search);
+                    } catch (e) { console.warn('No se pudo decodificar usuario desde hash', e); }
+                }
+                var user = null;
+                try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch (e) { }
+                var nameSpan = document.getElementById('current-user');
+                var loginLink = document.getElementById('fallback-login-link');
+                var logoutBtn = document.getElementById('logout-btn');
+                var adminEls = document.querySelectorAll('.admin-only');
+                var clientEls = document.querySelectorAll('.client-only');
+                if (user) {
+                    if (nameSpan) nameSpan.textContent = (user.name || user.email || 'Usuario') + ' (' + user.role + ')';
+                    if (loginLink) loginLink.style.display = 'none';
+                    if (logoutBtn) {
+                        logoutBtn.style.display = 'block';
+                        logoutBtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            localStorage.removeItem('user');
+                            window.location.href = (location.protocol === 'file:' ? '../login.html' : '/login.html');
+                        });
+                    }
+                    if (user.role === 'admin') Array.prototype.forEach.call(clientEls, el => el.style.display = 'none');
+                    if (user.role === 'cliente') Array.prototype.forEach.call(adminEls, el => el.style.display = 'none');
+                } else {
+
+                }
+            })();
+        </script>
+        <script>
+            function openMaintenanceModal(placa) {
+                document.getElementById('maintenanceModal').style.display = 'flex';
+                document.getElementById('m-placa').textContent = placa;
+                document.getElementById('m-servicio').textContent = "Cambio de frenos y alineación";
+                document.getElementById('m-ingreso').textContent = "2025-07-25";
+                document.getElementById('m-entrega').textContent = "2025-07-31";
+                document.getElementById('m-progreso').style.width = "60%";
+            }
+            function closeMaintenanceModal() {
+                document.getElementById('maintenanceModal').style.display = 'none';
+            }
+            function showNoMaintenance() {
+                alert("Este vehículo no se encuentra en mantenimiento.");
+            }
+        </script>
+
+        <script defer src="../assets/js/app.js"></script>
+
+    </main>
+  </div>
+  <script src="../assets/js/dashboard.js"></script>
+  <script defer src="../assets/js/nav-active.js"></script>
+  <script defer src="../assets/js/role-ui.js"></script>
+  <script defer src="../assets/js/carousel-polish.js"></script>
+  <script defer src="../assets/js/app.js"></script>
+</body>
+</html>

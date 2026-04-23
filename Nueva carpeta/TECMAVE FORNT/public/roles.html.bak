@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roles | TECMAVE CR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+  <link rel="stylesheet" href="../assets/css/theme-lighten.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/brand-red-hard.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><img src="../assets/img/tecmave_logo_innovacion.jpg" alt=""><span>Tecmave</span></div>
+      <div class="subtle">Gestión</div>
+      <nav class="nav">
+        <a href="index.html"><i class="fa-solid fa-gauge-high"></i> Panel</a>
+        <a href="vehiculos.html" class="client-only"><i class="fa-solid fa-car"></i> Vehículos</a>
+        <a href="clientes.html" class="client-only"><i class="fa-solid fa-user-group"></i> Clientes</a>
+        <a href="servicios.html" class="client-only"><i class="fa-solid fa-screwdriver-wrench"></i> Servicios</a>
+        <a href="agendamiento.html" class="client-only"><i class="fa-solid fa-calendar-check"></i> Agendamiento</a>
+        <a href="resenas.html" class="client-only"><i class="fa-solid fa-star"></i> Reseñas</a> <!-- New client link -->
+
+        <a href="colaboradores.html" class="admin-only"><i class="fa-solid fa-id-badge"></i> Colaboradores</a>
+        <a href="facturacion.html" class="admin-only"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación</a>
+        <a href="estadisticas.html" class="admin-only"><i class="fa-solid fa-chart-line"></i> Estadísticas</a>
+        <a href="administracion.html" class="admin-only"><i class="fa-solid fa-gear"></i> Administración</a>
+        <a href="usuarios.html" class="admin-only"><i class="fa-solid fa

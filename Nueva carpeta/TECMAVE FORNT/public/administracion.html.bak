@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administración | TECMAVE CR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+  <link rel="stylesheet" href="../assets/css/theme-lighten.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/brand-red-hard.css">
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><img src="../assets/img/tecmave_logo_innovacion.jpg" alt=""><span>Tecmave</span></div>
+      <div class="subtle">Gestión</div>
+      <nav class="nav"></nav>
+    </aside>
+
+    <header class="topbar">
+      <button class="iconbtn" data-toggle-sidebar><i class="fa-solid fa-bars"></i></button>
+      <div id="site-header" class="brand2"><img class="logo-xs" src="../assets/img/tecmave_logo_innovacion.jpg" alt="Tecmave" style="width:20px;height:20px;border-radius:6px;margin-right:6px;"><span>Administración | TECMAVE CR</span></div>
+      <div class="search">
+        <input type="search" placeholder="Buscar clientes, placas, servicios…">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M21 21l-4.3-4.3M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <button class="iconbtn"><i class="fa-regular fa-bell"></i></button>
+      <button class="iconbtn"><i class="fa-regular fa-user"></i> <span id="user-display-name">Admin</span></button>
+    </header>
+
+    <main class="main">
+
+
+
+
+  <main class="container">
+
+<section class="section"><div class="container grid cols-2">
+<div class="card"><h3>Ingresos por asistencia</h3>
+<div class="form-row"><div><label>Desde</label><input class="input" type="date"/></div><div><label>Hasta</label><input class="input" type="date"/></div></div>
+<div class="form-row"><div><label>Tipo</label><select class="input"><option>Todos</option><option>Asistencia</option><option>Mantenimiento</option></select></div><div><label>&nbsp;</label><button class="secondary">Consultar</button></div></div>
+<button id="export-excel">Exportar Excel</button> <button class="secondary" id="export-pdf">Exportar PDF</button>
+</div>
+<div class="card"><h3>Historial por placa</h3>
+<div class="form-row"><div><label>Placa</label><input class="input" id="placa-search" placeholder="ABC123"/></div><div><label>&nbsp;</label><button class="secondary">Buscar</button></div></div>
+<table class="table" id="historial-table" style="margin-top:.6rem"><thead><tr><th>Fecha ingreso</th><th>Servicio</th><th>Estado</th></tr></thead><tbody><tr><td>2025-07-25</td><td>Preventivo</td><td>En proceso</td></tr></tbody></table>
+</div>
+</div></section>
+<section class="section"><div class="container grid cols-2">
+<div class="card"><h3>Empleados y roles</h3><a href="./colaboradores.html"><button class="secondary">Gestionar empleados</button></a> <a href="./roles.html"><button class="ghost">Gestionar roles</button></a></div>
+<div class="card" id="planilla-form"><h3>Planilla</h3><div class="form-row"><div><label>Empleado</label><input class="input" id="empleado-nombre" placeholder="Nombre"/></div><div><label>Horas</input><input class="input" id="empleado-horas" placeholder="40" type="number"/></div></div><div class="form-row"><div><label>Período</label><input class="input" id="planilla-periodo" placeholder="Julio 2025"/></div><div><label>Ajustes</label><input class="input" id="planilla-ajustes" placeholder="Bonos / Deducciones"/></div></div><button id="generar-planilla">Generar planilla</button></div>
+</div></section>
+
+  </main>
+
+
+
+
+
+
+
+
+<script>
+(function(){
+  if (location.hash && location.hash.indexOf('user=') === 1) {
+    try {
+      var raw = decodeURIComponent(location.hash.split('user=')[1].split('&')[0]);
+      var user = JSON.parse(atob(raw));
+      localStorage.setItem('user', JSON.stringify(user));
+      history.replaceState(null, '', location.pathname + location.search);
+    } catch (e) { console.warn('No se pudo decodificar usuario desde hash', e); }
+  }
+  var user = null;
+  try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch(e) {}
+  var nameSpan = document.getElementById('current-user');
+  var loginLink = document.getElementById('fallback-login-link');
+  var logoutBtn = document.getElementById('logout-btn');
+  var adminEls = document.querySelectorAll('.admin-only');
+  var clientEls = document.querySelectorAll('.client-only');
+  if (user) {
+    if (nameSpan) nameSpan.textContent = (user.name || user.email || 'Usuario') + ' (' + user.role + ')';
+    if (loginLink) loginLink.style.display = 'none';
+    if (logoutBtn) {
+      logoutBtn.style.display = 'block';
+      logoutBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        localStorage.removeItem('user');
+        window.location.href = (location.protocol === 'file:' ? '../login.html' : '/login.html');
+      });
+    }
+    if (user.role === 'admin') Array.prototype.forEach.call(clientEls, el=>el.style.display='none');
+    if (user.role === 'cliente') Array.prototype.forEach.call(adminEls, el=>el.style.display='none');
+  } else {
+
+  }
+})();
+</script>
+<script defer src="../assets/js/app.js"></script>
+
+    </main>
+  </div>
+  <script src="../assets/js/dashboard.js"></script>
+  <script defer src="../assets/js/nav-active.js"></script>
+  <script defer src="../assets/js/role-ui.js"></script>
+  <script defer src="../assets/js/carousel-polish.js"></script>
+  <script defer src="../assets/js/app.js"></script>
+<script>
+  document.getElementById('export-excel').addEventListener('click', () => {
+    const table = document.getElementById('historial-table');
+    const wb = XLSX.utils.table_to_book(table, { sheet: "Historial" });
+    XLSX.writeFile(wb, 'historial.xlsx');
+  });
+
+  document.getElementById('export-pdf').addEventListener('click', () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.autoTable({ html: '#historial-table' });
+    doc.save('historial.pdf');
+  });
+
+  document.getElementById('generar-planilla').addEventListener('click', () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const employeeName = document.getElementById('empleado-nombre').value;
+    const hours = parseFloat(document.getElementById('empleado-horas').value);
+    const period = document.getElementById('planilla-periodo').value;
+    const adjustments = document.getElementById('planilla-ajustes').value;
+
+    if (!employeeName || isNaN(hours) || !period) {
+      alert('Por favor, complete todos los campos de la planilla.');
+      return;
+    }
+
+    const rate = 5000; // Example rate
+    const salary = hours * rate;
+    const total = salary + parseFloat(adjustments || 0);
+
+    doc.setFontSize(22);
+    doc.text('Planilla Taller Tecmave', 105, 20, null, null, 'center');
+
+    doc.setFontSize(12);
+    doc.text(`Empleado: ${employeeName}`, 20, 40);
+    doc.text(`Período: ${period}`, 20, 50);
+
+    doc.setLineWidth(0.5);
+    doc.line(20, 60, 190, 60);
+
+    doc.autoTable({
+      startY: 70,
+      head: [['Descripción', 'Monto']],
+      body: [
+        ['Salario Base', `₡${salary.toFixed(2)}`],
+        ['Horas Trabajadas', hours],
+        ['Ajustes (Bonos/Deducciones)', `₡${parseFloat(adjustments || 0).toFixed(2)}`],
+        ['Total a Pagar', `₡${total.toFixed(2)}`],
+      ],
+    });
+
+    doc.save(`planilla-${employeeName.replace(/\s/g, '_')}.pdf`);
+  });
+</script>
+</body>
+</html>
